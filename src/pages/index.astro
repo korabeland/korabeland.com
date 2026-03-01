@@ -1,66 +1,10 @@
----
-import { getCollection } from "astro:content";
 import BaseLayout from "../layouts/BaseLayout.astro";
-
-const posts = (await getCollection("blog", ({ data }) => data.status === "published"))
-  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
-  .slice(0, 3);
-
-const formatDate = (date: Date) =>
-  new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric"
-  }).format(date);
+import WipState from "../components/WipState.astro";
 ---
 
 <BaseLayout
-  title="Korab Eland | Building with AI"
-  description="I build with AI - not just about it. Strategy, systems, and real project work."
+  title="Work in Progress | Korab Eland"
+  description="Korab Eland's personal site is being refined. Reach out by email or download the resume."
 >
-  <section class="section hero">
-    <p class="eyebrow">The Front Door</p>
-    <h1>I build with AI, then show the receipts.</h1>
-    <p class="lead">
-      I turn ambiguous problems into useful systems using product judgment, structured experiments,
-      and real code. This site is where the narrative lives. The portfolio is where the case studies live.
-    </p>
-    <div class="cta-row">
-      <a class="btn" href="mailto:korabeland@gmail.com">Email me</a>
-      <a class="btn secondary" href="https://korabeland.github.io" target="_blank" rel="noopener noreferrer">
-        View case studies
-      </a>
-      <a class="btn secondary" href="/downloads/Korab_Eland_Resume.docx">Download resume</a>
-    </div>
-  </section>
-
-  <section class="section grid two" aria-label="Focus areas">
-    <article class="card">
-      <p class="kpi">Building with AI</p>
-      <p>Process posts, build logs, and decisions behind shipped work.</p>
-    </article>
-    <article class="card">
-      <p class="kpi">The Operator's Edge</p>
-      <p>Strategy and execution notes for using AI in real operating contexts.</p>
-    </article>
-  </section>
-
-  <section class="section">
-    <p class="eyebrow">Latest Writing</p>
-    <div class="post-list">
-      {posts.map((post) => (
-        <a class="post-link" href={`/blog/${post.slug}/`}>
-          <h3>{post.data.title}</h3>
-          <p>{post.data.description}</p>
-          <span class="meta">{formatDate(post.data.date)} • {post.data.pillar}</span>
-        </a>
-      ))}
-      {posts.length === 0 && (
-        <article class="card">
-          <p>No published posts yet. First piece is in progress.</p>
-        </article>
-      )}
-    </div>
-  </section>
+  <WipState context="the homepage" />
 </BaseLayout>
-
