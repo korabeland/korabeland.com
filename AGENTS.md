@@ -1,6 +1,6 @@
 # AGENTS.md - Personal Site
 
-This file guides coding agents working inside `personal-site/` (`korabeland.com`).
+This file guides coding agents working inside `korabeland.com/` (`korabeland.com`).
 
 For brand-level strategy, voice, and content pillars, refer to `../AGENTS.md`.
 
@@ -9,11 +9,13 @@ For brand-level strategy, voice, and content pillars, refer to `../AGENTS.md`.
 This site is the "Front Door":
 - who Korab is
 - what he is building
-- where to go next (portfolio and GitHub)
+- where to go next (GitHub and direct contact)
 
 ## Current Scope
 
-MVP target date: March 1, 2026
+Status date: March 1, 2026
+
+The site is intentionally in a temporary work-in-progress state while content is refined.
 
 Required pages:
 - `/` home
@@ -23,8 +25,16 @@ Required pages:
 
 Required CTAs on home:
 - Email me
-- View case studies
 - Download resume
+
+WIP behavior:
+- All required routes currently render a shared WIP state.
+- Do not reintroduce a case studies CTA unless explicitly requested by Korab.
+- Keep copy concise, direct, and consistent with the existing tone.
+
+Resume delivery:
+- Use `/downloads/Korab_Eland_Resume.pdf`.
+- Do not link to `.docx` resume files.
 
 ## Content Rules
 
@@ -43,4 +53,4 @@ Required CTAs on home:
 - Keep dependencies minimal.
 - Prefer static output.
 - Keep JS usage low unless interaction clearly requires it.
-
+- Deployment target is Vercel project `korabeland.com` with GitHub-connected deploys from `main`.
