@@ -1,0 +1,41 @@
+---
+import type { CollectionEntry } from "astro:content";
+import { getCollection, render } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+export async function getStaticPaths() {
+  const posts = await getCollection("blog", ({ data }) => data.status === "published");
+
+  return posts.map((post) => ({
+    params: { slug: post.slug },
+    props: { post }
+  }));
+}
+
+const { post }: { post: CollectionEntry<"blog"> } = Astro.props;
+const { Content } = await render(post);
+
+const formatDate = (date: Date) =>
+  new Intl.DateTimeFormat("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric"
+  }).format(date);
+---
+
+<BaseLayout title={`${post.data.title} | Korab Eland`} description={post.data.description}>
+  <article class="section article">
+    <header class="article-head">
+      <p class="eyebrow">{post.data.pillar}</p>
+      <h1>{post.data.title}</h1>
+      <p class="meta">
+        Published {formatDate(post.data.date)}
+        {post.data.updated && ` • Updated ${formatDate(post.data.updated)}`}
+      </p>
+    </header>
+    <div class="article-body">
+      <Content />
+    </div>
+  </article>
+</BaseLayout>
+

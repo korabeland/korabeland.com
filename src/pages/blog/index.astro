@@ -1,0 +1,36 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+const posts = (await getCollection("blog", ({ data }) => data.status === "published")).sort(
+  (a, b) => b.data.date.valueOf() - a.data.date.valueOf()
+);
+
+const formatDate = (date: Date) =>
+  new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric"
+  }).format(date);
+---
+
+<BaseLayout title="Blog | Korab Eland" description="Essays, operator notes, and build logs.">
+  <section class="section">
+    <p class="eyebrow">Blog</p>
+    <h1>Essays and build notes</h1>
+    <p class="lead">Writing about real implementation work, tradeoffs, and lessons from building with AI.</p>
+  </section>
+
+  <section class="section">
+    <div class="post-list">
+      {posts.map((post) => (
+        <a class="post-link" href={`/blog/${post.slug}/`}>
+          <h3>{post.data.title}</h3>
+          <p>{post.data.description}</p>
+          <span class="meta">{formatDate(post.data.date)} • {post.data.pillar}</span>
+        </a>
+      ))}
+    </div>
+  </section>
+</BaseLayout>
+

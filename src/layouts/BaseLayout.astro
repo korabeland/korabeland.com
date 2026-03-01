@@ -1,0 +1,64 @@
+---
+import "../styles/global.css";
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const {
+  title,
+  description = "Korab Eland builds with AI and turns ambiguous problems into useful systems."
+} = Astro.props;
+
+const year = new Date().getFullYear();
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="generator" content={Astro.generator} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+  </head>
+  <body>
+    <a href="#main" class="skip-link">Skip to content</a>
+    <div class="bg-orb bg-orb-one" aria-hidden="true"></div>
+    <div class="bg-orb bg-orb-two" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <div class="shell nav-wrap">
+        <a class="brand" href="/">Korab Eland</a>
+        <nav aria-label="Primary">
+          <ul class="nav-list">
+            <li><a href="/about">About</a></li>
+            <li><a href="/blog/">Blog</a></li>
+            <li><a href="https://korabeland.github.io" target="_blank" rel="noopener noreferrer">Portfolio</a></li>
+            <li><a href="https://github.com/korabeland" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main" class="site-main shell">
+      <slot />
+    </main>
+
+    <footer class="site-footer">
+      <div class="shell footer-wrap">
+        <p>Copyright {year} Korab Eland</p>
+        <div class="footer-links">
+          <a href="mailto:korabeland@gmail.com">Email</a>
+          <a href="https://www.linkedin.com/in/korabeland" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+          <a href="https://x.com/korabeland" target="_blank" rel="noopener noreferrer">X</a>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
+
