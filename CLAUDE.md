@@ -4,18 +4,18 @@ Personal site ("The Front Door") — who Korab is as a whole person, what he's b
 
 ## Current Scope
 
-Status: March 2026. The site is in a WIP state while content is refined.
+Status: March 2026. MVP live — home, about, blog, project case study pages.
 
-Required pages: `/` home, `/about`, `/blog/`, `/blog/[slug]/`
+Required pages: `/` home, `/about`, `/blog/`, `/blog/[slug]`, `/projects/[slug]`
 
 Required CTAs on home:
 - Email me
-- Download resume (use `/downloads/Korab_Eland_Resume.pdf`, never `.docx`)
+- Download resume (use `/korab-eland-resume.pdf`, never `.docx`)
 
-WIP behavior:
-- All required routes currently render a shared WIP state.
-- Do not reintroduce a case studies CTA unless explicitly requested by Korab.
-- Keep copy concise, direct, and consistent with the existing tone.
+Content collections:
+- Blog: `src/content/blog/` — posts with `status: draft | published`
+- Projects: `src/content/projects/` — case studies as MDX
+- Now: `src/content/now/` — compact status update shown on home page
 
 ## Content Rules
 
@@ -25,7 +25,7 @@ WIP behavior:
 
 ## Design Direction
 
-**Before making any design, layout, typography, or styling choices**, read `personal-site-brief.md` in full. It is the source of truth for the site's aesthetic and technical requirements.
+**Before making any design, layout, typography, or styling choices**, read the design doc first: `~/.gstack/projects/korabeland-personal-brand/korabeland-main-design-20260326-215957.md`. It supersedes `personal-site-brief.md` for page structure and content architecture. The original brief's visual system rules (typography, color, spacing, "no gradients/shadows/decorations") remain in effect.
 
 - Clean, intentional, human.
 - Distinctive but restrained.

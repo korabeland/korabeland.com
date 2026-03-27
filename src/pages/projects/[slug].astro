@@ -1,0 +1,83 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+export async function getStaticPaths() {
+  const projects = await getCollection("projects");
+  return projects.map((project) => ({
+    params: { slug: project.id.replace(/\.(md|mdx)$/, "") },
+    props: { project },
+  }));
+}
+
+const { project } = Astro.props;
+const { Content } = await project.render();
+
+function formatDate(date: Date): string {
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}
+
+function formatDateISO(date: Date): string {
+  return date.toISOString().split("T")[0];
+}
+
+const jsonLd = JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "CreativeWork",
+  name: project.data.title,
+  description: project.data.description,
+  dateCreated: formatDateISO(project.data.date),
+  author: {
+    "@type": "Person",
+    name: "Korab Eland",
+    url: "https://korabeland.com",
+  },
+});
+---
+
+<BaseLayout
+  title={`${project.data.title} — Korab Eland`}
+  description={project.data.description}
+  jsonLd={jsonLd}
+>
+  <section class="section">
+    <article class="article">
+      <div class="article-head">
+        <h1>{project.data.title}</h1>
+        <div class="project-meta">
+          <span class="article-meta">{project.data.role}</span>
+          <span class="article-meta">&middot;</span>
+          <time class="article-meta" datetime={formatDateISO(project.data.date)}>
+            {formatDate(project.data.date)}
+          </time>
+        </div>
+        <div class="tech-tags">
+          {project.data.tech_stack.map((tech) => (
+            <span class="tech-tag">{tech}</span>
+          ))}
+        </div>
+      </div>
+      <div class="article-body">
+        <Content />
+      </div>
+      {(project.data.github_url || project.data.live_url) && (
+        <div class="project-links">
+          {project.data.github_url && (
+            <a href={project.data.github_url} target="_blank" rel="noopener noreferrer">
+              View on GitHub
+            </a>
+          )}
+          {project.data.live_url && (
+            <a href={project.data.live_url} target="_blank" rel="noopener noreferrer">
+              Live site
+            </a>
+          )}
+        </div>
+      )}
+    </article>
+  </section>
+</BaseLayout>

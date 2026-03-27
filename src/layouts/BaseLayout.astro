@@ -1,17 +1,20 @@
 ---
 import "../styles/global.css";
+import ThemeToggle from "../components/ThemeToggle.astro";
 
 interface Props {
   title: string;
   description?: string;
+  jsonLd?: string;
 }
 
 const {
   title,
-  description = "Korab Eland builds with AI and turns ambiguous problems into useful systems."
+  description = "Korab Eland builds with AI and turns ambiguous problems into useful systems.",
+  jsonLd,
 } = Astro.props;
 
-const year = new Date().getFullYear();
+const canonicalUrl = new URL(Astro.url.pathname, Astro.site);
 ---
 
 <!doctype html>
@@ -22,27 +25,94 @@ const year = new Date().getFullYear();
     <title>{title}</title>
     <meta name="description" content={description} />
     <meta name="generator" content={Astro.generator} />
+
+    <!-- Open Graph -->
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonicalUrl} />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+
+    <!-- Canonical -->
+    <link rel="canonical" href={canonicalUrl} />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- FOWT prevention — runs before paint -->
+    <script is:inline>
+      (function () {
+        var theme = null;
+        try { theme = localStorage.getItem('theme'); } catch {}
+        if (!theme) {
+          theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        document.documentElement.setAttribute('data-theme', theme);
+      })();
+    </script>
+
+    <!-- JSON-LD structured data -->
+    {jsonLd && <script type="application/ld+json" set:html={jsonLd} />}
   </head>
   <body>
     <a href="#main" class="skip-link">Skip to content</a>
-    <div class="bg-orb bg-orb-one" aria-hidden="true"></div>
-    <div class="bg-orb bg-orb-two" aria-hidden="true"></div>
 
     <header class="site-header">
       <div class="shell nav-wrap">
         <a class="brand" href="/">Korab Eland</a>
-        <nav aria-label="Primary">
-          <ul class="nav-list">
-            <li><a href="/about">About</a></li>
-            <li><a href="/blog/">Blog</a></li>
-            <li><a href="https://github.com/korabeland" target="_blank" rel="noopener noreferrer">GitHub</a></li>
-          </ul>
-        </nav>
+        <div class="nav-right">
+          <nav aria-label="Primary">
+            <ul class="nav-list">
+              <li><a href="/about">About</a></li>
+              <li><a href="/blog/">Writing</a></li>
+              <li><a href="/#selected-work">Projects</a></li>
+            </ul>
+          </nav>
+          <ThemeToggle />
+          <button
+            class="hamburger"
+            id="hamburger-btn"
+            type="button"
+            aria-expanded="false"
+            aria-controls="mobile-nav"
+            aria-label="Open menu"
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+          </button>
+        </div>
       </div>
     </header>
+
+    <!-- Mobile nav overlay -->
+    <div class="mobile-nav" id="mobile-nav" role="dialog" aria-label="Navigation menu">
+      <div class="mobile-nav-header">
+        <a class="brand" href="/">Korab Eland</a>
+        <button class="mobile-nav-close" id="mobile-nav-close" type="button" aria-label="Close menu">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <ul class="mobile-nav-links">
+        <li><a href="/about">About</a></li>
+        <li><a href="/blog/">Writing</a></li>
+        <li><a href="/#selected-work">Projects</a></li>
+      </ul>
+    </div>
 
     <main id="main" class="site-main shell">
       <slot />
@@ -50,13 +120,54 @@ const year = new Date().getFullYear();
 
     <footer class="site-footer">
       <div class="shell footer-wrap">
-        <p>Copyright {year} Korab Eland</p>
+        <p>&copy; 2026 Korab Eland</p>
         <div class="footer-links">
           <a href="mailto:korabeland@gmail.com">Email</a>
+          <span class="footer-separator" aria-hidden="true">&middot;</span>
           <a href="https://www.linkedin.com/in/korabeland" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+          <span class="footer-separator" aria-hidden="true">&middot;</span>
+          <a href="https://github.com/korabeland" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <span class="footer-separator" aria-hidden="true">&middot;</span>
           <a href="https://x.com/korabeland" target="_blank" rel="noopener noreferrer">X</a>
         </div>
       </div>
     </footer>
+
+    <!-- Mobile menu script -->
+    <script is:inline>
+      (function () {
+        var hamburger = document.getElementById('hamburger-btn');
+        var mobileNav = document.getElementById('mobile-nav');
+        var closeBtn = document.getElementById('mobile-nav-close');
+        if (!hamburger || !mobileNav || !closeBtn) return;
+
+        function openMenu() {
+          mobileNav.classList.add('is-open');
+          hamburger.setAttribute('aria-expanded', 'true');
+          closeBtn.focus();
+        }
+
+        function closeMenu() {
+          mobileNav.classList.remove('is-open');
+          hamburger.setAttribute('aria-expanded', 'false');
+          hamburger.focus();
+        }
+
+        hamburger.addEventListener('click', openMenu);
+        closeBtn.addEventListener('click', closeMenu);
+
+        // Close on Escape
+        document.addEventListener('keydown', function (e) {
+          if (e.key === 'Escape' && mobileNav.classList.contains('is-open')) {
+            closeMenu();
+          }
+        });
+
+        // Close when clicking nav links
+        mobileNav.querySelectorAll('a').forEach(function (link) {
+          link.addEventListener('click', closeMenu);
+        });
+      })();
+    </script>
   </body>
 </html>

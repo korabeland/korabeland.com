@@ -1,0 +1,9 @@
+{
+  "redirects": [
+    {
+      "source": "/downloads/Korab_Eland_Resume.pdf",
+      "destination": "/korab-eland-resume.pdf",
+      "permanent": true
+    }
+  ]
+}

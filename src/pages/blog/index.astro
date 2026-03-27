@@ -1,8 +1,51 @@
 ---
+import { getCollection } from "astro:content";
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import WipState from "../../components/WipState.astro";
+
+const publishedPosts = (
+  await getCollection("blog", ({ data }) => data.status === "published")
+).sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+
+function formatDate(date: Date): string {
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
+
+function formatDateISO(date: Date): string {
+  return date.toISOString().split("T")[0];
+}
+
+function slug(id: string): string {
+  return id.replace(/\.(md|mdx)$/, "");
+}
 ---
 
-<BaseLayout title="Work in Progress | Blog" description="Blog content is being refined and will return soon.">
-  <WipState context="the blog" />
+<BaseLayout
+  title="Writing — Korab Eland"
+  description="Essays on building with AI, operations, and turning ambiguous problems into systems."
+>
+  <section class="section">
+    <h1>Writing</h1>
+    {publishedPosts.length > 0 ? (
+      <ul class="blog-list">
+        {publishedPosts.map((post) => (
+          <li class="blog-list-item">
+            <span class="blog-list-title">
+              <a href={`/blog/${slug(post.id)}/`}>{post.data.title}</a>
+            </span>
+            <time class="blog-list-date" datetime={formatDateISO(post.data.date)}>
+              {formatDate(post.data.date)}
+            </time>
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <p class="empty-state">
+        Writing is on the way. I am working on essays about building with AI, the messy middle of operations, and what I am learning along the way. Check back soon.
+      </p>
+    )}
+  </section>
 </BaseLayout>
