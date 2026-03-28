@@ -597,9 +597,7 @@ code {
   color: var(--text);
 }
 
-.theme-toggle svg {
-  display: block;
-}
+
 
 /* ==========================================================================
    Responsive — mobile (<640px)

@@ -26,16 +26,16 @@
 </button>
 
 <style>
-  [data-theme="dark"] .icon-sun,
-  :root:not([data-theme="dark"]) .icon-moon {
+  :global([data-theme="dark"]) .icon-sun,
+  :global(:root:not([data-theme="dark"])) .icon-moon {
     display: none;
   }
 
-  [data-theme="dark"] .icon-moon {
+  :global([data-theme="dark"]) .icon-moon {
     display: block;
   }
 
-  :root:not([data-theme="dark"]) .icon-sun {
+  :global(:root:not([data-theme="dark"])) .icon-sun {
     display: block;
   }
 </style>
