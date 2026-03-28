@@ -70,6 +70,9 @@ const jsonLd = JSON.stringify({
     </div>
   </section>
 
+  <!-- Ornament -->
+  <div class="section-ornament"></div>
+
   <!-- Now -->
   {latestNow && (
     <aside class="now-section">
@@ -82,28 +85,33 @@ const jsonLd = JSON.stringify({
 
   <!-- Selected Work -->
   {publishedProjects.length > 0 && (
-    <section class="section" id="selected-work">
-      <h2>Selected Work</h2>
-      <div class="project-grid">
-        {publishedProjects.map((project) => (
-          <a class="project-card" href={`/projects/${slug(project.id)}/`}>
-            <div class="project-card-title">{project.data.title}</div>
-            <p class="project-card-desc">{project.data.description}</p>
-            <div class="tech-tags">
-              {project.data.tech_stack.map((tech) => (
-                <span class="tech-tag">{tech}</span>
-              ))}
-            </div>
-          </a>
-        ))}
-      </div>
-    </section>
+    <>
+      <div class="section-ornament"></div>
+      <section class="section" id="selected-work">
+        <h2 class="heading-accent">Selected Work</h2>
+        <div class="project-grid">
+          {publishedProjects.map((project) => (
+            <a class="project-card" href={`/projects/${slug(project.id)}/`}>
+              <div class="project-card-title">{project.data.title}</div>
+              <p class="project-card-desc">{project.data.description}</p>
+              <div class="tech-tags">
+                {project.data.tech_stack.map((tech) => (
+                  <span class="tech-tag">{tech}</span>
+                ))}
+              </div>
+            </a>
+          ))}
+        </div>
+      </section>
+    </>
   )}
 
   <!-- Writing -->
   {publishedPosts.length > 0 && (
+    <>
+    <div class="section-ornament"></div>
     <section class="section">
-      <h2>Writing</h2>
+      <h2 class="heading-accent">Writing</h2>
       <ul class="blog-list">
         {publishedPosts.map((post) => (
           <li class="blog-list-item">
@@ -117,5 +125,6 @@ const jsonLd = JSON.stringify({
         ))}
       </ul>
     </section>
+    </>
   )}
 </BaseLayout>
