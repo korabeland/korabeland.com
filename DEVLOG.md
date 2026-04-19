@@ -10,34 +10,38 @@ For the snapshot view ("what's wired right now"), see the project memory tracker
 
 ## 2026-04-19 — Prompt 11: Deployment and preview infrastructure
 
-**Commits:** `e21f0ec`
-**Migrated repo:** `korabeland/personal-brand` → `korabeland/korabeland.com` (canonical home, matches Vercel project and domain)
+**Commits:** `b2a8626..eea5af3` (in `korabeland/korabeland.com`)
+**Canonical repo:** `korabeland/korabeland.com` — Vercel was already watching this; zero reconfiguration needed.
 
 Prompt 11 wires up the review surface so every PR opens with a rich, locally-generated description — no API keys in GitHub Actions.
 
-**Repo migration.** Old `korabeland/korabeland.com` code archived as `archive/v1-old-site` branch. New Astro 6 build force-pushed to `main`. `Dev Team/` origin updated to `korabeland/korabeland.com`. `personal-brand` repo archived. Vercel stays connected with zero reconfiguration — it was already watching `korabeland/korabeland.com`.
+**Repo migration.** `Dev Team/` has no `.git/` of its own — the git root is the parent `Korab's Personal Brand/` directory. The correct canonical home for the deployable site is `korabeland.com/` (standalone repo, `Korab's Personal Brand/korabeland.com/`). Migration: cleared old tracked files from `korabeland.com/`, rsync'd `Dev Team/` content in, removed stale artifacts (`personal-site-brief.md`, `build-archive.log`, `public/resume.json`), committed, force-pushed to `korabeland/korabeland.com`. Old code archived on `archive/v1-old-site` branch. `personal-brand` repo archived on GitHub.
 
-**CI workflow.** `.github/workflows/ci.yml` runs the full `verify:all` pyramid on every PR and push: Biome + tsc → Vitest → Playwright (build + preview server in CI via `process.env.CI` guard in `playwright.config.ts`) → Lighthouse CI. No `ANTHROPIC_*` secrets anywhere. Node version pinned via `.nvmrc`.
+**CI workflow.** `.github/workflows/ci.yml` in `korabeland.com/` (the standalone repo root — GitHub Actions finds it). Runs: `pnpm install` → Playwright install → `pnpm verify` → `pnpm test` → reset visual baselines → `pnpm test:visual` → `pnpm run audit` → Chromatic (PR-only, skipped on push). Three CI fixes were needed:
+1. Drop `version: 10` from `pnpm/action-setup@v4` (conflicts with `packageManager` in `package.json`)
+2. Bump `.nvmrc` from `20.18.3` to `22` (Astro 6 requires `>=22.12.0`)
+3. Replace `pnpm preview` with `node scripts/static-preview.mjs` in `playwright.config.ts` (`@astrojs/vercel` blocks `astro preview`)
+4. Reset visual baselines before `test:visual` in CI (macOS-generated baselines fail on Linux; Chromatic handles regression in CI)
+
+CI is green: `verify-all` passing on `korabeland/korabeland.com`.
 
 **Pre-push hook.** `.husky/pre-push` calls `generate-pr-description.sh` on non-main branches. `|| true` means a failing generator never blocks the push.
 
 **`scripts/generate-pr-description.sh`.** The 6-element review page generator:
 1. Predicted Vercel preview URL from `.vercel/project.json` + branch slug
 2. QR code PNG via `qrcode` package → committed to `public/pr-previews/<branch>/`
-3. `pnpm build` + static preview server → Playwright screenshots (3 routes × 4 viewports) → committed
-4. Chromatic Playwright archive (if `CHROMATIC_PROJECT_TOKEN` set) → build URL in description
+3. `pnpm build` + `node scripts/static-preview.mjs` → Playwright screenshots (3 routes × 4 viewports) → committed
+4. Chromatic dashboard link (runs in CI, not locally — path-spaces bug on macOS with apostrophe in `Korab's`)
 5. Lighthouse scores parsed from `.lighthouseci/` JSON
 6. Claude (Haiku) plain-English summary via `claude -p` on `git log + git diff --stat`
 
-Screenshots are committed to the branch via `git commit --no-verify` so Vercel serves them at the predicted preview URL. The `|| true` in the hook means a failing screenshot step never blocks the push.
+**`/open-pr` slash command.** `.claude/commands/open-pr.md` wraps the full flow: run script → push → create or update PR.
 
-**`scripts/pr-screenshots.mjs`.** Standalone Playwright Node script: imports `chromium` from `@playwright/test`, launches browser, takes 12 screenshots (home / colophon / off-trail at 375 / 768 / 1280 / 1920px). Called by `generate-pr-description.sh`.
+**Vercel.** `.vercel/project.json` in `korabeland.com/` already had the correct project ID (`prj_CLexAjSgpXWgay2rLgj4EZfC21FV`) from the old site. Auto-deploying correctly — latest build ✅ Ready.
 
-**`/open-pr` slash command.** `.claude/commands/open-pr.md` wraps the full flow: run script → push → create or update PR via `gh pr create --body-file .pr-description.md`.
+**Branch protection.** Skipped — requires GitHub Pro or public repo. Repo is private on free plan.
 
-**Chromatic note.** `chromatic` and `@chromatic-com/playwright` installed. `ChromaticConfig` is a type-only export — no `playwright.config.ts` changes needed. Chromatic reads the existing config automatically when `npx chromatic --playwright` is invoked by the script.
-
-**Still needs user action:** `! vercel link` (link `Dev Team/` to `korabeland.com` Vercel project after CI is green), Chromatic account setup + `CHROMATIC_PROJECT_TOKEN`, and branch protection setup via `gh api` (Step 9 of prompt — run after first CI pass).
+**Still local-only (not in `korabeland.com/` git history).** `Dev Team/` is a working copy; changes made there should be rsync'd to `korabeland.com/` and pushed from there for canonical history.
 
 ---
 
