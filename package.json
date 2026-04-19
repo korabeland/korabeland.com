@@ -1,21 +1,67 @@
 {
   "name": "personal-site",
-  "version": "0.1.0",
+  "version": "0.0.0",
   "private": true,
-  "type": "module",
-  "description": "Korab Eland personal site - korabeland.com",
+  "packageManager": "pnpm@10.33.0",
   "scripts": {
+    "predev": "pnpm gen:trail-register",
     "dev": "astro dev",
+    "prebuild": "pnpm gen:trail-register",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "sync": "astro sync",
+    "gen:barrels": "tsx scripts/gen-barrels.ts",
+    "gen:trail-register": "tsx scripts/gen-trail-register.ts",
+    "verify": "biome check . && tsc --noEmit",
+    "test": "vitest run",
+    "test:visual": "playwright test",
+    "audit": "lhci autorun",
+    "verify:all": "pnpm verify && pnpm test && pnpm test:visual && pnpm run audit"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "odiff-bin",
+      "sharp"
+    ]
   },
   "dependencies": {
-    "@astrojs/mdx": "^4.3.14",
+    "@astrojs/mdx": "^5.0.3",
+    "@astrojs/react": "^5.0.3",
     "@astrojs/sitemap": "^3.7.2",
-    "astro": "^5.17.3"
+    "@astrojs/vercel": "^10.0.4",
+    "@keystatic/astro": "^5.0.6",
+    "@keystatic/core": "^0.5.50",
+    "@tailwindcss/vite": "^4.2.2",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "astro": "^6.1.7",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.8.0",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "roughjs": "^4.6.6",
+    "tailwind-merge": "^3.5.0",
+    "tailwindcss": "^4.2.2",
+    "typescript": "^5.9.3"
   },
   "devDependencies": {
-    "@playwright/test": "^1.58.2"
+    "@axe-core/playwright": "^4.11.1",
+    "@biomejs/biome": "^2.4.12",
+    "@chromatic-com/playwright": "^0.13.1",
+    "@houtini/lm": "2.9.0",
+    "@lhci/cli": "^0.15.1",
+    "@playwright/test": "^1.59.1",
+    "@types/pngjs": "^6.0.5",
+    "chromatic": "^16.3.0",
+    "happy-dom": "^20.9.0",
+    "husky": "^9.1.7",
+    "odiff-bin": "^4.3.8",
+    "pixelmatch": "^7.1.0",
+    "pngjs": "^7.0.0",
+    "qrcode": "^1.5.4",
+    "tsx": "^4.21.0",
+    "vitest": "^2.1.9"
   }
 }

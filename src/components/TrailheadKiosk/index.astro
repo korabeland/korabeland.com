@@ -1,0 +1,192 @@
+---
+// TrailheadKiosk/index.astro — home-hero "kiosk" variant (launch default).
+//
+// Composes:
+//   · MapSurface            (center — the object)
+//   · TrailRegisterRail     (left — recent commits)
+//   · PopularRoutesRail     (right — two hand-picked routes)
+//   · Legend strip          (bottom — WeatherPill + masthead mono)
+//
+// Tape-corner accents on the outer frame per DESIGN.md §Mood. No client JS.
+
+import WeatherPill from "../WeatherPill/WeatherPill.astro";
+import MapSurface from "./MapSurface.astro";
+import PopularRoutesRail from "./PopularRoutesRail.astro";
+import TrailRegisterRail from "./TrailRegisterRail.astro";
+
+interface Props {
+  /** Static status string passed to the bottom-strip WeatherPill. */
+  weatherStatus?: string;
+}
+
+const { weatherStatus = "clear · 52°f · taking clients" } = Astro.props;
+---
+
+<section class="kiosk" aria-labelledby="kiosk-title">
+  {/* Tape corners */}
+  <span class="tape tape--tl" aria-hidden="true"></span>
+  <span class="tape tape--tr" aria-hidden="true"></span>
+  <span class="tape tape--bl" aria-hidden="true"></span>
+  <span class="tape tape--br" aria-hidden="true"></span>
+
+  <header class="kiosk-masthead">
+    <p class="t-mono kiosk-mark">§ 01 · trailhead · kiosk</p>
+    <h1 id="kiosk-title" class="kiosk-title">
+      <span class="kiosk-title-line">korab eland</span>
+      <span class="kiosk-title-sub">builder · operator · writer</span>
+    </h1>
+    <p class="kiosk-dek">
+      a hand-drawn map of what i'm working on. the pins are live,
+      the paths fill in as the ground is walked.
+    </p>
+  </header>
+
+  <div class="kiosk-frame">
+    <div class="kiosk-rail kiosk-rail--left">
+      <TrailRegisterRail />
+    </div>
+
+    <div class="kiosk-stage">
+      <MapSurface />
+    </div>
+
+    <div class="kiosk-rail kiosk-rail--right">
+      <PopularRoutesRail />
+    </div>
+  </div>
+
+  <footer class="kiosk-legend-strip">
+    <span class="t-mono">trailhead kiosk · korabeland.com</span>
+    <WeatherPill status={weatherStatus} />
+  </footer>
+
+  {/* Screen-reader-visible duplicate links for the map pins.
+      The SVG in MapSurface is decorative; real navigation targets live here. */}
+  <nav class="sr-only" aria-label="Map destinations">
+    <ul>
+      <li><a href="/off-trail?from=notes">field notes</a></li>
+      <li><a href="/off-trail?from=projects">projects</a></li>
+      <li><a href="/off-trail?from=work-with-me">work with me</a></li>
+    </ul>
+  </nav>
+</section>
+
+<style>
+  .kiosk {
+    position: relative;
+    max-width: 1280px;
+    margin-inline: auto;
+    padding: var(--s-8) var(--s-6) var(--s-7);
+    background: var(--paper);
+    border: 1px solid var(--ink);
+  }
+
+  /* Tape-corner accents */
+  .tape {
+    position: absolute;
+    width: 52px;
+    height: 14px;
+    background: var(--paper-2);
+    border: 1px solid var(--rule);
+    opacity: 0.85;
+  }
+  .tape--tl { top: -7px; left: -12px; transform: rotate(-4deg); }
+  .tape--tr { top: -7px; right: -12px; transform: rotate(3deg); }
+  .tape--bl { bottom: -7px; left: -12px; transform: rotate(2deg); }
+  .tape--br { bottom: -7px; right: -12px; transform: rotate(-3deg); }
+
+  .kiosk-masthead {
+    max-width: 720px;
+    margin: 0 auto var(--s-7);
+    text-align: center;
+  }
+
+  .kiosk-mark {
+    margin: 0 0 var(--s-4);
+  }
+
+  .kiosk-title {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-2);
+    margin: 0 0 var(--s-4);
+    font-family: var(--font-display);
+    font-weight: 400;
+    line-height: 1;
+  }
+
+  .kiosk-title-line {
+    font-size: clamp(42px, 6vw, 72px);
+    letter-spacing: -0.02em;
+  }
+
+  .kiosk-title-sub {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 300;
+    font-size: clamp(17px, 1.6vw, 22px);
+    color: var(--ink-soft);
+  }
+
+  .kiosk-dek {
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    max-width: 46ch;
+    margin-inline: auto;
+  }
+
+  .kiosk-frame {
+    display: grid;
+    grid-template-columns: 260px 1fr 260px;
+    gap: var(--s-5);
+    align-items: start;
+  }
+
+  .kiosk-stage {
+    min-width: 0;
+  }
+
+  .kiosk-legend-strip {
+    margin-top: var(--s-6);
+    padding-top: var(--s-4);
+    border-top: 1px solid var(--rule);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--s-3);
+  }
+
+  .kiosk-legend-strip .t-mono {
+    margin: 0;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  @media (max-width: 1040px) {
+    .kiosk-frame {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .kiosk {
+      padding: var(--s-6) var(--s-4) var(--s-5);
+    }
+    .tape {
+      width: 42px;
+    }
+  }
+</style>

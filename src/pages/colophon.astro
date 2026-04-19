@@ -1,0 +1,182 @@
+---
+export const prerender = true;
+
+import { existsSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import BaseLayout from "../layouts/BaseLayout.astro";
+
+const identityRoot = resolve(process.cwd(), "../identity");
+
+interface Influence {
+  person: string;
+  note: string;
+}
+
+// Built-in fallback used when the parent brand repo's identity/ folder
+// isn't available at build time (e.g., Vercel clones only the sub-project).
+// Keep in sync with identity/influences.md manually — check on each launch PR.
+const FALLBACK_INFLUENCES: Influence[] = [
+  {
+    person: "Tiago Forte",
+    note: "PARA + Building a Second Brain — capture, organise, distill, express.",
+  },
+  {
+    person: "Rick Rubin",
+    note: "The creative act as a lifelong practice of noticing.",
+  },
+  {
+    person: "Jony Ive",
+    note: "Care for materials, restraint, and the quiet craft of working things.",
+  },
+  {
+    person: "Cal Newport",
+    note: "Deep work, digital minimalism, and knowledge-work productivity.",
+  },
+];
+
+function parseInfluences(): Influence[] {
+  const file = resolve(identityRoot, "influences.md");
+  if (!existsSync(file)) return FALLBACK_INFLUENCES;
+  try {
+    const md = readFileSync(file, "utf8");
+    const out: Influence[] = [];
+    const lines = md.split("\n");
+    let inTable = false;
+    for (const line of lines) {
+      if (line.startsWith("## Primary current influence")) break;
+      if (line.startsWith("| Person | Influence captured |")) {
+        inTable = true;
+        continue;
+      }
+      if (!inTable) continue;
+      if (line.startsWith("|---") || line.trim() === "") continue;
+      if (!line.startsWith("|")) {
+        inTable = false;
+        continue;
+      }
+      const cells = line
+        .split("|")
+        .map((c) => c.trim())
+        .filter(Boolean);
+      if (cells.length >= 2) {
+        out.push({ person: cells[0], note: cells[1] });
+      }
+    }
+    return out.length > 0 ? out : FALLBACK_INFLUENCES;
+  } catch {
+    return FALLBACK_INFLUENCES;
+  }
+}
+
+const influences = parseInfluences();
+
+const tools: { label: string; note: string }[] = [
+  { label: "Astro 6", note: "page routing, server output via Vercel adapter" },
+  {
+    label: "Tailwind CSS 4",
+    note: "CSS-first configuration; tokens in src/styles/tokens.css",
+  },
+  {
+    label: "shadcn/ui + React 19",
+    note: "interactive islands where they earn their weight",
+  },
+  { label: "Keystatic", note: "local-git-backed CMS for long-form posts" },
+  { label: "Vercel", note: "hosting, preview deploys, edge functions" },
+  {
+    label: "Claude Code + a small team of subagents",
+    note: "the build crew running this site",
+  },
+];
+---
+
+<BaseLayout
+  title="Colophon — Korab Eland"
+  description="How korabeland.com was built and who Korab is. The crew, the stack, and the people whose thinking shaped this site."
+  active="colophon"
+>
+  <article class="prose colophon">
+    <header>
+      <p class="t-mono">§ · colophon</p>
+      <h1>Colophon</h1>
+      <p class="lede">
+        A record of how this site was built and a short note on who built it.
+      </p>
+    </header>
+
+    <section aria-labelledby="bio">
+      <h2 id="bio">About</h2>
+      <p>
+        Korab Eland is a builder, operator, and writer working at the intersection
+        of product, strategy, and AI execution. He cares about communicating
+        strategy clearly, leading with data, and helping the people around him do
+        their best work.
+      </p>
+      <p>
+        He is most at home turning ambiguous ideas into working systems and
+        writing about the parts that surprised him along the way. The default
+        voice here is understated, specific, and human — closer to a field journal
+        than a brand page.
+      </p>
+    </section>
+
+    <section aria-labelledby="influences">
+      <h2 id="influences">Influences</h2>
+      <p>
+        The thinkers below shape how Korab approaches work, communication, and
+        ethics. The full list lives at
+        <code>identity/influences.md</code> in the parent brand repo and is read
+        into this page at build time.
+      </p>
+      <ul>
+        {influences.map((entry) => (
+          <li>
+            <strong>{entry.person}</strong> — {entry.note}
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <section aria-labelledby="stack">
+      <h2 id="stack">Tools and stack</h2>
+      <p>
+        The site is small on purpose. The visible surface is two pages at launch;
+        the build pipeline does most of the work behind the scenes.
+      </p>
+      <ul>
+        {tools.map((tool) => (
+          <li>
+            <strong>{tool.label}</strong> — {tool.note}
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <section aria-labelledby="contact">
+      <h2 id="contact">Get in touch</h2>
+      <p>
+        The fastest path is email:
+        {" "}
+        <a href="mailto:hello@korabeland.com">hello@korabeland.com</a>.
+      </p>
+      <p class="t-mono small">
+        The map on the home page will keep filling in as the site does.
+      </p>
+    </section>
+  </article>
+</BaseLayout>
+
+<style>
+  .colophon {
+    max-width: 620px;
+    margin-inline: auto;
+    padding-block: var(--s-5) var(--s-8);
+  }
+
+  .colophon .t-mono {
+    margin: 0 0 var(--s-3);
+  }
+
+  .colophon .lede {
+    margin: 0 0 var(--s-5);
+  }
+</style>

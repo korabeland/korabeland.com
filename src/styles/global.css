@@ -1,765 +1,207 @@
-/* ==========================================================================
-   Design tokens — from DESIGN.md
-   ========================================================================== */
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap");
+@import "tailwindcss";
+@import "./tokens.css";
 
-:root {
-  /* Colors — light mode (default) */
-  --bg: #fafafa;
-  --bg-surface: #ffffff;
-  --text: #171717;
-  --text-muted: #6b6b6b;
-  --border: #e5e5e5;
-  --accent: #d97706;
-  --accent-hover: #b45309;
+/* ──────────────────────────────────────────────────────────────────────────
+   korabeland.com — base styles
+   Typography helpers, keyframes, a11y defaults. Defined globally so every
+   component can use `var(--moss)`, `.t-mono`, and the `breathe`/`ping`/
+   `trail-drift` animations without import boilerplate.
+   ────────────────────────────────────────────────────────────────────────── */
 
-  /* Typography */
-  --font-body: "Inter", system-ui, -apple-system, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Code", monospace;
-
-  /* Spacing */
-  --space-unit: 8px;
-  --max-prose: 680px;
-  --max-shell: 960px;
-}
-
-[data-theme="dark"] {
-  --bg: #0a0a0a;
-  --bg-surface: #171717;
-  --text: #ededed;
-  --text-muted: #a3a3a3;
-  --border: #262626;
-  --accent: #f59e0b;
-  --accent-hover: #fbbf24;
-}
-
-/* ==========================================================================
-   Reset & base
-   ========================================================================== */
-
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
-
-html,
-body {
-  margin: 0;
-  padding: 0;
-}
-
-body {
-  min-height: 100vh;
+html {
   font-family: var(--font-body);
-  font-size: 1rem;
-  line-height: 1.7;
-  color: var(--text);
-  background: var(--bg);
+  color: var(--ink);
+  background: var(--paper);
+  font-feature-settings: "ss01", "ss02";
+  text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Background texture — subtle paper grain */
-body::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0.035;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  background-repeat: repeat;
-  background-size: 256px 256px;
+body {
+  background: var(--paper);
+  color: var(--ink);
 }
 
-[data-theme="dark"] body::before {
-  opacity: 0.04;
+/* ─── Typography helpers ─────────────────────────────────────────────── */
+
+.t-mono {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.55;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  /* --ink-soft, not --ink-mute — 11 px on --paper needs a 4.5:1 contrast
+     ratio to clear WCAG AA. --ink-mute (3.33:1) is reserved for visually
+     recessive meta on larger elements or bordered chips only. */
+  color: var(--ink-soft);
 }
 
-/* ==========================================================================
-   Typography
-   ========================================================================== */
+.t-mono.small {
+  font-size: 10.5px;
+}
 
-h1,
-h2,
-h3,
-h4 {
-  font-family: var(--font-body);
-  font-weight: 700;
+.t-label {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.lede {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 300;
+  font-size: 19px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+
+.prose h1 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 56px;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  margin-block: var(--s-5) var(--s-4);
+}
+
+.prose h2 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 28px;
   line-height: 1.2;
-  margin: 0 0 calc(var(--space-unit) * 2);
-  color: var(--text);
+  margin-block: var(--s-7) var(--s-3);
 }
 
-h1 {
-  font-size: clamp(2rem, 5vw, 3rem);
-  font-weight: 700;
+.prose p {
+  font-size: 17px;
+  line-height: 1.65;
+  color: var(--ink-soft);
+  margin-block: var(--s-4) 0;
 }
 
-h2 {
-  font-size: clamp(1.4rem, 3.5vw, 1.875rem);
-  font-weight: 600;
+.prose ul {
+  list-style: none;
+  padding: 0;
+  margin-block: var(--s-4) 0;
 }
 
-h3 {
-  font-size: 1.25rem;
-  font-weight: 600;
+.prose ul li {
+  padding-block: var(--s-2);
+  border-bottom: 1px solid var(--rule);
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--ink-soft);
 }
 
-p {
-  margin: 0 0 1.5em;
+.prose ul li strong {
+  color: var(--ink);
 }
 
-a {
-  color: var(--accent);
+.prose a {
+  color: var(--moss);
   text-decoration: underline;
   text-decoration-thickness: 1px;
-  text-underline-offset: 0.15em;
-  transition: color 150ms ease;
+  text-underline-offset: 3px;
 }
 
-a:hover {
-  color: var(--accent-hover);
-}
-
-code {
+.prose code {
   font-family: var(--font-mono);
   font-size: 0.9em;
+  padding: 1px 4px;
+  background: var(--paper-2);
+  border: 1px solid var(--rule);
 }
 
-/* ==========================================================================
-   Decorative elements
-   ========================================================================== */
-
-/* Section ornament — short amber crossbar between sections */
-.section-ornament {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: calc(var(--space-unit) * 6) 0;
-}
-
-.section-ornament::before {
-  content: '';
-  width: 32px;
-  height: 2px;
-  background: var(--accent);
-  opacity: 0.5;
-}
-
-/* Heading accent bar — short amber underline on section headings */
-.heading-accent {
-  position: relative;
-  padding-bottom: calc(var(--space-unit) * 1.5);
-  margin-bottom: calc(var(--space-unit) * 3);
-}
-
-.heading-accent::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 28px;
-  height: 2.5px;
-  background: var(--accent);
-  border-radius: 1px;
-}
-
-/* ==========================================================================
-   Layout
-   ========================================================================== */
-
-.shell {
-  width: min(var(--max-shell), 92%);
-  margin-inline: auto;
-}
-
-.prose {
-  max-width: var(--max-prose);
-}
-
-.section {
-  padding-block: calc(var(--space-unit) * 10) calc(var(--space-unit) * 12);
-}
-
-.section + .section {
-  padding-top: 0;
-}
-
-/* ==========================================================================
-   Skip link
-   ========================================================================== */
-
-.skip-link {
-  position: absolute;
-  left: -10000px;
-  top: auto;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-}
-
-.skip-link:focus {
-  left: calc(var(--space-unit) * 2);
-  top: calc(var(--space-unit) * 2);
-  width: auto;
-  height: auto;
-  z-index: 1000;
-  padding: calc(var(--space-unit)) calc(var(--space-unit) * 1.5);
-  background: var(--bg);
-  border: 1px solid var(--border);
-  color: var(--text);
-}
-
-/* ==========================================================================
-   Navigation
-   ========================================================================== */
-
-.site-header {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  background: var(--bg);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border);
-}
-
-/* Support translucent header in both modes */
-[data-theme="light"] .site-header,
-:root:not([data-theme="dark"]) .site-header {
-  background: rgba(250, 250, 250, 0.85);
-}
-
-[data-theme="dark"] .site-header {
-  background: rgba(10, 10, 10, 0.85);
-}
-
-.nav-wrap {
-  min-height: 64px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: calc(var(--space-unit) * 2);
-}
-
-.brand {
-  text-decoration: none;
-  color: var(--text);
-  font-weight: 600;
-  font-size: 1.1rem;
-  letter-spacing: -0.01em;
-}
-
-.nav-right {
-  display: flex;
-  align-items: center;
-  gap: calc(var(--space-unit) * 2);
-}
-
-.nav-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  gap: calc(var(--space-unit) * 3);
-}
-
-.nav-list a {
-  text-decoration: none;
-  color: var(--text-muted);
-  font-weight: 500;
-  font-size: 0.95rem;
-  transition: color 150ms ease;
-}
-
-.nav-list a:hover {
-  color: var(--text);
-}
-
-/* Hamburger button — hidden on desktop */
-.hamburger {
-  display: none;
-  background: none;
-  border: none;
-  padding: calc(var(--space-unit));
-  cursor: pointer;
-  color: var(--text);
-  min-width: 44px;
-  min-height: 44px;
-  align-items: center;
-  justify-content: center;
-}
-
-.hamburger svg {
-  display: block;
-}
-
-/* Mobile nav overlay */
-.mobile-nav {
-  display: none;
-}
-
-/* ==========================================================================
-   Hero
-   ========================================================================== */
-
-.hero {
-  padding-top: calc(var(--space-unit) * 10);
-  padding-bottom: calc(var(--space-unit) * 10);
-}
-
-.hero h1 {
-  margin-bottom: calc(var(--space-unit) * 2);
-}
-
-.hero-subtitle {
-  font-size: clamp(1.05rem, 2vw, 1.25rem);
-  color: var(--text-muted);
-  max-width: 48ch;
-  margin-bottom: calc(var(--space-unit) * 4);
-  line-height: 1.6;
-}
-
-.cta-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: calc(var(--space-unit) * 1.5);
-}
-
-/* ==========================================================================
-   Buttons
-   ========================================================================== */
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  padding: calc(var(--space-unit) * 1.25) calc(var(--space-unit) * 2.5);
-  border: 1px solid transparent;
-  background: var(--accent);
-  color: #fff;
-  text-decoration: none;
-  font-weight: 600;
-  font-size: 0.95rem;
-  transition: background 150ms ease;
-  min-height: 44px;
-}
-
-.btn:hover {
-  background: var(--accent-hover);
-  color: #fff;
-}
-
-.btn.secondary {
-  background: transparent;
-  border-color: var(--border);
-  color: var(--text);
-}
-
-.btn.secondary:hover {
-  background: var(--bg-surface);
-  color: var(--text);
-}
-
-/* ==========================================================================
-   Now section
-   ========================================================================== */
-
-.now-section {
-  padding-block: calc(var(--space-unit) * 4);
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-}
-
-.now-timestamp {
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  margin-bottom: calc(var(--space-unit));
-}
-
-.now-content {
-  color: var(--text-muted);
-  font-size: 0.95rem;
-  line-height: 1.6;
-}
-
-.now-content p {
-  margin: 0;
-}
-
-/* ==========================================================================
-   Project cards
-   ========================================================================== */
-
-.project-grid {
-  display: grid;
-  gap: calc(var(--space-unit) * 3);
-}
-
-.project-card {
-  display: block;
-  text-decoration: none;
-  padding: calc(var(--space-unit) * 3) 0;
-  border-bottom: 1px solid var(--border);
-  transition: background 150ms ease;
-}
-
-.project-card:hover {
-  background: var(--bg-surface);
-  margin-inline: calc(var(--space-unit) * -2);
-  padding-inline: calc(var(--space-unit) * 2);
-}
-
-.project-card-title {
-  font-weight: 600;
-  font-size: 1.15rem;
-  color: var(--text);
-  margin-bottom: calc(var(--space-unit));
-}
-
-.project-card-desc {
-  color: var(--text-muted);
-  margin-bottom: calc(var(--space-unit) * 1.5);
-  line-height: 1.5;
-}
-
-.project-card-desc:last-child {
-  margin-bottom: 0;
-}
-
-.tech-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: calc(var(--space-unit));
-}
-
-.tech-tag {
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  color: var(--text-muted);
-}
-
-/* ==========================================================================
-   Blog list
-   ========================================================================== */
-
-.blog-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.blog-list-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: calc(var(--space-unit) * 2);
-  padding-block: calc(var(--space-unit) * 2);
-  border-bottom: 1px solid var(--border);
-}
-
-.blog-list-item:first-child {
-  border-top: 1px solid var(--border);
-}
-
-.blog-list-title {
-  font-weight: 500;
-  color: var(--text);
-}
-
-.blog-list-title a {
-  color: var(--text);
-  text-decoration: none;
-}
-
-.blog-list-title a:hover {
-  color: var(--accent);
-}
-
-.blog-list-date {
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-/* ==========================================================================
-   Article / prose
-   ========================================================================== */
-
-.article {
-  max-width: var(--max-prose);
-}
-
-.article-head {
-  margin-bottom: calc(var(--space-unit) * 5);
-}
-
-.article-head h1 {
-  margin-bottom: calc(var(--space-unit));
-}
-
-.article-meta {
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  color: var(--text-muted);
-}
-
-.article-body p,
-.article-body li {
-  color: var(--text-muted);
-  line-height: 1.7;
-}
-
-.article-body ul,
-.article-body ol {
-  margin: 0 0 1.5em;
-  padding-left: 1.5em;
-}
-
-.article-body strong {
-  color: var(--text);
-  font-weight: 600;
-}
-
-.article-body code {
-  background: var(--bg-surface);
-  padding: 0.15em 0.35em;
-  border: 1px solid var(--border);
-  font-size: 0.85em;
-}
-
-.article-body pre {
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  padding: calc(var(--space-unit) * 2);
-  overflow-x: auto;
-  margin: 0 0 1.5em;
-}
-
-.article-body pre code {
-  background: none;
-  border: none;
-  padding: 0;
-}
-
-.article-body h2 {
-  margin-top: calc(var(--space-unit) * 5);
-}
-
-.article-body h3 {
-  margin-top: calc(var(--space-unit) * 4);
-}
-
-.related-project {
-  margin-top: calc(var(--space-unit) * 5);
-  padding-top: calc(var(--space-unit) * 3);
-  border-top: 1px solid var(--border);
-  font-size: 0.95rem;
-  color: var(--text-muted);
-}
-
-/* ==========================================================================
-   Project detail page
-   ========================================================================== */
-
-.project-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: calc(var(--space-unit) * 2);
-  margin-bottom: calc(var(--space-unit) * 3);
-}
-
-.project-links {
-  display: flex;
-  gap: calc(var(--space-unit) * 2);
-  margin-top: calc(var(--space-unit) * 4);
-}
-
-/* ==========================================================================
-   Empty states
-   ========================================================================== */
-
-.empty-state {
-  color: var(--text-muted);
-  font-style: italic;
-  padding-block: calc(var(--space-unit) * 3);
-}
-
-/* ==========================================================================
-   Footer
-   ========================================================================== */
-
-.site-footer {
-  border-top: 1px solid var(--border);
-  margin-top: calc(var(--space-unit) * 10);
-}
-
-.footer-wrap {
-  min-height: 64px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: calc(var(--space-unit) * 2);
-  padding-block: calc(var(--space-unit) * 2);
-}
-
-.footer-wrap p {
-  margin: 0;
-  font-size: 0.9rem;
-  color: var(--text-muted);
-}
-
-.footer-links {
-  display: flex;
-  gap: calc(var(--space-unit) * 2);
-}
-
-.footer-links a {
-  font-size: 0.9rem;
-  color: var(--text-muted);
-  text-decoration: none;
+.prose header {
+  margin-bottom: var(--s-6);
 }
-
-.footer-links a:hover {
-  color: var(--accent);
-}
-
-.footer-separator {
-  color: var(--border);
-  user-select: none;
-}
-
-/* ==========================================================================
-   Theme toggle
-   ========================================================================== */
-
-.theme-toggle {
-  background: none;
-  border: none;
-  padding: calc(var(--space-unit));
-  cursor: pointer;
-  color: var(--text-muted);
-  min-width: 44px;
-  min-height: 44px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: color 150ms ease;
-}
-
-.theme-toggle:hover {
-  color: var(--text);
-}
-
-
 
-/* ==========================================================================
-   Responsive — mobile (<640px)
-   ========================================================================== */
+/* ─── Keyframes ──────────────────────────────────────────────────────── */
 
-@media (max-width: 639px) {
-  .nav-list,
-  .nav-right .nav-list {
-    display: none;
+@keyframes breathe {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 var(--moss-soft);
   }
-
-  .hamburger {
-    display: inline-flex;
-  }
-
-  .mobile-nav.is-open {
-    display: flex;
-    flex-direction: column;
-    position: fixed;
-    inset: 0;
-    z-index: 30;
-    background: var(--bg);
-    padding: calc(var(--space-unit) * 3);
-    gap: calc(var(--space-unit) * 4);
-  }
-
-  .mobile-nav-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .mobile-nav-close {
-    background: none;
-    border: none;
-    padding: calc(var(--space-unit));
-    cursor: pointer;
-    color: var(--text);
-    min-width: 44px;
-    min-height: 44px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .mobile-nav-links {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: calc(var(--space-unit) * 3);
-  }
-
-  .mobile-nav-links a {
-    font-size: 1.25rem;
-    font-weight: 500;
-    text-decoration: none;
-    color: var(--text);
-  }
-
-  .hero {
-    padding-top: calc(var(--space-unit) * 6);
-    padding-bottom: calc(var(--space-unit) * 6);
-  }
-
-  .section {
-    padding-block: calc(var(--space-unit) * 6) calc(var(--space-unit) * 8);
-  }
-
-  .footer-wrap {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: calc(var(--space-unit));
-  }
-
-  .blog-list-item {
-    flex-direction: column;
-    gap: calc(var(--space-unit) * 0.5);
+  50% {
+    box-shadow: 0 0 0 6px transparent;
   }
 }
 
-/* ==========================================================================
-   Responsive — tablet (640–960px)
-   ========================================================================== */
-
-@media (min-width: 640px) {
-  .project-grid {
-    grid-template-columns: repeat(2, 1fr);
+@keyframes ping {
+  0% {
+    r: 6;
+    opacity: 0.7;
+  }
+  50% {
+    r: 32;
+    opacity: 0;
+  }
+  100% {
+    r: 6;
+    opacity: 0.7;
   }
 }
 
-/* ==========================================================================
-   Reduced motion
-   ========================================================================== */
+@keyframes trail-drift {
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dashoffset: -60;
+  }
+}
+
+/* SVG-safe variant of `breathe` — the HTML version uses box-shadow which
+   SVG circles can't render. Used for the YOU-ARE-HERE moss-dot halo. */
+@keyframes breathe-halo {
+  0%,
+  100% {
+    r: 6;
+    opacity: 0.35;
+  }
+  50% {
+    r: 14;
+    opacity: 0;
+  }
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ─── Reduced-motion guard ─────────────────────────────────────────────
+   `!important` is intentional: this must win against component-level
+   `animation` shorthands. Standard prefers-reduced-motion pattern. */
 
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
-    transition-duration: 0.01ms !important;
+    /* biome-ignore lint/complexity/noImportantStyles: reduced-motion override */
+    animation-duration: 0.001ms !important;
+    /* biome-ignore lint/complexity/noImportantStyles: reduced-motion override */
+    animation-iteration-count: 1 !important;
+    /* biome-ignore lint/complexity/noImportantStyles: reduced-motion override */
+    transition-duration: 0.001ms !important;
   }
+}
 
-  body::before {
-    display: none;
-  }
+/* ─── Focus ring ─────────────────────────────────────────────────────── */
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
 }

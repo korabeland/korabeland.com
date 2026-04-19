@@ -1,0 +1,19 @@
+---
+import OffTrail from "../components/OffTrail/OffTrail.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
+
+const rawFrom = Astro.url.searchParams.get("from");
+const KNOWN = new Set(["notes", "projects", "work-with-me"]);
+const from = rawFrom && KNOWN.has(rawFrom) ? rawFrom : undefined;
+
+const destinationTitle = from
+  ? `${from.replace(/-/g, " ")} — off-trail`
+  : "Off-trail";
+---
+
+<BaseLayout
+  title={`${destinationTitle} — Korab Eland`}
+  description="This path hasn't been mapped yet. The pins on the map are live, the paths fill in as the ground is walked."
+>
+  <OffTrail from={from} />
+</BaseLayout>

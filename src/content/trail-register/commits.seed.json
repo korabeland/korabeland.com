@@ -1,0 +1,100 @@
+[
+  {
+    "sha": "2e7748ab59c77c5e43996807a17fbd4d8cae4627",
+    "shortSha": "2e7748a",
+    "subject": "chore(design): kick off korab.land design system",
+    "author": "Korab Eland",
+    "date": "2026-04-18T23:28:38+10:00"
+  },
+  {
+    "sha": "17bc046a1ab8ad2a536fc6ff8013ed0f473330ac",
+    "shortSha": "17bc046",
+    "subject": "chore(biome): exclude reference bundles, local agent config, and seed test",
+    "author": "Korab Eland",
+    "date": "2026-04-18T23:27:23+10:00"
+  },
+  {
+    "sha": "0d7dbb56a9b13a01efc8f3bd96c205963010d06d",
+    "shortSha": "0d7dbb5",
+    "subject": "chore: tighten visual-reviewer localhost constraint",
+    "author": "Korab Eland",
+    "date": "2026-04-17T22:35:04+10:00"
+  },
+  {
+    "sha": "53532390da55b5757a04263e7745abf900a0219b",
+    "shortSha": "5353239",
+    "subject": "feat: subagent roster with strict file ownership",
+    "author": "Korab Eland",
+    "date": "2026-04-17T22:27:25+10:00"
+  },
+  {
+    "sha": "844c798822018d12aaeadc3d285652a55cfb866e",
+    "shortSha": "844c798",
+    "subject": "feat: headless escalation pipeline with subscription-native pruner",
+    "author": "Korab Eland",
+    "date": "2026-04-17T22:07:34+10:00"
+  },
+  {
+    "sha": "4f385f00476ad2906e4d52d54bc7df016df11ad4",
+    "shortSha": "4f385f0",
+    "subject": "feat: local model delegation with houtini-lm primary and curl fallback",
+    "author": "Korab Eland",
+    "date": "2026-04-17T21:55:53+10:00"
+  },
+  {
+    "sha": "db9a246ff9a83fd2af175c7cc3e642b5215f5f94",
+    "shortSha": "db9a246",
+    "subject": "feat: verification stack (biome, vitest, playwright, lighthouse, axe)",
+    "author": "Korab Eland",
+    "date": "2026-04-17T21:33:01+10:00"
+  },
+  {
+    "sha": "f1303a84a0a11e979cd255a23658f9d444cf82aa",
+    "shortSha": "f1303a8",
+    "subject": "feat: scaffold astro + keystatic + shadcn + tailwind",
+    "author": "Korab Eland",
+    "date": "2026-04-17T21:00:20+10:00"
+  },
+  {
+    "sha": "c857ba482117c75d3d0c49ace5a6da78c9362d29",
+    "shortSha": "c857ba4",
+    "subject": "docs: align escalation paths with lib/agent-budget spec",
+    "author": "Korab Eland",
+    "date": "2026-04-17T20:26:56+10:00"
+  },
+  {
+    "sha": "c72fe82f9dfe77b9caa1e5d86f59b7fffc896d80",
+    "shortSha": "c72fe82",
+    "subject": "docs: establish agent orchestration rules",
+    "author": "Korab Eland",
+    "date": "2026-04-17T20:23:29+10:00"
+  },
+  {
+    "sha": "1dfb951d854a8c0850df08a02ec5a2a19b850bdf",
+    "shortSha": "1dfb951",
+    "subject": "chore: pin environment and add health scripts",
+    "author": "Korab Eland",
+    "date": "2026-04-17T19:49:29+10:00"
+  },
+  {
+    "sha": "31a8a194cca884ee011eb5e80703e1fd7b4dfa8a",
+    "shortSha": "31a8a19",
+    "subject": "chore: add Stitch SDK and AI SDK dependencies",
+    "author": "Korab Eland",
+    "date": "2026-04-16T21:51:13+10:00"
+  },
+  {
+    "sha": "66c16fe932042314d4ccde26e7c83efe84418292",
+    "shortSha": "66c16fe",
+    "subject": "chore: fix Paperclip server paths, remove stale design recording",
+    "author": "Korab Eland",
+    "date": "2026-04-16T21:51:08+10:00"
+  },
+  {
+    "sha": "497a3d6c0257ac188fad89502e126b382a1725cc",
+    "shortSha": "497a3d6",
+    "subject": "docs: wiki updates from CEO autonomous run (session 11)",
+    "author": "Korab Eland",
+    "date": "2026-04-16T21:50:34+10:00"
+  }
+]

@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /dev/
+Disallow: /keystatic
+
+Sitemap: https://korabeland.com/sitemap-index.xml

@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "houtini-lm": {
+      "command": "node",
+      "args": ["node_modules/@houtini/lm/dist/index.js"],
+      "env": {
+        "LM_STUDIO_URL": "http://localhost:1234"
+      }
+    },
+    "playwright-test": {
+      "command": "npx",
+      "args": ["playwright", "run-test-mcp-server"]
+    }
+  }
+}

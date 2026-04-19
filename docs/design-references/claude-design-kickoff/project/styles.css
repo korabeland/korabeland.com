@@ -1,0 +1,214 @@
+/* ─── Forest / Field-notes design system ────────────────────── */
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* Default palette — Rainforest, day */
+:root {
+  --paper:    oklch(0.97 0.008 95);
+  --paper-2:  oklch(0.945 0.012 95);
+  --ink:      oklch(0.22 0.015 180);
+  --ink-soft: oklch(0.42 0.012 180);
+  --ink-mute: oklch(0.62 0.010 180);
+  --rule:     oklch(0.88 0.010 140);
+  --moss:     oklch(0.48 0.055 150);
+  --moss-soft:oklch(0.78 0.040 150);
+  --amber:    oklch(0.62 0.095 60);
+
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body:    'Inter Tight', system-ui, sans-serif;
+  --font-mono:    'JetBrains Mono', ui-monospace, monospace;
+
+  /* Spacing rhythm — 4px base, Fibonacci-ish */
+  --s-1: 4px;  --s-2: 8px;  --s-3: 12px; --s-4: 16px;
+  --s-5: 24px; --s-6: 32px; --s-7: 48px; --s-8: 64px;
+  --s-9: 96px; --s-10: 128px;
+}
+
+/* ─── Alpine ─── */
+[data-palette="alpine"] {
+  --paper:    oklch(0.965 0.006 240);
+  --paper-2:  oklch(0.935 0.010 240);
+  --ink:      oklch(0.24 0.018 240);
+  --ink-soft: oklch(0.44 0.015 240);
+  --ink-mute: oklch(0.64 0.012 240);
+  --rule:     oklch(0.87 0.010 240);
+  --moss:     oklch(0.45 0.050 230);
+  --moss-soft:oklch(0.80 0.030 230);
+  --amber:    oklch(0.68 0.080 70);
+}
+/* ─── Rainforest (default) ─── — intentionally empty */
+
+/* ─── Mesa ─── */
+[data-palette="mesa"] {
+  --paper:    oklch(0.96 0.012 70);
+  --paper-2:  oklch(0.925 0.020 65);
+  --ink:      oklch(0.26 0.025 40);
+  --ink-soft: oklch(0.45 0.025 40);
+  --ink-mute: oklch(0.62 0.020 40);
+  --rule:     oklch(0.86 0.020 60);
+  --moss:     oklch(0.50 0.090 35);
+  --moss-soft:oklch(0.80 0.055 40);
+  --amber:    oklch(0.62 0.120 45);
+}
+
+/* ─── Boreal ─── */
+[data-palette="boreal"] {
+  --paper:    oklch(0.955 0.005 160);
+  --paper-2:  oklch(0.92 0.008 160);
+  --ink:      oklch(0.22 0.020 180);
+  --ink-soft: oklch(0.42 0.015 170);
+  --ink-mute: oklch(0.60 0.012 170);
+  --rule:     oklch(0.86 0.012 160);
+  --moss:     oklch(0.42 0.055 170);
+  --moss-soft:oklch(0.78 0.035 170);
+  --amber:    oklch(0.65 0.090 55);
+}
+
+/* ─── Day-states ─── */
+[data-time="dawn"] {
+  --paper:    oklch(0.955 0.022 50);
+  --paper-2:  oklch(0.92 0.030 45);
+  --amber:    oklch(0.65 0.110 40);
+}
+[data-time="dusk"] {
+  --paper:    oklch(0.30 0.020 280);
+  --paper-2:  oklch(0.26 0.022 280);
+  --ink:      oklch(0.92 0.010 60);
+  --ink-soft: oklch(0.78 0.014 60);
+  --ink-mute: oklch(0.60 0.015 60);
+  --rule:     oklch(0.42 0.020 280);
+  --moss:     oklch(0.75 0.060 140);
+  --moss-soft:oklch(0.45 0.050 140);
+  --amber:    oklch(0.78 0.110 65);
+}
+
+/* ─── Frame reset ────────────────────────────────────── */
+.frame {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.55;
+  letter-spacing: -0.005em;
+  font-feature-settings: "ss01", "cv11";
+}
+.frame * { box-sizing: border-box; }
+.frame a { color: inherit; text-decoration: none; }
+.frame::-webkit-scrollbar { width: 8px; }
+.frame::-webkit-scrollbar-track { background: transparent; }
+.frame::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 4px; }
+
+/* ─── Type scale ─── */
+.t-display { font-family: var(--font-display); font-weight: 400; font-variation-settings: "opsz" 144; letter-spacing: -0.02em; line-height: 1.05; }
+.t-serif   { font-family: var(--font-display); font-weight: 400; font-variation-settings: "opsz" 24; line-height: 1.35; }
+.t-mono    { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-mute); }
+.t-label   { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-mute); }
+.italic-serif { font-style: italic; font-family: var(--font-display); }
+
+/* ─── Top chrome (shared) ─── */
+.chrome {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: var(--s-5) var(--s-8);
+  border-bottom: 1px solid var(--rule);
+  position: sticky; top: 0; background: var(--paper); z-index: 10;
+}
+.chrome .mark {
+  display: flex; align-items: center; gap: var(--s-3);
+  font-family: var(--font-display); font-size: 18px; font-weight: 500;
+  letter-spacing: -0.01em;
+}
+.chrome nav {
+  display: flex; gap: var(--s-6); font-size: 13px; color: var(--ink-soft);
+}
+.chrome nav a { position: relative; padding-bottom: 2px; }
+.chrome nav a.active { color: var(--ink); }
+.chrome nav a.active::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: -3px;
+  height: 1px; background: var(--moss);
+}
+
+/* Weather pill */
+.weather {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--font-mono); font-size: 10.5px;
+  color: var(--ink-mute); letter-spacing: 0.08em; text-transform: uppercase;
+}
+.weather .dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--moss);
+  box-shadow: 0 0 0 0 var(--moss-soft);
+  animation: breathe 3.5s ease-in-out infinite;
+}
+@keyframes breathe {
+  0%,100% { box-shadow: 0 0 0 0 var(--moss-soft); }
+  50%     { box-shadow: 0 0 0 6px transparent; }
+}
+
+/* Reveal-on-scroll utility */
+.reveal { opacity: 0; transform: translateY(8px); transition: opacity .9s ease, transform .9s ease; }
+.reveal.in { opacity: 1; transform: none; }
+
+/* Pull quote */
+.pullquote {
+  font-family: var(--font-display); font-style: italic; font-weight: 300;
+  font-size: 28px; line-height: 1.3; color: var(--ink);
+  border-left: 1px solid var(--moss); padding-left: var(--s-5);
+  margin: var(--s-7) 0;
+}
+
+/* Margin note */
+.mnote {
+  font-family: var(--font-mono); font-size: 11px; line-height: 1.55;
+  color: var(--ink-mute); text-transform: none; letter-spacing: 0.01em;
+}
+.mnote sup { color: var(--moss); font-weight: 600; margin-right: 4px; }
+
+/* Footnote anchor */
+.fn {
+  color: var(--moss); font-family: var(--font-mono); font-size: 0.75em;
+  vertical-align: super; cursor: pointer; padding: 0 2px;
+}
+
+/* ink-drawn hairline */
+.rule-soft { height: 1px; background: var(--rule); }
+
+/* Button */
+.btn {
+  display: inline-flex; align-items: center; gap: var(--s-2);
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 10px 16px;
+  border: 1px solid var(--ink);
+  color: var(--ink); background: transparent;
+  transition: all .2s ease; cursor: pointer;
+}
+.btn:hover { background: var(--ink); color: var(--paper); }
+.btn.ghost { border-color: var(--rule); color: var(--ink-soft); }
+.btn.ghost:hover { border-color: var(--ink); color: var(--ink); background: transparent; }
+
+/* Tag */
+.tag {
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 3px 8px; border: 1px solid var(--rule);
+  color: var(--ink-soft);
+}
+
+/* Figure placeholder */
+.fig {
+  background:
+    repeating-linear-gradient(
+      135deg,
+      transparent 0, transparent 10px,
+      color-mix(in oklch, var(--ink) 4%, transparent) 10px,
+      color-mix(in oklch, var(--ink) 4%, transparent) 11px
+    ),
+    var(--paper-2);
+  border: 1px solid var(--rule);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-mono); font-size: 10.5px;
+  color: var(--ink-mute); letter-spacing: 0.1em; text-transform: uppercase;
+}

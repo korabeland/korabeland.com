@@ -1,0 +1,137 @@
+---
+// OffTrail.astro — shared "this path hasn't been mapped yet" surface.
+//
+// Used by both src/pages/404.astro (unknown URL) and
+// src/pages/off-trail.astro (known but unshipped route, signalled by
+// `?from=<slug>` — e.g. trail pins on the kiosk map).
+//
+// Renders a mini TrailMap with the active pin dimmed to --ink-mute, the
+// label "off-trail" in .t-mono, italic Fraunces dek, an optional subline
+// identifying the destination, and a button back to /.
+
+interface Props {
+  /**
+   * Known destination slug from the trail map (`notes`, `projects`,
+   * `work-with-me`). Any unknown value falls back to the generic copy.
+   */
+  from?: string;
+}
+
+const { from } = Astro.props;
+
+const KNOWN_DESTINATIONS: Record<string, string> = {
+  notes: "field notes",
+  projects: "projects",
+  "work-with-me": "work with me",
+};
+
+const destinationLabel = from ? KNOWN_DESTINATIONS[from] : undefined;
+const hasSubline = Boolean(destinationLabel);
+const subline = destinationLabel
+  ? `${destinationLabel} — not yet in the system`
+  : undefined;
+
+// Which of the three mini-map pins should be dimmed as the active
+// "off-trail" pin. Defaults to the center pin when there's no signal.
+const activePin =
+  from === "notes"
+    ? "tl"
+    : from === "projects"
+      ? "tr"
+      : from === "work-with-me"
+        ? "bl"
+        : "center";
+---
+
+<section class="off-trail" aria-labelledby="off-trail-title">
+  <svg
+    class="mini-map"
+    viewBox="0 0 220 170"
+    role="img"
+    aria-label="Mini topographic map showing an off-trail pin."
+    preserveAspectRatio="xMidYMid meet"
+  >
+    {/* Contour rings — regular and index alternating */}
+    <g fill="none">
+      <circle cx="110" cy="85" r="20" stroke="var(--rule)" stroke-width="1" />
+      <circle cx="110" cy="85" r="38" stroke="var(--ink-mute)" stroke-width="1" opacity="0.6" />
+      <circle cx="110" cy="85" r="56" stroke="var(--rule)" stroke-width="1" />
+    </g>
+    {/* Three dashed trails */}
+    <g stroke="var(--ink-mute)" stroke-width="1" stroke-dasharray="3 4" fill="none">
+      <path d="M110 85 L40 30" />
+      <path d="M110 85 L190 40" />
+      <path d="M110 85 L170 150" />
+    </g>
+    {/* Destination pins — active one is dimmed */}
+    <g class="pins">
+      <circle cx="40" cy="30" r="3.5" fill={activePin === "tl" ? "var(--ink-mute)" : "var(--ink)"} class={activePin === "tl" ? "active" : undefined} />
+      <circle cx="190" cy="40" r="3.5" fill={activePin === "tr" ? "var(--ink-mute)" : "var(--ink)"} class={activePin === "tr" ? "active" : undefined} />
+      <circle cx="170" cy="150" r="3.5" fill={activePin === "bl" ? "var(--ink-mute)" : "var(--ink)"} class={activePin === "bl" ? "active" : undefined} />
+    </g>
+    {/* Trailhead marker */}
+    <circle cx="110" cy="85" r="4" fill="var(--moss)" />
+  </svg>
+
+  <p class="t-mono" id="off-trail-title">off-trail</p>
+  <p class="dek">this path hasn't been mapped yet.</p>
+  {hasSubline && <p class="t-mono subline">{subline}</p>}
+  <a class="btn" href="/">back to the trailhead</a>
+</section>
+
+<style>
+  .off-trail {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--s-4);
+    padding-block: var(--s-9);
+    text-align: center;
+  }
+
+  .mini-map {
+    width: 220px;
+    height: 170px;
+    margin-bottom: var(--s-3);
+  }
+
+  .pins .active {
+    opacity: 0.55;
+  }
+
+  .dek {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 19px;
+    line-height: 1.4;
+    color: var(--ink-soft);
+    max-width: 32ch;
+    margin: 0;
+  }
+
+  .subline {
+    color: var(--ink-soft);
+    margin: 0;
+  }
+
+  .btn {
+    margin-top: var(--s-4);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink);
+    border: 1px solid var(--ink);
+    padding: 10px 16px;
+    text-decoration: none;
+    transition:
+      background 200ms ease,
+      color 200ms ease;
+  }
+
+  .btn:hover,
+  .btn:focus-visible {
+    background: var(--ink);
+    color: var(--paper);
+  }
+</style>

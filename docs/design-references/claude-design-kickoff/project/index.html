@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Korab Eland — Personal Site Mockups</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<link rel="stylesheet" href="styles.css"/>
+<style>
+  html, body { margin: 0; height: 100%; background: #f0eee9; overflow: hidden; }
+  /* Tweaks panel */
+  #tweaks {
+    position: fixed; bottom: 20px; right: 20px; z-index: 9999;
+    background: #fafaf7; border: 1px solid #d8d4ca;
+    padding: 16px; width: 260px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 11px; letter-spacing: 0.04em;
+    color: #3a3328;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    display: none;
+  }
+  #tweaks.open { display: block; }
+  #tweaks h4 {
+    margin: 0 0 10px; font-size: 10px; letter-spacing: 0.14em;
+    text-transform: uppercase; color: #8a7f6a;
+  }
+  #tweaks .row { display: flex; gap: 4px; margin-bottom: 14px; flex-wrap: wrap; }
+  #tweaks button {
+    flex: 1 1 calc(50% - 4px);
+    padding: 6px 8px; border: 1px solid #d8d4ca; background: #fff;
+    font: inherit; color: inherit; cursor: pointer; text-transform: lowercase;
+    letter-spacing: 0.06em;
+  }
+  #tweaks button.on { background: #3a3328; color: #faf8f2; border-color: #3a3328; }
+  #tweaks .note { color: #8a7f6a; margin-top: 6px; font-size: 10px; }
+  /* Intro strip */
+  #intro {
+    position: fixed; top: 14px; left: 50%; transform: translateX(-50%);
+    z-index: 20; background: rgba(250,250,247,0.95);
+    border: 1px solid #d8d4ca; padding: 10px 18px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 11px; color: #3a3328; letter-spacing: 0.08em;
+  }
+  #intro b { font-weight: 600; }
+  #intro span { color: #8a7f6a; }
+</style>
+</head>
+<body>
+
+<div id="intro">
+  <b>korab.land</b> <span>·</span> three pages · scroll inside frames, pan canvas with space-drag or trackpad
+</div>
+
+<div id="root"></div>
+
+<div id="tweaks">
+  <h4>Tweaks</h4>
+
+  <div class="t-label" style="font-family:inherit;color:#8a7f6a;margin-bottom:6px;">palette</div>
+  <div class="row" id="palette-row">
+    <button data-palette="alpine">alpine</button>
+    <button data-palette="rainforest" class="on">rainforest</button>
+    <button data-palette="mesa">mesa</button>
+    <button data-palette="boreal">boreal</button>
+  </div>
+
+  <div class="t-label" style="font-family:inherit;color:#8a7f6a;margin-bottom:6px;">day-state</div>
+  <div class="row" id="time-row">
+    <button data-time="dawn">dawn</button>
+    <button data-time="day" class="on">day</button>
+    <button data-time="dusk">dusk</button>
+  </div>
+
+  <div class="t-label" style="font-family:inherit;color:#8a7f6a;margin-bottom:6px;">home hero</div>
+  <div class="row" id="hero-row">
+    <button data-hero="map">map (split)</button>
+    <button data-hero="kiosk" class="on">kiosk</button>
+    <button data-hero="dispatch">dispatch</button>
+  </div>
+
+  <div class="note">Press <b>~</b> for terminal. Toggle tweaks with the toolbar.</div>
+</div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="knowledge-graph.jsx"></script>
+<script type="text/babel" src="mini-map.jsx"></script>
+<script type="text/babel" src="home.jsx"></script>
+<script type="text/babel" src="trailhead-kiosk.jsx"></script>
+<script type="text/babel" src="blog.jsx"></script>
+<script type="text/babel" src="case.jsx"></script>
+
+<script type="text/babel" data-presets="react">
+/*EDITMODE-BEGIN*/
+const TWEAK_DEFAULTS = {
+  "palette": "rainforest",
+  "time": "day",
+  "hero": "kiosk"
+};
+/*EDITMODE-END*/
+
+// apply defaults immediately so frames render themed on first paint
+(function applyDefaults(){
+  document.documentElement.setAttribute('data-palette', TWEAK_DEFAULTS.palette);
+  document.documentElement.setAttribute('data-time', TWEAK_DEFAULTS.time);
+  // also stamp the body so [data-*] inside all .frame elements inherits
+  document.body.setAttribute('data-palette', TWEAK_DEFAULTS.palette);
+  document.body.setAttribute('data-time', TWEAK_DEFAULTS.time);
+})();
+
+// ───── The canvas composition ─────
+const W = 1440, H = 1000, HOME_H = 960, BLOG_H = 1500, CASE_H = 2200;
+
+function App() {
+  const [hero, setHero] = React.useState(TWEAK_DEFAULTS.hero);
+
+  // Listen for hero change events (from tweaks panel)
+  React.useEffect(() => {
+    const onHero = (e) => setHero(e.detail);
+    window.addEventListener('tweak-hero', onHero);
+    return () => window.removeEventListener('tweak-hero', onHero);
+  }, []);
+
+  return (
+    <DesignCanvas>
+      <DCSection
+        title="Korab Eland — personal site"
+        subtitle="Three desktop views · Astro 5 + Tailwind 4 + shadcn/ui handoff"
+      >
+        <DCArtboard label="(a) Home · trailhead + now · 1440 × 960" width={W} height={HOME_H}>
+          <HomePage hero={hero}/>
+        </DCArtboard>
+
+        <DCArtboard label="(b) Field note · reading room · 1440 × 1500" width={W} height={BLOG_H}>
+          <BlogPage/>
+        </DCArtboard>
+
+        <DCArtboard label="(c) Project case study · classic + field log · 1440 × 2200" width={W} height={CASE_H}>
+          <CasePage/>
+        </DCArtboard>
+
+        <DCPostIt top={-20} left={W + 40} rotate={-3} width={200}>
+          scroll inside any frame.<br/>
+          pan the canvas with trackpad or space-drag.
+        </DCPostIt>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+
+// ───── Tweaks panel wiring ─────
+function setGroup(group, val) {
+  document.querySelectorAll(`#${group}-row button`).forEach(b => {
+    b.classList.toggle('on', b.dataset[group] === val);
+  });
+  if (group === 'palette') {
+    document.documentElement.setAttribute('data-palette', val);
+    document.body.setAttribute('data-palette', val);
+  } else if (group === 'time') {
+    document.documentElement.setAttribute('data-time', val);
+    document.body.setAttribute('data-time', val);
+  } else if (group === 'hero') {
+    window.dispatchEvent(new CustomEvent('tweak-hero', { detail: val }));
+  }
+  window.parent.postMessage({type:'__edit_mode_set_keys', edits:{ [group]: val }}, '*');
+}
+['palette','time','hero'].forEach(group => {
+  document.querySelectorAll(`#${group}-row button`).forEach(b => {
+    b.addEventListener('click', () => setGroup(group, b.dataset[group]));
+  });
+});
+
+// ───── Edit-mode availability ─────
+window.addEventListener('message', (e) => {
+  if (!e.data) return;
+  if (e.data.type === '__activate_edit_mode') document.getElementById('tweaks').classList.add('open');
+  if (e.data.type === '__deactivate_edit_mode') document.getElementById('tweaks').classList.remove('open');
+});
+window.parent.postMessage({type:'__edit_mode_available'}, '*');
+
+// ───── Terminal easter egg (~) ─────
+let term;
+window.addEventListener('keydown', (e) => {
+  if (e.key === '~' || (e.key === '`' && e.shiftKey)) {
+    if (term) { term.remove(); term = null; return; }
+    term = document.createElement('div');
+    term.innerHTML = `
+      <div style="background:#0d0f0c;color:#8fc088;font-family:'JetBrains Mono',monospace;
+                  padding:18px;border:1px solid #2a2f28;width:480px;font-size:12px;
+                  line-height:1.6;box-shadow:0 20px 60px rgba(0,0,0,0.4);">
+        <div style="color:#6a7a66;margin-bottom:10px;">korab@forest ~ % whoami</div>
+        <div style="color:#d4e4c8;">korab eland · guide · builder of quiet tools</div>
+        <div style="color:#6a7a66;margin:10px 0 4px;">% ls /recent</div>
+        <div>heron/ &nbsp; lichen/ &nbsp; cedar/ &nbsp; notes/</div>
+        <div style="color:#6a7a66;margin:10px 0 4px;">% weather</div>
+        <div>clear · 52°f · 2 consulting slots open</div>
+        <div style="color:#6a7a66;margin:10px 0 4px;">% exit</div>
+        <div style="color:#8fc088;opacity:0.5;">press ~ to close</div>
+      </div>`;
+    Object.assign(term.style, {
+      position:'fixed', top:'50%', left:'50%',
+      transform:'translate(-50%,-50%)', zIndex:10000,
+    });
+    document.body.appendChild(term);
+  }
+});
+</script>
+</body>
+</html>

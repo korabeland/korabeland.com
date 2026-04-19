@@ -1,0 +1,50 @@
+---
+// WeatherPill.astro — small live-status pill with a breathing moss dot.
+//
+// MVP data source is a static `status` string prop. No weather API, no
+// runtime fetch. The dot uses the HTML `breathe` keyframe (box-shadow halo).
+// Reusable anywhere — kiosk legend strip, availability card header, rails.
+
+interface Props {
+  status: string;
+  /** Optional screen-reader-visible label; defaults to the visible status. */
+  label?: string;
+}
+
+const { status, label } = Astro.props;
+const a11yLabel = label ?? status;
+---
+
+<span class="weather-pill" role="status" aria-label={a11yLabel}>
+  <span class="weather-pill-dot" aria-hidden="true"></span>
+  <span class="weather-pill-text">{status}</span>
+</span>
+
+<style>
+  .weather-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+    padding: 4px 10px;
+    border: 1px solid var(--rule);
+    background: var(--paper);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 1;
+    letter-spacing: 0.08em;
+    text-transform: lowercase;
+    color: var(--ink-soft);
+  }
+
+  .weather-pill-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 9999px;
+    background: var(--moss);
+    animation: breathe 3.5s ease-in-out infinite;
+  }
+
+  .weather-pill-text {
+    white-space: nowrap;
+  }
+</style>

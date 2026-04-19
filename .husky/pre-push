@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+if [ "$BRANCH" != "main" ]; then
+  bash scripts/generate-pr-description.sh || true
+fi

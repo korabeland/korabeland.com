@@ -1,0 +1,141 @@
+---
+// PopularRoutesRail.astro — right rail of the TrailheadKiosk.
+//
+// Hand-picked, not algorithmic. At launch renders exactly two routes:
+//   trailhead → colophon       (live, /colophon)
+//   trailhead → field notes    (map pin, /off-trail?from=notes)
+// Small .t-mono footer notes that more routes arrive as the map fills in.
+
+interface Route {
+  label: string;
+  href: string;
+  status: "live" | "off-trail";
+}
+
+const ROUTES: readonly Route[] = [
+  { label: "trailhead → colophon", href: "/colophon", status: "live" },
+  {
+    label: "trailhead → field notes",
+    href: "/off-trail?from=notes",
+    status: "off-trail",
+  },
+] as const;
+---
+
+<aside class="routes" aria-labelledby="routes-title">
+  <header class="routes-header">
+    <p class="t-mono routes-mark">§ · popular routes</p>
+    <h2 id="routes-title" class="routes-title">hand-picked</h2>
+  </header>
+  <ul class="routes-list">
+    {ROUTES.map((route) => (
+      <li class="routes-row">
+        <a class="routes-link" href={route.href}>
+          <span class="routes-label">{route.label}</span>
+          <span
+            class={`routes-status routes-status--${route.status}`}
+            aria-label={route.status === "live" ? "live route" : "off-trail pin"}
+          >
+            {route.status === "live" ? "live" : "off-trail"}
+          </span>
+        </a>
+      </li>
+    ))}
+  </ul>
+  <p class="t-mono routes-footer">more routes coming as the map fills in.</p>
+</aside>
+
+<style>
+  .routes {
+    padding: var(--s-5);
+    border: 1px solid var(--rule);
+    background: var(--paper);
+    min-width: 260px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-3);
+  }
+
+  .routes-header {
+    padding-bottom: var(--s-3);
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .routes-mark {
+    margin: 0;
+  }
+
+  .routes-title {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 400;
+    font-size: 17px;
+    line-height: 1.2;
+    margin: var(--s-2) 0 0;
+    color: var(--ink);
+  }
+
+  .routes-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-2);
+  }
+
+  .routes-row {
+    border-bottom: 1px dashed var(--rule);
+  }
+
+  .routes-row:last-child {
+    border-bottom: none;
+  }
+
+  .routes-link {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding-block: var(--s-3);
+    text-decoration: none;
+    color: var(--ink);
+    transition: color 200ms ease;
+  }
+
+  .routes-link:hover,
+  .routes-link:focus-visible {
+    color: var(--moss);
+  }
+
+  .routes-label {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 17px;
+    line-height: 1.2;
+  }
+
+  .routes-status {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    border: 1px solid var(--rule);
+  }
+
+  .routes-status--live {
+    color: var(--moss);
+    border-color: var(--moss);
+  }
+
+  .routes-status--off-trail {
+    color: var(--ink-soft);
+  }
+
+  .routes-footer {
+    margin: 0;
+    padding-top: var(--s-3);
+    border-top: 1px solid var(--rule);
+    color: var(--ink-soft);
+  }
+</style>

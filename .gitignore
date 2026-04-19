@@ -1,8 +1,57 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+Icon?
+ehthumbs.db
+Thumbs.db
+
+# Node
 node_modules/
+.npm
+npm-debug.log*
+.pnpm-debug.log*
+
+# Astro
 dist/
 .astro/
-.vercel/
-.netlify/
+
+# Environment
 .env
-.env.*
-!.env.example
+.env.local
+.env.*.local
+
+# Agent state (budget tracker, session state)
+.agent-state/
+
+# Build output
+.vercel/
+
+# Lighthouse CI reports
+.lighthouseci/
+
+# Test artifacts
+playwright-report/
+test-results/
+chromatic-*.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Visual test diffs (baselines are committed, diffs are ephemeral)
+tests/visual/diffs/
+
+# Generated PR description (local, used by /open-pr command)
+.pr-description.md
+
+# Trail-register: generated per-build by scripts/gen-trail-register.ts.
+# Seed (commits.seed.json) is committed as the shallow-clone fallback.
+src/content/trail-register/commits.json
+.vercel
+.env*.local
