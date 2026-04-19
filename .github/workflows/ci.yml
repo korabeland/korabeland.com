@@ -17,6 +17,8 @@ jobs:
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm verify
       - run: pnpm test
+      - name: Reset visual baselines (macOS-generated; Linux renders differently — Chromatic handles regression)
+        run: rm -rf tests/visual/baselines/
       - run: pnpm test:visual
       - run: pnpm run audit
       - name: Chromatic visual diff
