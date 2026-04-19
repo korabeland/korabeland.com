@@ -3,12 +3,36 @@ export const prerender = true;
 
 import TrailheadKiosk from "../components/TrailheadKiosk/index.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Person",
+      "@id": "https://korabeland.com/#person",
+      name: "Korab Eland",
+      url: "https://korabeland.com",
+      description:
+        "Builder, operator, writer. Working at the intersection of product, strategy, and AI execution.",
+      sameAs: [],
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://korabeland.com/#website",
+      url: "https://korabeland.com",
+      name: "korabeland.com",
+      publisher: { "@id": "https://korabeland.com/#person" },
+    },
+  ],
+};
 ---
 
 <BaseLayout
-  title="Korab Eland — trailhead kiosk"
-  description="Hand-drawn trail map for Korab Eland: where the work is, what's coming next, and how to get in touch."
+  title="korabeland.com — trailhead"
+  description="Korab Eland — builder, operator, writer. Field notes, projects, and the thinking behind them."
   active="home"
+  ogImage="/og.png"
 >
+  <script type="application/ld+json" slot="jsonld" set:html={JSON.stringify(jsonLd)} />
   <TrailheadKiosk />
 </BaseLayout>

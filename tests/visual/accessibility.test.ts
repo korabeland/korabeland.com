@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
-const ROUTES = ["/", "/colophon"];
+const ROUTES = ["/", "/colophon", "/off-trail"];
 
 for (const route of ROUTES) {
   test(`a11y: ${route}`, async ({ page }) => {

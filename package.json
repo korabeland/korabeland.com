@@ -30,8 +30,10 @@
     "@astrojs/react": "^5.0.3",
     "@astrojs/sitemap": "^3.7.2",
     "@astrojs/vercel": "^10.0.4",
+    "@fontsource/fraunces": "^5.2.9",
     "@keystatic/astro": "^5.0.6",
     "@keystatic/core": "^0.5.50",
+    "@resvg/resvg-js": "^2.6.2",
     "@tailwindcss/vite": "^4.2.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
@@ -42,6 +44,7 @@
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "roughjs": "^4.6.6",
+    "satori": "^0.26.0",
     "tailwind-merge": "^3.5.0",
     "tailwindcss": "^4.2.2",
     "typescript": "^5.9.3"

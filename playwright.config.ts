@@ -1,7 +1,7 @@
 import { defineConfig } from "@playwright/test";
 
 export default defineConfig({
-  testDir: "./tests/visual",
+  testDir: "./tests",
   use: {
     baseURL: "http://localhost:4321",
   },
@@ -29,6 +29,16 @@ export default defineConfig({
     {
       name: "a11y",
       testMatch: "**/accessibility.test.ts",
+      use: { viewport: { width: 1280, height: 800 } },
+    },
+    {
+      name: "seo",
+      testMatch: "**/seo.spec.ts",
+      use: { viewport: { width: 1280, height: 800 } },
+    },
+    {
+      name: "e2e",
+      testMatch: "**/routes.spec.ts",
       use: { viewport: { width: 1280, height: 800 } },
     },
   ],

@@ -14,7 +14,7 @@ function ensureDirs() {
   }
 }
 
-const ROUTES = ["/", "/colophon"];
+const ROUTES = ["/", "/colophon", "/off-trail"];
 
 for (const route of ROUTES) {
   test(`screenshot: ${route}`, async ({ page }, testInfo) => {

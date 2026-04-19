@@ -16,6 +16,12 @@ interface Props {
   active?: "home" | "notes" | "projects" | "work" | "colophon";
   /** Static status string for the Chrome WeatherPill. */
   weatherStatus?: string;
+  /** Absolute path to the OG image (e.g. "/og.png"). */
+  ogImage?: string;
+  /** og:type value — defaults to "website". */
+  ogType?: string;
+  /** Suppress indexing for utility/preview routes. */
+  noindex?: boolean;
 }
 
 const {
@@ -23,7 +29,13 @@ const {
   description = "Korab Eland — builder, operator, writer.",
   active,
   weatherStatus = "taking clients",
+  ogImage,
+  ogType = "website",
+  noindex,
 } = Astro.props;
+
+const siteUrl = Astro.site?.href.replace(/\/$/, "") ?? "https://korabeland.com";
+const ogImageUrl = ogImage ? `${siteUrl}${ogImage}` : undefined;
 
 const year = new Date().getFullYear();
 
@@ -54,12 +66,28 @@ const NAV_LINKS: readonly NavLink[] = [
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
     <meta name="theme-color" content="#f6f3ec" />
+    {noindex && <meta name="robots" content="noindex" />}
     <link rel="canonical" href={Astro.url.href} />
     <!-- Preconnect to Google Fonts so the font CSS and files fetch in
          parallel with the main document — cuts ~300-500ms off LCP. -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <title>{title}</title>
+    <!-- Open Graph -->
+    <meta property="og:type" content={ogType} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={Astro.url.href} />
+    <meta property="og:site_name" content="korabeland.com" />
+    {ogImageUrl && <meta property="og:image" content={ogImageUrl} />}
+    {ogImageUrl && <meta property="og:image:width" content="1200" />}
+    {ogImageUrl && <meta property="og:image:height" content="630" />}
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content={ogImageUrl ? "summary_large_image" : "summary"} />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    {ogImageUrl && <meta name="twitter:image" content={ogImageUrl} />}
+    <slot name="jsonld" />
   </head>
   <body>
     <a class="skip-link" href="#main">skip to content</a>

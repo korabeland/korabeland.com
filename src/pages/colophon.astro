@@ -70,6 +70,17 @@ function parseInfluences(): Influence[] {
 
 const influences = parseInfluences();
 
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "@id": "https://korabeland.com/colophon",
+  url: "https://korabeland.com/colophon",
+  name: "korabeland.com — colophon",
+  description:
+    "How korabeland.com was built. About Korab, the people and ideas that shaped his work, and the tools used.",
+  isPartOf: { "@id": "https://korabeland.com/#website" },
+};
+
 const tools: { label: string; note: string }[] = [
   { label: "Astro 6", note: "page routing, server output via Vercel adapter" },
   {
@@ -90,10 +101,11 @@ const tools: { label: string; note: string }[] = [
 ---
 
 <BaseLayout
-  title="Colophon — Korab Eland"
-  description="How korabeland.com was built and who Korab is. The crew, the stack, and the people whose thinking shaped this site."
+  title="korabeland.com — colophon"
+  description="How korabeland.com was built. About Korab, the people and ideas that shaped his work, and the tools used."
   active="colophon"
 >
+  <script type="application/ld+json" slot="jsonld" set:html={JSON.stringify(jsonLd)} />
   <article class="prose colophon">
     <header>
       <p class="t-mono">§ · colophon</p>

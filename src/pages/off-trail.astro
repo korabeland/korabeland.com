@@ -6,14 +6,23 @@ const rawFrom = Astro.url.searchParams.get("from");
 const KNOWN = new Set(["notes", "projects", "work-with-me"]);
 const from = rawFrom && KNOWN.has(rawFrom) ? rawFrom : undefined;
 
-const destinationTitle = from
-  ? `${from.replace(/-/g, " ")} — off-trail`
-  : "Off-trail";
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "@id": "https://korabeland.com/off-trail",
+  url: "https://korabeland.com/off-trail",
+  name: "korabeland.com — off-trail",
+  description:
+    "This path hasn't been mapped yet. Check back as the site grows, or reach out to suggest what's next.",
+  isPartOf: { "@id": "https://korabeland.com/#website" },
+};
 ---
 
 <BaseLayout
-  title={`${destinationTitle} — Korab Eland`}
-  description="This path hasn't been mapped yet. The pins on the map are live, the paths fill in as the ground is walked."
+  title="korabeland.com — off-trail"
+  description="This path hasn't been mapped yet. Check back as the site grows, or reach out to suggest what's next."
+  noindex={true}
 >
+  <script type="application/ld+json" slot="jsonld" set:html={JSON.stringify(jsonLd)} />
   <OffTrail from={from} />
 </BaseLayout>
