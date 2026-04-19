@@ -34,7 +34,7 @@ export default defineConfig({
   ],
   webServer: {
     command: process.env.CI
-      ? "pnpm build && pnpm preview --port 4321"
+      ? "pnpm build && node scripts/static-preview.mjs"
       : "pnpm dev",
     url: "http://localhost:4321",
     reuseExistingServer: !process.env.CI,
