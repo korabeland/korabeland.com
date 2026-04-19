@@ -1,0 +1,27 @@
+name: CI
+on:
+  push:
+  pull_request:
+    branches: [main]
+jobs:
+  verify-all:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 10 }
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm verify
+      - run: pnpm test
+      - run: pnpm test:visual
+      - run: pnpm run audit
+      - name: Chromatic visual diff
+        if: github.event_name == 'pull_request' && env.CHROMATIC_PROJECT_TOKEN != ''
+        run: npx chromatic --playwright --exit-zero-on-changes
+        env:
+          CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
