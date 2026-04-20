@@ -6,11 +6,50 @@ import { resolve } from "node:path";
 import BaseLayout from "../layouts/BaseLayout.astro";
 
 const identityRoot = resolve(process.cwd(), "../identity");
+const trailRegisterRoot = resolve(process.cwd(), "src/content/trail-register");
 
 interface Influence {
   person: string;
   note: string;
 }
+
+interface CommitEntry {
+  sha: string;
+  shortSha: string;
+  subject: string;
+  author: string;
+  date: string;
+}
+
+// The prebuild hook (`scripts/gen-trail-register.ts`) writes commits.json from
+// `git log`. The seed file is the committed fallback for shallow Vercel clones
+// that don't run the hook.
+function loadCommits(): CommitEntry[] {
+  for (const name of ["commits.json", "commits.seed.json"]) {
+    const file = resolve(trailRegisterRoot, name);
+    if (!existsSync(file)) continue;
+    try {
+      const raw = JSON.parse(readFileSync(file, "utf8"));
+      if (Array.isArray(raw) && raw.length > 0) {
+        return raw as CommitEntry[];
+      }
+    } catch {
+      // fall through to the next candidate
+    }
+  }
+  return [];
+}
+
+function formatCommitDate(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}.${mm}.${dd}`;
+}
+
+const commits = loadCommits().slice(0, 14);
 
 // Built-in fallback used when the parent brand repo's identity/ folder
 // isn't available at build time (e.g., Vercel clones only the sub-project).
@@ -163,6 +202,28 @@ const tools: { label: string; note: string }[] = [
       </ul>
     </section>
 
+    {commits.length > 0 && (
+      <section aria-labelledby="build-log" class="build-log">
+        <h2 id="build-log">Build log</h2>
+        <p>
+          The last fourteen commits that shaped this site, straight from
+          <code>git log</code>. Regenerated at each build by
+          <code>scripts/gen-trail-register.ts</code>.
+        </p>
+        <ol class="commit-list" aria-label="Recent commits">
+          {commits.map((commit) => (
+            <li class="commit">
+              <span class="commit-sha t-mono">{commit.shortSha}</span>
+              <span class="commit-subject t-mono">{commit.subject}</span>
+              <time class="commit-date t-mono" datetime={commit.date}>
+                {formatCommitDate(commit.date)}
+              </time>
+            </li>
+          ))}
+        </ol>
+      </section>
+    )}
+
     <section aria-labelledby="contact">
       <h2 id="contact">Get in touch</h2>
       <p>
@@ -190,5 +251,51 @@ const tools: { label: string; note: string }[] = [
 
   .colophon .lede {
     margin: 0 0 var(--s-5);
+  }
+
+  .build-log .commit-list {
+    list-style: none;
+    padding: 0;
+    margin: var(--s-4) 0 0;
+    border-top: 1px solid var(--rule);
+  }
+
+  .build-log .commit {
+    display: grid;
+    grid-template-columns: 72px 1fr auto;
+    gap: var(--s-3);
+    align-items: baseline;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--rule);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  .build-log .commit-sha {
+    margin: 0;
+    color: var(--moss);
+    letter-spacing: 0.04em;
+  }
+
+  .build-log .commit-subject {
+    margin: 0;
+    color: var(--ink-soft);
+    overflow-wrap: anywhere;
+  }
+
+  .build-log .commit-date {
+    margin: 0;
+    color: var(--ink-mute);
+    font-size: 11px;
+    white-space: nowrap;
+  }
+
+  @media (max-width: 640px) {
+    .build-log .commit {
+      grid-template-columns: 64px 1fr;
+    }
+    .build-log .commit-date {
+      grid-column: 1 / -1;
+    }
   }
 </style>
