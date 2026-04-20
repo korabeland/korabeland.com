@@ -1,0 +1,42 @@
+---
+// ReadingRoom RightSidebar — margin notes + KnowledgeGraph island.
+
+import KnowledgeGraph from "../KnowledgeGraph/KnowledgeGraph.astro";
+
+interface MarginNote {
+  superscript: string;
+  body: string;
+}
+
+interface Props {
+  marginNotes?: MarginNote[];
+}
+
+const { marginNotes = [] } = Astro.props;
+---
+
+<aside class="right-rail">
+  {marginNotes.map((m) => (
+    <div class="mnote">
+      <sup>{m.superscript}</sup>{m.body}
+    </div>
+  ))}
+
+  <KnowledgeGraph />
+</aside>
+
+<style>
+  .right-rail {
+    padding-top: 140px;
+  }
+  .mnote {
+    margin-bottom: var(--s-7);
+    padding-left: var(--s-3);
+    border-left: 1px solid var(--moss-soft);
+  }
+  @media (max-width: 1200px) {
+    .right-rail {
+      padding-top: var(--s-5);
+    }
+  }
+</style>

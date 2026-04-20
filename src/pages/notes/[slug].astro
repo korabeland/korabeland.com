@@ -1,0 +1,70 @@
+---
+export const prerender = true;
+
+import { createReader } from "@keystatic/core/reader";
+import type { GetStaticPaths } from "astro";
+import keystaticConfig from "../../../keystatic.config";
+import { PostContent } from "../../components/PostContent";
+import ReadingRoom from "../../components/ReadingRoom/index.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { listPosts } from "../../lib/posts";
+
+export const getStaticPaths: GetStaticPaths = async () => {
+  const posts = await listPosts();
+  return posts.map((p) => ({ params: { slug: p.slug } }));
+};
+
+const { slug } = Astro.params;
+if (!slug) throw new Error("Missing slug");
+
+const reader = createReader(process.cwd(), keystaticConfig);
+const post = await reader.collections.posts.read(slug);
+if (!post) throw new Error(`Post not found: ${slug}`);
+
+const content = await post.content();
+
+// Format publishedAt as "04.12.26" for the sidebar meta line.
+function formatDate(iso: string | null): string {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${pad(d.getMonth() + 1)}.${pad(d.getDate())}.${String(d.getFullYear()).slice(-2)}`;
+}
+
+// Estimate read time and word count from the content payload. The reader
+// returns structured document data, so we flatten to a string first.
+const prose = JSON.stringify(content);
+const wordCount = prose.split(/\s+/).filter(Boolean).length;
+const readTime = `${Math.max(1, Math.round(wordCount / 220))} min`;
+
+// Split the title on the last word so we can italicise it, matching the
+// export's "Forests that scale." treatment without requiring per-post
+// frontmatter hints.
+function splitTitle(title: string): { head: string; tail?: string } {
+  const parts = title.trim().split(" ");
+  if (parts.length < 2) return { head: title };
+  const tail = parts.slice(-1)[0];
+  const head = parts.slice(0, -1).join(" ");
+  return { head, tail };
+}
+const { head, tail } = splitTitle(post.title);
+---
+
+<BaseLayout
+  title={`${post.title} — field notes`}
+  description={post.description || `Field note — ${post.title}`}
+  active="notes"
+  ogType="article"
+  fullBleed
+>
+  <ReadingRoom
+    title={head}
+    titleEm={tail}
+    subtitle={post.description}
+    date={formatDate(post.publishedAt)}
+    readTime={readTime}
+    wordCount={wordCount}
+  >
+    <PostContent document={content} />
+  </ReadingRoom>
+</BaseLayout>

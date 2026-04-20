@@ -1,0 +1,47 @@
+---
+// OutcomeMetrics.astro — three bordered boxes: big moss value + mono label.
+
+interface Metric {
+  value: string;
+  label: string;
+}
+
+interface Props {
+  metrics: Metric[];
+}
+
+const { metrics } = Astro.props;
+---
+
+<div class="metrics">
+  {metrics.map((m) => (
+    <div class="metric">
+      <div class="t-display value">{m.value}</div>
+      <div class="t-mono label">{m.label}</div>
+    </div>
+  ))}
+</div>
+
+<style>
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--s-5);
+    margin: 0 0 var(--s-6);
+  }
+  .metric {
+    padding: var(--s-5);
+    border: 1px solid var(--rule);
+  }
+  .value {
+    font-size: 44px;
+    color: var(--moss);
+    margin-bottom: 4px;
+    line-height: 1;
+  }
+  @media (max-width: 640px) {
+    .metrics {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

@@ -1,0 +1,62 @@
+---
+// FieldLog.astro — "entries from the build" log. Renders each week as a
+// 80px mono column + serif title + body prose row.
+
+interface Entry {
+  week: string;
+  title: string;
+  body: string;
+}
+
+interface Props {
+  entries: Entry[];
+}
+
+const { entries } = Astro.props;
+---
+
+<div class="log">
+  {entries.map((e) => (
+    <div class="entry">
+      <div class="t-mono week">{e.week}</div>
+      <div>
+        <div class="italic-serif title">{e.title}</div>
+        <div class="body">{e.body}</div>
+      </div>
+    </div>
+  ))}
+</div>
+
+<style>
+  .log {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-6);
+  }
+  .entry {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: var(--s-5);
+    padding-bottom: var(--s-5);
+    border-bottom: 1px solid var(--rule);
+  }
+  .week {
+    color: var(--moss);
+  }
+  .title {
+    font-size: 20px;
+    font-weight: 300;
+    margin-bottom: 4px;
+  }
+  .body {
+    font-size: 15px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+  }
+  @media (max-width: 640px) {
+    .entry {
+      grid-template-columns: 1fr;
+      gap: var(--s-2);
+    }
+  }
+</style>

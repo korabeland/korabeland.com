@@ -1,0 +1,108 @@
+---
+export const prerender = true;
+
+import { createReader } from "@keystatic/core/reader";
+import type { GetStaticPaths } from "astro";
+import keystaticConfig from "../../../keystatic.config";
+import CaseStudy from "../../components/CaseStudy/index.astro";
+import { PostContent } from "../../components/PostContent";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { listProjects } from "../../lib/projects";
+
+export const getStaticPaths: GetStaticPaths = async () => {
+  const projects = await listProjects();
+  return projects.map((p) => ({ params: { slug: p.slug } }));
+};
+
+const { slug } = Astro.params;
+if (!slug) throw new Error("Missing slug");
+
+const reader = createReader(process.cwd(), keystaticConfig);
+const project = await reader.collections.projects.read(slug);
+if (!project) throw new Error(`Project not found: ${slug}`);
+
+const content = await project.content();
+
+// Derive a duration string ("2025 — 2026 · 8 months") if both dates are set.
+function formatDuration(
+  startISO: string | null,
+  shipISO: string | null,
+): string {
+  if (!startISO || !shipISO) return "";
+  const s = new Date(startISO);
+  const e = new Date(shipISO);
+  const months = Math.max(
+    1,
+    (e.getFullYear() - s.getFullYear()) * 12 + (e.getMonth() - s.getMonth()),
+  );
+  const yearStr =
+    s.getFullYear() === e.getFullYear()
+      ? String(s.getFullYear())
+      : `${s.getFullYear()} — ${e.getFullYear()}`;
+  return `${yearStr} · ${months} month${months === 1 ? "" : "s"}`;
+}
+const duration = formatDuration(project.startedAt, project.shippedAt);
+
+// Determine status tag based on shippedAt. If shippedAt is in the past,
+// show "shipped" with moss accent; otherwise "in progress".
+const now = new Date();
+const statusTag =
+  project.shippedAt && new Date(project.shippedAt) <= now
+    ? "shipped"
+    : "in progress";
+
+// Pull the "next project" reference — we only surface it if the slug
+// actually resolves to a published project.
+let nextProject: { slug: string; title: string } | undefined;
+if (project.nextProject) {
+  const next = await reader.collections.projects.read(project.nextProject);
+  if (next) {
+    nextProject = { slug: project.nextProject, title: next.title };
+  }
+}
+
+// Facts grid uses authored strings; leave blanks if the author skipped a field.
+const facts = [
+  { label: "role", value: project.role || "—" },
+  { label: "team", value: project.team || "—" },
+  { label: "stack", value: project.stack || "—" },
+  { label: "outcome", value: project.outcome || "—" },
+];
+
+const fieldLog = project.fieldLog.map((f) => ({
+  week: f.week,
+  title: f.title,
+  body: f.body,
+}));
+const outcomeMetrics = project.outcomeMetrics.map((m) => ({
+  value: m.value,
+  label: m.label,
+}));
+---
+
+<BaseLayout
+  title={`${project.title} — case study`}
+  description={project.description || `Case study — ${project.title}`}
+  active="projects"
+  ogType="article"
+  fullBleed
+>
+  <CaseStudy
+    title={project.title}
+    subtitle={project.description}
+    tags={["case study"]}
+    statusTag={statusTag}
+    duration={duration}
+    heroImage={project.heroImage ?? undefined}
+    heroImageAlt={`${project.title} hero`}
+    figCaption={`fig. 01 — ${project.title.toLowerCase()}`}
+    figMeta="photo · in situ"
+    facts={facts}
+    fieldLog={fieldLog}
+    outcomeMetrics={outcomeMetrics}
+    reflection={project.reflection}
+    nextProject={nextProject}
+  >
+    <PostContent document={content} />
+  </CaseStudy>
+</BaseLayout>

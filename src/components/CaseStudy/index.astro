@@ -1,0 +1,334 @@
+---
+// CaseStudy/index.astro — case-study page layout. Hero + fact strip +
+// 2-col body (sidebar with MiniMap + section TOC | main content slot) +
+// optional field log + outcome metrics + reflection + next-project link.
+
+import MiniMap from "../MiniMap/MiniMap.astro";
+import FactStrip from "./FactStrip.astro";
+import FieldLog from "./FieldLog.astro";
+import OutcomeMetrics from "./OutcomeMetrics.astro";
+
+interface Fact {
+  label: string;
+  value: string;
+}
+interface Metric {
+  value: string;
+  label: string;
+}
+interface LogEntry {
+  week: string;
+  title: string;
+  body: string;
+}
+
+interface Props {
+  title: string;
+  subtitle?: string;
+  tags?: string[];
+  statusTag?: string;
+  duration?: string;
+  heroImage?: string;
+  heroImageAlt?: string;
+  figCaption?: string;
+  figMeta?: string;
+  facts: Fact[];
+  fieldLog?: LogEntry[];
+  outcomeMetrics?: Metric[];
+  reflection?: string;
+  nextProject?: { slug: string; title: string };
+  backHref?: string;
+  backLabel?: string;
+}
+
+const {
+  title,
+  subtitle,
+  tags = [],
+  statusTag,
+  duration,
+  heroImage,
+  heroImageAlt = "",
+  figCaption = "",
+  figMeta = "",
+  facts,
+  fieldLog = [],
+  outcomeMetrics = [],
+  reflection,
+  nextProject,
+  backHref = "/projects",
+  backLabel = "← all projects",
+} = Astro.props;
+
+const sections = [
+  "Overview",
+  "The problem",
+  "Approach",
+  fieldLog.length > 0 ? "Field log" : null,
+  outcomeMetrics.length > 0 ? "Outcome" : null,
+  reflection ? "Reflection" : null,
+].filter((s): s is string => Boolean(s));
+---
+
+<div class="return">
+  <a class="t-mono" href={backHref}>{backLabel}</a>
+</div>
+
+{/* HERO */}
+<section class="hero">
+  <div class="hero-tags">
+    {tags.map((t) => <span class="tag">{t}</span>)}
+    {statusTag && <span class="tag tag--moss">{statusTag}</span>}
+    {duration && <span class="t-mono hero-duration">{duration}</span>}
+  </div>
+
+  <h1 class="t-display hero-title">{title}</h1>
+  {subtitle && (
+    <p class="t-serif hero-subtitle">{subtitle}</p>
+  )}
+
+  {heroImage ? (
+    <img class="hero-image" src={heroImage} alt={heroImageAlt} />
+  ) : (
+    <div class="fig hero-fig">plate iii · product hero</div>
+  )}
+  {(figCaption || figMeta) && (
+    <div class="hero-meta">
+      {figCaption && <span class="t-mono">{figCaption}</span>}
+      {figMeta && <span class="t-mono">{figMeta}</span>}
+    </div>
+  )}
+</section>
+
+{/* Fact strip */}
+<FactStrip facts={facts} />
+
+{/* Body */}
+<section class="body">
+  <aside class="sidebar" aria-label="Case study sections">
+    <div class="sidebar-block">
+      <MiniMap active="projects" title="↳ you are here" />
+    </div>
+    <div class="t-label sections-label">sections</div>
+    <ol class="sections">
+      {sections.map((s, i) => (
+        <li class="section-item">
+          <span class="t-mono">§{String(i + 1).padStart(2, "0")}</span>
+          <span>{s}</span>
+        </li>
+      ))}
+    </ol>
+  </aside>
+
+  <div class="body-main">
+    <div class="post-body">
+      <slot />
+    </div>
+
+    {fieldLog.length > 0 && (
+      <section class="field-log">
+        <h2 class="t-display log-title">
+          Field log <span class="italic-serif log-subtitle">— entries from the build</span>
+        </h2>
+        <FieldLog entries={fieldLog} />
+      </section>
+    )}
+
+    {outcomeMetrics.length > 0 && (
+      <section class="outcome">
+        <h2 class="t-display outcome-title">Outcome</h2>
+        <OutcomeMetrics metrics={outcomeMetrics} />
+      </section>
+    )}
+
+    {reflection && (
+      <section class="reflection">
+        <h2 class="t-display">Reflection</h2>
+        <p class="reflection-body">{reflection}</p>
+      </section>
+    )}
+
+    <div class="rule-soft rule-next"></div>
+    {nextProject && (
+      <div class="next-row">
+        <div class="t-mono">next project ↝</div>
+        <a class="italic-serif next-link" href={`/projects/${nextProject.slug}`}>
+          {nextProject.title}
+        </a>
+      </div>
+    )}
+  </div>
+</section>
+
+<style>
+  .return {
+    padding: var(--s-5) var(--s-6) 0;
+  }
+  .return .t-mono {
+    color: var(--ink-mute);
+    text-decoration: none;
+  }
+
+  .hero {
+    padding: var(--s-7) var(--s-6) var(--s-6);
+    max-width: 1280px;
+    margin: 0 auto;
+  }
+  .hero-tags {
+    display: flex;
+    gap: var(--s-3);
+    margin-bottom: var(--s-4);
+    align-items: baseline;
+    flex-wrap: wrap;
+  }
+  .tag--moss {
+    border-color: var(--moss);
+    color: var(--moss);
+  }
+  .hero-duration {
+    margin-left: auto;
+  }
+  .hero-title {
+    font-size: clamp(56px, 9vw, 88px);
+    line-height: 0.95;
+    margin: 0 0 var(--s-5);
+    font-weight: 400;
+    letter-spacing: -0.02em;
+  }
+  .hero-subtitle {
+    font-size: 24px;
+    color: var(--ink-soft);
+    margin: 0 0 var(--s-7);
+    max-width: 760px;
+    line-height: 1.35;
+  }
+  .hero-image {
+    width: 100%;
+    max-height: 460px;
+    object-fit: cover;
+    border: 1px solid var(--rule);
+    display: block;
+    margin-bottom: var(--s-4);
+  }
+  .hero-fig {
+    height: 460px;
+    margin-bottom: var(--s-4);
+  }
+  .hero-meta {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .body {
+    padding: var(--s-8) var(--s-6);
+    max-width: 1280px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: var(--s-8);
+  }
+  .sidebar {
+    position: sticky;
+    top: 100px;
+    align-self: start;
+  }
+  .sidebar-block {
+    margin-bottom: var(--s-5);
+  }
+  .sections-label {
+    margin-bottom: var(--s-4);
+  }
+  .sections {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .section-item {
+    display: flex;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+
+  .body-main {
+    max-width: 780px;
+  }
+  .post-body :global(p) {
+    font-size: 17px;
+    line-height: 1.7;
+    color: var(--ink-soft);
+    margin: 0 0 var(--s-5);
+  }
+  .post-body :global(h2) {
+    font-family: var(--font-display);
+    font-size: 32px;
+    font-weight: 400;
+    margin: var(--s-7) 0 var(--s-4);
+  }
+  .post-body :global(blockquote) {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 22px;
+    line-height: 1.4;
+    margin: var(--s-7) 0;
+    padding-left: var(--s-5);
+    border-left: 2px solid var(--moss);
+    color: var(--ink-soft);
+  }
+
+  .log-title,
+  .outcome-title {
+    font-size: 32px;
+    font-weight: 400;
+    margin: var(--s-8) 0 var(--s-5);
+  }
+  .log-subtitle {
+    color: var(--ink-mute);
+    font-size: 22px;
+  }
+
+  .reflection h2 {
+    font-family: var(--font-display);
+    font-size: 32px;
+    font-weight: 400;
+    margin: var(--s-7) 0 var(--s-4);
+  }
+  .reflection-body {
+    font-size: 17px;
+    line-height: 1.7;
+    color: var(--ink-soft);
+    margin: 0 0 var(--s-7);
+  }
+
+  .rule-next {
+    margin: var(--s-7) 0 var(--s-5);
+  }
+  .next-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .next-link {
+    font-size: 22px;
+    color: var(--ink);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 160ms ease;
+  }
+  .next-link:hover,
+  .next-link:focus-visible {
+    border-bottom-color: var(--moss);
+  }
+
+  @media (max-width: 900px) {
+    .body {
+      grid-template-columns: 1fr;
+    }
+    .sidebar {
+      position: static;
+    }
+  }
+</style>

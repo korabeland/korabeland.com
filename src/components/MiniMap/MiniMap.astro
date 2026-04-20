@@ -1,0 +1,300 @@
+---
+// MiniMap.astro — compact 220×170 locator card for /notes/* and /projects/*
+// left rails. Ported 1:1 from mini-map.jsx with SMIL <animate> replacing the
+// React parallax. No client JS.
+//
+// Props:
+//   active: 'notes' | 'projects' | 'work'  — highlighted pin
+//   title:  eyebrow text (defaults to '↳ you are here')
+
+type DestId = "notes" | "projects" | "work";
+
+interface Props {
+  active: DestId;
+  title?: string;
+}
+
+const { active, title = "↳ you are here" } = Astro.props;
+
+interface Dest {
+  id: DestId;
+  label: string;
+  angleDeg: number;
+  dist: number;
+  sub: string;
+}
+
+const DESTS: readonly Dest[] = [
+  {
+    id: "notes",
+    label: "field notes",
+    angleDeg: -62,
+    dist: 72,
+    sub: "peak · 42 entries",
+  },
+  {
+    id: "projects",
+    label: "projects",
+    angleDeg: 62,
+    dist: 66,
+    sub: "ridge · 9 studies",
+  },
+  {
+    id: "work",
+    label: "work with me",
+    angleDeg: 168,
+    dist: 54,
+    sub: "clearing · open",
+  },
+] as const;
+
+const W = 220;
+const H = 170;
+const CX = W / 2;
+const CY = H / 2 + 4;
+
+function polar(deg: number, r: number): [number, number] {
+  const rad = ((deg - 90) * Math.PI) / 180;
+  return [CX + Math.cos(rad) * r, CY + Math.sin(rad) * r];
+}
+
+function trailD(deg: number, dist: number, curve: number): string {
+  const [ex, ey] = polar(deg, dist);
+  const rad = ((deg - 90) * Math.PI) / 180;
+  const px = -Math.sin(rad);
+  const py = Math.cos(rad);
+  const mx = (CX + ex) / 2;
+  const my = (CY + ey) / 2;
+  const cx = mx + px * dist * curve;
+  const cy = my + py * dist * curve;
+  return `M ${CX} ${CY} Q ${cx.toFixed(1)} ${cy.toFixed(1)} ${ex.toFixed(1)} ${ey.toFixed(1)}`;
+}
+
+const rings = [18, 30, 42, 54, 66, 78];
+const ringsLight = rings.filter((_, i) => i % 2 !== 0);
+const ringsDark = rings.filter((_, i) => i % 2 === 0);
+
+const peaks = [
+  { cx: 54, cy: 40, rings: [8, 14, 20] },
+  { cx: 170, cy: 46, rings: [7, 12, 18] },
+  { cx: 60, cy: 128, rings: [6, 11] },
+  { cx: 168, cy: 126, rings: [7, 13, 19] },
+];
+
+const activeDest = DESTS.find((d) => d.id === active);
+
+const trails = DESTS.map((d, i) => {
+  const isActive = d.id === active;
+  const isMoss = d.id === "work";
+  return {
+    d: trailD(d.angleDeg, d.dist - 6, 0.16 + (i % 2) * 0.05),
+    stroke: isActive || isMoss ? "var(--moss)" : "var(--ink)",
+    opacity: isActive ? 0.95 : 0.45,
+    width: isActive ? 1.1 : 0.7,
+  };
+});
+
+const pins = DESTS.map((d) => {
+  const [x, y] = polar(d.angleDeg, d.dist);
+  const isActive = d.id === active;
+  const isMoss = d.id === "work";
+  const fill = isActive || isMoss ? "var(--moss)" : "var(--ink)";
+  const rad = ((d.angleDeg - 90) * Math.PI) / 180;
+  const lx = x + Math.cos(rad) * 10;
+  const ly = y + Math.sin(rad) * 10;
+  const anchor: "start" | "middle" | "end" =
+    lx < CX ? "end" : Math.abs(lx - CX) < 6 ? "middle" : "start";
+  return {
+    id: d.id,
+    label: d.label,
+    x,
+    y,
+    isActive,
+    fill,
+    lx,
+    ly,
+    anchor,
+  };
+});
+---
+
+<div class="minimap">
+  <div class="header">
+    <span class="eyebrow t-label">{title}</span>
+    <span class="plate t-mono">plate i · mini</span>
+  </div>
+
+  <svg viewBox={`0 0 ${W} ${H}`} width="100%" style="display:block;">
+    {/* contours (central trailhead) */}
+    <g stroke="#d2d0cb" stroke-width="0.5" fill="none">
+      {ringsLight.map((r, i) => (
+        <circle
+          cx={CX}
+          cy={CY}
+          r={r}
+          transform={`rotate(${-6 + i * 2} ${CX} ${CY}) scale(1 ${0.78 + i * 0.02})`}
+        />
+      ))}
+    </g>
+    <g stroke="#9a9690" stroke-width="0.75" fill="none">
+      {ringsDark.map((r, i) => (
+        <circle
+          cx={CX}
+          cy={CY}
+          r={r}
+          transform={`rotate(${-6 + i * 2} ${CX} ${CY}) scale(1 ${0.78 + i * 0.02})`}
+        />
+      ))}
+    </g>
+
+    {/* decoy peaks */}
+    <g stroke="#d2d0cb" stroke-width="0.4" fill="none" opacity="0.75">
+      {peaks.map((p) => (
+        <g>
+          {p.rings.map((r, j) => (
+            <ellipse
+              cx={p.cx}
+              cy={p.cy}
+              rx={r}
+              ry={r * 0.68}
+              transform={`rotate(${-10 + j * 4} ${p.cx} ${p.cy})`}
+            />
+          ))}
+        </g>
+      ))}
+    </g>
+
+    {/* trails */}
+    <g fill="none" stroke-linecap="round">
+      {trails.map((t) => (
+        <path
+          d={t.d}
+          stroke={t.stroke}
+          stroke-opacity={t.opacity}
+          stroke-width={t.width}
+          stroke-dasharray="1.2 3.2"
+        />
+      ))}
+    </g>
+
+    {/* trailhead dot (center) */}
+    <g>
+      <circle cx={CX} cy={CY} r="4.5" fill="var(--paper)" stroke="var(--ink-soft)" stroke-width="0.8" />
+      <circle cx={CX} cy={CY} r="1.8" fill="var(--ink-soft)" />
+    </g>
+
+    {/* destination pins */}
+    {pins.map((p) => (
+      <g>
+        {p.isActive && (
+          <>
+            <circle cx={p.x} cy={p.y} r="4" fill="none" stroke="var(--moss)" stroke-width="0.8" opacity="0.6">
+              <animate attributeName="r" values="4;12;4" dur="2.4s" repeatCount="indefinite" />
+              <animate attributeName="opacity" values="0.7;0;0.7" dur="2.4s" repeatCount="indefinite" />
+            </circle>
+            <circle cx={p.x} cy={p.y} r="8" fill="none" stroke="var(--moss)" stroke-width="0.6" opacity="0.3" />
+          </>
+        )}
+        <circle
+          cx={p.x}
+          cy={p.y}
+          r={p.isActive ? 3.4 : 2.6}
+          fill={p.fill}
+          stroke={p.isActive ? "var(--ink)" : "none"}
+          stroke-width="0.5"
+        />
+        {p.isActive && <circle cx={p.x} cy={p.y} r="1.2" fill="var(--paper)" />}
+        <text
+          x={p.lx}
+          y={p.ly + 3}
+          font-size="8.5"
+          fill={p.isActive ? "var(--ink)" : "var(--ink-soft)"}
+          font-family="var(--font-display)"
+          font-style="italic"
+          text-anchor={p.anchor}
+          font-weight={p.isActive ? 500 : 400}
+        >
+          {p.label}
+        </text>
+      </g>
+    ))}
+
+    {/* trailhead label */}
+    <text
+      x={CX}
+      y={CY + 16}
+      text-anchor="middle"
+      font-size="6.5"
+      fill="var(--ink-mute)"
+      font-family="var(--font-mono)"
+      letter-spacing="0.14em"
+    >
+      TRAILHEAD
+    </text>
+
+    {/* compass */}
+    <g transform={`translate(${W - 18} 14)`}>
+      <circle r="9" fill="var(--paper)" stroke="var(--ink-mute)" stroke-width="0.4" opacity="0.85" />
+      <path d="M0 -8 L2 0 L0 8 L-2 0 Z" fill="var(--ink)" />
+      <path d="M0 -8 L2 0 L0 0 Z" fill="var(--moss)" />
+      <text x="0" y="-11" text-anchor="middle" font-size="5.5" fill="var(--ink)" font-family="var(--font-mono)" font-weight="600">N</text>
+    </g>
+  </svg>
+
+  <div class="caption">
+    <span class="caption-sub">● {activeDest ? activeDest.sub : ""}</span>
+    <a class="caption-link" href="/">full map ↗</a>
+  </div>
+</div>
+
+<style>
+  .minimap {
+    border: 1px solid var(--rule);
+    background: var(--paper-2);
+    padding: 10px 12px 8px;
+    position: relative;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 6px;
+  }
+  .eyebrow {
+    color: var(--moss);
+  }
+  .plate {
+    font-size: 8px;
+    color: var(--ink-mute);
+  }
+
+  .caption {
+    padding-top: 8px;
+    margin-top: 6px;
+    border-top: 1px dashed var(--rule);
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: 8.5px;
+    color: var(--ink-mute);
+    letter-spacing: 0.08em;
+  }
+  .caption-sub {
+    color: var(--moss);
+  }
+  .caption-link {
+    color: var(--ink-mute);
+    text-decoration: none;
+  }
+  .caption-link:hover,
+  .caption-link:focus-visible {
+    color: var(--ink);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .minimap :global(animate) {
+      display: none;
+    }
+  }
+</style>

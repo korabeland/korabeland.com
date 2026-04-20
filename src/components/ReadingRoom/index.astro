@@ -1,0 +1,191 @@
+---
+// ReadingRoom/index.astro — three-column blog reading layout.
+// 220px sidebar · 620px reading column · 260px margin-notes rail.
+
+import LeftSidebar from "./LeftSidebar.astro";
+import RightSidebar from "./RightSidebar.astro";
+
+interface MarginNote {
+  superscript: string;
+  body: string;
+}
+
+interface Props {
+  eyebrow?: string;
+  title: string;
+  titleEm?: string;
+  subtitle?: string;
+  noteNumber?: string;
+  date: string;
+  readTime: string;
+  wordCount?: number;
+  tags?: string[];
+  contents?: Array<{ label: string; activeIndex?: boolean }>;
+  marginNotes?: MarginNote[];
+  backHref?: string;
+  backLabel?: string;
+}
+
+const {
+  eyebrow = "§ field notes",
+  title,
+  titleEm,
+  subtitle,
+  noteNumber,
+  date,
+  readTime,
+  wordCount,
+  tags = [],
+  contents = [],
+  marginNotes = [],
+  backHref = "/notes",
+  backLabel = "← back to the grove",
+} = Astro.props;
+---
+
+<div class="return">
+  <a class="t-mono" href={backHref}>{backLabel}</a>
+</div>
+
+<article class="reading-room">
+  <LeftSidebar
+    noteNumber={noteNumber}
+    date={date}
+    readTime={readTime}
+    wordCount={wordCount}
+    tags={tags}
+    contents={contents}
+  />
+
+  <div class="column">
+    <div class="eyebrow t-label">{eyebrow}</div>
+    <h1 class="t-display title">
+      {title}{titleEm && <> <span class="italic-serif title-em">{titleEm}</span></>}
+    </h1>
+    {subtitle && (
+      <p class="t-serif subtitle">{subtitle}</p>
+    )}
+
+    <div class="rule-soft rule-top"></div>
+
+    <div class="post-body">
+      <slot />
+    </div>
+  </div>
+
+  <RightSidebar marginNotes={marginNotes} />
+</article>
+
+<style>
+  .return {
+    padding: var(--s-5) var(--s-6) 0;
+  }
+  .return .t-mono {
+    color: var(--ink-mute);
+    text-decoration: none;
+  }
+  .return .t-mono:hover,
+  .return .t-mono:focus-visible {
+    color: var(--ink);
+  }
+
+  .reading-room {
+    display: grid;
+    grid-template-columns: 220px 1fr 260px;
+    gap: var(--s-7);
+    padding: var(--s-8) var(--s-6) var(--s-9);
+    max-width: 1320px;
+    margin: 0 auto;
+  }
+
+  .column {
+    max-width: 620px;
+  }
+
+  .eyebrow {
+    color: var(--moss);
+    margin-bottom: var(--s-4);
+  }
+  .title {
+    font-size: 56px;
+    margin: 0 0 var(--s-5);
+    font-weight: 400;
+    line-height: 1.05;
+  }
+  .title-em {
+    font-weight: 300;
+  }
+  .subtitle {
+    font-size: 19px;
+    color: var(--ink-soft);
+    margin: 0 0 var(--s-7);
+  }
+  .rule-top {
+    margin: var(--s-6) 0 var(--s-7);
+  }
+
+  /* Body prose — margins + dropped cap + basic type scale. DocumentRenderer
+     emits plain <p>/<h2>/<ul> so we target them generically. */
+  .post-body :global(p) {
+    font-size: 17px;
+    line-height: 1.7;
+    margin: 0 0 var(--s-5);
+  }
+  .post-body :global(p:first-of-type::first-letter) {
+    font-family: var(--font-display);
+    font-size: 52px;
+    line-height: 0.9;
+    float: left;
+    padding-right: 10px;
+    padding-top: 6px;
+    color: var(--moss);
+  }
+  .post-body :global(h2) {
+    font-family: var(--font-display);
+    font-size: 32px;
+    font-weight: 400;
+    margin: var(--s-8) 0 var(--s-4);
+    letter-spacing: -0.01em;
+  }
+  .post-body :global(h3) {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 400;
+    margin: var(--s-6) 0 var(--s-3);
+  }
+  .post-body :global(blockquote) {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 22px;
+    line-height: 1.4;
+    margin: var(--s-7) 0;
+    padding-left: var(--s-5);
+    border-left: 2px solid var(--moss);
+    color: var(--ink-soft);
+  }
+  .post-body :global(figure) {
+    margin: var(--s-7) 0;
+  }
+  .post-body :global(figcaption) {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--ink-mute);
+    margin-top: var(--s-2);
+  }
+  .post-body :global(ul),
+  .post-body :global(ol) {
+    font-size: 17px;
+    line-height: 1.7;
+    margin: 0 0 var(--s-5) var(--s-5);
+  }
+
+  @media (max-width: 1200px) {
+    .reading-room {
+      grid-template-columns: 1fr;
+    }
+    .column {
+      max-width: 100%;
+    }
+  }
+</style>

@@ -1,0 +1,51 @@
+---
+// FactStrip.astro — 4-column bordered fact row for role / team / stack / outcome.
+
+interface Fact {
+  label: string;
+  value: string;
+}
+
+interface Props {
+  facts: Fact[];
+}
+
+const { facts } = Astro.props;
+---
+
+<section class="strip">
+  <div class="strip-inner">
+    {facts.map((f) => (
+      <div class="fact">
+        <div class="t-label">{f.label}</div>
+        <div class="t-serif fact-value">{f.value}</div>
+      </div>
+    ))}
+  </div>
+</section>
+
+<style>
+  .strip {
+    padding: var(--s-6) var(--s-6);
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    background: var(--paper-2);
+  }
+  .strip-inner {
+    max-width: 1280px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--s-6);
+  }
+  .fact-value {
+    font-size: 18px;
+    margin-top: 4px;
+  }
+  @media (max-width: 800px) {
+    .strip-inner {
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--s-5);
+    }
+  }
+</style>
