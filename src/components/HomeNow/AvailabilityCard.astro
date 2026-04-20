@@ -1,0 +1,89 @@
+---
+// AvailabilityCard.astro — moss-bordered "↳ availability" card.
+// Reads slot count from siteMeta (passed in as a prop so the parent page
+// owns the single read). Keeps the hello link as a mono footnote.
+
+interface Props {
+  slotsAvailable: number;
+  slotsTotal?: number;
+  contactEmail?: string;
+}
+
+const {
+  slotsAvailable,
+  slotsTotal = 3,
+  contactEmail = "hello@korabeland.com",
+} = Astro.props;
+---
+
+<div>
+  <div class="card">
+    <div class="pill">
+      <span class="dot" aria-hidden="true"></span>
+      <span class="pill-text">
+        {slotsAvailable} of {slotsTotal} slots open
+      </span>
+    </div>
+    <p class="lede">
+      Taking on short engagements through Q3. Best fit: small teams
+      building the scaffolding for AI or data products.
+    </p>
+    <a class="btn" href={`mailto:${contactEmail}`}>
+      start a conversation
+    </a>
+  </div>
+  <div class="fallback t-mono">
+    or — <a href={`mailto:${contactEmail}`}>{contactEmail}</a>
+  </div>
+</div>
+
+<style>
+  .card {
+    padding: var(--s-5);
+    border: 1px solid var(--moss);
+    background: color-mix(in oklch, var(--moss) 4%, transparent);
+  }
+  .pill {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+    margin-bottom: var(--s-3);
+  }
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 9999px;
+    background: var(--moss);
+    animation: breathe 3.5s ease-in-out infinite;
+  }
+  .pill-text {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: var(--moss);
+  }
+  .lede {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: 15px;
+    color: var(--ink-soft);
+  }
+  .btn {
+    margin-top: var(--s-4);
+    width: 100%;
+    justify-content: center;
+  }
+  .fallback {
+    margin-top: var(--s-3);
+    text-align: center;
+  }
+  .fallback a {
+    color: inherit;
+    border-bottom: 1px dashed var(--rule);
+    text-decoration: none;
+  }
+  .fallback a:hover,
+  .fallback a:focus-visible {
+    border-bottom-color: var(--moss);
+  }
+</style>

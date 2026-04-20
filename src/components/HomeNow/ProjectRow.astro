@@ -1,0 +1,41 @@
+---
+// ProjectRow.astro — one row in the "↳ in the field" column.
+// Grid: name (italic serif) / description (ink-soft) / status (mono).
+
+interface Props {
+  name: string;
+  description: string;
+  status: string;
+}
+
+const { name, description, status } = Astro.props;
+---
+
+<li class="row">
+  <span class="name italic-serif">{name}</span>
+  <span class="desc">{description}</span>
+  <span class="status t-mono">{status}</span>
+</li>
+
+<style>
+  .row {
+    display: grid;
+    grid-template-columns: 80px 1fr auto;
+    gap: var(--s-4);
+    align-items: baseline;
+    padding-bottom: var(--s-4);
+    border-bottom: 1px solid var(--rule);
+  }
+  .name {
+    font-size: 17px;
+  }
+  .desc {
+    color: var(--ink-soft);
+  }
+  @media (max-width: 640px) {
+    .row {
+      grid-template-columns: 1fr;
+      gap: var(--s-2);
+    }
+  }
+</style>

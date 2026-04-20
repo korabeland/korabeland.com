@@ -1,6 +1,7 @@
 ---
 export const prerender = true;
 
+import HomeNow from "../components/HomeNow/index.astro";
 import TrailheadKiosk from "../components/TrailheadKiosk/index.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 
@@ -25,6 +26,38 @@ const jsonLd = {
     },
   ],
 };
+
+// Convert the current year to lowercase roman numerals for the closing
+// footer line ("© mmxxvi · korabeland.com"). Matches the export.
+function toRomanLower(n: number): string {
+  const pairs: Array<[number, string]> = [
+    [1000, "m"],
+    [900, "cm"],
+    [500, "d"],
+    [400, "cd"],
+    [100, "c"],
+    [90, "xc"],
+    [50, "l"],
+    [40, "xl"],
+    [10, "x"],
+    [9, "ix"],
+    [5, "v"],
+    [4, "iv"],
+    [1, "i"],
+  ];
+  let out = "";
+  let rem = n;
+  for (const [val, sym] of pairs) {
+    while (rem >= val) {
+      out += sym;
+      rem -= val;
+    }
+  }
+  return out;
+}
+
+const year = new Date().getFullYear();
+const romanYear = toRomanLower(year);
 ---
 
 <BaseLayout
@@ -33,7 +66,46 @@ const jsonLd = {
   active="home"
   ogImage="/og.png"
   fullBleed
+  hideFooter
 >
   <script type="application/ld+json" slot="jsonld" set:html={JSON.stringify(jsonLd)} />
   <TrailheadKiosk />
+
+  <div class="home-rule" aria-hidden="true"></div>
+  <HomeNow />
+
+  <footer class="home-footer">
+    <div class="home-footer-inner">
+      <span class="italic-serif home-thanks">thanks for wandering through.</span>
+      <span class="t-mono">© {romanYear} · korabeland.com</span>
+    </div>
+  </footer>
 </BaseLayout>
+
+<style>
+  .home-rule {
+    height: 1px;
+    background: var(--rule);
+    max-width: 1280px;
+    margin: 0 auto;
+    opacity: 0.7;
+  }
+
+  .home-footer {
+    border-top: 1px solid var(--rule);
+    padding: var(--s-7) var(--s-6);
+  }
+  .home-footer-inner {
+    max-width: 1280px;
+    margin-inline: auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--s-3);
+    flex-wrap: wrap;
+  }
+  .home-thanks {
+    font-size: 18px;
+    color: var(--ink);
+  }
+</style>

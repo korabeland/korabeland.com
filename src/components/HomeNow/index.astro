@@ -1,0 +1,150 @@
+---
+// HomeNow/index.astro — "§ 02 · now" block under the kiosk.
+//
+// Three columns: active projects (hardcoded for v1 — real values arrive in
+// Commit 5 when the projects collection seeds), recent notes (top N from
+// Keystatic posts), availability (moss-bordered card + slot count).
+// Below: a hairline rule. The home page owns the footer strip itself so
+// the wordmark can sit flush.
+
+import { recentPosts } from "../../lib/posts";
+import { getSiteMeta } from "../../lib/siteMeta";
+import AvailabilityCard from "./AvailabilityCard.astro";
+import NoteRow from "./NoteRow.astro";
+import ProjectRow from "./ProjectRow.astro";
+
+interface Props {
+  /** Label for the "updated N days ago" mono tag on the header. */
+  updatedLabel?: string;
+}
+
+const { updatedLabel = "updated today" } = Astro.props;
+
+const siteMeta = await getSiteMeta();
+const posts = await recentPosts(4);
+
+// v1 placeholder projects. Commit 5 replaces with real data once the
+// projects collection seeds exist.
+const PROJECTS: Array<{ name: string; description: string; status: string }> = [
+  {
+    name: "Heron",
+    description: "a self-serve analytics surface for non-engineers",
+    status: "active · wk 6 of 12",
+  },
+  {
+    name: "Lichen",
+    description: "writing a short book on systems literacy",
+    status: "draft · ch. 3",
+  },
+  {
+    name: "Cedar",
+    description: "advising a pre-seed AI startup on evaluation",
+    status: "monthly",
+  },
+];
+
+// Format publishedAt as "MM.DD.YY" for the note row meta line. Fall back
+// to "—" if a post has no date (shouldn't happen, but the type allows it).
+function formatNoteDate(iso: string | null): string {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${pad(d.getMonth() + 1)}.${pad(d.getDate())}.${String(d.getFullYear()).slice(-2)}`;
+}
+---
+
+<section class="home-now" aria-labelledby="home-now-title">
+  <div class="now-header">
+    <h2 id="home-now-title" class="t-label">§ 02 · now</h2>
+    <div class="now-rule" aria-hidden="true"></div>
+    <span class="t-mono">{updatedLabel}</span>
+  </div>
+
+  <div class="now-grid">
+    {/* ↳ in the field */}
+    <div>
+      <p class="col-label t-label">↳ in the field</p>
+      <ul class="col-list">
+        {PROJECTS.map((p) => (
+          <ProjectRow name={p.name} description={p.description} status={p.status} />
+        ))}
+      </ul>
+    </div>
+
+    {/* ↳ recent notes */}
+    <div>
+      <p class="col-label t-label">↳ recent notes</p>
+      {posts.length === 0 ? (
+        <p class="t-mono empty">no notes yet — come back soon.</p>
+      ) : (
+        <ul class="col-list">
+          {posts.map((post) => (
+            <NoteRow
+              href={`/notes/${post.slug}`}
+              title={post.title}
+              date={formatNoteDate(post.publishedAt)}
+              readTime={post.readTime}
+            />
+          ))}
+        </ul>
+      )}
+    </div>
+
+    {/* ↳ availability */}
+    <div>
+      <p class="col-label t-label">↳ availability</p>
+      <AvailabilityCard slotsAvailable={siteMeta.slotsAvailable} />
+    </div>
+  </div>
+</section>
+
+<style>
+  .home-now {
+    padding: var(--s-8) var(--s-6);
+    max-width: 1280px;
+    margin-inline: auto;
+  }
+
+  .now-header {
+    display: flex;
+    align-items: baseline;
+    gap: var(--s-5);
+    margin-bottom: var(--s-6);
+  }
+  .now-rule {
+    flex: 1;
+    height: 1px;
+    background: var(--rule);
+  }
+
+  .now-grid {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr 1fr;
+    gap: var(--s-7);
+  }
+
+  .col-label {
+    color: var(--moss);
+    margin: 0 0 var(--s-4);
+  }
+
+  .col-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-4);
+  }
+
+  .empty {
+    color: var(--ink-mute);
+  }
+
+  @media (max-width: 960px) {
+    .now-grid {
+      grid-template-columns: 1fr;
+      gap: var(--s-6);
+    }
+  }
+</style>

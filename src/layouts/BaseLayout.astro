@@ -25,6 +25,9 @@ interface Props {
   /** Render <main> edge-to-edge with no max-width or padding. Used by the
    *  home kiosk, which manages its own internal containers. */
   fullBleed?: boolean;
+  /** Suppress the site-wide footer. Used on the home page, which renders
+   *  its own "thanks for wandering through" strip in place of the default. */
+  hideFooter?: boolean;
 }
 
 const {
@@ -36,6 +39,7 @@ const {
   ogType = "website",
   noindex,
   fullBleed = false,
+  hideFooter = false,
 } = Astro.props;
 
 const siteUrl = Astro.site?.href.replace(/\/$/, "") ?? "https://korabeland.com";
@@ -133,14 +137,16 @@ const NAV_LINKS: readonly NavLink[] = [
       <slot />
     </main>
 
-    <footer class="site-footer">
-      <div class="site-footer-inner">
-        <span class="site-footer-brand">korab eland</span>
-        <span class="t-mono">
-          © {year} · <a href="/colophon">colophon</a>
-        </span>
-      </div>
-    </footer>
+    {!hideFooter && (
+      <footer class="site-footer">
+        <div class="site-footer-inner">
+          <span class="site-footer-brand">korab eland</span>
+          <span class="t-mono">
+            © {year} · <a href="/colophon">colophon</a>
+          </span>
+        </div>
+      </footer>
+    )}
   </body>
 </html>
 

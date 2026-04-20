@@ -1,0 +1,47 @@
+---
+// NoteRow.astro — one row in the "↳ recent notes" column.
+// Mono meta line (date · read-time) above a serif title link.
+
+interface Props {
+  href: string;
+  title: string;
+  date: string;
+  readTime: string;
+}
+
+const { href, title, date, readTime } = Astro.props;
+---
+
+<li class="row">
+  <a href={href}>
+    <div class="meta t-mono">{date} · {readTime}</div>
+    <div class="title t-serif">{title}</div>
+  </a>
+</li>
+
+<style>
+  .row {
+    list-style: none;
+  }
+  .row a {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 160ms ease, color 160ms ease;
+  }
+  .row a:hover,
+  .row a:focus-visible {
+    color: var(--ink);
+  }
+  .meta {
+    margin-bottom: 2px;
+  }
+  .title {
+    font-size: 16px;
+  }
+  .row a:hover .title,
+  .row a:focus-visible .title {
+    border-bottom: 1px solid var(--moss);
+  }
+</style>
