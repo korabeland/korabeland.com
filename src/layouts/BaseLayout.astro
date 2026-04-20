@@ -22,6 +22,9 @@ interface Props {
   ogType?: string;
   /** Suppress indexing for utility/preview routes. */
   noindex?: boolean;
+  /** Render <main> edge-to-edge with no max-width or padding. Used by the
+   *  home kiosk, which manages its own internal containers. */
+  fullBleed?: boolean;
 }
 
 const {
@@ -32,6 +35,7 @@ const {
   ogImage,
   ogType = "website",
   noindex,
+  fullBleed = false,
 } = Astro.props;
 
 const siteUrl = Astro.site?.href.replace(/\/$/, "") ?? "https://korabeland.com";
@@ -125,7 +129,7 @@ const NAV_LINKS: readonly NavLink[] = [
       </div>
     </header>
 
-    <main id="main" class="page-main">
+    <main id="main" class:list={["page-main", { "page-main--full-bleed": fullBleed }]}>
       <slot />
     </main>
 
@@ -247,6 +251,15 @@ const NAV_LINKS: readonly NavLink[] = [
     max-width: 1280px;
     margin-inline: auto;
     padding: var(--s-6) var(--s-4);
+  }
+
+  /* Full-bleed mode: page owns its own containers and bleeds to the viewport
+     edge. Used by the home kiosk. Vertical padding drops too so the hero
+     sits flush under the sticky chrome. */
+  .page-main--full-bleed {
+    max-width: none;
+    padding: 0;
+    margin-inline: 0;
   }
 
   .site-footer {

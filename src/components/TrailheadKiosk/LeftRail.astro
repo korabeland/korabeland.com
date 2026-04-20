@@ -1,0 +1,264 @@
+---
+// LeftRail.astro — kiosk left rail.
+//
+// Three stacked cards: masthead (TRAIL REGISTER · korab eland + tagline),
+// status pill (TAKING 2 CLIENTS · clear · 52°), and today's entry
+// typewriter block (handwritten note, signed — k.e.). Below the stack:
+// a guestbook foot link.
+//
+// Commit 2 hard-codes today's entry content to the export's sample; Commit 3
+// reads it from Keystatic's siteMeta singleton. Intentionally: lets us ship
+// the visual layout atomically without pulling in the CMS schema change.
+
+import TapeCorner from "./TapeCorner.astro";
+
+// Rev date for the masthead foot line (YYYY.MM.DD in lowercase roman).
+const now = new Date();
+const pad = (n: number) => String(n).padStart(2, "0");
+const revDate = `${now.getFullYear()}.${pad(now.getMonth() + 1)}.${pad(now.getDate())}`;
+
+// Placeholder content. Commit 3 replaces with Keystatic singleton data.
+const TODAYS_ENTRY = {
+  date: "thu · apr 18 · 9:42am",
+  body: [
+    "reworking heron's onboarding.",
+    "the real problem isn't",
+    "the learning curve — it's",
+    "that nobody knows where",
+    "the curve ends.",
+    "",
+    "drafted a piece on",
+    "permission structures.",
+    "maybe a footnote to",
+    '"borrowed maps."',
+  ].join("\n"),
+  signoff: "— k.e.",
+} as const;
+---
+
+<aside class="left-rail" aria-label="Trail register">
+  {/* Masthead */}
+  <div class="masthead">
+    <TapeCorner pos="tl" />
+    <TapeCorner pos="tr" />
+    <p class="masthead-eyebrow">TRAIL REGISTER · NO. 04</p>
+    <p class="masthead-title">korab eland</p>
+    <p class="masthead-tagline">
+      independent design &amp; research
+      <br />for the unusually curious.
+    </p>
+    <div class="masthead-foot">
+      <span>est. 2019</span>
+      <span>rev. {revDate}</span>
+    </div>
+  </div>
+
+  {/* Status pill card */}
+  <div class="status-card">
+    <span class="status-left">
+      <span class="status-dot" aria-hidden="true"></span>
+      <span class="status-text">TAKING 2 CLIENTS</span>
+    </span>
+    <span class="status-right">clear · 52°</span>
+  </div>
+
+  {/* Today's entry */}
+  <div class="entry-card">
+    <TapeCorner pos="tl" rotate={10} />
+    <p class="entry-label">§ today's entry</p>
+    <p class="entry-date">{TODAYS_ENTRY.date}</p>
+    <p class="entry-body">{TODAYS_ENTRY.body}</p>
+    <p class="entry-signoff">
+      {TODAYS_ENTRY.signoff}
+      <span class="entry-caret" aria-hidden="true"></span>
+    </p>
+  </div>
+
+  {/* Foot link */}
+  <div class="rail-foot">
+    <span>↳ sign the register</span>
+    <span>guestbook →</span>
+  </div>
+</aside>
+
+<style>
+  .left-rail {
+    position: absolute;
+    top: 28px;
+    left: 28px;
+    bottom: 64px;
+    width: 244px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    z-index: 2;
+  }
+
+  /* Shared card surface */
+  .masthead,
+  .status-card,
+  .entry-card {
+    position: relative;
+    background: var(--paper);
+    border: 1px solid var(--rule);
+  }
+  .masthead {
+    border-color: var(--ink);
+    padding: 14px 16px 12px;
+    box-shadow: 1px 2px 0 var(--moss-soft);
+  }
+
+  /* Masthead */
+  .masthead-eyebrow {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    color: var(--ink-mute);
+  }
+  .masthead-title {
+    margin: 6px 0 0;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 30px;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+  .masthead-tagline {
+    margin: 6px 0 0;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 14px;
+    line-height: 1.35;
+    color: var(--ink-soft);
+  }
+  .masthead-foot {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--rule);
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--ink-mute);
+    letter-spacing: 0.08em;
+  }
+
+  /* Status pill card */
+  .status-card {
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .status-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 9999px;
+    background: var(--moss);
+    animation: breathe 3.5s ease-in-out infinite;
+  }
+  .status-text {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--moss);
+  }
+  .status-right {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    color: var(--ink-mute);
+    text-transform: lowercase;
+  }
+
+  /* Today's entry */
+  .entry-card {
+    padding: 14px 16px 12px;
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .entry-label {
+    margin: 0 0 8px;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .entry-date {
+    margin: 0 0 10px;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 13px;
+    color: var(--ink-mute);
+  }
+  .entry-body {
+    margin: 0;
+    flex: 1 1 auto;
+    min-height: 0;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    line-height: 1.5;
+    color: var(--ink);
+    white-space: pre-line;
+    overflow: hidden;
+  }
+  .entry-signoff {
+    margin: 14px 0 0;
+    padding-top: 10px;
+    border-top: 1px dashed var(--rule);
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 13px;
+    color: var(--ink-soft);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .entry-caret {
+    display: inline-block;
+    width: 7px;
+    height: 13px;
+    background: var(--moss);
+    animation: blink 1.1s step-end infinite;
+  }
+
+  /* Foot link */
+  .rail-foot {
+    padding: 8px 10px;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    color: var(--ink-mute);
+    display: flex;
+    justify-content: space-between;
+  }
+
+  @keyframes blink {
+    0%, 50% {
+      opacity: 1;
+    }
+    50.01%, 100% {
+      opacity: 0;
+    }
+  }
+
+  @media (max-width: 1040px) {
+    .left-rail {
+      position: static;
+      width: 100%;
+    }
+  }
+</style>

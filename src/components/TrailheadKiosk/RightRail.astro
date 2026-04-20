@@ -1,0 +1,120 @@
+---
+// RightRail.astro — kiosk right rail.
+//
+// Four RouteCards (upper forest → field notes, east ridge → projects,
+// clearing → work-with-me, creek → about) with staggered rotations.
+// Below the stack: a moss-dashed "you're at the trailhead" hint.
+
+import RouteCard from "./RouteCard.astro";
+---
+
+<aside class="right-rail" aria-label="Popular routes">
+  <div class="right-rail-head">
+    <span class="right-rail-head-label">↳ popular routes</span>
+    <span class="right-rail-head-meta">this month</span>
+  </div>
+
+  <RouteCard
+    eyebrow="TO THE UPPER FOREST"
+    title="field notes"
+    sub="42 entries · essays, marginalia"
+    stats={["5–20 min ea.", "moss trail", "●●○"]}
+    tag="most walked"
+    rotate={-0.4}
+    href="/notes"
+  />
+  <RouteCard
+    eyebrow="TO THE EAST RIDGE"
+    title="projects"
+    sub="9 case studies · tools &amp; systems"
+    stats={["12–25 min ea.", "stone path", "●●●"]}
+    tag="new · 2 added"
+    rotate={0.6}
+    href="/projects"
+  />
+  <RouteCard
+    eyebrow="TO THE CLEARING"
+    title="work with me"
+    sub="2 slots open · q3 2026"
+    stats={["30 min call", "well graded", "●○○"]}
+    accent="moss"
+    rotate={-0.3}
+    href="/off-trail?from=work-with-me"
+  />
+  <RouteCard
+    eyebrow="TO THE CREEK"
+    title="colophon"
+    sub="one page · build log · contact"
+    stats={["2 min", "flat", "●○○"]}
+    rotate={0.4}
+    dim
+    href="/colophon"
+  />
+
+  <div class="you-are-here">
+    <span>↑ you're at the trailhead</span>
+    <span class="you-are-here-elev">elev. 412m</span>
+  </div>
+</aside>
+
+<style>
+  .right-rail {
+    position: absolute;
+    top: 28px;
+    right: 28px;
+    bottom: 64px;
+    width: 284px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    z-index: 2;
+  }
+
+  .right-rail-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 0 4px;
+  }
+
+  .right-rail-head-label {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  .right-rail-head-meta {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--ink-mute);
+    letter-spacing: 0.08em;
+  }
+
+  .you-are-here {
+    margin-top: auto;
+    padding: 10px 12px;
+    border: 1px dashed var(--moss);
+    background: color-mix(in oklch, var(--moss) 5%, var(--paper));
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    color: var(--ink-soft);
+    letter-spacing: 0.06em;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+
+  .you-are-here-elev {
+    color: var(--moss);
+  }
+
+  @media (max-width: 1040px) {
+    .right-rail {
+      position: static;
+      width: 100%;
+    }
+  }
+</style>

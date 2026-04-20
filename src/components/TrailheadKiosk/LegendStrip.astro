@@ -1,0 +1,78 @@
+---
+// LegendStrip.astro — kiosk bottom strip.
+//
+// Blurred paper backdrop over the map. Left eyebrow, legend chips (open /
+// draft / archive), right meta (last walker + build stamp). The export's
+// "press ~ for terminal" easter-egg copy is scope-trimmed for MVP.
+
+import LegendChip from "./LegendChip.astro";
+
+const now = new Date();
+const pad = (n: number) => String(n).padStart(2, "0");
+const buildStamp = `${now.getFullYear()}.${pad(now.getMonth() + 1)}.${pad(now.getDate())}`;
+---
+
+<footer class="legend-strip" aria-label="Kiosk legend">
+  <span class="legend-eyebrow">KORAB ELAND — TRAILHEAD</span>
+  <span class="legend-spacer"></span>
+  <LegendChip swatch="var(--moss)" label="open" />
+  <LegendChip swatch="var(--ink-soft)" label="draft" />
+  <LegendChip swatch="var(--paper)" label="archive" bordered />
+  <span class="legend-spacer"></span>
+  <span class="legend-meta">last walker: 2h ago</span>
+  <span class="legend-dot" aria-hidden="true">·</span>
+  <span class="legend-meta">build {buildStamp}</span>
+</footer>
+
+<style>
+  .legend-strip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 48px;
+    background: color-mix(in oklch, var(--paper) 92%, transparent);
+    border-top: 1px solid var(--ink);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    display: flex;
+    align-items: center;
+    padding: 0 28px;
+    gap: 28px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--ink-soft);
+    z-index: 3;
+  }
+
+  .legend-eyebrow {
+    color: var(--ink);
+    letter-spacing: 0.16em;
+  }
+
+  .legend-spacer {
+    flex: 1;
+  }
+
+  .legend-meta {
+    color: var(--ink-soft);
+  }
+
+  .legend-dot {
+    color: var(--ink-mute);
+  }
+
+  /* Drop the chips + extras on narrow screens; keep the eyebrow + build. */
+  @media (max-width: 900px) {
+    .legend-strip :global(.legend-chip),
+    .legend-strip .legend-meta:first-of-type,
+    .legend-strip .legend-dot {
+      display: none;
+    }
+    .legend-strip {
+      padding: 0 16px;
+      gap: 12px;
+    }
+  }
+</style>

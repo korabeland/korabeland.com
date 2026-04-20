@@ -1,0 +1,40 @@
+---
+// LegendChip.astro — small swatch+label pair for the bottom legend strip.
+
+interface Props {
+  /** CSS color value for the swatch fill (or transparent with a ring). */
+  swatch: string;
+  label: string;
+  /** Render as an open ring rather than a filled dot. */
+  bordered?: boolean;
+}
+
+const { swatch, label, bordered = false } = Astro.props;
+---
+
+<span class="legend-chip">
+  <span
+    class:list={["legend-chip-dot", { "legend-chip-dot--bordered": bordered }]}
+    style={`background: ${swatch};`}
+    aria-hidden="true"></span>
+  <span>{label}</span>
+</span>
+
+<style>
+  .legend-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .legend-chip-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 9999px;
+    display: inline-block;
+  }
+
+  .legend-chip-dot--bordered {
+    border: 1px solid var(--ink-soft);
+  }
+</style>

@@ -1,0 +1,168 @@
+---
+// RouteCard.astro — a "popular routes" card pinned to the kiosk's right rail.
+//
+// Tape corner + subtle rotation + optional moss accent for the active
+// "work with me" slot. Ported from trailhead-kiosk.jsx (RouteCard).
+
+import TapeCorner from "./TapeCorner.astro";
+
+type Accent = "default" | "moss";
+
+interface Props {
+  /** Small uppercase eyebrow above the title (e.g. "TO THE UPPER FOREST"). */
+  eyebrow: string;
+  title: string;
+  /** Sub-text (plain HTML-safe string). */
+  sub: string;
+  /** 3-part stats row at the card foot. */
+  stats: readonly [string, string, string];
+  /** Optional corner badge. */
+  tag?: string;
+  /** Destination URL. */
+  href: string;
+  accent?: Accent;
+  /** Degrees of rotation applied to the whole card. */
+  rotate?: number;
+  /** Dim the card (for archived/less-important routes). */
+  dim?: boolean;
+}
+
+const {
+  eyebrow,
+  title,
+  sub,
+  stats,
+  tag,
+  href,
+  accent = "default",
+  rotate = 0,
+  dim = false,
+} = Astro.props;
+
+const isMoss = accent === "moss";
+// Place the tape on the corner opposite the lean — it reads like a pinning
+// finger on the high side of the card.
+const tapePos: "tl" | "tr" = rotate < 0 ? "tr" : "tl";
+---
+
+<a
+  class:list={["route-card", { "route-card--moss": isMoss, "route-card--dim": dim }]}
+  href={href}
+  style={`--route-rotate: ${rotate}deg;`}
+>
+  <TapeCorner pos={tapePos} />
+
+  <div class="route-card-header">
+    <span class="route-card-eyebrow">{eyebrow}</span>
+    {tag && <span class="route-card-tag">{tag}</span>}
+  </div>
+
+  <div class="route-card-title">
+    {title} <span class="route-card-arrow">→</span>
+  </div>
+
+  <div class="route-card-sub" set:html={sub}></div>
+
+  <div class="route-card-stats">
+    {stats.map((s) => <span>{s}</span>)}
+  </div>
+</a>
+
+<style>
+  .route-card {
+    position: relative;
+    display: block;
+    background: var(--paper);
+    border: 1px solid var(--ink);
+    padding: 12px 14px 11px;
+    text-decoration: none;
+    color: inherit;
+    transform: rotate(var(--route-rotate));
+    box-shadow: 1px 2px 0 var(--moss-soft);
+    transition:
+      transform 200ms ease,
+      box-shadow 200ms ease;
+  }
+
+  .route-card:hover,
+  .route-card:focus-visible {
+    transform: rotate(0deg);
+    box-shadow: 2px 3px 0 var(--moss-soft);
+  }
+
+  .route-card--moss {
+    border-color: var(--moss);
+    box-shadow: 1px 2px 0 color-mix(in oklch, var(--moss) 22%, transparent);
+  }
+  .route-card--moss:hover,
+  .route-card--moss:focus-visible {
+    box-shadow: 2px 3px 0 color-mix(in oklch, var(--moss) 28%, transparent);
+  }
+
+  .route-card--dim {
+    opacity: 0.82;
+  }
+
+  .route-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 4px;
+  }
+
+  .route-card-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+  }
+  .route-card--moss .route-card-eyebrow {
+    color: var(--moss);
+  }
+
+  .route-card-tag {
+    font-family: var(--font-mono);
+    font-size: 8px;
+    letter-spacing: 0.12em;
+    padding: 2px 6px;
+    border: 1px solid var(--ink);
+    background: var(--paper);
+    color: var(--ink);
+    text-transform: uppercase;
+  }
+
+  .route-card-title {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 24px;
+    line-height: 1.05;
+    color: var(--ink);
+    margin-bottom: 4px;
+  }
+
+  .route-card-arrow {
+    color: var(--ink-soft);
+  }
+  .route-card--moss .route-card-arrow {
+    color: var(--moss);
+  }
+
+  .route-card-sub {
+    font-family: var(--font-body);
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    margin-bottom: 8px;
+  }
+
+  .route-card-stats {
+    display: flex;
+    justify-content: space-between;
+    padding-top: 8px;
+    border-top: 1px dashed var(--rule);
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    color: var(--ink-mute);
+    letter-spacing: 0.08em;
+  }
+</style>

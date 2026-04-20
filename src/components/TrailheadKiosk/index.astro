@@ -1,72 +1,54 @@
 ---
-// TrailheadKiosk/index.astro — home-hero "kiosk" variant (launch default).
+// TrailheadKiosk/index.astro — home-hero "trailhead kiosk" variant.
+//
+// Full-bleed immersive interpretation: the map IS the background, rails
+// float over it as tape-cornered cards. Ported from
+// docs/design-references/claude-design-kickoff/project/trailhead-kiosk.jsx.
 //
 // Composes:
-//   · MapSurface            (center — the object)
-//   · TrailRegisterRail     (left — recent commits)
-//   · PopularRoutesRail     (right — two hand-picked routes)
-//   · Legend strip          (bottom — WeatherPill + masthead mono)
+//   · MapSurface backdrop  (full-bleed, scaled 1.45× with paper vignette)
+//   · LeftRail             (masthead + status pill + today's entry)
+//   · RightRail            (four route cards + you-are-here hint)
+//   · LegendStrip          (bottom legend chips + build stamp)
 //
-// Tape-corner accents on the outer frame per DESIGN.md §Mood. No client JS.
+// No client JS. The page requires `fullBleed` on BaseLayout so the <main>
+// wrapper doesn't constrain the kiosk's edge-to-edge width.
 
-import WeatherPill from "../WeatherPill/WeatherPill.astro";
+import LeftRail from "./LeftRail.astro";
+import LegendStrip from "./LegendStrip.astro";
 import MapSurface from "./MapSurface.astro";
-import PopularRoutesRail from "./PopularRoutesRail.astro";
-import TrailRegisterRail from "./TrailRegisterRail.astro";
-
-interface Props {
-  /** Static status string passed to the bottom-strip WeatherPill. */
-  weatherStatus?: string;
-}
-
-const { weatherStatus = "clear · 52°f · taking clients" } = Astro.props;
+import RightRail from "./RightRail.astro";
 ---
 
 <section class="kiosk" aria-labelledby="kiosk-title">
-  {/* Tape corners */}
-  <span class="tape tape--tl" aria-hidden="true"></span>
-  <span class="tape tape--tr" aria-hidden="true"></span>
-  <span class="tape tape--bl" aria-hidden="true"></span>
-  <span class="tape tape--br" aria-hidden="true"></span>
+  {/* Title is visually hidden — the masthead card carries the on-screen
+      wordmark. This stays for SR users + document outline. */}
+  <h1 id="kiosk-title" class="sr-only">
+    korab eland — trailhead kiosk
+  </h1>
 
-  <header class="kiosk-masthead">
-    <p class="t-mono kiosk-mark">§ 01 · trailhead · kiosk</p>
-    <h1 id="kiosk-title" class="kiosk-title">
-      <span class="kiosk-title-line">korab eland</span>
-      <span class="kiosk-title-sub">builder · operator · writer</span>
-    </h1>
-    <p class="kiosk-dek">
-      a hand-drawn map of what i'm working on. the pins are live,
-      the paths fill in as the ground is walked.
-    </p>
-  </header>
-
-  <div class="kiosk-frame">
-    <div class="kiosk-rail kiosk-rail--left">
-      <TrailRegisterRail />
-    </div>
-
-    <div class="kiosk-stage">
+  {/* Full-bleed map backdrop */}
+  <div class="kiosk-backdrop" aria-hidden="true">
+    <div class="kiosk-backdrop-inner">
       <MapSurface />
-    </div>
-
-    <div class="kiosk-rail kiosk-rail--right">
-      <PopularRoutesRail />
     </div>
   </div>
 
-  <footer class="kiosk-legend-strip">
-    <span class="t-mono">trailhead kiosk · korabeland.com</span>
-    <WeatherPill status={weatherStatus} />
-  </footer>
+  {/* Paper vignette — fades map edges so the rails read cleanly */}
+  <div class="kiosk-vignette" aria-hidden="true"></div>
 
-  {/* Screen-reader-visible duplicate links for the map pins.
-      The SVG in MapSurface is decorative; real navigation targets live here. */}
+  <LeftRail />
+  <RightRail />
+  <LegendStrip />
+
+  {/* Screen-reader destinations — the visual RouteCards already link, but
+      this gives SR users a single clean list under a semantic <nav>. */}
   <nav class="sr-only" aria-label="Map destinations">
     <ul>
-      <li><a href="/off-trail?from=notes">field notes</a></li>
-      <li><a href="/off-trail?from=projects">projects</a></li>
+      <li><a href="/notes">field notes</a></li>
+      <li><a href="/projects">projects</a></li>
       <li><a href="/off-trail?from=work-with-me">work with me</a></li>
+      <li><a href="/colophon">colophon</a></li>
     </ul>
   </nav>
 </section>
@@ -74,93 +56,46 @@ const { weatherStatus = "clear · 52°f · taking clients" } = Astro.props;
 <style>
   .kiosk {
     position: relative;
-    max-width: 1280px;
-    margin-inline: auto;
-    padding: var(--s-8) var(--s-6) var(--s-7);
-    background: var(--paper);
-    border: 1px solid var(--ink);
-  }
-
-  /* Tape-corner accents */
-  .tape {
-    position: absolute;
-    width: 52px;
-    height: 14px;
+    width: 100%;
+    height: 820px;
     background: var(--paper-2);
-    border: 1px solid var(--rule);
-    opacity: 0.85;
-  }
-  .tape--tl { top: -7px; left: -12px; transform: rotate(-4deg); }
-  .tape--tr { top: -7px; right: -12px; transform: rotate(3deg); }
-  .tape--bl { bottom: -7px; left: -12px; transform: rotate(2deg); }
-  .tape--br { bottom: -7px; right: -12px; transform: rotate(-3deg); }
-
-  .kiosk-masthead {
-    max-width: 720px;
-    margin: 0 auto var(--s-7);
-    text-align: center;
+    overflow: hidden;
+    border-bottom: 1px solid var(--rule);
   }
 
-  .kiosk-mark {
-    margin: 0 0 var(--s-4);
-  }
-
-  .kiosk-title {
+  .kiosk-backdrop {
+    position: absolute;
+    inset: 0;
     display: flex;
-    flex-direction: column;
-    gap: var(--s-2);
-    margin: 0 0 var(--s-4);
-    font-family: var(--font-display);
-    font-weight: 400;
-    line-height: 1;
+    align-items: stretch;
+    justify-content: stretch;
   }
 
-  .kiosk-title-line {
-    font-size: clamp(42px, 6vw, 72px);
-    letter-spacing: -0.02em;
+  .kiosk-backdrop-inner {
+    width: 100%;
+    transform: scale(1.45);
+    transform-origin: center center;
   }
 
-  .kiosk-title-sub {
-    font-family: var(--font-display);
-    font-style: italic;
-    font-weight: 300;
-    font-size: clamp(17px, 1.6vw, 22px);
-    color: var(--ink-soft);
+  /* Strip MapSurface's framing chrome so it reads as a texture rather than
+     a card. It provides its own scale via the wrapper above. */
+  .kiosk-backdrop :global(.map-surface) {
+    max-width: none;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
   }
 
-  .kiosk-dek {
-    font-family: var(--font-body);
-    font-size: 15px;
-    line-height: 1.55;
-    color: var(--ink-soft);
-    max-width: 46ch;
-    margin-inline: auto;
-  }
-
-  .kiosk-frame {
-    display: grid;
-    grid-template-columns: 260px 1fr 260px;
-    gap: var(--s-5);
-    align-items: start;
-  }
-
-  .kiosk-stage {
-    min-width: 0;
-  }
-
-  .kiosk-legend-strip {
-    margin-top: var(--s-6);
-    padding-top: var(--s-4);
-    border-top: 1px solid var(--rule);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: var(--s-3);
-  }
-
-  .kiosk-legend-strip .t-mono {
-    margin: 0;
+  .kiosk-vignette {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(
+      ellipse at center,
+      transparent 50%,
+      color-mix(in oklch, var(--paper) 50%, transparent) 100%
+    );
+    z-index: 1;
   }
 
   .sr-only {
@@ -175,18 +110,27 @@ const { weatherStatus = "clear · 52°f · taking clients" } = Astro.props;
     border: 0;
   }
 
+  /* Narrow-viewport fallback: stop pretending we're a kiosk — stack the
+     rails under the map. Matches the `@media (max-width: 1040px)` rules
+     in LeftRail / RightRail (which go `position: static`). */
   @media (max-width: 1040px) {
-    .kiosk-frame {
-      grid-template-columns: 1fr;
+    .kiosk {
+      height: auto;
+      padding-bottom: 64px;
+    }
+    .kiosk-backdrop {
+      position: relative;
+      inset: auto;
+      height: 440px;
+    }
+    .kiosk-backdrop-inner {
+      transform: none;
     }
   }
 
   @media (max-width: 640px) {
-    .kiosk {
-      padding: var(--s-6) var(--s-4) var(--s-5);
-    }
-    .tape {
-      width: 42px;
+    .kiosk-backdrop {
+      height: 300px;
     }
   }
 </style>
