@@ -5,6 +5,17 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 import { listProjects } from "../../lib/projects";
 
 const projects = await listProjects();
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "@id": "https://korabeland.com/projects",
+  url: "https://korabeland.com/projects",
+  name: "projects — korabeland.com",
+  description:
+    "Case studies and field work — products shipped at the edge of product, strategy, and AI execution.",
+  isPartOf: { "@id": "https://korabeland.com/#website" },
+};
 ---
 
 <BaseLayout
@@ -12,6 +23,7 @@ const projects = await listProjects();
   description="Case studies and field work — products shipped at the edge of product, strategy, and AI execution."
   active="projects"
 >
+  <script type="application/ld+json" slot="jsonld" set:html={JSON.stringify(jsonLd)} />
   <section class="projects-head">
     <p class="t-label eyebrow">§ projects</p>
     <h1 class="t-display title">
@@ -135,5 +147,7 @@ const projects = await listProjects();
   }
   .empty a {
     color: var(--moss);
+    text-decoration: underline;
+    text-underline-offset: 2px;
   }
 </style>

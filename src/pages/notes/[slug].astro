@@ -48,6 +48,23 @@ function splitTitle(title: string): { head: string; tail?: string } {
   return { head, tail };
 }
 const { head, tail } = splitTitle(post.title);
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "@id": `https://korabeland.com/notes/${slug}`,
+  url: `https://korabeland.com/notes/${slug}`,
+  headline: post.title,
+  description: post.description || `Field note — ${post.title}`,
+  datePublished: post.publishedAt,
+  author: {
+    "@type": "Person",
+    name: "Korab Eland",
+    url: "https://korabeland.com/colophon",
+  },
+  isPartOf: { "@id": "https://korabeland.com/notes" },
+  mainEntityOfPage: { "@id": "https://korabeland.com/#website" },
+};
 ---
 
 <BaseLayout
@@ -57,6 +74,7 @@ const { head, tail } = splitTitle(post.title);
   ogType="article"
   fullBleed
 >
+  <script type="application/ld+json" slot="jsonld" set:html={JSON.stringify(jsonLd)} />
   <ReadingRoom
     title={head}
     titleEm={tail}

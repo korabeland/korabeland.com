@@ -372,7 +372,6 @@ export default function KnowledgeGraph({
   const overlay =
     expanded && portalTarget
       ? createPortal(
-          // biome-ignore lint/a11y/useSemanticElements: native <dialog> can't easily click-through-to-close without extra wiring; role=dialog + aria-modal + Escape handler provides equivalent semantics.
           <div
             className="kg-overlay"
             onClick={(e) => {

@@ -12,6 +12,23 @@ function formatDate(iso: string | null): string {
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${pad(d.getMonth() + 1)}.${pad(d.getDate())}.${String(d.getFullYear()).slice(-2)}`;
 }
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Blog",
+  "@id": "https://korabeland.com/notes",
+  url: "https://korabeland.com/notes",
+  name: "field notes — korabeland.com",
+  description: "Field notes on building, tools, and thinking in public.",
+  isPartOf: { "@id": "https://korabeland.com/#website" },
+  blogPost: posts.map((p) => ({
+    "@type": "BlogPosting",
+    headline: p.title,
+    description: p.description,
+    url: `https://korabeland.com/notes/${p.slug}`,
+    datePublished: p.publishedAt,
+  })),
+};
 ---
 
 <BaseLayout
@@ -19,6 +36,7 @@ function formatDate(iso: string | null): string {
   description="Field notes on building, tools, and thinking in public."
   active="notes"
 >
+  <script type="application/ld+json" slot="jsonld" set:html={JSON.stringify(jsonLd)} />
   <section class="notes-head">
     <p class="t-label eyebrow">§ field notes</p>
     <h1 class="t-display title">

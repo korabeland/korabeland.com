@@ -29,7 +29,9 @@
   /* Text */
   --ink: oklch(0.22 0.015 180); /* #1f2a2a */
   --ink-soft: oklch(0.42 0.012 180); /* #4d5757 */
-  --ink-mute: oklch(0.62 0.01 180); /* #7f8887 */
+  /* ink-mute tuned down from 0.62 → 0.52 to clear WCAG AA (4.5:1) against
+     paper/paper-2 at the 9–13px mono sizes the kiosk uses. */
+  --ink-mute: oklch(0.52 0.012 180); /* #636e6d */
 
   /* Hairlines */
   --rule: oklch(0.88 0.01 140); /* #d8dcd4 */

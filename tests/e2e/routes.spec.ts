@@ -10,10 +10,44 @@ test("/nonexistent route returns 404 with OffTrail component", async ({
   await expect(page.locator("#off-trail-title")).toHaveText("off-trail");
 });
 
-// /off-trail?from= label variants (SSR — skip in static-preview CI)
+// /notes — field notes index renders the eyebrow, title, and at least the
+// hello-world row.
+test("/notes renders the field notes index", async ({ page }) => {
+  const response = await page.goto("/notes");
+  expect(response?.status()).toBe(200);
+  await expect(page.locator(".notes-head .eyebrow")).toContainText(
+    "field notes",
+  );
+  await expect(page.locator("h1.title")).toContainText("Field notes");
+  await expect(page.locator(`a[href="/notes/hello-world"]`)).toBeVisible();
+});
+
+// /notes/hello-world — reading-room page renders the post title, left-rail
+// MiniMap, and the body prose container.
+test("/notes/hello-world renders in the reading room", async ({ page }) => {
+  const response = await page.goto("/notes/hello-world");
+  expect(response?.status()).toBe(200);
+  await expect(page.locator("article.reading-room h1.title")).toContainText(
+    "Hello",
+  );
+  await expect(page.locator(".left-rail")).toBeVisible();
+  await expect(page.locator(".post-body")).toBeVisible();
+});
+
+// /projects — launch state is empty; the grove-is-quiet copy must render.
+test("/projects renders the empty-state grove copy", async ({ page }) => {
+  const response = await page.goto("/projects");
+  expect(response?.status()).toBe(200);
+  await expect(page.locator("h1.title")).toContainText("Case studies");
+  await expect(page.locator(".empty .empty-title")).toContainText(
+    "The grove is quiet",
+  );
+});
+
+// /off-trail?from= label variants (SSR — skip in static-preview CI). The
+// notes + projects slugs are no longer routed here because both destinations
+// are live, so only work-with-me remains as a legitimate off-trail case.
 const FROM_CASES = [
-  { slug: "notes", label: "field notes — not yet in the system" },
-  { slug: "projects", label: "projects — not yet in the system" },
   { slug: "work-with-me", label: "work with me — not yet in the system" },
 ] as const;
 

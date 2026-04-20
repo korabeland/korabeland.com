@@ -14,7 +14,14 @@ function ensureDirs() {
   }
 }
 
-const ROUTES = ["/", "/colophon", "/off-trail"];
+const ROUTES = [
+  "/",
+  "/notes",
+  "/notes/hello-world",
+  "/projects",
+  "/colophon",
+  "/off-trail",
+];
 
 for (const route of ROUTES) {
   test(`screenshot: ${route}`, async ({ page }, testInfo) => {
