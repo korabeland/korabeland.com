@@ -205,3 +205,147 @@ body {
   outline: none;
   box-shadow: var(--focus-ring);
 }
+
+/* ─── Display & serif helpers ────────────────────────────────────────── */
+
+.t-display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-variation-settings: "opsz" 144;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+}
+
+.t-serif {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-variation-settings: "opsz" 24;
+  line-height: 1.35;
+}
+
+.italic-serif {
+  font-family: var(--font-display);
+  font-style: italic;
+}
+
+/* ─── Button ─────────────────────────────────────────────────────────── */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 10px 16px;
+  border: 1px solid var(--ink);
+  color: var(--ink);
+  background: transparent;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.btn:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.btn.ghost {
+  border-color: var(--rule);
+  color: var(--ink-soft);
+}
+
+.btn.ghost:hover {
+  border-color: var(--ink);
+  color: var(--ink);
+  background: transparent;
+}
+
+/* ─── Tag chip ───────────────────────────────────────────────────────── */
+
+.tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border: 1px solid var(--rule);
+  color: var(--ink-soft);
+}
+
+/* ─── Figure placeholder ─────────────────────────────────────────────── */
+
+.fig {
+  background:
+    repeating-linear-gradient(
+      135deg,
+      transparent 0,
+      transparent 10px,
+      color-mix(in oklch, var(--ink) 4%, transparent) 10px,
+      color-mix(in oklch, var(--ink) 4%, transparent) 11px
+    ),
+    var(--paper-2);
+  border: 1px solid var(--rule);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--ink-mute);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* ─── Pullquote ──────────────────────────────────────────────────────── */
+
+.pullquote {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 300;
+  font-size: 28px;
+  line-height: 1.3;
+  color: var(--ink);
+  border-left: 1px solid var(--moss);
+  padding-left: var(--s-5);
+  margin: var(--s-7) 0;
+}
+
+/* ─── Margin note ────────────────────────────────────────────────────── */
+
+.mnote {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.55;
+  color: var(--ink-mute);
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
+
+.mnote sup {
+  color: var(--moss);
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+/* ─── Footnote anchor ────────────────────────────────────────────────── */
+
+.fn {
+  color: var(--moss);
+  font-family: var(--font-mono);
+  font-size: 0.75em;
+  vertical-align: super;
+  cursor: pointer;
+  padding: 0 2px;
+}
+
+/* ─── Soft hairline ──────────────────────────────────────────────────── */
+
+.rule-soft {
+  height: 1px;
+  background: var(--rule);
+  border: 0;
+}
