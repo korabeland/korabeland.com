@@ -83,7 +83,7 @@ test("/notes/hello-world renders in the reading room", async ({ page }) => {
   await expect(page.locator(".post-body")).toBeVisible();
 });
 
-// /colophon — build log + influences + tools.
+// /colophon — build log + tools.
 test("/colophon renders the colophon page", async ({ page }) => {
   const response = await page.goto("/colophon");
   expect(response?.status()).toBe(200);
