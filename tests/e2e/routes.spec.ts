@@ -129,13 +129,27 @@ test("/off-trail with an unknown from= value falls back to generic copy", async 
   await expect(page.locator(".dek")).toContainText("This page does not exist");
 });
 
-// Chrome — availability line renders and nav active state works.
-test("chrome renders the availability line", async ({ page }) => {
+// Availability signal — status line in the homepage hero readout, quiet
+// echo in every footer. The rail carries a portrait badge on interior
+// pages instead (the homepage hero has the full framed portrait).
+test("home hero renders the availability status line and portrait", async ({
+  page,
+}) => {
   await page.goto("/");
-  await expect(page.locator(".avail")).toContainText(
+  await expect(page.locator(".hero-avail")).toContainText(
     "open to ai · data · product roles",
   );
-  await expect(page.locator(".avail-dot")).toBeVisible();
+  await expect(page.locator(".hero-avail-dot")).toBeVisible();
+  await expect(page.locator(".hero-portrait img")).toBeVisible();
+  await expect(page.locator(".chrome-badge")).toHaveCount(0);
+});
+
+test("footer carries the availability echo; interior rail shows the badge", async ({
+  page,
+}) => {
+  await page.goto("/work");
+  await expect(page.locator(".footer-avail")).toContainText("open to roles");
+  await expect(page.locator(".chrome-badge")).toBeVisible();
 });
 
 const NAV_ACTIVE_CASES = [

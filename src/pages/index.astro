@@ -5,6 +5,8 @@ export const prerender = true;
 // case studies from the projects collection), recent notes, and a quiet
 // contact line. See docs/plans/2026-07-03-console-mvp.md.
 
+import { Image } from "astro:assets";
+import portrait from "../assets/portrait-illustrated.jpg";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { listPosts } from "../lib/posts";
 import { listProjects } from "../lib/projects";
@@ -67,14 +69,33 @@ function formatDate(iso: string | null): string {
   <div class="home">
     <!-- ─── Hero: the readout ─────────────────────────────────────────── -->
     <section class="hero" aria-labelledby="hero-heading">
-      <p class="t-label hero-eyebrow">korab eland · operator · melbourne</p>
-      <h1 id="hero-heading" class="t-display hero-title">
-        I turn ambiguous problems into systems that <span class="hero-ship">ship</span>.
-      </h1>
-      <p class="hero-sub">
-        13 years across marketing, CX and operations. Now building the AI-driven kind:
-        evidence in, decisions out, designed for handoff.
-      </p>
+      <div class="hero-text">
+        <p class="t-label hero-eyebrow">korab eland · operator · melbourne</p>
+        <h1 id="hero-heading" class="t-display hero-title">
+          I turn ambiguous problems into systems that <span class="hero-ship">ship</span>.
+        </h1>
+        <p class="hero-sub">
+          13 years across marketing, CX and operations. Now building the AI-driven kind:
+          evidence in, decisions out, designed for handoff.
+        </p>
+        <p class="t-label hero-avail">
+          <span class="hero-avail-dot" aria-hidden="true"></span>
+          open to ai · data · product roles
+        </p>
+      </div>
+      <figure class="hero-portrait">
+        <Image
+          src={portrait}
+          alt="Illustrated portrait of Korab Eland"
+          widths={[360, 720]}
+          sizes="(max-width: 680px) 240px, 340px"
+          loading="eager"
+        />
+        <figcaption class="t-mono hero-portrait-cap">
+          <span>korab eland</span>
+          <span class="hero-portrait-loc">⌖ melbourne</span>
+        </figcaption>
+      </figure>
     </section>
 
     <!-- ─── Outcome ledger ────────────────────────────────────────────── -->
@@ -159,7 +180,14 @@ function formatDate(iso: string | null): string {
     gap: var(--s-8);
   }
 
-  /* ─── Hero ─────────────────────────────────────────────────────────── */
+  /* ─── Hero — split readout: text left, framed portrait right ────────── */
+
+  .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+    gap: var(--s-7);
+    align-items: start;
+  }
 
   .hero-eyebrow {
     color: var(--ink-soft);
@@ -167,7 +195,7 @@ function formatDate(iso: string | null): string {
   }
 
   .hero-title {
-    font-size: clamp(34px, 6vw, 52px);
+    font-size: clamp(34px, 5vw, 48px);
     margin: 0 0 var(--s-4);
     max-width: 18ch;
     color: var(--ink);
@@ -183,6 +211,59 @@ function formatDate(iso: string | null): string {
     color: var(--ink-soft);
     max-width: 52ch;
     margin: 0;
+  }
+
+  /* Availability status line — the last line of the readout. The dot is
+     motion moment 2 of 3 (DESIGN.md §5): a slow breathe, amber. */
+  .hero-avail {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+    color: var(--amber);
+    margin: var(--s-5) 0 0;
+  }
+
+  .hero-avail-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: var(--r-pill);
+    background: var(--amber);
+    animation: avail-breathe 3.2s ease-in-out infinite;
+  }
+
+  @keyframes avail-breathe {
+    0%,
+    100% {
+      box-shadow: 0 0 0 0 color-mix(in oklch, var(--amber) 45%, transparent);
+    }
+    50% {
+      box-shadow: 0 0 0 5px transparent;
+    }
+  }
+
+  .hero-portrait {
+    margin: 0;
+    max-width: 340px;
+    justify-self: end;
+    border: 1px solid var(--rule);
+  }
+
+  .hero-portrait img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .hero-portrait-cap {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--s-3);
+    padding: var(--s-2) var(--s-3);
+    border-top: 1px solid var(--rule);
+  }
+
+  .hero-portrait-loc {
+    color: var(--amber);
   }
 
   /* ─── Section chrome ───────────────────────────────────────────────── */
@@ -372,6 +453,14 @@ function formatDate(iso: string | null): string {
   }
 
   @media (max-width: 680px) {
+    .hero {
+      grid-template-columns: 1fr;
+      gap: var(--s-6);
+    }
+    .hero-portrait {
+      max-width: 240px;
+      justify-self: start;
+    }
     .ledger-link {
       grid-template-columns: 1fr auto;
     }

@@ -1,23 +1,24 @@
 ---
 // BaseLayout.astro — page shell for every route.
 //
-// The Operator's Console (DESIGN.md 2026-07-03): the chrome is a status
-// rail — wordmark, mono nav labels, availability line with a breathing
-// amber dot. Footer is a hairline collar with contact links.
+// The Operator's Console (DESIGN.md 2026-07-03): the chrome is a clean
+// rail — wordmark + mono nav labels, plus a small portrait badge on
+// interior pages (the "logged-in operator"). The availability signal
+// lives in the homepage hero readout; every footer carries a quiet echo.
 
+import { Image } from "astro:assets";
 import "../styles/global.css";
 // Critical font files, preloaded so first paint already has them (CLS).
 import mono400 from "@fontsource/jetbrains-mono/files/jetbrains-mono-latin-400-normal.woff2?url";
 import grotesk400 from "@fontsource/schibsted-grotesk/files/schibsted-grotesk-latin-400-normal.woff2?url";
 import grotesk700 from "@fontsource/schibsted-grotesk/files/schibsted-grotesk-latin-700-normal.woff2?url";
+import portrait from "../assets/portrait-illustrated.jpg";
 
 interface Props {
   title: string;
   description?: string;
   /** Which nav item, if any, is "active" — controls the amber underline. */
   active?: "home" | "notes" | "projects" | "work" | "about" | "colophon";
-  /** Availability line in the status rail. */
-  availability?: string;
   /** Absolute path to the OG image (e.g. "/og.png"). */
   ogImage?: string;
   /** og:type value — defaults to "website". */
@@ -36,13 +37,16 @@ const {
   title,
   description = "Korab Eland, operator. I turn ambiguous problems into systems that ship.",
   active,
-  availability = "open to ai · data · product roles",
   ogImage,
   ogType = "website",
   noindex,
   fullBleed = false,
   hideFooter = false,
 } = Astro.props;
+
+// Interior pages get the small portrait badge in the rail; the homepage
+// carries the full framed portrait in its hero instead.
+const showBadge = active !== "home";
 
 const siteUrl = Astro.site?.href.replace(/\/$/, "") ?? "https://korabeland.com";
 const ogImageUrl = ogImage ? `${siteUrl}${ogImage}` : undefined;
@@ -105,10 +109,21 @@ const NAV_LINKS: readonly NavLink[] = [
     <header class="chrome">
       <div class="chrome-inner">
         <a class="chrome-brand" href="/" aria-label="Korab Eland, home">
-          <svg class="chrome-mark" viewBox="0 0 18 18" aria-hidden="true">
-            <rect x="1.5" y="1.5" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1" />
-            <circle cx="9" cy="9" r="2.4" fill="currentColor" />
-          </svg>
+          {showBadge ? (
+            <Image
+              class="chrome-badge"
+              src={portrait}
+              alt=""
+              width={52}
+              height={52}
+              loading="eager"
+            />
+          ) : (
+            <svg class="chrome-mark" viewBox="0 0 18 18" aria-hidden="true">
+              <rect x="1.5" y="1.5" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1" />
+              <circle cx="9" cy="9" r="2.4" fill="currentColor" />
+            </svg>
+          )}
           <span class="chrome-brand-text">korab eland</span>
         </a>
 
@@ -129,12 +144,6 @@ const NAV_LINKS: readonly NavLink[] = [
           </ul>
         </nav>
 
-        <div class="chrome-meta">
-          <span class="avail t-label">
-            <span class="avail-dot" aria-hidden="true"></span>
-            {availability}
-          </span>
-        </div>
       </div>
     </header>
 
@@ -147,6 +156,7 @@ const NAV_LINKS: readonly NavLink[] = [
         <div class="site-footer-inner">
           <span class="site-footer-brand">korab eland</span>
           <span class="t-mono site-footer-links">
+            <span class="footer-avail">● open to roles</span> ·{" "}
             <a href="mailto:korabeland@gmail.com">email</a> ·{" "}
             <a href="https://www.linkedin.com/in/korabeland" rel="me">linkedin</a> ·{" "}
             <a href="/colophon">colophon</a> · © {year}
@@ -199,7 +209,7 @@ const NAV_LINKS: readonly NavLink[] = [
     margin-inline: auto;
     padding: var(--s-4) var(--s-6);
     display: grid;
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns: auto 1fr;
     align-items: center;
     gap: var(--s-5);
   }
@@ -218,6 +228,15 @@ const NAV_LINKS: readonly NavLink[] = [
     color: var(--ink);
   }
 
+  .chrome-badge {
+    width: 26px;
+    height: 26px;
+    border-radius: var(--r-1);
+    border: 1px solid var(--rule);
+    object-fit: cover;
+    display: block;
+  }
+
   .chrome-brand-text {
     font-family: var(--font-display);
     font-weight: 500;
@@ -230,7 +249,7 @@ const NAV_LINKS: readonly NavLink[] = [
     margin: 0;
     padding: 0;
     display: flex;
-    justify-content: center;
+    justify-content: flex-end;
     gap: var(--s-6);
   }
 
@@ -254,38 +273,6 @@ const NAV_LINKS: readonly NavLink[] = [
   .chrome-nav a.is-active {
     color: var(--ink);
     border-bottom-color: var(--amber);
-  }
-
-  .chrome-meta {
-    justify-self: end;
-  }
-
-  /* Availability line — the understated open-to-roles signal. The dot is
-     motion moment 2 of 3 (DESIGN.md §5): a slow breathe, amber. */
-  .avail {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--s-2);
-    color: var(--amber);
-    white-space: nowrap;
-  }
-
-  .avail-dot {
-    width: 7px;
-    height: 7px;
-    border-radius: var(--r-pill);
-    background: var(--amber);
-    animation: avail-breathe 3.2s ease-in-out infinite;
-  }
-
-  @keyframes avail-breathe {
-    0%,
-    100% {
-      box-shadow: 0 0 0 0 color-mix(in oklch, var(--amber) 45%, transparent);
-    }
-    50% {
-      box-shadow: 0 0 0 5px transparent;
-    }
   }
 
   .page-main {
@@ -341,18 +328,17 @@ const NAV_LINKS: readonly NavLink[] = [
     border-bottom-color: var(--amber);
   }
 
-  @media (max-width: 768px) {
+  .footer-avail {
+    color: var(--amber);
+    letter-spacing: 0.06em;
+  }
+
+  @media (max-width: 640px) {
     .chrome-inner {
-      grid-template-columns: 1fr auto;
-      grid-template-areas:
-        "brand meta"
-        "nav   nav";
+      grid-template-columns: 1fr;
       row-gap: var(--s-3);
     }
-    .chrome-brand { grid-area: brand; }
-    .chrome-meta  { grid-area: meta; }
-    .chrome-nav   {
-      grid-area: nav;
+    .chrome-nav {
       overflow-x: auto;
     }
     .chrome-nav ul {

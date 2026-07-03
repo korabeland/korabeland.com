@@ -6,6 +6,8 @@ export const prerender = true;
 // Copy is disclosure-cleared per docs/plans/2026-07-03-console-mvp.md —
 // do not add specifics (names, vendors, metrics, comp, transitions).
 
+import { Image } from "astro:assets";
+import portrait from "../assets/portrait-illustrated.jpg";
 import BaseLayout from "../layouts/BaseLayout.astro";
 
 const jsonLd = {
@@ -32,6 +34,20 @@ const jsonLd = {
       <p class="t-label">§ · about</p>
       <h1 class="t-display about-title">Turning ambiguous problems into systems</h1>
     </header>
+
+    <figure class="about-portrait">
+      <Image
+        src={portrait}
+        alt="Illustrated portrait of Korab Eland"
+        widths={[440, 880]}
+        sizes="(max-width: 680px) 280px, 440px"
+        loading="eager"
+      />
+      <figcaption class="t-mono about-portrait-cap">
+        <span>korab eland</span>
+        <span class="about-portrait-loc">⌖ melbourne</span>
+      </figcaption>
+    </figure>
 
     <section class="about-body" aria-labelledby="narrative">
       <h2 id="narrative" class="sr-only">Career narrative</h2>
@@ -118,6 +134,36 @@ const jsonLd = {
 
   .about-header {
     margin: 0 0 var(--s-6);
+  }
+
+  .about-portrait {
+    margin: 0 0 var(--s-7);
+    max-width: 440px;
+    border: 1px solid var(--rule);
+  }
+
+  .about-portrait img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .about-portrait-cap {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--s-3);
+    padding: var(--s-2) var(--s-3);
+    border-top: 1px solid var(--rule);
+  }
+
+  .about-portrait-loc {
+    color: var(--amber);
+  }
+
+  @media (max-width: 680px) {
+    .about-portrait {
+      max-width: 280px;
+    }
   }
 
   .about-header .t-label {
