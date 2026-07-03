@@ -17,7 +17,11 @@ const root = resolve(__dirname, "..");
 const componentsDir = join(root, "src", "components");
 const barrelPath = join(componentsDir, "index.ts");
 
-const extensions = [".tsx", ".ts", ".astro"];
+// .astro is deliberately excluded: astro modules can't be re-exported
+// through a .ts barrel (tsc can't resolve them without the extension).
+// Astro components are imported directly by path; the barrel serves
+// ts/tsx islands only.
+const extensions = [".tsx", ".ts"];
 
 function discoverExports(): string[] {
   const entries = readdirSync(componentsDir, { withFileTypes: true });
