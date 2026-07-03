@@ -41,10 +41,13 @@
   --moss: oklch(0.62 0.06 145); /* #6a8f6a */
   --moss-soft: oklch(0.4 0.04 145); /* #435c45 */
 
-  /* Typography families */
-  --font-display: "Schibsted Grotesk", system-ui, sans-serif;
-  --font-body: "Schibsted Grotesk", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  /* Typography families — the Fallback face carries size-adjust metrics
+     matched to Schibsted (see global.css) so font swap causes no CLS. */
+  --font-display:
+    "Schibsted Grotesk", "Schibsted Grotesk Fallback", system-ui, sans-serif;
+  --font-body:
+    "Schibsted Grotesk", "Schibsted Grotesk Fallback", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "Menlo", monospace;
 
   /* Spacing rhythm — 4px base, Tailwind-aligned step (1/2/3/4/6/8/12/16/24/32) */
   --s-1: 4px;

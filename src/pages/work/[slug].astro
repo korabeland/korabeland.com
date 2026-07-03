@@ -41,7 +41,7 @@ function formatSpan(startISO: string | null, shipISO: string | null): string {
   const yearStr =
     s.getFullYear() === e.getFullYear()
       ? String(s.getFullYear())
-      : `${s.getFullYear()} — ${e.getFullYear()}`;
+      : `${s.getFullYear()}–${e.getFullYear()}`;
   return `${yearStr} · ${months} month${months === 1 ? "" : "s"}`;
 }
 const span = formatSpan(project.startedAt, project.shippedAt);
@@ -72,14 +72,26 @@ if (project.nextProject) {
     nextProject = { slug: project.nextProject, title: next.title };
   }
 }
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  headline: project.title,
+  description: project.description,
+  url: `https://korabeland.com/work/${slug}`,
+  author: { "@id": "https://korabeland.com/#person" },
+  ...(project.startedAt ? { dateCreated: project.startedAt } : {}),
+  ...(project.shippedAt ? { datePublished: project.shippedAt } : {}),
+};
 ---
 
 <BaseLayout
-  title={`${project.title} — case study — korab eland`}
-  description={project.description || `Case study — ${project.title}`}
+  title={`${project.title} · case study · korab eland`}
+  description={project.description || `Case study: ${project.title}`}
   active="work"
   ogType="article"
 >
+  <script type="application/ld+json" slot="jsonld" set:html={JSON.stringify(jsonLd)} />
   <CaseStudy
     title={project.title}
     subtitle={project.description}

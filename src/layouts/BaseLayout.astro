@@ -6,6 +6,10 @@
 // amber dot. Footer is a hairline collar with contact links.
 
 import "../styles/global.css";
+// Critical font files, preloaded so first paint already has them (CLS).
+import mono400 from "@fontsource/jetbrains-mono/files/jetbrains-mono-latin-400-normal.woff2?url";
+import grotesk400 from "@fontsource/schibsted-grotesk/files/schibsted-grotesk-latin-400-normal.woff2?url";
+import grotesk700 from "@fontsource/schibsted-grotesk/files/schibsted-grotesk-latin-700-normal.woff2?url";
 
 interface Props {
   title: string;
@@ -30,7 +34,7 @@ interface Props {
 
 const {
   title,
-  description = "Korab Eland — operator. I turn ambiguous problems into systems that ship.",
+  description = "Korab Eland, operator. I turn ambiguous problems into systems that ship.",
   active,
   availability = "open to ai · data · product roles",
   ogImage,
@@ -74,10 +78,11 @@ const NAV_LINKS: readonly NavLink[] = [
     <meta name="theme-color" content="#16181c" />
     {noindex && <meta name="robots" content="noindex" />}
     <link rel="canonical" href={Astro.url.href} />
-    <!-- Preconnect to Google Fonts so the font CSS and files fetch in
-         parallel with the main document — cuts ~300-500ms off LCP. -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Fonts are self-hosted; preload the critical weights so they land
+         before first paint (no swap, no layout shift). -->
+    <link rel="preload" href={grotesk400} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={grotesk700} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={mono400} as="font" type="font/woff2" crossorigin />
     <title>{title}</title>
     <!-- Open Graph -->
     <meta property="og:type" content={ogType} />
@@ -99,7 +104,7 @@ const NAV_LINKS: readonly NavLink[] = [
     <a class="skip-link" href="#main">skip to content</a>
     <header class="chrome">
       <div class="chrome-inner">
-        <a class="chrome-brand" href="/" aria-label="Korab Eland — home">
+        <a class="chrome-brand" href="/" aria-label="Korab Eland, home">
           <svg class="chrome-mark" viewBox="0 0 18 18" aria-hidden="true">
             <rect x="1.5" y="1.5" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1" />
             <circle cx="9" cy="9" r="2.4" fill="currentColor" />
