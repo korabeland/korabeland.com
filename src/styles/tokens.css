@@ -1,16 +1,16 @@
 /* ──────────────────────────────────────────────────────────────────────────
    korabeland.com — design tokens
-   Source of truth: OKLCH values from the Claude Design handoff
-   (docs/design-references/claude-design-kickoff/project/styles.css).
+   Source of truth: ../../DESIGN.md ("The Operator's Console", 2026-07-03).
 
    Hex values alongside each OKLCH are *lossy* best-effort fallbacks for
    legacy browsers without OKLCH support. OKLCH is authoritative; hex drift
    of ±1 unit in perceptual lightness is expected and acceptable.
 
    Scope:
-     [data-palette]  swaps hue family        (rainforest | alpine | mesa | boreal)
-     [data-time]     swaps day-state         (dawn | day | dusk)
-   Rainforest + day are the defaults and live on :root with no attribute.
+     :root              night shift (default) — the console
+     [data-time="day"]  day shift — light mode
+   Legacy palettes (rainforest/alpine/mesa/boreal) and dawn/dusk states
+   retired with the trail-map system.
 
    Do NOT hand-edit. Token changes flow through DESIGN.md first; this file
    is regenerated to match.
@@ -20,30 +20,30 @@
    all other rules in the final stylesheet, and tokens.css is imported after
    the Tailwind base. */
 
-/* ─── Default palette — Rainforest, day ────────────────────────────────── */
+/* ─── Night shift (default) ────────────────────────────────────────────── */
 :root {
   /* Surfaces */
-  --paper: oklch(0.97 0.008 95); /* #f6f3ec */
-  --paper-2: oklch(0.945 0.012 95); /* #ece8df */
+  --paper: oklch(0.21 0.01 250); /* #16181c */
+  --paper-2: oklch(0.24 0.012 250); /* #1d2026 */
 
   /* Text */
-  --ink: oklch(0.22 0.015 180); /* #1f2a2a */
-  --ink-soft: oklch(0.42 0.012 180); /* #4d5757 */
-  /* ink-mute tuned down from 0.62 → 0.52 to clear WCAG AA (4.5:1) against
-     paper/paper-2 at the 9–13px mono sizes the kiosk uses. */
-  --ink-mute: oklch(0.52 0.012 180); /* #636e6d */
+  --ink: oklch(0.93 0.008 100); /* #e9e8e0 */
+  --ink-soft: oklch(0.72 0.01 110); /* #a6a99c */
+  /* ink-mute is reserved for larger recessive meta or bordered chips —
+     small mono (≤13px) uses --ink-soft to clear WCAG AA. See DESIGN.md §2. */
+  --ink-mute: oklch(0.62 0.01 110); /* #8a8d81 */
 
   /* Hairlines */
-  --rule: oklch(0.88 0.01 140); /* #d8dcd4 */
+  --rule: oklch(0.31 0.012 250); /* #2c3037 */
 
-  /* Accents */
-  --moss: oklch(0.48 0.055 150); /* #4f6f55 */
-  --moss-soft: oklch(0.78 0.04 150); /* #b7c9ba */
-  --amber: oklch(0.62 0.095 60); /* #b38541 */
+  /* Accents — amber is THE signal; moss is semantic "shipped/positive" only */
+  --amber: oklch(0.75 0.12 70); /* #d99a3c */
+  --moss: oklch(0.62 0.06 145); /* #6a8f6a */
+  --moss-soft: oklch(0.4 0.04 145); /* #435c45 */
 
   /* Typography families */
-  --font-display: "Fraunces", Georgia, serif;
-  --font-body: "Inter Tight", system-ui, sans-serif;
+  --font-display: "Schibsted Grotesk", system-ui, sans-serif;
+  --font-body: "Schibsted Grotesk", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 
   /* Spacing rhythm — 4px base, Tailwind-aligned step (1/2/3/4/6/8/12/16/24/32) */
@@ -62,70 +62,23 @@
   --r-0: 0px; /* hairline boxes, cards, buttons — default */
   --r-1: 2px; /* input corners, subtle softening */
   --r-2: 4px; /* scrollbar thumbs, chip-radii if needed */
-  --r-pill: 9999px; /* weather-pill dot, status circles */
+  --r-pill: 9999px; /* status dots, availability chip */
 
-  /* Focus ring — see DESIGN.md §Accessibility */
-  --focus-ring: 0 0 0 2px var(--paper), 0 0 0 4px var(--moss);
+  /* Focus ring — amber signal on console ground. See DESIGN.md §Accessibility */
+  --focus-ring: 0 0 0 2px var(--paper), 0 0 0 4px var(--amber);
 }
 
-/* ─── Alpine ──────────────────────────────────────────────────────────── */
-[data-palette="alpine"] {
-  --paper: oklch(0.965 0.006 240); /* #eff1f5 */
-  --paper-2: oklch(0.935 0.01 240); /* #e3e6ed */
-  --ink: oklch(0.24 0.018 240); /* #252c38 */
-  --ink-soft: oklch(0.44 0.015 240); /* #525b6a */
-  --ink-mute: oklch(0.64 0.012 240); /* #8289923 */
-  --rule: oklch(0.87 0.01 240); /* #d3d6de */
-  --moss: oklch(0.45 0.05 230); /* #4a6678 */
-  --moss-soft: oklch(0.8 0.03 230); /* #bbc7d1 */
-  --amber: oklch(0.68 0.08 70); /* #c29356 */
-}
-
-/* ─── Rainforest (default) ─── intentionally empty; baked into :root ──── */
-
-/* ─── Mesa ────────────────────────────────────────────────────────────── */
-[data-palette="mesa"] {
-  --paper: oklch(0.96 0.012 70); /* #f3eee3 */
-  --paper-2: oklch(0.925 0.02 65); /* #ebe0c8 */
-  --ink: oklch(0.26 0.025 40); /* #322720 */
-  --ink-soft: oklch(0.45 0.025 40); /* #5e4c40 */
-  --ink-mute: oklch(0.62 0.02 40); /* #8a7969 */
-  --rule: oklch(0.86 0.02 60); /* #d4ccbd */
-  --moss: oklch(0.5 0.09 35); /* #86583c */
-  --moss-soft: oklch(0.8 0.055 40); /* #d6bba3 */
-  --amber: oklch(0.62 0.12 45); /* #b8763a */
-}
-
-/* ─── Boreal ──────────────────────────────────────────────────────────── */
-[data-palette="boreal"] {
-  --paper: oklch(0.955 0.005 160); /* #eef1ec */
-  --paper-2: oklch(0.92 0.008 160); /* #e2e7e0 */
-  --ink: oklch(0.22 0.02 180); /* #1e2a28 */
-  --ink-soft: oklch(0.42 0.015 170); /* #4a5856 */
-  --ink-mute: oklch(0.6 0.012 170); /* #7c8684 */
-  --rule: oklch(0.86 0.012 160); /* #d2d8d1 */
-  --moss: oklch(0.42 0.055 170); /* #3e6156 */
-  --moss-soft: oklch(0.78 0.035 170); /* #b5c7bc */
-  --amber: oklch(0.65 0.09 55); /* #b98a47 */
-}
-
-/* ─── Day-states ─── override paper / amber / (dusk: everything) ──────── */
-[data-time="dawn"] {
-  --paper: oklch(0.955 0.022 50); /* #f4e9d6 */
-  --paper-2: oklch(0.92 0.03 45); /* #e8d5b5 */
-  --amber: oklch(0.65 0.11 40); /* #c37a3a */
-}
-
-[data-time="dusk"] {
-  --paper: oklch(0.3 0.02 280); /* #2e2e3d */
-  --paper-2: oklch(0.26 0.022 280); /* #272736 */
-  --ink: oklch(0.92 0.01 60); /* #ecead9 */
-  --ink-soft: oklch(0.78 0.014 60); /* #c4bfa7 */
-  --ink-mute: oklch(0.6 0.015 60); /* #8e8871 */
-  --rule: oklch(0.42 0.02 280); /* #484862 */
-  --moss: oklch(0.75 0.06 140); /* #a5c29c */
-  --moss-soft: oklch(0.45 0.05 140); /* #556c52 */
-  --amber: oklch(0.78 0.11 65); /* #d9a66a */
-  /* Focus ring re-pins against dark paper */
-  --focus-ring: 0 0 0 2px var(--paper), 0 0 0 4px var(--moss);
+/* ─── Day shift ────────────────────────────────────────────────────────── */
+[data-time="day"] {
+  --paper: oklch(0.955 0.006 100); /* #f2f1ea */
+  --paper-2: oklch(0.925 0.008 100); /* #e9e7de */
+  --ink: oklch(0.23 0.012 250); /* #1a1d22 */
+  --ink-soft: oklch(0.43 0.01 250); /* #565a62 */
+  --ink-mute: oklch(0.52 0.01 250); /* #6d717a */
+  --rule: oklch(0.88 0.008 100); /* #dbd9cf */
+  --amber: oklch(0.6 0.11 70); /* #a4732a */
+  --moss: oklch(0.48 0.06 145); /* #4a6f4d */
+  --moss-soft: oklch(0.78 0.04 145); /* #b7ccb9 */
+  /* Focus ring re-pins against light paper */
+  --focus-ring: 0 0 0 2px var(--paper), 0 0 0 4px var(--amber);
 }

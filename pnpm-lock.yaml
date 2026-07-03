@@ -20,9 +20,9 @@ importers:
       '@astrojs/vercel':
         specifier: ^10.0.4
         version: 10.0.4(astro@6.1.7(@types/node@25.6.0)(@vercel/functions@3.4.3)(idb-keyval@6.2.2)(jiti@2.6.1)(lightningcss@1.32.0)(rollup@4.60.1)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.3))(react@19.2.5)(rollup@4.60.1)
-      '@fontsource/fraunces':
-        specifier: ^5.2.9
-        version: 5.2.9
+      '@fontsource/schibsted-grotesk':
+        specifier: ^5.2.8
+        version: 5.2.8
       '@keystatic/astro':
         specifier: ^5.0.6
         version: 5.0.6(@keystatic/core@0.5.50(@react-spectrum/provider@3.11.0(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(astro@6.1.7(@types/node@25.6.0)(@vercel/functions@3.4.3)(idb-keyval@6.2.2)(jiti@2.6.1)(lightningcss@1.32.0)(rollup@4.60.1)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.3))(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
@@ -732,8 +732,8 @@ packages:
   '@floating-ui/utils@0.2.11':
     resolution: {integrity: sha512-RiB/yIh78pcIxl6lLMG0CgBXAZ2Y0eVHqMPYugu+9U0AeT6YBeiJpf7lbdJNIugFP5SIjwNRgo4DhR1Qxi26Gg==}
 
-  '@fontsource/fraunces@5.2.9':
-    resolution: {integrity: sha512-XDzuddBtoC7BZgZdBn6b7hsFZY2+V1hgN7yca5fBTKuHjb/lOd45a0Ji8dTUgFhPoL7RdGupo+bC2BFSt6UH8Q==}
+  '@fontsource/schibsted-grotesk@5.2.8':
+    resolution: {integrity: sha512-CyyDW5aS89oKGFAVndOsJTQ5pqzKuPnSKWjrdJdMT5TD/eA2JyWapUBhvy6X/lqqrB/GNk74PIff7coPifeVyg==}
 
   '@formatjs/ecma402-abstract@2.3.6':
     resolution: {integrity: sha512-HJnTFeRM2kVFVr5gr5kH1XP6K0JcJtE7Lzvtr3FS/so5f1kpsqqqxy5JF+FRaO6H2qmcMfAUIox7AJteieRtVw==}
@@ -4976,8 +4976,8 @@ packages:
   third-party-web@0.26.7:
     resolution: {integrity: sha512-buUzX4sXC4efFX6xg2bw6/eZsCUh8qQwSavC4D9HpONMFlRbcHhD8Je5qwYdCpViR6q0qla2wPP+t91a2vgolg==}
 
-  third-party-web@0.29.0:
-    resolution: {integrity: sha512-nBDSJw5B7Sl1YfsATG2XkW5qgUPODbJhXw++BKygi9w6O/NKS98/uY/nR/DxDq2axEjL6halHW1v+jhm/j1DBQ==}
+  third-party-web@0.29.2:
+    resolution: {integrity: sha512-fegtha91tq2DHphyoiBXVHjVi2YG9zFaRnboT9C28tO1en9Y3wJsfspuy40F+u5wl3hHVbw7cnd1b67kEGHb8g==}
 
   through@2.3.8:
     resolution: {integrity: sha512-w89qg7PI8wAdvX60bMDP+bFoD5Dvhm9oLheFp5O4a2QF0cSBGsBX4qZmadPMvVqlLJBBci+WqGGOAPvcDeNSVg==}
@@ -6148,7 +6148,7 @@ snapshots:
 
   '@floating-ui/utils@0.2.11': {}
 
-  '@fontsource/fraunces@5.2.9': {}
+  '@fontsource/schibsted-grotesk@5.2.8': {}
 
   '@formatjs/ecma402-abstract@2.3.6':
     dependencies:
@@ -6648,7 +6648,7 @@ snapshots:
   '@paulirish/trace_engine@0.0.53':
     dependencies:
       legacy-javascript: 0.0.1
-      third-party-web: 0.29.0
+      third-party-web: 0.29.2
 
   '@playwright/test@1.59.1':
     dependencies:
@@ -11363,7 +11363,7 @@ snapshots:
 
   third-party-web@0.26.7: {}
 
-  third-party-web@0.29.0: {}
+  third-party-web@0.29.2: {}
 
   through@2.3.8: {}
 
