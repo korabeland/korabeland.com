@@ -24,6 +24,8 @@ interface Props {
   marginNotes?: MarginNote[];
   backHref?: string;
   backLabel?: string;
+  heroImage?: string;
+  heroImageAlt?: string;
 }
 
 const {
@@ -40,6 +42,8 @@ const {
   marginNotes = [],
   backHref = "/notes",
   backLabel = "← back to the grove",
+  heroImage,
+  heroImageAlt = "",
 } = Astro.props;
 ---
 
@@ -67,6 +71,12 @@ const {
     )}
 
     <div class="rule-soft rule-top"></div>
+
+    {heroImage && (
+      <figure class="hero">
+        <img src={heroImage} alt={heroImageAlt} loading="eager" />
+      </figure>
+    )}
 
     <div class="post-body">
       <slot />
@@ -124,6 +134,16 @@ const {
     margin: var(--s-6) 0 var(--s-7);
   }
 
+  .hero {
+    margin: 0 0 var(--s-7);
+  }
+  .hero img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 2px;
+  }
+
   /* Body prose — margins + dropped cap + basic type scale. DocumentRenderer
      emits plain <p>/<h2>/<ul> so we target them generically. */
   .post-body :global(p) {
@@ -177,7 +197,17 @@ const {
   .post-body :global(ol) {
     font-size: 17px;
     line-height: 1.7;
-    margin: 0 0 var(--s-5) var(--s-5);
+    margin: 0 0 var(--s-5) 0;
+    padding-left: var(--s-5);
+  }
+  .post-body :global(ul) {
+    list-style: disc outside;
+  }
+  .post-body :global(ol) {
+    list-style: decimal outside;
+  }
+  .post-body :global(li) {
+    margin-block: var(--s-2);
   }
 
   @media (max-width: 1200px) {

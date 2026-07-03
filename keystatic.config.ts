@@ -18,6 +18,15 @@ export default config({
         }),
         description: fields.text({ label: "Description", multiline: true }),
         publishedAt: fields.date({ label: "Published At" }),
+        heroImage: fields.image({
+          label: "Hero image",
+          directory: "public/notes",
+          publicPath: "/notes/",
+        }),
+        heroImageAlt: fields.text({
+          label: "Hero image alt text",
+          description: "Describes the image for screen readers.",
+        }),
         content: fields.markdoc({ label: "Content" }),
       },
     }),

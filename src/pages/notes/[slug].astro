@@ -82,6 +82,8 @@ const jsonLd = {
     date={formatDate(post.publishedAt)}
     readTime={readTime}
     wordCount={wordCount}
+    heroImage={post.heroImage ?? undefined}
+    heroImageAlt={post.heroImageAlt || post.title}
   >
     <PostContent document={content} />
   </ReadingRoom>
