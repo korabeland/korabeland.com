@@ -3,15 +3,41 @@ import { expect, test } from "@playwright/test";
 const routes = [
   {
     path: "/",
-    title: "korabeland.com — trailhead",
-    descriptionFragment: "builder, operator, writer",
+    title: "korab eland · operator · builds with ai",
+    descriptionFragment: "ambiguous problems into systems",
     ogType: "website",
     hasOgImage: true,
     noindex: false,
   },
   {
+    path: "/work",
+    title: "work · case studies · korab eland",
+    descriptionFragment: "Case studies from the field",
+    ogType: "website",
+    hasOgImage: false,
+    noindex: false,
+  },
+  {
+    path: "/work/lead-scoring",
+    title:
+      "Lead scoring: fixed tiers to a decile model · case study · korab eland",
+    descriptionFragment: "Stopping hundreds of low-value calls",
+    ogType: "article",
+    hasOgImage: false,
+    noindex: false,
+    hasJsonLd: true,
+  },
+  {
+    path: "/about",
+    title: "about · korab eland",
+    descriptionFragment: "13 years across marketing, CX and operations",
+    ogType: "website",
+    hasOgImage: false,
+    noindex: false,
+  },
+  {
     path: "/colophon",
-    title: "korabeland.com — colophon",
+    title: "korabeland.com: colophon",
     descriptionFragment: "How korabeland.com was built",
     ogType: "website",
     hasOgImage: false,
@@ -19,7 +45,7 @@ const routes = [
   },
   {
     path: "/notes",
-    title: "field notes — korabeland.com",
+    title: "field notes: korabeland.com",
     descriptionFragment: "Field notes on building",
     ogType: "website",
     hasOgImage: false,
@@ -27,24 +53,16 @@ const routes = [
   },
   {
     path: "/notes/hello-world",
-    title: "Hello World — field notes",
-    descriptionFragment: "first post on Korab",
+    title: "Hello World: field notes",
+    descriptionFragment: "first post",
     ogType: "article",
     hasOgImage: false,
     noindex: false,
   },
   {
-    path: "/projects",
-    title: "projects — korabeland.com",
-    descriptionFragment: "Case studies and field work",
-    ogType: "website",
-    hasOgImage: false,
-    noindex: false,
-  },
-  {
     path: "/off-trail",
-    title: "korabeland.com — off-trail",
-    descriptionFragment: "This path hasn't been mapped yet",
+    title: "korabeland.com: page not found",
+    descriptionFragment: "This page does not exist",
     ogType: "website",
     hasOgImage: false,
     noindex: true,
@@ -52,6 +70,7 @@ const routes = [
 ] as const;
 
 for (const route of routes) {
+  const hasJsonLd = "hasJsonLd" in route ? route.hasJsonLd : true;
   test(`SEO head: ${route.path}`, async ({ page }) => {
     await page.goto(route.path);
 
@@ -112,13 +131,17 @@ for (const route of routes) {
       page.locator('meta[name="twitter:description"]'),
     ).toHaveAttribute("content", new RegExp(route.descriptionFragment));
 
-    // JSON-LD present and valid
+    // JSON-LD present and valid (all routes except the known gap above)
     const jsonLdScript = page.locator('script[type="application/ld+json"]');
-    await expect(jsonLdScript).toHaveCount(1);
-    const jsonLdText = await jsonLdScript.textContent();
-    expect(() => JSON.parse(jsonLdText ?? "")).not.toThrow();
-    const jsonLd = JSON.parse(jsonLdText ?? "{}");
-    expect(jsonLd["@context"]).toBe("https://schema.org");
+    if (hasJsonLd) {
+      await expect(jsonLdScript).toHaveCount(1);
+      const jsonLdText = await jsonLdScript.textContent();
+      expect(() => JSON.parse(jsonLdText ?? "")).not.toThrow();
+      const jsonLd = JSON.parse(jsonLdText ?? "{}");
+      expect(jsonLd["@context"]).toBe("https://schema.org");
+    } else {
+      await expect(jsonLdScript).toHaveCount(0);
+    }
 
     // noindex guard
     if (route.noindex) {
@@ -131,3 +154,34 @@ for (const route of routes) {
     }
   });
 }
+
+// Home embeds a JSON-LD @graph containing a schema.org Person node for
+// Korab — the canonical identity anchor other pages' JSON-LD references via
+// @id / mainEntity.
+test("home JSON-LD graph includes a Person node", async ({ page }) => {
+  await page.goto("/");
+  const jsonLdText = await page
+    .locator('script[type="application/ld+json"]')
+    .textContent();
+  const jsonLd = JSON.parse(jsonLdText ?? "{}");
+  expect(jsonLd["@graph"]).toBeTruthy();
+  const personNode = (jsonLd["@graph"] as Array<Record<string, unknown>>).find(
+    (node) => node["@type"] === "Person",
+  );
+  expect(personNode).toBeTruthy();
+  expect(personNode?.name).toBe("Korab Eland");
+  expect(personNode?.["@id"]).toBe("https://korabeland.com/#person");
+});
+
+// /about references the Person node via mainEntity rather than duplicating it.
+test("/about JSON-LD references the Person node via mainEntity", async ({
+  page,
+}) => {
+  await page.goto("/about");
+  const jsonLdText = await page
+    .locator('script[type="application/ld+json"]')
+    .textContent();
+  const jsonLd = JSON.parse(jsonLdText ?? "{}");
+  expect(jsonLd["@type"]).toBe("ProfilePage");
+  expect(jsonLd.mainEntity?.["@id"]).toBe("https://korabeland.com/#person");
+});
