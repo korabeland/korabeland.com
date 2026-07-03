@@ -1,21 +1,19 @@
 ---
 // BaseLayout.astro — page shell for every route.
 //
-// Provides <head> + Chrome header (logo, nav links, right-side WeatherPill)
-// per DESIGN.md §Component inventory > Chrome. Footer is a single hairline
-// row with copyright + a colophon link (terminal-caret easter egg is
-// deferred post-MVP per the office-hours doc).
+// The Operator's Console (DESIGN.md 2026-07-03): the chrome is a status
+// rail — wordmark, mono nav labels, availability line with a breathing
+// amber dot. Footer is a hairline collar with contact links.
 
 import "../styles/global.css";
-import WeatherPill from "../components/WeatherPill/WeatherPill.astro";
 
 interface Props {
   title: string;
   description?: string;
-  /** Which nav item, if any, is "active" — controls the moss underline. */
-  active?: "home" | "notes" | "projects" | "work" | "colophon";
-  /** Static status string for the Chrome WeatherPill. */
-  weatherStatus?: string;
+  /** Which nav item, if any, is "active" — controls the amber underline. */
+  active?: "home" | "notes" | "projects" | "work" | "about" | "colophon";
+  /** Availability line in the status rail. */
+  availability?: string;
   /** Absolute path to the OG image (e.g. "/og.png"). */
   ogImage?: string;
   /** og:type value — defaults to "website". */
@@ -32,9 +30,9 @@ interface Props {
 
 const {
   title,
-  description = "Korab Eland — builder, operator, writer.",
+  description = "Korab Eland — operator. I turn ambiguous problems into systems that ship.",
   active,
-  weatherStatus = "taking clients",
+  availability = "open to ai · data · product roles",
   ogImage,
   ogType = "website",
   noindex,
@@ -55,14 +53,14 @@ interface NavLink {
 }
 
 const NAV_LINKS: readonly NavLink[] = [
+  { key: "work", href: "/work", label: "work" },
   {
     key: "notes",
     href: "/notes",
-    label: "field notes",
+    label: "notes",
     ariaLabel: "field notes",
   },
-  { key: "projects", href: "/projects", label: "projects" },
-  { key: "work", href: "/off-trail?from=work-with-me", label: "work with me" },
+  { key: "about", href: "/about", label: "about" },
   { key: "colophon", href: "/colophon", label: "colophon" },
 ] as const;
 ---
@@ -73,7 +71,7 @@ const NAV_LINKS: readonly NavLink[] = [
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
-    <meta name="theme-color" content="#f6f3ec" />
+    <meta name="theme-color" content="#16181c" />
     {noindex && <meta name="robots" content="noindex" />}
     <link rel="canonical" href={Astro.url.href} />
     <!-- Preconnect to Google Fonts so the font CSS and files fetch in
@@ -103,9 +101,8 @@ const NAV_LINKS: readonly NavLink[] = [
       <div class="chrome-inner">
         <a class="chrome-brand" href="/" aria-label="Korab Eland — home">
           <svg class="chrome-mark" viewBox="0 0 18 18" aria-hidden="true">
-            <circle cx="9" cy="9" r="8" fill="none" stroke="currentColor" stroke-width="1" />
-            <path d="M 9 2 L 11 9 L 9 8 L 7 9 Z" fill="currentColor" />
-            <circle cx="9" cy="9" r="1.2" fill="currentColor" />
+            <rect x="1.5" y="1.5" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1" />
+            <circle cx="9" cy="9" r="2.4" fill="currentColor" />
           </svg>
           <span class="chrome-brand-text">korab eland</span>
         </a>
@@ -128,7 +125,10 @@ const NAV_LINKS: readonly NavLink[] = [
         </nav>
 
         <div class="chrome-meta">
-          <WeatherPill status={weatherStatus} />
+          <span class="avail t-label">
+            <span class="avail-dot" aria-hidden="true"></span>
+            {availability}
+          </span>
         </div>
       </div>
     </header>
@@ -141,8 +141,10 @@ const NAV_LINKS: readonly NavLink[] = [
       <footer class="site-footer">
         <div class="site-footer-inner">
           <span class="site-footer-brand">korab eland</span>
-          <span class="t-mono">
-            © {year} · <a href="/colophon">colophon</a>
+          <span class="t-mono site-footer-links">
+            <a href="mailto:korabeland@gmail.com">email</a> ·{" "}
+            <a href="https://www.linkedin.com/in/korabeland" rel="me">linkedin</a> ·{" "}
+            <a href="/colophon">colophon</a> · © {year}
           </span>
         </div>
       </footer>
@@ -228,8 +230,10 @@ const NAV_LINKS: readonly NavLink[] = [
   }
 
   .chrome-nav a {
-    font-family: var(--font-body);
-    font-size: 13px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
     color: var(--ink-soft);
     text-decoration: none;
     padding-bottom: 3px;
@@ -244,11 +248,39 @@ const NAV_LINKS: readonly NavLink[] = [
 
   .chrome-nav a.is-active {
     color: var(--ink);
-    border-bottom-color: var(--moss);
+    border-bottom-color: var(--amber);
   }
 
   .chrome-meta {
     justify-self: end;
+  }
+
+  /* Availability line — the understated open-to-roles signal. The dot is
+     motion moment 2 of 3 (DESIGN.md §5): a slow breathe, amber. */
+  .avail {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+    color: var(--amber);
+    white-space: nowrap;
+  }
+
+  .avail-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: var(--r-pill);
+    background: var(--amber);
+    animation: avail-breathe 3.2s ease-in-out infinite;
+  }
+
+  @keyframes avail-breathe {
+    0%,
+    100% {
+      box-shadow: 0 0 0 0 color-mix(in oklch, var(--amber) 45%, transparent);
+    }
+    50% {
+      box-shadow: 0 0 0 5px transparent;
+    }
   }
 
   .page-main {
@@ -286,8 +318,9 @@ const NAV_LINKS: readonly NavLink[] = [
 
   .site-footer-brand {
     font-family: var(--font-display);
-    font-style: italic;
-    font-size: 18px;
+    font-weight: 500;
+    font-size: 16px;
+    letter-spacing: -0.01em;
     color: var(--ink);
   }
 
@@ -300,7 +333,7 @@ const NAV_LINKS: readonly NavLink[] = [
   .site-footer a:hover,
   .site-footer a:focus-visible {
     color: var(--ink);
-    border-bottom-color: var(--moss);
+    border-bottom-color: var(--amber);
   }
 
   @media (max-width: 768px) {
