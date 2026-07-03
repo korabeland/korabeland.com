@@ -41,7 +41,7 @@ const {
   contents = [],
   marginNotes = [],
   backHref = "/notes",
-  backLabel = "← back to the grove",
+  backLabel = "← back to notes",
   heroImage,
   heroImageAlt = "",
 } = Astro.props;
@@ -64,10 +64,10 @@ const {
   <div class="column">
     <div class="eyebrow t-label">{eyebrow}</div>
     <h1 class="t-display title">
-      {title}{titleEm && <> <span class="italic-serif title-em">{titleEm}</span></>}
+      {title}{titleEm && <> <span class="title-em">{titleEm}</span></>}
     </h1>
     {subtitle && (
-      <p class="t-serif subtitle">{subtitle}</p>
+      <p class="subtitle">{subtitle}</p>
     )}
 
     <div class="rule-soft rule-top"></div>
@@ -113,22 +113,21 @@ const {
   }
 
   .eyebrow {
-    color: var(--moss);
     margin-bottom: var(--s-4);
   }
   .title {
-    font-size: 56px;
+    font-size: clamp(28px, 4vw, 40px);
     margin: 0 0 var(--s-5);
-    font-weight: 400;
-    line-height: 1.05;
   }
   .title-em {
-    font-weight: 300;
+    color: var(--amber);
   }
   .subtitle {
-    font-size: 19px;
+    font-size: 17px;
+    line-height: 1.6;
     color: var(--ink-soft);
     margin: 0 0 var(--s-7);
+    max-width: 52ch;
   }
   .rule-top {
     margin: var(--s-6) 0 var(--s-7);
@@ -144,43 +143,37 @@ const {
     border-radius: 2px;
   }
 
-  /* Body prose — margins + dropped cap + basic type scale. DocumentRenderer
-     emits plain <p>/<h2>/<ul> so we target them generically. */
+  /* Body prose — console type scale. DocumentRenderer emits plain
+     <p>/<h2>/<ul> so we target them generically. */
   .post-body :global(p) {
     font-size: 17px;
     line-height: 1.7;
     margin: 0 0 var(--s-5);
   }
-  .post-body :global(p:first-of-type::first-letter) {
-    font-family: var(--font-display);
-    font-size: 52px;
-    line-height: 0.9;
-    float: left;
-    padding-right: 10px;
-    padding-top: 6px;
-    color: var(--moss);
-  }
   .post-body :global(h2) {
     font-family: var(--font-display);
-    font-size: 32px;
-    font-weight: 400;
+    font-weight: 700;
+    font-size: 28px;
+    letter-spacing: -0.02em;
     margin: var(--s-8) 0 var(--s-4);
-    letter-spacing: -0.01em;
+    color: var(--ink);
   }
   .post-body :global(h3) {
     font-family: var(--font-display);
-    font-size: 22px;
-    font-weight: 400;
+    font-weight: 700;
+    font-size: 20px;
+    letter-spacing: -0.01em;
     margin: var(--s-6) 0 var(--s-3);
+    color: var(--ink);
   }
   .post-body :global(blockquote) {
     font-family: var(--font-display);
-    font-style: italic;
-    font-size: 22px;
-    line-height: 1.4;
+    font-weight: 500;
+    font-size: 20px;
+    line-height: 1.45;
     margin: var(--s-7) 0;
     padding-left: var(--s-5);
-    border-left: 2px solid var(--moss);
+    border-left: 2px solid var(--amber);
     color: var(--ink-soft);
   }
   .post-body :global(figure) {

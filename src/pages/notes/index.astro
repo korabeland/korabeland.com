@@ -18,7 +18,7 @@ const jsonLd = {
   "@type": "Blog",
   "@id": "https://korabeland.com/notes",
   url: "https://korabeland.com/notes",
-  name: "field notes — korabeland.com",
+  name: "field notes: korabeland.com",
   description: "Field notes on building, tools, and thinking in public.",
   isPartOf: { "@id": "https://korabeland.com/#website" },
   blogPost: posts.map((p) => ({
@@ -32,25 +32,23 @@ const jsonLd = {
 ---
 
 <BaseLayout
-  title="field notes — korabeland.com"
+  title="field notes: korabeland.com"
   description="Field notes on building, tools, and thinking in public."
   active="notes"
 >
   <script type="application/ld+json" slot="jsonld" set:html={JSON.stringify(jsonLd)} />
   <section class="notes-head">
     <p class="t-label eyebrow">§ field notes</p>
-    <h1 class="t-display title">
-      Field notes <span class="italic-serif">from the trail.</span>
-    </h1>
-    <p class="t-serif lede">
-      A log of what I'm thinking through — mycelial networks, interface
-      design, systems literacy, and the small bets behind them.
+    <h1 class="t-display title">Field notes.</h1>
+    <p class="lede">
+      A log of what I am thinking through: systems, tools, and the small
+      bets behind them.
     </p>
   </section>
 
   <section class="notes-list">
     {posts.length === 0 ? (
-      <p class="t-mono empty">no notes yet — come back soon.</p>
+      <p class="t-mono empty">no notes yet, check back soon.</p>
     ) : (
       <ul>
         {posts.map((p) => (
@@ -73,20 +71,20 @@ const jsonLd = {
     margin: var(--s-7) auto var(--s-6);
   }
   .eyebrow {
-    color: var(--moss);
     margin: 0 0 var(--s-4);
   }
   .title {
-    font-size: clamp(44px, 6vw, 72px);
-    line-height: 1.05;
+    font-size: clamp(28px, 4vw, 40px);
     margin: 0 0 var(--s-5);
-    font-weight: 400;
-    letter-spacing: -0.02em;
   }
   .lede {
-    font-size: 19px;
+    font-family: var(--font-body);
+    font-style: normal;
+    font-size: 17px;
+    line-height: 1.6;
     color: var(--ink-soft);
     margin: 0;
+    max-width: 52ch;
   }
 
   .notes-list {
@@ -115,8 +113,8 @@ const jsonLd = {
   }
   .row-title {
     font-family: var(--font-display);
-    font-size: 26px;
-    font-weight: 400;
+    font-weight: 700;
+    font-size: 20px;
     margin: 0 0 6px;
     letter-spacing: -0.01em;
     color: var(--ink);
@@ -128,7 +126,7 @@ const jsonLd = {
   }
   .row-main:hover .row-title,
   .row-main:focus-visible .row-title {
-    border-bottom: 1px solid var(--moss);
+    border-bottom: 1px solid var(--amber);
     display: inline;
   }
   .empty {

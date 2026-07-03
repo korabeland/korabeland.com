@@ -55,7 +55,7 @@ const jsonLd = {
   "@id": `https://korabeland.com/notes/${slug}`,
   url: `https://korabeland.com/notes/${slug}`,
   headline: post.title,
-  description: post.description || `Field note — ${post.title}`,
+  description: post.description || `Field note: ${post.title}`,
   datePublished: post.publishedAt,
   author: {
     "@type": "Person",
@@ -68,8 +68,8 @@ const jsonLd = {
 ---
 
 <BaseLayout
-  title={`${post.title} — field notes`}
-  description={post.description || `Field note — ${post.title}`}
+  title={`${post.title}: field notes`}
+  description={post.description || `Field note: ${post.title}`}
   active="notes"
   ogType="article"
   fullBleed

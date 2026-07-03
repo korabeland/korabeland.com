@@ -57,7 +57,7 @@ const commits = loadCommits().slice(0, 14);
 const FALLBACK_INFLUENCES: Influence[] = [
   {
     person: "Tiago Forte",
-    note: "PARA + Building a Second Brain — capture, organise, distill, express.",
+    note: "PARA + Building a Second Brain: capture, organise, distill, express.",
   },
   {
     person: "Rick Rubin",
@@ -114,7 +114,7 @@ const jsonLd = {
   "@type": "WebPage",
   "@id": "https://korabeland.com/colophon",
   url: "https://korabeland.com/colophon",
-  name: "korabeland.com — colophon",
+  name: "korabeland.com: colophon",
   description:
     "How korabeland.com was built. About Korab, the people and ideas that shaped his work, and the tools used.",
   isPartOf: { "@id": "https://korabeland.com/#website" },
@@ -140,7 +140,7 @@ const tools: { label: string; note: string }[] = [
 ---
 
 <BaseLayout
-  title="korabeland.com — colophon"
+  title="korabeland.com: colophon"
   description="How korabeland.com was built. About Korab, the people and ideas that shaped his work, and the tools used."
   active="colophon"
 >
@@ -165,7 +165,7 @@ const tools: { label: string; note: string }[] = [
       <p>
         He is most at home turning ambiguous ideas into working systems and
         writing about the parts that surprised him along the way. The default
-        voice here is understated, specific, and human — closer to a field journal
+        voice here is understated, specific, and human: closer to a field journal
         than a brand page.
       </p>
     </section>
@@ -181,7 +181,7 @@ const tools: { label: string; note: string }[] = [
       <ul>
         {influences.map((entry) => (
           <li>
-            <strong>{entry.person}</strong> — {entry.note}
+            <strong>{entry.person}</strong>: {entry.note}
           </li>
         ))}
       </ul>
@@ -190,13 +190,13 @@ const tools: { label: string; note: string }[] = [
     <section aria-labelledby="stack">
       <h2 id="stack">Tools and stack</h2>
       <p>
-        The site is small on purpose. The visible surface is two pages at launch;
-        the build pipeline does most of the work behind the scenes.
+        The site is small on purpose. The build pipeline does most of the
+        work behind the scenes.
       </p>
       <ul>
         {tools.map((tool) => (
           <li>
-            <strong>{tool.label}</strong> — {tool.note}
+            <strong>{tool.label}</strong>: {tool.note}
           </li>
         ))}
       </ul>
@@ -232,7 +232,7 @@ const tools: { label: string; note: string }[] = [
         <a href="mailto:hello@korabeland.com">hello@korabeland.com</a>.
       </p>
       <p class="t-mono small">
-        The map on the home page will keep filling in as the site does.
+        The outcome ledger on the home page will keep filling in as the work does.
       </p>
     </section>
   </article>
