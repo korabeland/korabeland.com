@@ -211,6 +211,26 @@ test("/dev/experience-preview renders roles, a current chip, and conditional tes
   await expect(page.getByText("6 · stakeholders")).toBeVisible();
 });
 
+// U3 — skills section is content-gated: absent while the singleton is empty.
+test("about page omits the skills section while the singleton is empty", async ({
+  page,
+}) => {
+  await page.goto("/about");
+  await expect(page.locator("#skills-heading")).toHaveCount(0);
+});
+
+// U3 — dev-only preview renders SkillsSection against a fixture.
+test("/dev/skills-preview renders categories and certifications", async ({
+  page,
+}) => {
+  const response = await page.goto("/dev/skills-preview");
+  expect(response?.status()).toBe(200);
+  await expect(page.locator("#skills-heading")).toBeVisible();
+  await expect(page.locator(".skills-cat")).not.toHaveCount(0);
+  await expect(page.locator(".skills-cert")).not.toHaveCount(0);
+  await expect(page.getByText("SQL · Python", { exact: false })).toBeVisible();
+});
+
 // robots.txt must block /dev/ and /keystatic
 test("robots.txt disallows /dev/ and /keystatic", async ({ request }) => {
   const resp = await request.get("/robots.txt");

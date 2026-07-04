@@ -11,9 +11,10 @@ const ROUTES = [
   "/notes/hello-world",
   "/colophon",
   "/off-trail",
-  // Dev-only preview — the only place the experience section renders until real
-  // roles land, so axe checks its markup and contrast here.
+  // Dev-only previews — the only place the experience and skills sections
+  // render until real content lands, so axe checks their markup and contrast.
   "/dev/experience-preview",
+  "/dev/skills-preview",
 ];
 
 for (const route of ROUTES) {

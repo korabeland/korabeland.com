@@ -8,8 +8,12 @@ export const prerender = true;
 
 import { Image } from "astro:assets";
 import portrait from "../assets/portrait-illustrated.jpg";
+import SkillsSection from "../components/SkillsSection/SkillsSection.astro";
 import StatusChip from "../components/StatusChip/StatusChip.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
+import { readSkills } from "../lib/skills";
+
+const skills = await readSkills();
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -98,6 +102,8 @@ const jsonLd = {
         <a href="/notes/system-designer-personal-os">/notes/system-designer-personal-os</a>.
       </p>
     </section>
+
+    {skills && <SkillsSection data={skills} />}
 
     <section class="about-close" aria-labelledby="close">
       <h2 id="close" class="sr-only">Contact</h2>

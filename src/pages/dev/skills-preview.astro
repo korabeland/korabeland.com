@@ -1,0 +1,57 @@
+---
+export const prerender = false;
+
+// Dev-only preview: renders SkillsSection against a fixture so the section's
+// markup and contrast are covered by e2e + axe without committing a skills
+// singleton that would ship to prod. Returns 404 in production; robots.txt
+// disallows /dev/ and the sitemap filter excludes it.
+
+import SkillsSection from "../../components/SkillsSection/SkillsSection.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import type { SkillsData } from "../../lib/skills";
+
+if (import.meta.env.PROD) {
+  return new Response("Not found", { status: 404 });
+}
+
+const data: SkillsData = {
+  categories: [
+    {
+      name: "Data & AI",
+      skills: ["SQL", "Python", "ML pipelines", "experiment design"],
+    },
+    {
+      name: "Operations",
+      skills: ["process design", "stakeholder alignment", "CX systems"],
+    },
+  ],
+  certifications: [
+    {
+      name: "Some Certification",
+      issuer: "An Institute",
+      year: "2024",
+      url: null,
+    },
+    {
+      name: "Another Credential",
+      issuer: "A Body",
+      year: "2021",
+      url: "https://example.co",
+    },
+  ],
+};
+---
+
+<BaseLayout title="dev · skills preview" noindex={true}>
+  <div class="dev-preview">
+    <SkillsSection data={data} />
+  </div>
+</BaseLayout>
+
+<style>
+  .dev-preview {
+    max-width: 680px;
+    margin-inline: auto;
+    padding: var(--s-6) var(--s-4);
+  }
+</style>
