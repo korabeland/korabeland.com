@@ -1,6 +1,12 @@
 ---
-// OutcomeMetrics.astro — bordered rows: label · mono amber value.
+// OutcomeMetrics.astro — bordered rows: label · mono amber value. Clean numeric
+// values (e.g. "42", "90%", "3x") count up from zero when they scroll into
+// view; ranges and words render static. The server-rendered markup always
+// carries the final value, so no-JS and reduced-motion visitors see it
+// immediately — the script self-disables under prefers-reduced-motion.
 // DESIGN.md §4 "Metrics block".
+
+import { parseCountUp } from "../../lib/metric-countup";
 
 interface Metric {
   value: string;
@@ -12,16 +18,76 @@ interface Props {
 }
 
 const { metrics } = Astro.props;
+
+const rows = metrics.map((m) => ({ ...m, countUp: parseCountUp(m.value) }));
 ---
 
 <div class="metrics">
-  {metrics.map((m) => (
+  {rows.map((m) => (
     <div class="metric">
       <span class="metric-label">{m.label}</span>
-      <span class="t-mono metric-value">{m.value}</span>
+      <span
+        class="t-mono metric-value"
+        data-countup-target={m.countUp.animatable ? m.countUp.target : undefined}
+        data-countup-suffix={m.countUp.animatable ? m.countUp.suffix : undefined}
+      >{m.value}</span>
     </div>
   ))}
 </div>
+
+<script>
+  // Count-up enhancement. Values that passed the build-time parser carry
+  // data-countup-* attributes; every other readout is left untouched. Guarded
+  // by prefers-reduced-motion — the server already rendered the final value, so
+  // reduced-motion and no-JS visitors simply keep it.
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
+  if (!reduce.matches) {
+    const animate = (el: HTMLElement) => {
+      const target = Number(el.dataset.countupTarget);
+      const suffix = el.dataset.countupSuffix ?? "";
+      if (!Number.isFinite(target)) return;
+      const settle = () => {
+        el.textContent = target + suffix;
+      };
+      // A backgrounded / throttled tab can't animate smoothly — show the real
+      // value rather than risk leaving a metric stuck mid-count.
+      if (document.hidden) {
+        settle();
+        return;
+      }
+      const durationMs = 900;
+      let startTs: number | null = null;
+      const step = (ts: number) => {
+        if (startTs === null) startTs = ts;
+        const progress = Math.min(1, (ts - startTs) / durationMs);
+        const eased = 1 - (1 - progress) ** 3;
+        el.textContent = Math.round(eased * target) + suffix;
+        if (progress < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+      // Safety net: guarantee the final value even if rAF is throttled and
+      // never reaches the last frame. A real metric must never stick at zero.
+      window.setTimeout(settle, durationMs + 200);
+    };
+
+    const observer = new IntersectionObserver(
+      (entries, obs) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          obs.unobserve(entry.target);
+          animate(entry.target as HTMLElement);
+        }
+      },
+      { threshold: 0.6 },
+    );
+
+    for (const el of document.querySelectorAll<HTMLElement>(
+      "[data-countup-target]",
+    )) {
+      observer.observe(el);
+    }
+  }
+</script>
 
 <style>
   .metrics {

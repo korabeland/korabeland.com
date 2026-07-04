@@ -7,9 +7,10 @@ export const prerender = true;
 
 import { Image } from "astro:assets";
 import portrait from "../assets/portrait-illustrated.jpg";
+import StatusChip from "../components/StatusChip/StatusChip.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { listPosts } from "../lib/posts";
-import { listProjects } from "../lib/projects";
+import { listProjects, projectStatus } from "../lib/projects";
 
 const projects = await listProjects();
 const posts = (await listPosts()).slice(0, 3);
@@ -41,15 +42,6 @@ const jsonLd = {
   ],
 };
 
-function ledgerStatus(p: { shippedAt: string | null }): {
-  label: string;
-  kind: "shipped" | "active";
-} {
-  return p.shippedAt
-    ? { label: "shipped", kind: "shipped" }
-    : { label: "in flight", kind: "active" };
-}
-
 function formatDate(iso: string | null): string {
   if (!iso) return "";
   return new Date(iso)
@@ -79,8 +71,7 @@ function formatDate(iso: string | null): string {
           evidence in, decisions out, designed for handoff.
         </p>
         <p class="t-label hero-avail">
-          <span class="hero-avail-dot" aria-hidden="true"></span>
-          open to ai · data · product roles
+          <StatusChip status="available" variant="pulse" label="open to ai · data · product roles" />
         </p>
       </div>
       <figure class="hero-portrait">
@@ -109,13 +100,13 @@ function formatDate(iso: string | null): string {
         projects.length > 0 ? (
           <ol class="ledger">
             {projects.map((p, i) => {
-              const status = ledgerStatus(p);
+              const status = projectStatus(p);
               return (
                 <li class="ledger-row" style={`--row: ${i}`}>
                   <a class="ledger-link" href={`/work/${p.slug}`}>
                     <span class="ledger-name">{p.title}</span>
                     <span class="t-mono ledger-datum">{p.outcome}</span>
-                    <span class={`ledger-chip ledger-chip--${status.kind}`}>{status.label}</span>
+                    <StatusChip status={status} variant="chip" />
                   </a>
                 </li>
               );
@@ -213,32 +204,13 @@ function formatDate(iso: string | null): string {
     margin: 0;
   }
 
-  /* Availability status line — the last line of the readout. The dot is
-     motion moment 2 of 3 (DESIGN.md §5): a slow breathe, amber. */
+  /* Availability status line — the last line of the readout. The breathing
+     dot now lives in StatusChip (pulse variant); this stays a shrink-fit
+     inline-flex box so the line's geometry is unchanged. */
   .hero-avail {
     display: inline-flex;
     align-items: center;
-    gap: var(--s-2);
-    color: var(--amber);
     margin: var(--s-5) 0 0;
-  }
-
-  .hero-avail-dot {
-    width: 7px;
-    height: 7px;
-    border-radius: var(--r-pill);
-    background: var(--amber);
-    animation: avail-breathe 3.2s ease-in-out infinite;
-  }
-
-  @keyframes avail-breathe {
-    0%,
-    100% {
-      box-shadow: 0 0 0 0 color-mix(in oklch, var(--amber) 45%, transparent);
-    }
-    50% {
-      box-shadow: 0 0 0 5px transparent;
-    }
   }
 
   .hero-portrait {
@@ -336,26 +308,6 @@ function formatDate(iso: string | null): string {
     text-transform: none;
     letter-spacing: 0.02em;
     color: var(--ink-soft);
-  }
-
-  .ledger-chip {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    padding: 3px 8px;
-    border: 1px solid;
-    white-space: nowrap;
-  }
-
-  .ledger-chip--active {
-    color: var(--amber);
-    border-color: var(--amber);
-  }
-
-  .ledger-chip--shipped {
-    color: var(--moss);
-    border-color: var(--moss);
   }
 
   .ledger-empty {

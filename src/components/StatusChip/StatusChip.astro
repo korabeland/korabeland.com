@@ -1,0 +1,99 @@
+---
+// StatusChip — the single status / availability primitive. Replaces the three
+// inline copies that had drifted apart: the homepage hero availability dot, the
+// about-page availability dot, and the outcome-ledger status chip.
+//
+// Semantic colours are locked (docs/plans/2026-07-03-console-mvp.md): amber =
+// active / in-flight / available, moss = shipped. The dot is decorative
+// (aria-hidden); the meaning always lives in the adjacent text. Motion is a
+// slow breathe, killed by the global reduced-motion guard in global.css.
+
+type Status = "available" | "in-flight" | "shipped";
+
+interface Props {
+  status: Status;
+  /** "chip" = bordered mono pill (ledger rows); "pulse" = breathing dot +
+   *  inline text (availability lines). */
+  variant?: "chip" | "pulse";
+  /** Override the default label. Required in practice for the availability
+   *  lines, whose copy differs from the canonical status word. */
+  label?: string;
+  class?: string;
+}
+
+const { status, variant = "chip", label, class: className } = Astro.props;
+
+const TONE: Record<Status, "amber" | "moss"> = {
+  available: "amber",
+  "in-flight": "amber",
+  shipped: "moss",
+};
+const DEFAULT_LABEL: Record<Status, string> = {
+  available: "open to roles",
+  "in-flight": "in flight",
+  shipped: "shipped",
+};
+
+const tone = TONE[status];
+const text = label ?? DEFAULT_LABEL[status];
+---
+
+{
+  variant === "pulse" ? (
+    <span class:list={["statuschip statuschip--pulse", `statuschip--${tone}`, className]}>
+      <span class="statuschip-dot" aria-hidden="true" />
+      {text}
+    </span>
+  ) : (
+    <span class:list={["statuschip statuschip--chip", `statuschip--${tone}`, className]}>
+      {text}
+    </span>
+  )
+}
+
+<style>
+  .statuschip--amber {
+    --chip-tone: var(--amber);
+  }
+  .statuschip--moss {
+    --chip-tone: var(--moss);
+  }
+
+  /* Pulse — a breathing dot + text. The availability signal. */
+  .statuschip--pulse {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+    color: var(--chip-tone);
+  }
+
+  .statuschip-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: var(--r-pill);
+    background: var(--chip-tone);
+    animation: statuschip-breathe 3.2s ease-in-out infinite;
+  }
+
+  @keyframes statuschip-breathe {
+    0%,
+    100% {
+      box-shadow: 0 0 0 0 color-mix(in oklch, var(--chip-tone) 45%, transparent);
+    }
+    50% {
+      box-shadow: 0 0 0 5px transparent;
+    }
+  }
+
+  /* Chip — a bordered mono pill. The ledger-row status label. */
+  .statuschip--chip {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border: 1px solid var(--chip-tone);
+    color: var(--chip-tone);
+    white-space: nowrap;
+  }
+</style>

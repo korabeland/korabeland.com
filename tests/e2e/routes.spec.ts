@@ -139,7 +139,7 @@ test("home hero renders the availability status line and portrait", async ({
   await expect(page.locator(".hero-avail")).toContainText(
     "open to ai · data · product roles",
   );
-  await expect(page.locator(".hero-avail-dot")).toBeVisible();
+  await expect(page.locator(".hero-avail .statuschip-dot")).toBeVisible();
   await expect(page.locator(".hero-portrait img")).toBeVisible();
   await expect(page.locator(".chrome-badge")).toHaveCount(0);
 });

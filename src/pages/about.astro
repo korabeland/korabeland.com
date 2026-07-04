@@ -8,6 +8,7 @@ export const prerender = true;
 
 import { Image } from "astro:assets";
 import portrait from "../assets/portrait-illustrated.jpg";
+import StatusChip from "../components/StatusChip/StatusChip.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 
 const jsonLd = {
@@ -101,8 +102,7 @@ const jsonLd = {
     <section class="about-close" aria-labelledby="close">
       <h2 id="close" class="sr-only">Contact</h2>
       <p class="t-mono about-status">
-        <span class="about-status-dot" aria-hidden="true"></span>
-        currently exploring ai / data / product roles
+        <StatusChip status="available" variant="pulse" label="currently exploring ai / data / product roles" />
       </p>
       <p class="t-mono about-links">
         <a href="mailto:korabeland@gmail.com">email</a> ·{" "}
@@ -233,28 +233,8 @@ const jsonLd = {
   .about-status {
     display: inline-flex;
     align-items: center;
-    gap: var(--s-2);
-    color: var(--amber);
     text-transform: none;
     letter-spacing: 0.02em;
-  }
-
-  .about-status-dot {
-    width: 7px;
-    height: 7px;
-    border-radius: var(--r-pill);
-    background: var(--amber);
-    animation: about-status-breathe 3.2s ease-in-out infinite;
-  }
-
-  @keyframes about-status-breathe {
-    0%,
-    100% {
-      box-shadow: 0 0 0 0 color-mix(in oklch, var(--amber) 45%, transparent);
-    }
-    50% {
-      box-shadow: 0 0 0 5px transparent;
-    }
   }
 
   .about-links {
@@ -275,9 +255,4 @@ const jsonLd = {
     border-bottom-color: var(--amber);
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .about-status-dot {
-      animation: none;
-    }
-  }
 </style>
