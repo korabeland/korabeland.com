@@ -125,11 +125,18 @@ const statusKind = status === "shipped" ? "shipped" : "active";
      as the fallback so the meter never looks broken on unsupported
      browsers. prefers-reduced-motion is covered by the global guard in
      global.css, which zeroes animation-duration — the bar simply stops
-     tracking and sits still, which is an acceptable degraded state. */
+     tracking and sits still, which is an acceptable degraded state.
+
+     Fixed (not sticky) and pinned above the chrome header: a sticky bar at
+     top:0 shares the header's own sticky position, and the header's higher
+     z-index hid it completely. Fixed positioning also escapes page-main's
+     max-width, so the bar spans the full viewport without needing fullBleed. */
   .progress-track {
-    position: sticky;
+    position: fixed;
     top: 0;
-    z-index: 9;
+    left: 0;
+    right: 0;
+    z-index: 20;
     height: 2px;
     background: var(--rule);
   }
