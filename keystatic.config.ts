@@ -56,8 +56,8 @@ export default config({
         shippedAt: fields.date({ label: "Shipped at" }),
         heroImage: fields.image({
           label: "Hero image",
-          directory: "src/content/projects",
-          publicPath: "/src/content/projects/",
+          directory: "public/work",
+          publicPath: "/work/",
         }),
         tags: fields.array(fields.text({ label: "Tag" }), {
           label: "Tags",
