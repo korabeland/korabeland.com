@@ -23,6 +23,20 @@ test("/ renders the operator's console home", async ({ page }) => {
   );
 });
 
+// U4 — the hero headline rotates its subject only with motion. Playwright
+// emulates prefers-reduced-motion globally, so the default subject must stay
+// put (AE2: static default under reduced motion / no JS).
+test("hero headline stays on the default subject under reduced motion", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const word = page.locator(".hero-ship-word");
+  await expect(word).toHaveText("ship");
+  // Wait past one rotation interval; the script must have self-disabled.
+  await page.waitForTimeout(3200);
+  await expect(word).toHaveText("ship");
+});
+
 // /work — case-study index renders the ledger with real project rows.
 test("/work renders the case-study index", async ({ page }) => {
   const response = await page.goto("/work");
