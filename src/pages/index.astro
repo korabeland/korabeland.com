@@ -7,12 +7,15 @@ export const prerender = true;
 
 import { Image } from "astro:assets";
 import portrait from "../assets/portrait-illustrated.jpg";
+import ExperienceLedger from "../components/ExperienceLedger/ExperienceLedger.astro";
 import StatusChip from "../components/StatusChip/StatusChip.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
+import { listExperience } from "../lib/experience";
 import { listPosts } from "../lib/posts";
 import { listProjects, projectStatus } from "../lib/projects";
 
 const projects = await listProjects();
+const experience = await listExperience();
 const posts = (await listPosts()).slice(0, 3);
 
 const jsonLd = {
@@ -117,6 +120,9 @@ function formatDate(iso: string | null): string {
         )
       }
     </section>
+
+    <!-- ─── Experience ── renders only once real roles exist in Keystatic ── -->
+    {experience.length > 0 && <ExperienceLedger roles={experience} />}
 
     <!-- ─── Recent notes ──────────────────────────────────────────────── -->
     {

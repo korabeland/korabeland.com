@@ -8,7 +8,7 @@
 // (aria-hidden); the meaning always lives in the adjacent text. Motion is a
 // slow breathe, killed by the global reduced-motion guard in global.css.
 
-type Status = "available" | "in-flight" | "shipped";
+type Status = "available" | "in-flight" | "current" | "shipped";
 
 interface Props {
   status: Status;
@@ -26,11 +26,13 @@ const { status, variant = "chip", label, class: className } = Astro.props;
 const TONE: Record<Status, "amber" | "moss"> = {
   available: "amber",
   "in-flight": "amber",
+  current: "amber",
   shipped: "moss",
 };
 const DEFAULT_LABEL: Record<Status, string> = {
   available: "open to roles",
   "in-flight": "in flight",
+  current: "current",
   shipped: "shipped",
 };
 

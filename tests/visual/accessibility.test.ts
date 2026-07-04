@@ -11,6 +11,9 @@ const ROUTES = [
   "/notes/hello-world",
   "/colophon",
   "/off-trail",
+  // Dev-only preview — the only place the experience section renders until real
+  // roles land, so axe checks its markup and contrast here.
+  "/dev/experience-preview",
 ];
 
 for (const route of ROUTES) {

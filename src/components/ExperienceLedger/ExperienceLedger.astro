@@ -1,0 +1,209 @@
+---
+// ExperienceLedger.astro — the experience section on the homepage. Reverse-chron
+// roles (sorted by the reader) with quantified bullets, a "current" chip on the
+// active role, and a testimonial only when one exists (AE1). Ranges-only
+// numbers and no vendor names — the disclosure gate applies to every entry.
+
+import {
+  type ExperienceSummary,
+  formatExperiencePeriod,
+} from "../../lib/experience";
+import StatusChip from "../StatusChip/StatusChip.astro";
+
+interface Props {
+  roles: ExperienceSummary[];
+}
+
+const { roles } = Astro.props;
+---
+
+<section class="experience-section" aria-labelledby="experience-heading">
+  <div class="experience-section-head">
+    <h2 id="experience-heading" class="t-label">experience</h2>
+  </div>
+
+  <ol class="experience-list">
+    {
+      roles.map((role) => (
+        <li class="experience-row">
+          <div class="experience-head">
+            <div class="experience-idline">
+              <span class="experience-role">{role.role}</span>
+              <span class="experience-company">{role.company}</span>
+            </div>
+            <div class="experience-meta">
+              {role.current && <StatusChip status="current" variant="chip" />}
+              <span class="t-mono experience-period">
+                {formatExperiencePeriod(role)}
+              </span>
+            </div>
+          </div>
+
+          <ul class="experience-bullets">
+            {role.achievements.map((a) => (
+              <li class="experience-bullet">
+                <span class="experience-bullet-text">{a.text}</span>
+                {a.metric && (
+                  <span class="t-mono experience-metric">
+                    {a.metric.label
+                      ? `${a.metric.value} · ${a.metric.label}`
+                      : a.metric.value}
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+
+          {role.testimonial && (
+            <figure class="experience-testimonial">
+              <blockquote class="experience-quote">
+                {role.testimonial.quote}
+              </blockquote>
+              {role.testimonial.attribution && (
+                <figcaption class="t-mono experience-attrib">
+                  {`— ${role.testimonial.attribution}`}
+                </figcaption>
+              )}
+            </figure>
+          )}
+        </li>
+      ))
+    }
+  </ol>
+</section>
+
+<style>
+  .experience-section-head {
+    border-bottom: 1px solid var(--ink);
+    padding-bottom: var(--s-2);
+    margin-bottom: var(--s-5);
+  }
+
+  .experience-section-head h2 {
+    margin: 0;
+    color: var(--ink-soft);
+  }
+
+  .experience-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-6);
+  }
+
+  .experience-row {
+    padding-bottom: var(--s-5);
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .experience-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--s-4);
+    flex-wrap: wrap;
+  }
+
+  .experience-idline {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .experience-role {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 17px;
+    color: var(--ink);
+    line-height: 1.3;
+  }
+
+  .experience-company {
+    font-size: 14px;
+    color: var(--ink-soft);
+  }
+
+  .experience-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-3);
+    white-space: nowrap;
+  }
+
+  .experience-period {
+    text-transform: none;
+    letter-spacing: 0.02em;
+    color: var(--ink-soft);
+  }
+
+  .experience-bullets {
+    list-style: none;
+    margin: var(--s-4) 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-3);
+  }
+
+  .experience-bullet {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--s-4);
+    padding-left: var(--s-4);
+    position: relative;
+  }
+
+  .experience-bullet::before {
+    content: "›";
+    position: absolute;
+    left: 0;
+    color: var(--amber);
+  }
+
+  .experience-bullet-text {
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    max-width: 62ch;
+  }
+
+  .experience-metric {
+    text-transform: none;
+    letter-spacing: 0.02em;
+    color: var(--amber);
+    white-space: nowrap;
+    font-size: 13px;
+  }
+
+  .experience-testimonial {
+    margin: var(--s-4) 0 0;
+    padding: var(--s-3) var(--s-4);
+    border-left: 2px solid var(--rule);
+  }
+
+  .experience-quote {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    font-style: italic;
+  }
+
+  .experience-attrib {
+    margin: var(--s-2) 0 0;
+    text-transform: none;
+    letter-spacing: 0.02em;
+    color: var(--ink-soft);
+    font-size: 13px;
+  }
+
+  @media (max-width: 680px) {
+    .experience-bullet {
+      flex-direction: column;
+      gap: 2px;
+    }
+  }
+</style>

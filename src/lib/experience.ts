@@ -103,6 +103,22 @@ export function sortExperience(
   });
 }
 
+/**
+ * Year-only period label for a role: "2020–present" for a current role, else
+ * "2018–2020". Years only (ranges-safe per the disclosure gate); en dash and
+ * no spaces mirror the case-study span format.
+ */
+export function formatExperiencePeriod(role: {
+  startDate: string | null;
+  endDate: string | null;
+  current: boolean;
+}): string {
+  const start = role.startDate ? role.startDate.slice(0, 4) : "";
+  const end =
+    role.current || !role.endDate ? "present" : role.endDate.slice(0, 4);
+  return start ? `${start}–${end}` : end;
+}
+
 const reader = createReader(process.cwd(), keystaticConfig);
 
 export async function listExperience(): Promise<ExperienceSummary[]> {

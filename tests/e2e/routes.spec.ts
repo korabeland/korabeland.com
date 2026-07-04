@@ -182,6 +182,35 @@ for (const { path, href } of NAV_ACTIVE_CASES) {
   });
 }
 
+// U2 — the experience section is content-gated: with the collection empty it
+// must not render on the homepage (no placeholder content ships).
+test("homepage omits the experience section while the collection is empty", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await expect(page.locator("#experience-heading")).toHaveCount(0);
+});
+
+// U2 — dev-only preview renders ExperienceLedger against fixtures so the section
+// markup is covered without committing content. AE1: a testimonial element
+// appears only for a role that has one.
+test("/dev/experience-preview renders roles, a current chip, and conditional testimonials", async ({
+  page,
+}) => {
+  const response = await page.goto("/dev/experience-preview");
+  expect(response?.status()).toBe(200);
+  await expect(page.locator(".experience-row")).toHaveCount(2);
+  await expect(
+    page.locator(".experience-row").first().locator(".statuschip"),
+  ).toContainText("current");
+  await expect(page.locator(".experience-period").first()).toHaveText(
+    "2021–present",
+  );
+  // AE1: only the role with a testimonial renders a testimonial element.
+  await expect(page.locator(".experience-testimonial")).toHaveCount(1);
+  await expect(page.getByText("6 · stakeholders")).toBeVisible();
+});
+
 // robots.txt must block /dev/ and /keystatic
 test("robots.txt disallows /dev/ and /keystatic", async ({ request }) => {
   const resp = await request.get("/robots.txt");

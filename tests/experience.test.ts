@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   type ExperienceSummary,
+  formatExperiencePeriod,
   mapExperienceEntry,
   type RawExperienceEntry,
   sortExperience,
@@ -126,5 +127,47 @@ describe("sortExperience", () => {
     const before = input.map((r) => r.slug);
     sortExperience(input);
     expect(input.map((r) => r.slug)).toEqual(before);
+  });
+});
+
+describe("formatExperiencePeriod", () => {
+  it("renders a current role as start–present", () => {
+    expect(
+      formatExperiencePeriod({
+        startDate: "2020-03-01",
+        endDate: null,
+        current: true,
+      }),
+    ).toBe("2020–present");
+  });
+
+  it("renders a prior role as start–end years", () => {
+    expect(
+      formatExperiencePeriod({
+        startDate: "2016-06-01",
+        endDate: "2019-11-01",
+        current: false,
+      }),
+    ).toBe("2016–2019");
+  });
+
+  it("treats a missing end date as present even when not flagged current", () => {
+    expect(
+      formatExperiencePeriod({
+        startDate: "2018-01-01",
+        endDate: null,
+        current: false,
+      }),
+    ).toBe("2018–present");
+  });
+
+  it("falls back to the end year when there is no start date", () => {
+    expect(
+      formatExperiencePeriod({
+        startDate: null,
+        endDate: "2015-01-01",
+        current: false,
+      }),
+    ).toBe("2015");
   });
 });
