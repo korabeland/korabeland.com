@@ -3,7 +3,7 @@ import OffTrail from "../components/OffTrail/OffTrail.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 
 const rawFrom = Astro.url.searchParams.get("from");
-const KNOWN = new Set(["notes", "projects", "work-with-me"]);
+const KNOWN = new Set(["notes", "work"]);
 const from = rawFrom && KNOWN.has(rawFrom) ? rawFrom : undefined;
 
 const jsonLd = {
@@ -11,16 +11,15 @@ const jsonLd = {
   "@type": "WebPage",
   "@id": "https://korabeland.com/off-trail",
   url: "https://korabeland.com/off-trail",
-  name: "korabeland.com — off-trail",
-  description:
-    "This path hasn't been mapped yet. Check back as the site grows, or reach out to suggest what's next.",
+  name: "korabeland.com: page not found",
+  description: "This page does not exist. Check back as the site grows.",
   isPartOf: { "@id": "https://korabeland.com/#website" },
 };
 ---
 
 <BaseLayout
-  title="korabeland.com — off-trail"
-  description="This path hasn't been mapped yet. Check back as the site grows, or reach out to suggest what's next."
+  title="korabeland.com: page not found"
+  description="This page does not exist. Check back as the site grows."
   noindex={true}
 >
   <script type="application/ld+json" slot="jsonld" set:html={JSON.stringify(jsonLd)} />

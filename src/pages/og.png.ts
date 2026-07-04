@@ -4,11 +4,18 @@ import { Resvg } from "@resvg/resvg-js";
 import type { APIRoute } from "astro";
 import satori from "satori";
 
-// Load Fraunces WOFF once at module init — avoids re-reading on each request.
-const frauncesFontData = readFileSync(
+// Load Schibsted Grotesk WOFFs once at module init — avoids re-reading on
+// each request. Console OG: night ground, amber signal, grotesk wordmark.
+const grotesk400 = readFileSync(
   resolve(
     process.cwd(),
-    "node_modules/@fontsource/fraunces/files/fraunces-latin-400-normal.woff",
+    "node_modules/@fontsource/schibsted-grotesk/files/schibsted-grotesk-latin-400-normal.woff",
+  ),
+).buffer;
+const grotesk700 = readFileSync(
+  resolve(
+    process.cwd(),
+    "node_modules/@fontsource/schibsted-grotesk/files/schibsted-grotesk-latin-700-normal.woff",
   ),
 ).buffer;
 
@@ -23,28 +30,24 @@ export const GET: APIRoute = async () => {
       style: {
         display: "flex",
         flexDirection: "column",
-        alignItems: "center",
+        alignItems: "flex-start",
         justifyContent: "center",
         width: "1200px",
         height: "630px",
-        background: "#1f2a2a",
-        padding: "80px",
+        background: "#16181c",
+        padding: "80px 96px",
         position: "relative",
       },
       children: [
-        // Compass mark — circle with inner dot, evoking the trail map pin
+        // Status line — the availability signal
         {
           type: "div",
           props: {
             style: {
               display: "flex",
               alignItems: "center",
-              justifyContent: "center",
-              width: "52px",
-              height: "52px",
-              borderRadius: "50%",
-              border: "1.5px solid #4f6f55",
-              marginBottom: "40px",
+              gap: "12px",
+              marginBottom: "44px",
             },
             children: [
               {
@@ -54,8 +57,22 @@ export const GET: APIRoute = async () => {
                     width: "10px",
                     height: "10px",
                     borderRadius: "50%",
-                    background: "#4f6f55",
+                    background: "#d99a3c",
                   },
+                },
+              },
+              {
+                type: "div",
+                props: {
+                  style: {
+                    fontFamily: "Schibsted Grotesk",
+                    fontSize: "18px",
+                    fontWeight: 400,
+                    color: "#d99a3c",
+                    letterSpacing: "0.14em",
+                    textTransform: "uppercase",
+                  },
+                  children: "open to ai · data · product roles",
                 },
               },
             ],
@@ -66,59 +83,72 @@ export const GET: APIRoute = async () => {
           type: "div",
           props: {
             style: {
-              fontFamily: "Fraunces",
-              fontSize: "88px",
-              fontWeight: 400,
-              color: "#f6f3ec",
+              fontFamily: "Schibsted Grotesk",
+              fontSize: "92px",
+              fontWeight: 700,
+              color: "#e9e8e0",
               letterSpacing: "-0.02em",
               lineHeight: 1,
               marginBottom: "28px",
-              textAlign: "center",
             },
-            children: "korabeland",
+            children: "korab eland",
           },
         },
-        // Rule
+        // Positioning line
         {
           type: "div",
           props: {
             style: {
-              width: "48px",
-              height: "1px",
-              background: "#4f6f55",
-              marginBottom: "28px",
-            },
-          },
-        },
-        // Subtitle
-        {
-          type: "div",
-          props: {
-            style: {
-              fontFamily: "Fraunces",
-              fontSize: "22px",
+              fontFamily: "Schibsted Grotesk",
+              fontSize: "26px",
               fontWeight: 400,
-              color: "#7f8887",
-              letterSpacing: "0.08em",
-              textAlign: "center",
+              color: "#a6a99c",
+              lineHeight: 1.4,
             },
-            children: "builder · operator · writer",
+            children: "I turn ambiguous problems into systems that ship.",
           },
         },
-        // Domain label — absolute bottom-right
+        // Collar rule + domain — absolute bottom, full width
         {
           type: "div",
           props: {
             style: {
               position: "absolute",
-              bottom: "44px",
-              right: "64px",
-              fontFamily: "Fraunces",
-              fontSize: "14px",
-              color: "#4d5757",
-              letterSpacing: "0.04em",
+              bottom: "52px",
+              left: "96px",
+              right: "96px",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              borderTop: "1px solid #2c3037",
+              paddingTop: "20px",
             },
-            children: "korabeland.com",
+            children: [
+              {
+                type: "div",
+                props: {
+                  style: {
+                    fontFamily: "Schibsted Grotesk",
+                    fontSize: "15px",
+                    color: "#8a8d81",
+                    letterSpacing: "0.08em",
+                  },
+                  children: "operator · 13 yrs · builds with ai",
+                },
+              },
+              {
+                type: "div",
+                props: {
+                  style: {
+                    fontFamily: "Schibsted Grotesk",
+                    fontSize: "15px",
+                    color: "#8a8d81",
+                    letterSpacing: "0.08em",
+                  },
+                  children: "korabeland.com",
+                },
+              },
+            ],
           },
         },
       ],
@@ -130,9 +160,15 @@ export const GET: APIRoute = async () => {
     height: 630,
     fonts: [
       {
-        name: "Fraunces",
-        data: frauncesFontData,
+        name: "Schibsted Grotesk",
+        data: grotesk400,
         weight: 400,
+        style: "normal",
+      },
+      {
+        name: "Schibsted Grotesk",
+        data: grotesk700,
+        weight: 700,
         style: "normal",
       },
     ],

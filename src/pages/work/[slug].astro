@@ -1,0 +1,109 @@
+---
+export const prerender = true;
+
+// /work/[slug] — case-study detail. Renders the re-skinned CaseStudy
+// layout with the entry's data + markdoc content body. See
+// docs/plans/2026-07-03-console-mvp.md.
+
+import type { GetStaticPaths } from "astro";
+import CaseStudy from "../../components/CaseStudy/index.astro";
+import { PostContent } from "../../components/PostContent";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { listProjects, readProject } from "../../lib/projects";
+
+export const getStaticPaths: GetStaticPaths = async () => {
+  const projects = await listProjects();
+  return projects.map((p) => ({ params: { slug: p.slug } }));
+};
+
+const { slug } = Astro.params;
+if (!slug) throw new Error("Missing slug");
+
+const project = await readProject(slug);
+if (!project) throw new Error(`Project not found: ${slug}`);
+
+const content = await project.content();
+
+// Status derives from shippedAt — same rule as the ledger chips on / and
+// /work: amber "in flight" while null, moss "shipped" once set.
+const status = project.shippedAt ? "shipped" : "in flight";
+
+// Duration string ("2026 · 4 months") when both dates are present.
+function formatSpan(startISO: string | null, shipISO: string | null): string {
+  if (!startISO) return "";
+  const s = new Date(startISO);
+  if (!shipISO) return String(s.getFullYear());
+  const e = new Date(shipISO);
+  const months = Math.max(
+    1,
+    (e.getFullYear() - s.getFullYear()) * 12 + (e.getMonth() - s.getMonth()),
+  );
+  const yearStr =
+    s.getFullYear() === e.getFullYear()
+      ? String(s.getFullYear())
+      : `${s.getFullYear()}–${e.getFullYear()}`;
+  return `${yearStr} · ${months} month${months === 1 ? "" : "s"}`;
+}
+const span = formatSpan(project.startedAt, project.shippedAt);
+
+// Fact strip: Role / Team / Stack / Span / Status.
+const facts = [
+  { label: "role", value: project.role || "—" },
+  { label: "team", value: project.team || "—" },
+  { label: "stack", value: project.stack || "—" },
+  { label: "span", value: span || "—" },
+  { label: "status", value: status },
+];
+
+const outcomeMetrics = project.outcomeMetrics.map((m) => ({
+  value: m.value,
+  label: m.label,
+}));
+const fieldLog = project.fieldLog.map((f) => ({
+  week: f.week,
+  title: f.title,
+  body: f.body,
+}));
+
+let nextProject: { slug: string; title: string } | undefined;
+if (project.nextProject) {
+  const next = await readProject(project.nextProject);
+  if (next) {
+    nextProject = { slug: project.nextProject, title: next.title };
+  }
+}
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  headline: project.title,
+  description: project.description,
+  url: `https://korabeland.com/work/${slug}`,
+  author: { "@id": "https://korabeland.com/#person" },
+  ...(project.startedAt ? { dateCreated: project.startedAt } : {}),
+  ...(project.shippedAt ? { datePublished: project.shippedAt } : {}),
+};
+---
+
+<BaseLayout
+  title={`${project.title} · case study · korab eland`}
+  description={project.description || `Case study: ${project.title}`}
+  active="work"
+  ogType="article"
+>
+  <script type="application/ld+json" slot="jsonld" set:html={JSON.stringify(jsonLd)} />
+  <CaseStudy
+    title={project.title}
+    subtitle={project.description}
+    status={status}
+    facts={facts}
+    heroImage={project.heroImage ?? undefined}
+    heroImageAlt={`${project.title} hero`}
+    outcomeMetrics={outcomeMetrics}
+    fieldLog={fieldLog}
+    reflection={project.reflection}
+    nextProject={nextProject}
+  >
+    <PostContent document={content} />
+  </CaseStudy>
+</BaseLayout>

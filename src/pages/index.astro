@@ -1,9 +1,18 @@
 ---
 export const prerender = true;
 
-import HomeNow from "../components/HomeNow/index.astro";
-import TrailheadKiosk from "../components/TrailheadKiosk/index.astro";
+// Home — the console. Positioning first, then the outcome ledger (real
+// case studies from the projects collection), recent notes, and a quiet
+// contact line. See docs/plans/2026-07-03-console-mvp.md.
+
+import { Image } from "astro:assets";
+import portrait from "../assets/portrait-illustrated.jpg";
 import BaseLayout from "../layouts/BaseLayout.astro";
+import { listPosts } from "../lib/posts";
+import { listProjects } from "../lib/projects";
+
+const projects = await listProjects();
+const posts = (await listPosts()).slice(0, 3);
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -14,8 +23,13 @@ const jsonLd = {
       name: "Korab Eland",
       url: "https://korabeland.com",
       description:
-        "Builder, operator, writer. Working at the intersection of product, strategy, and AI execution.",
-      sameAs: [],
+        "Operator with 13 years across marketing, CX and operations. Turns ambiguous problems into systems that ship, now building with AI.",
+      sameAs: ["https://www.linkedin.com/in/korabeland"],
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: "Melbourne",
+        addressCountry: "AU",
+      },
     },
     {
       "@type": "WebSite",
@@ -27,85 +41,432 @@ const jsonLd = {
   ],
 };
 
-// Convert the current year to lowercase roman numerals for the closing
-// footer line ("© mmxxvi · korabeland.com"). Matches the export.
-function toRomanLower(n: number): string {
-  const pairs: Array<[number, string]> = [
-    [1000, "m"],
-    [900, "cm"],
-    [500, "d"],
-    [400, "cd"],
-    [100, "c"],
-    [90, "xc"],
-    [50, "l"],
-    [40, "xl"],
-    [10, "x"],
-    [9, "ix"],
-    [5, "v"],
-    [4, "iv"],
-    [1, "i"],
-  ];
-  let out = "";
-  let rem = n;
-  for (const [val, sym] of pairs) {
-    while (rem >= val) {
-      out += sym;
-      rem -= val;
-    }
-  }
-  return out;
+function ledgerStatus(p: { shippedAt: string | null }): {
+  label: string;
+  kind: "shipped" | "active";
+} {
+  return p.shippedAt
+    ? { label: "shipped", kind: "shipped" }
+    : { label: "in flight", kind: "active" };
 }
 
-const year = new Date().getFullYear();
-const romanYear = toRomanLower(year);
+function formatDate(iso: string | null): string {
+  if (!iso) return "";
+  return new Date(iso)
+    .toLocaleDateString("en-AU", { year: "numeric", month: "short" })
+    .toLowerCase();
+}
 ---
 
 <BaseLayout
-  title="korabeland.com — trailhead"
-  description="Korab Eland — builder, operator, writer. Field notes, projects, and the thinking behind them."
+  title="korab eland · operator · builds with ai"
+  description="I turn ambiguous problems into systems that ship. 13 years across marketing, CX and operations. Now building the AI-driven kind."
   active="home"
   ogImage="/og.png"
-  fullBleed
-  hideFooter
 >
   <script type="application/ld+json" slot="jsonld" set:html={JSON.stringify(jsonLd)} />
-  <TrailheadKiosk />
 
-  <div class="home-rule" aria-hidden="true"></div>
-  <HomeNow />
+  <div class="home">
+    <!-- ─── Hero: the readout ─────────────────────────────────────────── -->
+    <section class="hero" aria-labelledby="hero-heading">
+      <div class="hero-text">
+        <p class="t-label hero-eyebrow">korab eland · operator · melbourne</p>
+        <h1 id="hero-heading" class="t-display hero-title">
+          I turn ambiguous problems into systems that <span class="hero-ship">ship</span>.
+        </h1>
+        <p class="hero-sub">
+          13 years across marketing, CX and operations. Now building the AI-driven kind:
+          evidence in, decisions out, designed for handoff.
+        </p>
+        <p class="t-label hero-avail">
+          <span class="hero-avail-dot" aria-hidden="true"></span>
+          open to ai · data · product roles
+        </p>
+      </div>
+      <figure class="hero-portrait">
+        <Image
+          src={portrait}
+          alt="Illustrated portrait of Korab Eland"
+          widths={[360, 720]}
+          sizes="(max-width: 680px) 240px, 340px"
+          loading="eager"
+        />
+        <figcaption class="t-mono hero-portrait-cap">
+          <span>korab eland</span>
+          <span class="hero-portrait-loc">⌖ melbourne</span>
+        </figcaption>
+      </figure>
+    </section>
 
-  <footer class="home-footer">
-    <div class="home-footer-inner">
-      <span class="italic-serif home-thanks">thanks for wandering through.</span>
-      <span class="t-mono">© {romanYear} · korabeland.com</span>
-    </div>
-  </footer>
+    <!-- ─── Outcome ledger ────────────────────────────────────────────── -->
+    <section class="ledger-section" aria-labelledby="ledger-heading">
+      <div class="section-head">
+        <h2 id="ledger-heading" class="t-label">work · outcome ledger</h2>
+        <a class="t-mono section-more" href="/work">all case studies →</a>
+      </div>
+
+      {
+        projects.length > 0 ? (
+          <ol class="ledger">
+            {projects.map((p, i) => {
+              const status = ledgerStatus(p);
+              return (
+                <li class="ledger-row" style={`--row: ${i}`}>
+                  <a class="ledger-link" href={`/work/${p.slug}`}>
+                    <span class="ledger-name">{p.title}</span>
+                    <span class="t-mono ledger-datum">{p.outcome}</span>
+                    <span class={`ledger-chip ledger-chip--${status.kind}`}>{status.label}</span>
+                  </a>
+                </li>
+              );
+            })}
+          </ol>
+        ) : (
+          <p class="t-mono ledger-empty">first case studies being written up · check back shortly</p>
+        )
+      }
+    </section>
+
+    <!-- ─── Recent notes ──────────────────────────────────────────────── -->
+    {
+      posts.length > 0 && (
+        <section class="notes-section" aria-labelledby="notes-heading">
+          <div class="section-head">
+            <h2 id="notes-heading" class="t-label">recent notes</h2>
+            <a class="t-mono section-more" href="/notes">
+              all notes →
+            </a>
+          </div>
+          <ul class="notes-list">
+            {posts.map((post) => (
+              <li class="notes-row">
+                <a class="notes-link" href={`/notes/${post.slug}`}>
+                  <span class="notes-title">{post.title}</span>
+                  <span class="t-mono notes-meta">
+                    {formatDate(post.publishedAt)} · {post.readTime}
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
+
+    <!-- ─── About teaser + contact ────────────────────────────────────── -->
+    <section class="close-section" aria-labelledby="close-heading">
+      <h2 id="close-heading" class="t-label">the short version</h2>
+      <p class="close-body">
+        Media buyer, then marketer, then CX manager, now building AI systems inside a real
+        business. I lead with evidence, design pilots for handoff, and document everything.
+        The longer version is on the <a href="/about">about page</a>; the receipts are in
+        the <a href="/work">case studies</a>.
+      </p>
+      <p class="t-mono close-contact">
+        <a href="mailto:korabeland@gmail.com">korabeland@gmail.com</a> ·
+        <a href="https://www.linkedin.com/in/korabeland" rel="me">linkedin</a>
+      </p>
+    </section>
+  </div>
 </BaseLayout>
 
 <style>
-  .home-rule {
-    height: 1px;
-    background: var(--rule);
-    max-width: 1280px;
-    margin: 0 auto;
-    opacity: 0.7;
+  .home {
+    max-width: 960px;
+    margin-inline: auto;
+    padding: var(--s-7) var(--s-4) var(--s-8);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-8);
   }
 
-  .home-footer {
-    border-top: 1px solid var(--rule);
-    padding: var(--s-7) var(--s-6);
+  /* ─── Hero — split readout: text left, framed portrait right ────────── */
+
+  .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+    gap: var(--s-7);
+    align-items: start;
   }
-  .home-footer-inner {
-    max-width: 1280px;
-    margin-inline: auto;
+
+  .hero-eyebrow {
+    color: var(--ink-soft);
+    margin: 0 0 var(--s-4);
+  }
+
+  .hero-title {
+    font-size: clamp(34px, 5vw, 48px);
+    margin: 0 0 var(--s-4);
+    max-width: 18ch;
+    color: var(--ink);
+  }
+
+  .hero-ship {
+    color: var(--amber);
+  }
+
+  .hero-sub {
+    font-size: 17px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    max-width: 52ch;
+    margin: 0;
+  }
+
+  /* Availability status line — the last line of the readout. The dot is
+     motion moment 2 of 3 (DESIGN.md §5): a slow breathe, amber. */
+  .hero-avail {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+    color: var(--amber);
+    margin: var(--s-5) 0 0;
+  }
+
+  .hero-avail-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: var(--r-pill);
+    background: var(--amber);
+    animation: avail-breathe 3.2s ease-in-out infinite;
+  }
+
+  @keyframes avail-breathe {
+    0%,
+    100% {
+      box-shadow: 0 0 0 0 color-mix(in oklch, var(--amber) 45%, transparent);
+    }
+    50% {
+      box-shadow: 0 0 0 5px transparent;
+    }
+  }
+
+  .hero-portrait {
+    margin: 0;
+    max-width: 340px;
+    justify-self: end;
+    border: 1px solid var(--rule);
+  }
+
+  .hero-portrait img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .hero-portrait-cap {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--s-3);
+    padding: var(--s-2) var(--s-3);
+    border-top: 1px solid var(--rule);
+  }
+
+  .hero-portrait-loc {
+    color: var(--amber);
+  }
+
+  /* ─── Section chrome ───────────────────────────────────────────────── */
+
+  .section-head {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
-    gap: var(--s-3);
-    flex-wrap: wrap;
+    gap: var(--s-4);
+    border-bottom: 1px solid var(--ink);
+    padding-bottom: var(--s-2);
   }
-  .home-thanks {
-    font-size: 18px;
+
+  .section-head h2 {
+    margin: 0;
+    color: var(--ink-soft);
+  }
+
+  .section-more {
+    text-transform: none;
+    letter-spacing: 0.04em;
+    color: var(--ink-soft);
+    text-decoration: none;
+  }
+
+  .section-more:hover,
+  .section-more:focus-visible {
+    color: var(--amber);
+  }
+
+  /* ─── Outcome ledger — motion moment 1 of 3: rows stagger in once ──── */
+
+  .ledger {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .ledger-row {
+    border-bottom: 1px solid var(--rule);
+    animation: reveal 0.45s ease both;
+    animation-delay: calc(var(--row) * 60ms);
+  }
+
+  .ledger-link {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: var(--s-5);
+    padding: var(--s-4) var(--s-2);
+    text-decoration: none;
+    transition: background 150ms ease;
+  }
+
+  @media (hover: hover) {
+    .ledger-link:hover {
+      background: var(--paper-2);
+    }
+  }
+
+  .ledger-name {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 17px;
     color: var(--ink);
+    line-height: 1.35;
+  }
+
+  .ledger-datum {
+    text-transform: none;
+    letter-spacing: 0.02em;
+    color: var(--ink-soft);
+  }
+
+  .ledger-chip {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border: 1px solid;
+    white-space: nowrap;
+  }
+
+  .ledger-chip--active {
+    color: var(--amber);
+    border-color: var(--amber);
+  }
+
+  .ledger-chip--shipped {
+    color: var(--moss);
+    border-color: var(--moss);
+  }
+
+  .ledger-empty {
+    padding: var(--s-5) var(--s-2);
+    margin: 0;
+  }
+
+  /* ─── Recent notes ─────────────────────────────────────────────────── */
+
+  .notes-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .notes-row {
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .notes-link {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--s-5);
+    padding: var(--s-3) var(--s-2);
+    text-decoration: none;
+    transition: background 150ms ease;
+  }
+
+  @media (hover: hover) {
+    .notes-link:hover {
+      background: var(--paper-2);
+    }
+  }
+
+  .notes-title {
+    font-size: 15.5px;
+    color: var(--ink);
+    line-height: 1.4;
+  }
+
+  .notes-meta {
+    text-transform: none;
+    letter-spacing: 0.02em;
+    color: var(--ink-soft);
+    white-space: nowrap;
+  }
+
+  /* ─── Close ────────────────────────────────────────────────────────── */
+
+  .close-section .t-label {
+    display: block;
+    border-bottom: 1px solid var(--ink);
+    padding-bottom: var(--s-2);
+    color: var(--ink-soft);
+  }
+
+  .close-body {
+    font-size: 16px;
+    line-height: 1.65;
+    color: var(--ink-soft);
+    max-width: 58ch;
+    margin: var(--s-4) 0 0;
+  }
+
+  .close-body a {
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+  }
+
+  .close-body a:hover,
+  .close-body a:focus-visible {
+    color: var(--amber);
+  }
+
+  .close-contact {
+    margin: var(--s-4) 0 0;
+    text-transform: none;
+    letter-spacing: 0.02em;
+  }
+
+  .close-contact a {
+    color: var(--ink-soft);
+    text-decoration: none;
+    border-bottom: 1px solid var(--rule);
+    transition: color 150ms ease, border-color 150ms ease;
+  }
+
+  .close-contact a:hover,
+  .close-contact a:focus-visible {
+    color: var(--amber);
+    border-bottom-color: var(--amber);
+  }
+
+  @media (max-width: 680px) {
+    .hero {
+      grid-template-columns: 1fr;
+      gap: var(--s-6);
+    }
+    .hero-portrait {
+      max-width: 240px;
+      justify-self: start;
+    }
+    .ledger-link {
+      grid-template-columns: 1fr auto;
+    }
+    .ledger-datum {
+      grid-column: 1 / -1;
+      order: 3;
+    }
   }
 </style>

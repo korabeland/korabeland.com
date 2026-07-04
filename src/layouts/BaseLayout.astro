@@ -1,21 +1,24 @@
 ---
 // BaseLayout.astro — page shell for every route.
 //
-// Provides <head> + Chrome header (logo, nav links, right-side WeatherPill)
-// per DESIGN.md §Component inventory > Chrome. Footer is a single hairline
-// row with copyright + a colophon link (terminal-caret easter egg is
-// deferred post-MVP per the office-hours doc).
+// The Operator's Console (DESIGN.md 2026-07-03): the chrome is a clean
+// rail — wordmark + mono nav labels, plus a small portrait badge on
+// interior pages (the "logged-in operator"). The availability signal
+// lives in the homepage hero readout; every footer carries a quiet echo.
 
+import { Image } from "astro:assets";
 import "../styles/global.css";
-import WeatherPill from "../components/WeatherPill/WeatherPill.astro";
+// Critical font files, preloaded so first paint already has them (CLS).
+import mono400 from "@fontsource/jetbrains-mono/files/jetbrains-mono-latin-400-normal.woff2?url";
+import grotesk400 from "@fontsource/schibsted-grotesk/files/schibsted-grotesk-latin-400-normal.woff2?url";
+import grotesk700 from "@fontsource/schibsted-grotesk/files/schibsted-grotesk-latin-700-normal.woff2?url";
+import portrait from "../assets/portrait-illustrated.jpg";
 
 interface Props {
   title: string;
   description?: string;
-  /** Which nav item, if any, is "active" — controls the moss underline. */
-  active?: "home" | "notes" | "projects" | "work" | "colophon";
-  /** Static status string for the Chrome WeatherPill. */
-  weatherStatus?: string;
+  /** Which nav item, if any, is "active" — controls the amber underline. */
+  active?: "home" | "notes" | "projects" | "work" | "about" | "colophon";
   /** Absolute path to the OG image (e.g. "/og.png"). */
   ogImage?: string;
   /** og:type value — defaults to "website". */
@@ -32,9 +35,8 @@ interface Props {
 
 const {
   title,
-  description = "Korab Eland — builder, operator, writer.",
+  description = "Korab Eland, operator. I turn ambiguous problems into systems that ship.",
   active,
-  weatherStatus = "taking clients",
   ogImage,
   ogType = "website",
   noindex,
@@ -42,8 +44,18 @@ const {
   hideFooter = false,
 } = Astro.props;
 
+// Interior pages get the small portrait badge in the rail; the homepage
+// carries the full framed portrait in its hero instead.
+const showBadge = active !== "home";
+
 const siteUrl = Astro.site?.href.replace(/\/$/, "") ?? "https://korabeland.com";
 const ogImageUrl = ogImage ? `${siteUrl}${ogImage}` : undefined;
+// Prerendered directory-style routes (page/index.html) carry a trailing
+// slash in Astro.url; every other reference to a page on this site (nav,
+// redirects, sitemap) omits it, so strip it here to keep canonical/og:url
+// consistent with the rest of the site. The bare root "/" still resolves
+// correctly since URL.pathname normalises an empty path back to "/".
+const canonicalUrl = Astro.url.href.replace(/\/$/, "");
 
 const year = new Date().getFullYear();
 
@@ -55,14 +67,14 @@ interface NavLink {
 }
 
 const NAV_LINKS: readonly NavLink[] = [
+  { key: "work", href: "/work", label: "work" },
   {
     key: "notes",
     href: "/notes",
-    label: "field notes",
+    label: "notes",
     ariaLabel: "field notes",
   },
-  { key: "projects", href: "/projects", label: "projects" },
-  { key: "work", href: "/off-trail?from=work-with-me", label: "work with me" },
+  { key: "about", href: "/about", label: "about" },
   { key: "colophon", href: "/colophon", label: "colophon" },
 ] as const;
 ---
@@ -73,19 +85,20 @@ const NAV_LINKS: readonly NavLink[] = [
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
-    <meta name="theme-color" content="#f6f3ec" />
+    <meta name="theme-color" content="#16181c" />
     {noindex && <meta name="robots" content="noindex" />}
-    <link rel="canonical" href={Astro.url.href} />
-    <!-- Preconnect to Google Fonts so the font CSS and files fetch in
-         parallel with the main document — cuts ~300-500ms off LCP. -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="canonical" href={canonicalUrl} />
+    <!-- Fonts are self-hosted; preload the critical weights so they land
+         before first paint (no swap, no layout shift). -->
+    <link rel="preload" href={grotesk400} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={grotesk700} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={mono400} as="font" type="font/woff2" crossorigin />
     <title>{title}</title>
     <!-- Open Graph -->
     <meta property="og:type" content={ogType} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:url" content={Astro.url.href} />
+    <meta property="og:url" content={canonicalUrl} />
     <meta property="og:site_name" content="korabeland.com" />
     {ogImageUrl && <meta property="og:image" content={ogImageUrl} />}
     {ogImageUrl && <meta property="og:image:width" content="1200" />}
@@ -101,12 +114,22 @@ const NAV_LINKS: readonly NavLink[] = [
     <a class="skip-link" href="#main">skip to content</a>
     <header class="chrome">
       <div class="chrome-inner">
-        <a class="chrome-brand" href="/" aria-label="Korab Eland — home">
-          <svg class="chrome-mark" viewBox="0 0 18 18" aria-hidden="true">
-            <circle cx="9" cy="9" r="8" fill="none" stroke="currentColor" stroke-width="1" />
-            <path d="M 9 2 L 11 9 L 9 8 L 7 9 Z" fill="currentColor" />
-            <circle cx="9" cy="9" r="1.2" fill="currentColor" />
-          </svg>
+        <a class="chrome-brand" href="/" aria-label="Korab Eland, home">
+          {showBadge ? (
+            <Image
+              class="chrome-badge"
+              src={portrait}
+              alt=""
+              width={52}
+              height={52}
+              loading="eager"
+            />
+          ) : (
+            <svg class="chrome-mark" viewBox="0 0 18 18" aria-hidden="true">
+              <rect x="1.5" y="1.5" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1" />
+              <circle cx="9" cy="9" r="2.4" fill="currentColor" />
+            </svg>
+          )}
           <span class="chrome-brand-text">korab eland</span>
         </a>
 
@@ -127,9 +150,6 @@ const NAV_LINKS: readonly NavLink[] = [
           </ul>
         </nav>
 
-        <div class="chrome-meta">
-          <WeatherPill status={weatherStatus} />
-        </div>
       </div>
     </header>
 
@@ -141,8 +161,11 @@ const NAV_LINKS: readonly NavLink[] = [
       <footer class="site-footer">
         <div class="site-footer-inner">
           <span class="site-footer-brand">korab eland</span>
-          <span class="t-mono">
-            © {year} · <a href="/colophon">colophon</a>
+          <span class="t-mono site-footer-links">
+            <span class="footer-avail">● open to roles</span> ·{" "}
+            <a href="mailto:korabeland@gmail.com">email</a> ·{" "}
+            <a href="https://www.linkedin.com/in/korabeland" rel="me">linkedin</a> ·{" "}
+            <a href="/colophon">colophon</a> · © {year}
           </span>
         </div>
       </footer>
@@ -192,7 +215,7 @@ const NAV_LINKS: readonly NavLink[] = [
     margin-inline: auto;
     padding: var(--s-4) var(--s-6);
     display: grid;
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns: auto 1fr;
     align-items: center;
     gap: var(--s-5);
   }
@@ -211,6 +234,15 @@ const NAV_LINKS: readonly NavLink[] = [
     color: var(--ink);
   }
 
+  .chrome-badge {
+    width: 26px;
+    height: 26px;
+    border-radius: var(--r-1);
+    border: 1px solid var(--rule);
+    object-fit: cover;
+    display: block;
+  }
+
   .chrome-brand-text {
     font-family: var(--font-display);
     font-weight: 500;
@@ -223,13 +255,15 @@ const NAV_LINKS: readonly NavLink[] = [
     margin: 0;
     padding: 0;
     display: flex;
-    justify-content: center;
+    justify-content: flex-end;
     gap: var(--s-6);
   }
 
   .chrome-nav a {
-    font-family: var(--font-body);
-    font-size: 13px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
     color: var(--ink-soft);
     text-decoration: none;
     padding-bottom: 3px;
@@ -244,11 +278,7 @@ const NAV_LINKS: readonly NavLink[] = [
 
   .chrome-nav a.is-active {
     color: var(--ink);
-    border-bottom-color: var(--moss);
-  }
-
-  .chrome-meta {
-    justify-self: end;
+    border-bottom-color: var(--amber);
   }
 
   .page-main {
@@ -286,8 +316,9 @@ const NAV_LINKS: readonly NavLink[] = [
 
   .site-footer-brand {
     font-family: var(--font-display);
-    font-style: italic;
-    font-size: 18px;
+    font-weight: 500;
+    font-size: 16px;
+    letter-spacing: -0.01em;
     color: var(--ink);
   }
 
@@ -300,21 +331,20 @@ const NAV_LINKS: readonly NavLink[] = [
   .site-footer a:hover,
   .site-footer a:focus-visible {
     color: var(--ink);
-    border-bottom-color: var(--moss);
+    border-bottom-color: var(--amber);
   }
 
-  @media (max-width: 768px) {
+  .footer-avail {
+    color: var(--amber);
+    letter-spacing: 0.06em;
+  }
+
+  @media (max-width: 640px) {
     .chrome-inner {
-      grid-template-columns: 1fr auto;
-      grid-template-areas:
-        "brand meta"
-        "nav   nav";
+      grid-template-columns: 1fr;
       row-gap: var(--s-3);
     }
-    .chrome-brand { grid-area: brand; }
-    .chrome-meta  { grid-area: meta; }
-    .chrome-nav   {
-      grid-area: nav;
+    .chrome-nav {
       overflow-x: auto;
     }
     .chrome-nav ul {

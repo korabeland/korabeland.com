@@ -1,0 +1,34 @@
+---
+slug: lead-scoring
+title: 'Lead scoring: fixed tiers to a decile model'
+description: >-
+  Stopping hundreds of low-value calls held conversion steady and earned the
+  mandate to replace fixed tiers with a decile model built on evidence.
+role: Led strategy + evidence
+team: Admissions, marketing, paid media, data engineering
+stack: SQL · CRM · ML pipeline
+outcome: hundreds of calls cut · conversion held
+startedAt: 2026-01-28
+tags:
+  - ai
+  - ml
+  - evidence
+  - operations
+outcomeMetrics:
+  - value: hundreds → 0
+    label: Call effort on lowest tier, per application
+  - value: none measured
+    label: Conversion impact of removing those calls
+  - value: '6'
+    label: Stakeholders aligned, across four functions
+  - value: ~600k leads
+    label: Dataset assembled for model build
+fieldLog: []
+reflection: ''
+nextProject: ai-sms-pilot
+---
+We were calling our lowest-tier leads **hundreds of times for every application they produced**. When we stopped calling them, conversion held. Applications arrived on their own timeline, and the team got real capacity back. One analysis changed how the business thought about effort.
+
+It also bought the mandate for something better. Fixed tiers treat every lead in a bucket the same. A **decile model** scores each lead on expected conversion probability, so call strategy, nurture sequencing and media spend can follow the evidence instead of the rulebook. I ran alignment sessions with six stakeholders across admissions, marketing, paid media and data engineering, synthesised where they converged, and took the model to senior leaders. They endorsed v1.
+
+Then the groundwork. I audited the lead signals we actually had and wrote the analysis query myself: **around 600k leads with point-in-time features**. I set an interpretability requirement so the team could trust the scores, and briefed data engineering. The model build is scheduled behind a data-platform migration, and the whole workstream is documented to run without me as the dependency.

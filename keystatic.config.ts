@@ -1,4 +1,4 @@
-import { collection, config, fields, singleton } from "@keystatic/core";
+import { collection, config, fields } from "@keystatic/core";
 
 export default config({
   storage: {
@@ -18,6 +18,15 @@ export default config({
         }),
         description: fields.text({ label: "Description", multiline: true }),
         publishedAt: fields.date({ label: "Published At" }),
+        heroImage: fields.image({
+          label: "Hero image",
+          directory: "public/notes",
+          publicPath: "/notes/",
+        }),
+        heroImageAlt: fields.text({
+          label: "Hero image alt text",
+          description: "Describes the image for screen readers.",
+        }),
         content: fields.markdoc({ label: "Content" }),
       },
     }),
@@ -47,8 +56,8 @@ export default config({
         shippedAt: fields.date({ label: "Shipped at" }),
         heroImage: fields.image({
           label: "Hero image",
-          directory: "src/content/projects",
-          publicPath: "/src/content/projects/",
+          directory: "public/work",
+          publicPath: "/work/",
         }),
         tags: fields.array(fields.text({ label: "Tag" }), {
           label: "Tags",
@@ -103,45 +112,6 @@ export default config({
           description: "Slug of the next project to link to at the bottom.",
         }),
         content: fields.markdoc({ label: "Content" }),
-      },
-    }),
-  },
-  singletons: {
-    siteMeta: singleton({
-      label: "Site meta",
-      path: "src/content/site-meta/",
-      format: { data: "json" },
-      schema: {
-        tagline: fields.text({
-          label: "Tagline",
-          description: "Italic line under the masthead.",
-          validation: { isRequired: true },
-        }),
-        slotsAvailable: fields.integer({
-          label: "Client slots available",
-          defaultValue: 2,
-        }),
-        todaysEntry: fields.object(
-          {
-            date: fields.text({
-              label: "Date line",
-              description:
-                'e.g. "thu · apr 18 · 9:42am" — shown verbatim above the body.',
-              validation: { isRequired: true },
-            }),
-            body: fields.text({
-              label: "Body",
-              multiline: true,
-              validation: { isRequired: true },
-            }),
-            signoff: fields.text({
-              label: "Signoff",
-              description: 'e.g. "— k.e."',
-              validation: { isRequired: true },
-            }),
-          },
-          { label: "Today's entry" },
-        ),
       },
     }),
   },

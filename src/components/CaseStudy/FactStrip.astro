@@ -1,5 +1,5 @@
 ---
-// FactStrip.astro — 4-column bordered fact row for role / team / stack / outcome.
+// FactStrip.astro — bordered mono grid: Role / Team / Stack / Span / Status.
 
 interface Fact {
   label: string;
@@ -17,8 +17,8 @@ const { facts } = Astro.props;
   <div class="strip-inner">
     {facts.map((f) => (
       <div class="fact">
-        <div class="t-label">{f.label}</div>
-        <div class="t-serif fact-value">{f.value}</div>
+        <div class="t-label fact-label">{f.label}</div>
+        <div class="t-mono fact-value">{f.value}</div>
       </div>
     ))}
   </div>
@@ -26,26 +26,43 @@ const { facts } = Astro.props;
 
 <style>
   .strip {
-    padding: var(--s-6) var(--s-6);
     border-top: 1px solid var(--rule);
     border-bottom: 1px solid var(--rule);
     background: var(--paper-2);
   }
   .strip-inner {
-    max-width: 1280px;
+    max-width: 1000px;
     margin: 0 auto;
+    padding: var(--s-5) var(--s-4);
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: var(--s-6);
+    grid-template-columns: repeat(5, 1fr);
+    gap: var(--s-5);
+  }
+  .fact {
+    border-left: 1px solid var(--rule);
+    padding-left: var(--s-3);
+  }
+  .fact:first-child {
+    border-left: none;
+    padding-left: 0;
+  }
+  .fact-label {
+    margin: 0 0 4px;
   }
   .fact-value {
-    font-size: 18px;
-    margin-top: 4px;
+    text-transform: none;
+    letter-spacing: 0.02em;
+    color: var(--ink);
+    font-size: 12.5px;
   }
   @media (max-width: 800px) {
     .strip-inner {
       grid-template-columns: repeat(2, 1fr);
-      gap: var(--s-5);
+      gap: var(--s-4);
+    }
+    .fact {
+      border-left: none;
+      padding-left: 0;
     }
   }
 </style>

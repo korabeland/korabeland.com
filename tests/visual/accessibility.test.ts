@@ -3,9 +3,12 @@ import { expect, test } from "@playwright/test";
 
 const ROUTES = [
   "/",
+  "/work",
+  "/work/lead-scoring",
+  "/work/ai-sms-pilot",
+  "/about",
   "/notes",
   "/notes/hello-world",
-  "/projects",
   "/colophon",
   "/off-trail",
 ];

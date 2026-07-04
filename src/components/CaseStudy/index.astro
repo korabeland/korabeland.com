@@ -1,9 +1,10 @@
 ---
-// CaseStudy/index.astro — case-study page layout. Hero + fact strip +
-// 2-col body (sidebar with MiniMap + section TOC | main content slot) +
-// optional field log + outcome metrics + reflection + next-project link.
+// CaseStudy/index.astro — case-study page layout, console skin. Fact strip
+// (Role/Team/Stack/Span/Status) up top, outcome metrics right after the
+// first prose block, then field log / reflection / next-project.
+// Motion moment 3 of 3: reading-progress meter, CSS scroll-driven, guarded
+// by @supports + prefers-reduced-motion. See DESIGN.md §4-5.
 
-import MiniMap from "../MiniMap/MiniMap.astro";
 import FactStrip from "./FactStrip.astro";
 import FieldLog from "./FieldLog.astro";
 import OutcomeMetrics from "./OutcomeMetrics.astro";
@@ -25,14 +26,11 @@ interface LogEntry {
 interface Props {
   title: string;
   subtitle?: string;
-  tags?: string[];
-  statusTag?: string;
-  duration?: string;
+  /** "in flight" | "shipped" — drives the status chip colour. */
+  status?: string;
+  facts: Fact[];
   heroImage?: string;
   heroImageAlt?: string;
-  figCaption?: string;
-  figMeta?: string;
-  facts: Fact[];
   fieldLog?: LogEntry[];
   outcomeMetrics?: Metric[];
   reflection?: string;
@@ -44,291 +42,293 @@ interface Props {
 const {
   title,
   subtitle,
-  tags = [],
-  statusTag,
-  duration,
+  status,
+  facts,
   heroImage,
   heroImageAlt = "",
-  figCaption = "",
-  figMeta = "",
-  facts,
   fieldLog = [],
   outcomeMetrics = [],
   reflection,
   nextProject,
-  backHref = "/projects",
-  backLabel = "← all projects",
+  backHref = "/work",
+  backLabel = "← all case studies",
 } = Astro.props;
 
-const sections = [
-  "Overview",
-  "The problem",
-  "Approach",
-  fieldLog.length > 0 ? "Field log" : null,
-  outcomeMetrics.length > 0 ? "Outcome" : null,
-  reflection ? "Reflection" : null,
-].filter((s): s is string => Boolean(s));
+const statusKind = status === "shipped" ? "shipped" : "active";
 ---
+
+<div class="progress-track" aria-hidden="true">
+  <div class="progress-bar"></div>
+</div>
 
 <div class="return">
   <a class="t-mono" href={backHref}>{backLabel}</a>
 </div>
 
-{/* HERO */}
-<section class="hero">
-  <div class="hero-tags">
-    {tags.map((t) => <span class="tag">{t}</span>)}
-    {statusTag && <span class="tag tag--moss">{statusTag}</span>}
-    {duration && <span class="t-mono hero-duration">{duration}</span>}
+{/* HEADER */}
+<section class="head">
+  <div class="head-meta">
+    <span class="t-label">case study</span>
+    {status && (
+      <span class={`chip chip--${statusKind}`}>{status}</span>
+    )}
   </div>
 
-  <h1 class="t-display hero-title">{title}</h1>
-  {subtitle && (
-    <p class="t-serif hero-subtitle">{subtitle}</p>
-  )}
+  <h1 class="t-display head-title">{title}</h1>
+  {subtitle && <p class="head-subtitle">{subtitle}</p>}
 
-  {heroImage ? (
-    <img class="hero-image" src={heroImage} alt={heroImageAlt} />
-  ) : (
-    <div class="fig hero-fig">plate iii · product hero</div>
-  )}
-  {(figCaption || figMeta) && (
-    <div class="hero-meta">
-      {figCaption && <span class="t-mono">{figCaption}</span>}
-      {figMeta && <span class="t-mono">{figMeta}</span>}
-    </div>
-  )}
+  {heroImage && <img class="head-image" src={heroImage} alt={heroImageAlt} />}
 </section>
 
-{/* Fact strip */}
+{/* Fact strip: Role / Team / Stack / Span / Status */}
 <FactStrip facts={facts} />
 
 {/* Body */}
 <section class="body">
-  <aside class="sidebar" aria-label="Case study sections">
-    <div class="sidebar-block">
-      <MiniMap active="projects" title="↳ you are here" />
-    </div>
-    <div class="t-label sections-label">sections</div>
-    <ol class="sections">
-      {sections.map((s, i) => (
-        <li class="section-item">
-          <span class="t-mono">§{String(i + 1).padStart(2, "0")}</span>
-          <span>{s}</span>
-        </li>
-      ))}
-    </ol>
-  </aside>
-
-  <div class="body-main">
-    <div class="post-body">
-      <slot />
-    </div>
-
-    {fieldLog.length > 0 && (
-      <section class="field-log">
-        <h2 class="t-display log-title">
-          Field log <span class="italic-serif log-subtitle">— entries from the build</span>
-        </h2>
-        <FieldLog entries={fieldLog} />
-      </section>
-    )}
-
-    {outcomeMetrics.length > 0 && (
-      <section class="outcome">
-        <h2 class="t-display outcome-title">Outcome</h2>
-        <OutcomeMetrics metrics={outcomeMetrics} />
-      </section>
-    )}
-
-    {reflection && (
-      <section class="reflection">
-        <h2 class="t-display">Reflection</h2>
-        <p class="reflection-body">{reflection}</p>
-      </section>
-    )}
-
-    <div class="rule-soft rule-next"></div>
-    {nextProject && (
-      <div class="next-row">
-        <div class="t-mono">next project ↝</div>
-        <a class="italic-serif next-link" href={`/projects/${nextProject.slug}`}>
-          {nextProject.title}
-        </a>
-      </div>
-    )}
+  <div class="prose">
+    <slot />
   </div>
+
+  {outcomeMetrics.length > 0 && (
+    <section class="outcome" aria-labelledby="outcome-heading">
+      <h2 id="outcome-heading" class="t-label outcome-heading">outcome</h2>
+      <OutcomeMetrics metrics={outcomeMetrics} />
+    </section>
+  )}
+
+  {fieldLog.length > 0 && (
+    <section class="field-log" aria-labelledby="log-heading">
+      <h2 id="log-heading" class="t-label log-heading">field log</h2>
+      <FieldLog entries={fieldLog} />
+    </section>
+  )}
+
+  {reflection && (
+    <section class="reflection" aria-labelledby="reflection-heading">
+      <h2 id="reflection-heading" class="t-label reflection-heading">reflection</h2>
+      <p class="reflection-body">{reflection}</p>
+    </section>
+  )}
+
+  <div class="rule-soft rule-next"></div>
+  {nextProject && (
+    <div class="next-row">
+      <span class="t-mono">next case study</span>
+      <a class="next-link" href={`/work/${nextProject.slug}`}>{nextProject.title}</a>
+    </div>
+  )}
 </section>
 
 <style>
+  /* ─── Motion moment 3 of 3: reading progress ──────────────────────────
+     CSS scroll-driven animation where supported; a static, unanimated bar
+     as the fallback so the meter never looks broken on unsupported
+     browsers. prefers-reduced-motion is covered by the global guard in
+     global.css, which zeroes animation-duration — the bar simply stops
+     tracking and sits still, which is an acceptable degraded state.
+
+     Fixed (not sticky) and pinned above the chrome header: a sticky bar at
+     top:0 shares the header's own sticky position, and the header's higher
+     z-index hid it completely. Fixed positioning also escapes page-main's
+     max-width, so the bar spans the full viewport without needing fullBleed. */
+  .progress-track {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 20;
+    height: 2px;
+    background: var(--rule);
+  }
+
+  .progress-bar {
+    height: 100%;
+    background: var(--amber);
+    width: 0%;
+    transform-origin: left;
+  }
+
+  @supports (animation-timeline: scroll()) {
+    .progress-bar {
+      width: 100%;
+      transform: scaleX(0);
+      animation: reading-progress linear;
+      animation-timeline: scroll(root);
+    }
+
+    @keyframes reading-progress {
+      to {
+        transform: scaleX(1);
+      }
+    }
+  }
+
   .return {
-    padding: var(--s-5) var(--s-6) 0;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: var(--s-5) var(--s-4) 0;
   }
   .return .t-mono {
     color: var(--ink-mute);
     text-decoration: none;
   }
-
-  .hero {
-    padding: var(--s-7) var(--s-6) var(--s-6);
-    max-width: 1280px;
-    margin: 0 auto;
+  .return .t-mono:hover,
+  .return .t-mono:focus-visible {
+    color: var(--amber);
   }
-  .hero-tags {
+
+  .head {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: var(--s-6) var(--s-4) var(--s-6);
+  }
+
+  .head-meta {
     display: flex;
+    align-items: center;
     gap: var(--s-3);
     margin-bottom: var(--s-4);
-    align-items: baseline;
-    flex-wrap: wrap;
   }
-  .tag--moss {
-    border-color: var(--moss);
+
+  .chip {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border: 1px solid;
+    white-space: nowrap;
+  }
+  .chip--active {
+    color: var(--amber);
+    border-color: var(--amber);
+  }
+  .chip--shipped {
     color: var(--moss);
+    border-color: var(--moss);
   }
-  .hero-duration {
-    margin-left: auto;
+
+  .head-title {
+    font-size: clamp(32px, 5vw, 48px);
+    margin: 0 0 var(--s-4);
+    max-width: 20ch;
   }
-  .hero-title {
-    font-size: clamp(56px, 9vw, 88px);
-    line-height: 0.95;
-    margin: 0 0 var(--s-5);
-    font-weight: 400;
-    letter-spacing: -0.02em;
-  }
-  .hero-subtitle {
-    font-size: 24px;
+
+  .head-subtitle {
+    font-size: 18px;
+    line-height: 1.5;
     color: var(--ink-soft);
-    margin: 0 0 var(--s-7);
-    max-width: 760px;
-    line-height: 1.35;
+    max-width: 60ch;
+    margin: 0 0 var(--s-5);
   }
-  .hero-image {
+
+  .head-image {
     width: 100%;
-    max-height: 460px;
+    max-height: 420px;
     object-fit: cover;
     border: 1px solid var(--rule);
     display: block;
-    margin-bottom: var(--s-4);
-  }
-  .hero-fig {
-    height: 460px;
-    margin-bottom: var(--s-4);
-  }
-  .hero-meta {
-    display: flex;
-    justify-content: space-between;
   }
 
   .body {
-    padding: var(--s-8) var(--s-6);
-    max-width: 1280px;
+    max-width: 1000px;
     margin: 0 auto;
-    display: grid;
-    grid-template-columns: 240px 1fr;
-    gap: var(--s-8);
-  }
-  .sidebar {
-    position: sticky;
-    top: 100px;
-    align-self: start;
-  }
-  .sidebar-block {
-    margin-bottom: var(--s-5);
-  }
-  .sections-label {
-    margin-bottom: var(--s-4);
-  }
-  .sections {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  .section-item {
-    display: flex;
-    gap: 10px;
-    font-size: 13px;
-    color: var(--ink-soft);
+    padding: var(--s-7) var(--s-4) var(--s-8);
   }
 
-  .body-main {
-    max-width: 780px;
+  .prose {
+    max-width: 680px;
   }
-  .post-body :global(p) {
+
+  .prose :global(p) {
     font-size: 17px;
     line-height: 1.7;
     color: var(--ink-soft);
     margin: 0 0 var(--s-5);
   }
-  .post-body :global(h2) {
+  .prose :global(h2) {
     font-family: var(--font-display);
-    font-size: 32px;
-    font-weight: 400;
+    font-weight: 500;
+    font-size: 24px;
+    letter-spacing: -0.01em;
+    color: var(--ink);
     margin: var(--s-7) 0 var(--s-4);
   }
-  .post-body :global(blockquote) {
+  .prose :global(strong) {
+    color: var(--ink);
+  }
+  .prose :global(blockquote) {
     font-family: var(--font-display);
     font-style: italic;
-    font-size: 22px;
-    line-height: 1.4;
-    margin: var(--s-7) 0;
+    font-size: 20px;
+    line-height: 1.45;
+    margin: var(--s-6) 0;
     padding-left: var(--s-5);
-    border-left: 2px solid var(--moss);
+    border-left: 2px solid var(--amber);
+    color: var(--ink);
+  }
+  .prose :global(ul) {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 var(--s-5);
+  }
+  .prose :global(ul li) {
+    padding-block: var(--s-2);
+    border-bottom: 1px solid var(--rule);
+    font-size: 16px;
+    line-height: 1.6;
     color: var(--ink-soft);
   }
 
-  .log-title,
-  .outcome-title {
-    font-size: 32px;
-    font-weight: 400;
+  .outcome-heading,
+  .log-heading,
+  .reflection-heading {
+    display: block;
+    border-bottom: 1px solid var(--ink);
+    padding-bottom: var(--s-2);
     margin: var(--s-8) 0 var(--s-5);
-  }
-  .log-subtitle {
-    color: var(--ink-mute);
-    font-size: 22px;
+    max-width: 680px;
   }
 
-  .reflection h2 {
-    font-family: var(--font-display);
-    font-size: 32px;
-    font-weight: 400;
-    margin: var(--s-7) 0 var(--s-4);
-  }
   .reflection-body {
     font-size: 17px;
     line-height: 1.7;
     color: var(--ink-soft);
-    margin: 0 0 var(--s-7);
+    max-width: 680px;
+    margin: 0;
   }
 
   .rule-next {
-    margin: var(--s-7) 0 var(--s-5);
+    margin: var(--s-8) 0 var(--s-5);
+    max-width: 680px;
   }
+
   .next-row {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
+    gap: var(--s-4);
+    max-width: 680px;
   }
+
   .next-link {
-    font-size: 22px;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 18px;
     color: var(--ink);
     text-decoration: none;
     border-bottom: 1px solid transparent;
-    transition: border-color 160ms ease;
+    transition: border-color 160ms ease, color 160ms ease;
   }
   .next-link:hover,
   .next-link:focus-visible {
-    border-bottom-color: var(--moss);
+    color: var(--amber);
+    border-bottom-color: var(--amber);
   }
 
-  @media (max-width: 900px) {
-    .body {
-      grid-template-columns: 1fr;
-    }
-    .sidebar {
-      position: static;
+  @media (max-width: 680px) {
+    .head-meta {
+      flex-wrap: wrap;
     }
   }
 </style>

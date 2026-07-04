@@ -55,3 +55,6 @@ tests/visual/diffs/
 src/content/trail-register/commits.json
 .vercel
 .env*.local
+
+# Stray local build log (accidentally committed via git add -A in 136e7ae)
+build-archive.log

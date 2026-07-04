@@ -1,0 +1,195 @@
+---
+export const prerender = true;
+
+// /work — case-study index. Same ledger grammar as the homepage outcome
+// ledger: title / mono outcome datum / status chip. See
+// docs/plans/2026-07-03-console-mvp.md.
+
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { listProjects } from "../../lib/projects";
+
+const projects = await listProjects();
+
+function ledgerStatus(p: { shippedAt: string | null }): {
+  label: string;
+  kind: "shipped" | "active";
+} {
+  return p.shippedAt
+    ? { label: "shipped", kind: "shipped" }
+    : { label: "in flight", kind: "active" };
+}
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "@id": "https://korabeland.com/work",
+  url: "https://korabeland.com/work",
+  name: "work · case studies · korabeland.com",
+  description:
+    "Case studies from the field: evidence, decisions, and outcomes across marketing, CX and AI operations.",
+  isPartOf: { "@id": "https://korabeland.com/#website" },
+};
+---
+
+<BaseLayout
+  title="work · case studies · korab eland"
+  description="Case studies from the field: evidence, decisions, and outcomes across marketing, CX and AI operations."
+  active="work"
+>
+  <script type="application/ld+json" slot="jsonld" set:html={JSON.stringify(jsonLd)} />
+
+  <div class="work">
+    <section class="work-head">
+      <p class="t-label work-eyebrow">work · case studies</p>
+      <p class="work-intro">
+        The evidence behind the outcomes. Each entry is a real project, with the decisions
+        and the numbers that came out of it.
+      </p>
+    </section>
+
+    <section class="ledger-section" aria-labelledby="ledger-heading">
+      <div class="section-head">
+        <h2 id="ledger-heading" class="t-label">all case studies</h2>
+      </div>
+
+      {
+        projects.length > 0 ? (
+          <ol class="ledger">
+            {projects.map((p) => {
+              const status = ledgerStatus(p);
+              return (
+                <li class="ledger-row">
+                  <a class="ledger-link" href={`/work/${p.slug}`}>
+                    <span class="ledger-name">{p.title}</span>
+                    <span class="t-mono ledger-datum">{p.outcome}</span>
+                    <span class={`ledger-chip ledger-chip--${status.kind}`}>{status.label}</span>
+                  </a>
+                </li>
+              );
+            })}
+          </ol>
+        ) : (
+          <p class="t-mono ledger-empty">first case studies being written up.</p>
+        )
+      }
+    </section>
+  </div>
+</BaseLayout>
+
+<style>
+  .work {
+    max-width: 960px;
+    margin-inline: auto;
+    padding: var(--s-7) var(--s-4) var(--s-8);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-7);
+  }
+
+  .work-head {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-4);
+  }
+
+  .work-eyebrow {
+    margin: 0;
+  }
+
+  .work-intro {
+    font-size: 17px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    max-width: 60ch;
+    margin: 0;
+  }
+
+  .section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--s-4);
+    border-bottom: 1px solid var(--ink);
+    padding-bottom: var(--s-2);
+  }
+
+  .section-head h2 {
+    margin: 0;
+    color: var(--ink-soft);
+  }
+
+  .ledger {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .ledger-row {
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .ledger-link {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: var(--s-5);
+    padding: var(--s-4) var(--s-2);
+    text-decoration: none;
+    transition: background 150ms ease;
+  }
+
+  @media (hover: hover) {
+    .ledger-link:hover {
+      background: var(--paper-2);
+    }
+  }
+
+  .ledger-name {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 17px;
+    color: var(--ink);
+    line-height: 1.35;
+  }
+
+  .ledger-datum {
+    text-transform: none;
+    letter-spacing: 0.02em;
+    color: var(--ink-soft);
+  }
+
+  .ledger-chip {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border: 1px solid;
+    white-space: nowrap;
+  }
+
+  .ledger-chip--active {
+    color: var(--amber);
+    border-color: var(--amber);
+  }
+
+  .ledger-chip--shipped {
+    color: var(--moss);
+    border-color: var(--moss);
+  }
+
+  .ledger-empty {
+    padding: var(--s-5) var(--s-2);
+    margin: 0;
+  }
+
+  @media (max-width: 680px) {
+    .ledger-link {
+      grid-template-columns: 1fr auto;
+    }
+    .ledger-datum {
+      grid-column: 1 / -1;
+      order: 3;
+    }
+  }
+</style>

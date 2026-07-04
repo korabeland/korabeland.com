@@ -1,7 +1,5 @@
 ---
-// ReadingRoom LeftSidebar — MiniMap + field-note meta + tags + contents TOC.
-
-import MiniMap from "../MiniMap/MiniMap.astro";
+// ReadingRoom LeftSidebar — post metadata + tags + contents TOC.
 
 interface Props {
   noteNumber?: string;
@@ -32,10 +30,6 @@ const depthCells = Array.from(
 ---
 
 <aside class="left-rail" aria-label="Field note metadata">
-  <div class="block">
-    <MiniMap active="notes" title="↳ you are here" />
-  </div>
-
   <div class="block t-mono meta">
     {noteNumber && <>field note {noteNumber}<br /></>}
     <span class="meta-date">{date}</span>
