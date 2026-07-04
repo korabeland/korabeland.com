@@ -10,6 +10,7 @@ export default defineConfig({
   site: "https://korabeland.com",
   output: "server",
   adapter: vercel(),
+  trailingSlash: "never",
   // /projects moved to /work in the console redesign (2026-07-03).
   redirects: {
     "/projects": "/work",
