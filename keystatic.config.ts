@@ -182,6 +182,54 @@ export default config({
         ),
       },
     }),
+    tailored: collection({
+      label: "Tailored pages",
+      slugField: "slug",
+      path: "src/content/for/*/",
+      schema: {
+        slug: fields.text({
+          label: "Slug",
+          description:
+            "URL slug (usually the company). The page is /for/<slug>.",
+          validation: { isRequired: true },
+        }),
+        displayName: fields.text({
+          label: "Display name",
+          description: "Company or role name shown on the page.",
+          validation: { isRequired: true },
+        }),
+        intro: fields.text({
+          label: "Intro",
+          description: "The bespoke opening — the only free-form copy.",
+          multiline: true,
+          validation: { isRequired: true },
+        }),
+        experienceRefs: fields.array(
+          fields.relationship({
+            label: "Experience",
+            collection: "experience",
+          }),
+          {
+            label: "Experience (ordered)",
+            itemLabel: (props) => props.value ?? "—",
+          },
+        ),
+        projectRefs: fields.array(
+          fields.relationship({ label: "Case study", collection: "projects" }),
+          {
+            label: "Case studies (ordered)",
+            itemLabel: (props) => props.value ?? "—",
+          },
+        ),
+        skillCategories: fields.array(
+          fields.text({ label: "Skill category name" }),
+          {
+            label: "Skill categories (by name)",
+            itemLabel: (props) => props.value,
+          },
+        ),
+      },
+    }),
   },
   singletons: {
     skills: singleton({

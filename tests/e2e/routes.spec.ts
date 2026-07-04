@@ -231,6 +231,38 @@ test("/dev/skills-preview renders categories and certifications", async ({
   await expect(page.getByText("SQL · Python", { exact: false })).toBeVisible();
 });
 
+// U6 — a tailored page renders for a known slug, assembled from the pool with
+// case-study exits (AE4), and carries the noindex directive.
+test("/for/demo renders the tailored page with its case-study exits", async ({
+  page,
+}) => {
+  const response = await page.goto("/for/demo");
+  expect(response?.status()).toBe(200);
+  await expect(page.locator(".tailored-eyebrow")).toContainText("Demo Company");
+  await expect(page.locator('a[href="/work/lead-scoring"]')).toBeVisible();
+  await expect(page.locator('a[href="/work/ai-sms-pilot"]')).toBeVisible();
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
+    "content",
+    /noindex/,
+  );
+});
+
+// U6 — an unknown /for/ slug falls through to the SSR 404 (off-trail); the
+// stale-link answer after a page is deleted (F3).
+test("/for/nonexistent-xyz returns 404 via the off-trail page", async ({
+  page,
+}) => {
+  const response = await page.goto("/for/nonexistent-xyz");
+  expect(response?.status()).toBe(404);
+  await expect(page.locator(".off-trail")).toBeVisible();
+});
+
+// U6 — tailored pages are unlisted: nothing on the site links into /for/.
+test("no navigation links point into /for/", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator('a[href^="/for/"]')).toHaveCount(0);
+});
+
 // robots.txt must block /dev/ and /keystatic
 test("robots.txt disallows /dev/ and /keystatic", async ({ request }) => {
   const resp = await request.get("/robots.txt");

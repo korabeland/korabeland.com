@@ -15,6 +15,8 @@ const ROUTES = [
   // render until real content lands, so axe checks their markup and contrast.
   "/dev/experience-preview",
   "/dev/skills-preview",
+  // The permanent tailored-page fixture — a real shipping (noindex) page.
+  "/for/demo",
 ];
 
 for (const route of ROUTES) {
