@@ -42,10 +42,13 @@ export default defineConfig({
       use: { viewport: { width: 1280, height: 800 } },
     },
   ],
+  // Always a real dev server, in CI too: /off-trail, /404, and the
+  // /projects redirects are SSR-only (live query-string reads, live
+  // redirects) with no static output, so the static-preview.mjs server
+  // used by Lighthouse (see .lighthouserc.json, a separate config) can't
+  // serve them — it 404s routes that work fine under real SSR.
   webServer: {
-    command: process.env.CI
-      ? "pnpm build && node scripts/static-preview.mjs"
-      : "pnpm dev",
+    command: "pnpm dev",
     url: "http://localhost:4321",
     reuseExistingServer: !process.env.CI,
     timeout: 120000,
