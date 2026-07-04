@@ -1,7 +1,7 @@
 ---
 title: "feat: Experience ledger, skills section, hero animation, and tailored landing pages"
 type: feat
-status: active
+status: completed
 date: 2026-07-04
 origin: docs/brainstorms/2026-07-04-experience-ledger-and-tailored-pages-requirements.md
 ---
