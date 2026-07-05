@@ -11,7 +11,7 @@ Stack-specific rules for the korabeland.com codebase. Orchestration mechanics, e
 - **Astro 6** (TypeScript strict mode) — page routing, SSR via Vercel adapter
 - **Tailwind CSS 4** — Vite plugin (`@tailwindcss/vite`), CSS-first config (`@import "tailwindcss"` in `src/styles/global.css`)
 - **shadcn/ui** — React islands via `@astrojs/react`; components in `src/components/`
-- **Keystatic** — local-git-backed CMS (`@keystatic/core` + `@keystatic/astro`). Content at `src/content/posts/*/`. Admin UI at `/keystatic`.
+- **Keystatic** — local-git-backed CMS (`@keystatic/core` + `@keystatic/astro`). Collections `posts`/`projects`/`experience`/`tailored` at `src/content/*/` plus a `skills` singleton. Admin UI at `/keystatic`. Readers in `src/lib/` split pure map/sort from the reader so Vitest tests them with fixtures.
 - **MDX** — `@astrojs/mdx` alongside Keystatic's markdoc format
 - **Vercel** — `@astrojs/vercel@10` adapter, `output: 'server'`
 
@@ -41,6 +41,11 @@ astro.config.mjs      — Framework + integration config
 - `pnpm test:visual` — Playwright visual + E2E
 - `pnpm audit` — Lighthouse CI + axe-core
 - `pnpm verify:all` — chains all four; must pass before any PR is opened
+
+**Testing conventions (established 2026-07-05):**
+- Content-gated `.astro` sections (experience, skills) are render-tested via **dev-only preview routes** — `src/pages/dev/<x>-preview.astro` (`prerender=false`, returns 404 in prod) renders the component with a fixture, then Playwright e2e + axe assert against it. AstroContainer is incompatible with this Vitest/Vite pairing — don't reach for it. `robots.txt` disallows `/dev/` and the sitemap `filter` excludes it.
+- Playwright emulates reduced motion globally via `use.contextOptions.reducedMotion` (not the top-level key, which this version lacks) so animation surfaces render their static end-state — deterministic screenshots, and the static-default path is the tested path.
+- Keep pure logic (map/sort/parse/resolve) in `.ts` split from the Keystatic reader so Vitest covers it with fixtures; never commit placeholder content to make a section appear (it ships to prod). New sections **conditionally render** on real entries existing.
 
 ---
 
