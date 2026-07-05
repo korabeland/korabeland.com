@@ -72,3 +72,14 @@ export async function listProjects(): Promise<ProjectSummary[]> {
 export async function readProject(slug: string) {
   return reader.collections.projects.read(slug);
 }
+
+/**
+ * Console status vocabulary for a case study: amber "in-flight" until it has a
+ * ship date, moss "shipped" after. The single derivation the ledgers and the
+ * StatusChip display share — no second source of truth.
+ */
+export function projectStatus(
+  project: Pick<ProjectSummary, "shippedAt">,
+): "shipped" | "in-flight" {
+  return project.shippedAt ? "shipped" : "in-flight";
+}

@@ -24,8 +24,10 @@ export default defineConfig({
     // committed to git and readable by Astro's content API in all envs.
     ...(process.env.NODE_ENV !== "production" ? [keystatic()] : []),
     sitemap({
-      // Exclude dev-only preview pages from the public sitemap.
-      filter: (page) => !page.includes("/dev/"),
+      // Exclude dev-only previews and the unlisted tailored pages. /for/ pages
+      // are noindex, not robots-disallowed, so crawlers can still see the
+      // noindex directive — the sitemap just never advertises them.
+      filter: (page) => !page.includes("/dev/") && !page.includes("/for/"),
     }),
   ],
   vite: {

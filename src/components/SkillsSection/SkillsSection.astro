@@ -1,0 +1,128 @@
+---
+// SkillsSection.astro — skills + certifications on the about page. Categorised
+// term lists and certifications with issuer/year. Renders only when the skills
+// singleton has content; the about page gates on readSkills().
+
+import type { SkillsData } from "../../lib/skills";
+
+interface Props {
+  data: SkillsData;
+}
+
+const { data } = Astro.props;
+---
+
+<section class="skills-section" aria-labelledby="skills-heading">
+  <h2 id="skills-heading" class="t-label">skills · certifications</h2>
+
+  {
+    data.categories.length > 0 && (
+      <dl class="skills-cats">
+        {data.categories.map((cat) => (
+          <div class="skills-cat">
+            <dt class="skills-cat-name">{cat.name}</dt>
+            <dd class="skills-cat-items">{cat.skills.join(" · ")}</dd>
+          </div>
+        ))}
+      </dl>
+    )
+  }
+
+  {
+    data.certifications.length > 0 && (
+      <ul class="skills-certs">
+        {data.certifications.map((cert) => (
+          <li class="skills-cert">
+            <span class="skills-cert-name">
+              {cert.url ? <a href={cert.url}>{cert.name}</a> : cert.name}
+            </span>
+            {(cert.issuer || cert.year) && (
+              <span class="t-mono skills-cert-meta">
+                {[cert.issuer, cert.year].filter(Boolean).join(" · ")}
+              </span>
+            )}
+          </li>
+        ))}
+      </ul>
+    )
+  }
+</section>
+
+<style>
+  .skills-section {
+    margin-top: var(--s-7);
+    padding-top: var(--s-5);
+    border-top: 1px solid var(--rule);
+  }
+
+  .skills-section .t-label {
+    display: block;
+    margin: 0 0 var(--s-4);
+  }
+
+  .skills-cats {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-4);
+  }
+
+  .skills-cat-name {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  .skills-cat-items {
+    margin: 2px 0 0;
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+  }
+
+  .skills-certs {
+    list-style: none;
+    margin: var(--s-6) 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .skills-cert {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--s-4);
+    padding: var(--s-3) 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .skills-cert:first-child {
+    border-top: 1px solid var(--rule);
+  }
+
+  .skills-cert-name {
+    font-size: 15px;
+    color: var(--ink);
+  }
+
+  .skills-cert a {
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+  }
+  .skills-cert a:hover,
+  .skills-cert a:focus-visible {
+    color: var(--amber);
+  }
+
+  .skills-cert-meta {
+    text-transform: none;
+    letter-spacing: 0.02em;
+    color: var(--ink-soft);
+    white-space: nowrap;
+    font-size: 13px;
+  }
+</style>

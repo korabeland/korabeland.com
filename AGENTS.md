@@ -40,7 +40,7 @@ astro.config.mjs      — Framework + integration config
 - `pnpm test` — Vitest (non-visual, non-E2E)
 - `pnpm test:visual` — Playwright visual + E2E
 - `pnpm audit` — Lighthouse CI + axe-core
-- `pnpm verify:all` — chains all four; must pass before any PR reaches Korab
+- `pnpm verify:all` — chains all four; must pass before any PR is opened
 
 ---
 
@@ -97,3 +97,13 @@ Any file not listed in §3–§5 is orchestrator-owned by default. Ask first.
 ## 6. Memory scope
 
 Memory captured from a `korabeland.com/` session should describe stack quirks (Astro, Keystatic, Tailwind, Vercel adapter, shadcn islands) and component decisions. Orchestration and model-tuning lessons belong in Dev Team memory — capture those from a session started in `Dev Team/`. See `../.claude/rules/memory-scope.md` for the full rule.
+
+---
+
+## 7. Merge workflow
+
+Korab works this repo solo. `main`'s branch protection has no required-approving-review count — that model assumes a second human distinct from the PR author, which doesn't exist here, and previously forced an admin bypass on every single merge. Required status checks instead: `verify-all` and `Devin Review` (Cognition Labs' automated PR review, runs on every PR automatically).
+
+- `Devin Review` genuinely gates on completion (`pending` → `success`), not just a static badge — merge is blocked until it's actually run. It does **not** gate on severity: it goes green even when it flagged real bugs.
+- Before merging, read Devin's review comments. Fix genuine bugs and regressions — that's non-negotiable. Cosmetic/style suggestions can be deferred or explicitly declined.
+- Once `verify-all` and `Devin Review` are both green, merge normally: `gh pr merge --squash`. No `--admin` needed.

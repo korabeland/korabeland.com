@@ -23,6 +23,20 @@ test("/ renders the operator's console home", async ({ page }) => {
   );
 });
 
+// U4 — the hero headline rotates its subject only with motion. Playwright
+// emulates prefers-reduced-motion globally, so the default subject must stay
+// put (AE2: static default under reduced motion / no JS).
+test("hero headline stays on the default subject under reduced motion", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const word = page.locator(".hero-ship-word");
+  await expect(word).toHaveText("ship");
+  // Wait past one rotation interval; the script must have self-disabled.
+  await page.waitForTimeout(3200);
+  await expect(word).toHaveText("ship");
+});
+
 // /work — case-study index renders the ledger with real project rows.
 test("/work renders the case-study index", async ({ page }) => {
   const response = await page.goto("/work");
@@ -139,7 +153,7 @@ test("home hero renders the availability status line and portrait", async ({
   await expect(page.locator(".hero-avail")).toContainText(
     "open to ai · data · product roles",
   );
-  await expect(page.locator(".hero-avail-dot")).toBeVisible();
+  await expect(page.locator(".hero-avail .statuschip-dot")).toBeVisible();
   await expect(page.locator(".hero-portrait img")).toBeVisible();
   await expect(page.locator(".chrome-badge")).toHaveCount(0);
 });
@@ -167,6 +181,87 @@ for (const { path, href } of NAV_ACTIVE_CASES) {
     await expect(activeLink).toHaveAttribute("aria-current", "page");
   });
 }
+
+// U2 — the experience section is content-gated: with the collection empty it
+// must not render on the homepage (no placeholder content ships).
+test("homepage omits the experience section while the collection is empty", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await expect(page.locator("#experience-heading")).toHaveCount(0);
+});
+
+// U2 — dev-only preview renders ExperienceLedger against fixtures so the section
+// markup is covered without committing content. AE1: a testimonial element
+// appears only for a role that has one.
+test("/dev/experience-preview renders roles, a current chip, and conditional testimonials", async ({
+  page,
+}) => {
+  const response = await page.goto("/dev/experience-preview");
+  expect(response?.status()).toBe(200);
+  await expect(page.locator(".experience-row")).toHaveCount(2);
+  await expect(
+    page.locator(".experience-row").first().locator(".statuschip"),
+  ).toContainText("current");
+  await expect(page.locator(".experience-period").first()).toHaveText(
+    "2021–present",
+  );
+  // AE1: only the role with a testimonial renders a testimonial element.
+  await expect(page.locator(".experience-testimonial")).toHaveCount(1);
+  await expect(page.getByText("6 · stakeholders")).toBeVisible();
+});
+
+// U3 — skills section is content-gated: absent while the singleton is empty.
+test("about page omits the skills section while the singleton is empty", async ({
+  page,
+}) => {
+  await page.goto("/about");
+  await expect(page.locator("#skills-heading")).toHaveCount(0);
+});
+
+// U3 — dev-only preview renders SkillsSection against a fixture.
+test("/dev/skills-preview renders categories and certifications", async ({
+  page,
+}) => {
+  const response = await page.goto("/dev/skills-preview");
+  expect(response?.status()).toBe(200);
+  await expect(page.locator("#skills-heading")).toBeVisible();
+  await expect(page.locator(".skills-cat")).not.toHaveCount(0);
+  await expect(page.locator(".skills-cert")).not.toHaveCount(0);
+  await expect(page.getByText("SQL · Python", { exact: false })).toBeVisible();
+});
+
+// U6 — a tailored page renders for a known slug, assembled from the pool with
+// case-study exits (AE4), and carries the noindex directive.
+test("/for/demo renders the tailored page with its case-study exits", async ({
+  page,
+}) => {
+  const response = await page.goto("/for/demo");
+  expect(response?.status()).toBe(200);
+  await expect(page.locator(".tailored-eyebrow")).toContainText("Demo Company");
+  await expect(page.locator('a[href="/work/lead-scoring"]')).toBeVisible();
+  await expect(page.locator('a[href="/work/ai-sms-pilot"]')).toBeVisible();
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
+    "content",
+    /noindex/,
+  );
+});
+
+// U6 — an unknown /for/ slug falls through to the SSR 404 (off-trail); the
+// stale-link answer after a page is deleted (F3).
+test("/for/nonexistent-xyz returns 404 via the off-trail page", async ({
+  page,
+}) => {
+  const response = await page.goto("/for/nonexistent-xyz");
+  expect(response?.status()).toBe(404);
+  await expect(page.locator(".off-trail")).toBeVisible();
+});
+
+// U6 — tailored pages are unlisted: nothing on the site links into /for/.
+test("no navigation links point into /for/", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator('a[href^="/for/"]')).toHaveCount(0);
+});
 
 // robots.txt must block /dev/ and /keystatic
 test("robots.txt disallows /dev/ and /keystatic", async ({ request }) => {

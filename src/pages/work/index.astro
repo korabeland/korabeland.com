@@ -5,19 +5,11 @@ export const prerender = true;
 // ledger: title / mono outcome datum / status chip. See
 // docs/plans/2026-07-03-console-mvp.md.
 
+import StatusChip from "../../components/StatusChip/StatusChip.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import { listProjects } from "../../lib/projects";
+import { listProjects, projectStatus } from "../../lib/projects";
 
 const projects = await listProjects();
-
-function ledgerStatus(p: { shippedAt: string | null }): {
-  label: string;
-  kind: "shipped" | "active";
-} {
-  return p.shippedAt
-    ? { label: "shipped", kind: "shipped" }
-    : { label: "in flight", kind: "active" };
-}
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -56,13 +48,13 @@ const jsonLd = {
         projects.length > 0 ? (
           <ol class="ledger">
             {projects.map((p) => {
-              const status = ledgerStatus(p);
+              const status = projectStatus(p);
               return (
                 <li class="ledger-row">
                   <a class="ledger-link" href={`/work/${p.slug}`}>
                     <span class="ledger-name">{p.title}</span>
                     <span class="t-mono ledger-datum">{p.outcome}</span>
-                    <span class={`ledger-chip ledger-chip--${status.kind}`}>{status.label}</span>
+                    <StatusChip status={status} variant="chip" />
                   </a>
                 </li>
               );
@@ -156,26 +148,6 @@ const jsonLd = {
     text-transform: none;
     letter-spacing: 0.02em;
     color: var(--ink-soft);
-  }
-
-  .ledger-chip {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    padding: 3px 8px;
-    border: 1px solid;
-    white-space: nowrap;
-  }
-
-  .ledger-chip--active {
-    color: var(--amber);
-    border-color: var(--amber);
-  }
-
-  .ledger-chip--shipped {
-    color: var(--moss);
-    border-color: var(--moss);
   }
 
   .ledger-empty {

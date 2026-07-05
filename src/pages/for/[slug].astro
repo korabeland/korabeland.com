@@ -1,0 +1,224 @@
+---
+export const prerender = true;
+
+// /for/[slug] — a tailored, unlisted landing page assembled from the shared
+// content pool via explicit ordered references (never tag queries). noindex +
+// excluded from the sitemap; unknown slugs fall through to the SSR 404
+// (off-trail). See docs/tailored-pages.md for the generation runbook.
+
+import type { GetStaticPaths } from "astro";
+import ExperienceLedger from "../../components/ExperienceLedger/ExperienceLedger.astro";
+import SkillsSection from "../../components/SkillsSection/SkillsSection.astro";
+import StatusChip from "../../components/StatusChip/StatusChip.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { projectStatus } from "../../lib/projects";
+import { listTailoredSlugs, readTailored } from "../../lib/tailored";
+
+export const getStaticPaths: GetStaticPaths = async () => {
+  const slugs = await listTailoredSlugs();
+  return slugs.map((slug) => ({ params: { slug } }));
+};
+
+const { slug } = Astro.params;
+if (!slug) throw new Error("Missing slug");
+
+// readTailored throws on any dangling reference — a broken build over a hollow
+// page. That surfaces here at prerender time.
+const page = await readTailored(slug);
+if (!page) throw new Error(`Tailored page not found: ${slug}`);
+
+const intro = page.intro
+  .split(/\n{2,}/)
+  .map((p) => p.trim())
+  .filter(Boolean);
+---
+
+<BaseLayout
+  title={`For ${page.displayName} · korab eland`}
+  description={`A tailored overview of Korab Eland's work, prepared for ${page.displayName}.`}
+  noindex={true}
+>
+  <div class="tailored">
+    <header class="tailored-head">
+      <p class="t-label tailored-eyebrow">prepared for {page.displayName}</p>
+      <div class="tailored-intro">
+        {intro.map((para) => <p>{para}</p>)}
+      </div>
+    </header>
+
+    {page.experience.length > 0 && <ExperienceLedger roles={page.experience} />}
+
+    {
+      page.projects.length > 0 && (
+        <section class="tailored-work" aria-labelledby="tailored-work-heading">
+          <div class="tailored-section-head">
+            <h2 id="tailored-work-heading" class="t-label">
+              selected work
+            </h2>
+          </div>
+          <ol class="tailored-ledger">
+            {page.projects.map((p) => (
+              <li class="tailored-row">
+                <a class="tailored-link" href={`/work/${p.slug}`}>
+                  <span class="tailored-name">{p.title}</span>
+                  <span class="t-mono tailored-datum">{p.outcome}</span>
+                  <StatusChip status={projectStatus(p)} variant="chip" />
+                </a>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )
+    }
+
+    {
+      page.skillCategories.length > 0 && (
+        <SkillsSection
+          data={{ categories: page.skillCategories, certifications: [] }}
+        />
+      )
+    }
+
+    <section class="tailored-cta" aria-labelledby="tailored-cta-heading">
+      <h2 id="tailored-cta-heading" class="t-label">get in touch</h2>
+      <p class="tailored-cta-body">
+        If this is the shape of what you need, I'd welcome a conversation.
+      </p>
+      <p class="t-mono tailored-contact">
+        <a href="mailto:korabeland@gmail.com">korabeland@gmail.com</a> ·
+        <a href="https://www.linkedin.com/in/korabeland" rel="me">linkedin</a>
+      </p>
+      <p class="tailored-home"><a href="/">← korab eland</a></p>
+    </section>
+  </div>
+</BaseLayout>
+
+<style>
+  .tailored {
+    max-width: 760px;
+    margin-inline: auto;
+    padding: var(--s-7) var(--s-4) var(--s-8);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-7);
+  }
+
+  .tailored-eyebrow {
+    color: var(--ink-soft);
+    margin: 0 0 var(--s-4);
+  }
+
+  .tailored-intro {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-4);
+  }
+  .tailored-intro p {
+    font-size: 18px;
+    line-height: 1.6;
+    color: var(--ink);
+    max-width: 60ch;
+    margin: 0;
+  }
+
+  .tailored-section-head {
+    border-bottom: 1px solid var(--ink);
+    padding-bottom: var(--s-2);
+    margin-bottom: var(--s-4);
+  }
+  .tailored-section-head h2 {
+    margin: 0;
+    color: var(--ink-soft);
+  }
+
+  .tailored-ledger {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .tailored-row {
+    border-bottom: 1px solid var(--rule);
+  }
+  .tailored-link {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: var(--s-5);
+    padding: var(--s-4) var(--s-2);
+    text-decoration: none;
+    transition: background 150ms ease;
+  }
+  @media (hover: hover) {
+    .tailored-link:hover {
+      background: var(--paper-2);
+    }
+  }
+  .tailored-name {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 17px;
+    color: var(--ink);
+    line-height: 1.35;
+  }
+  .tailored-datum {
+    text-transform: none;
+    letter-spacing: 0.02em;
+    color: var(--ink-soft);
+  }
+
+  .tailored-cta {
+    border-top: 1px solid var(--rule);
+    padding-top: var(--s-5);
+  }
+  .tailored-cta .t-label {
+    display: block;
+    margin: 0 0 var(--s-3);
+    color: var(--ink-soft);
+  }
+  .tailored-cta-body {
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    max-width: 54ch;
+    margin: 0 0 var(--s-4);
+  }
+  .tailored-contact {
+    text-transform: none;
+    letter-spacing: 0.02em;
+    margin: 0 0 var(--s-5);
+  }
+  .tailored-contact a {
+    color: var(--ink-soft);
+    text-decoration: none;
+    border-bottom: 1px solid var(--rule);
+    transition:
+      color 150ms ease,
+      border-color 150ms ease;
+  }
+  .tailored-contact a:hover,
+  .tailored-contact a:focus-visible {
+    color: var(--amber);
+    border-bottom-color: var(--amber);
+  }
+  .tailored-home a {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    color: var(--ink-soft);
+    text-decoration: none;
+  }
+  .tailored-home a:hover,
+  .tailored-home a:focus-visible {
+    color: var(--amber);
+  }
+
+  @media (max-width: 680px) {
+    .tailored-link {
+      grid-template-columns: 1fr auto;
+    }
+    .tailored-datum {
+      grid-column: 1 / -1;
+      order: 3;
+    }
+  }
+</style>

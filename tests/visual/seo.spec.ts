@@ -67,6 +67,15 @@ const routes = [
     hasOgImage: false,
     noindex: true,
   },
+  {
+    path: "/for/demo",
+    title: "For Demo Company · korab eland",
+    descriptionFragment: "prepared for Demo Company",
+    ogType: "website",
+    hasOgImage: false,
+    noindex: true,
+    hasJsonLd: false,
+  },
 ] as const;
 
 for (const route of routes) {
@@ -184,4 +193,19 @@ test("/about JSON-LD references the Person node via mainEntity", async ({
   const jsonLd = JSON.parse(jsonLdText ?? "{}");
   expect(jsonLd["@type"]).toBe("ProfilePage");
   expect(jsonLd.mainEntity?.["@id"]).toBe("https://korabeland.com/#person");
+});
+
+// Tailored /for/ pages are unlisted: noindex (asserted per-route above) AND
+// absent from the sitemap (AE5). Build-time output, so this is meaningful
+// post-build / in CI; it skips under the dev server.
+test("sitemap excludes /for/ tailored pages", async ({ request }) => {
+  const indexResp = await request.get("/sitemap-index.xml");
+  if (indexResp.status() !== 200) {
+    test.skip(true, "Sitemap not available in dev mode (build-time only)");
+    return;
+  }
+  const sitemapResp = await request.get("/sitemap-0.xml");
+  expect(sitemapResp.status()).toBe(200);
+  const xml = await sitemapResp.text();
+  expect(xml).not.toContain("/for/");
 });

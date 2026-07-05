@@ -4,6 +4,12 @@ export default defineConfig({
   testDir: "./tests",
   use: {
     baseURL: "http://localhost:4321",
+    // Emulate prefers-reduced-motion for every project so animation-driven
+    // surfaces (breathing status dots, hero-headline rotation, metric
+    // count-up) render their static end-state. This keeps screenshots
+    // deterministic and makes the static-default path the tested path; the
+    // animated paths are verified manually in a normal browser.
+    contextOptions: { reducedMotion: "reduce" },
   },
   projects: [
     {

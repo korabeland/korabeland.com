@@ -1,0 +1,11 @@
+slug: demo
+displayName: Demo Company
+intro: >-
+  A demonstration of a tailored page. Real pages open with a bespoke note for the
+  specific role, then assemble a curated set of work from the shared pool. No new
+  writing, just the right evidence in the right order.
+experienceRefs: []
+projectRefs:
+  - ai-sms-pilot
+  - lead-scoring
+skillCategories: []
