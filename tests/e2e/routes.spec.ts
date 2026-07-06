@@ -114,7 +114,7 @@ test("/colophon shift-log exposes a real-data summary and hides the grid", async
   const summary = page.locator(".shiftlog-summary");
   await expect(summary).toBeVisible();
   await expect(summary).toHaveText(
-    /\d[\d,]* contributions · busiest week \d+ · streak \d+ days/,
+    /\d[\d,]*\s+contributions\s+·\s+busiest week\s+\d+\s+·\s+streak\s+\d+\s+days/,
   );
   await expect(page.locator(".shiftlog-grid")).toHaveAttribute(
     "aria-hidden",

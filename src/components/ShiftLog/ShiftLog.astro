@@ -24,8 +24,7 @@ const sourceNote = data.source === "seed" ? " (seed)" : "";
 
 <div class="shiftlog">
   <p class="t-mono shiftlog-summary">
-    {totalLabel} contributions · busiest week {stats.busiestWeekTotal} · streak{" "}
-    {stats.currentStreak} days
+    {`${totalLabel} contributions · busiest week ${stats.busiestWeekTotal} · streak ${stats.currentStreak} days`}
   </p>
   <p class="t-mono small shiftlog-caption">
     data as of {data.fetchedAt}{sourceNote}

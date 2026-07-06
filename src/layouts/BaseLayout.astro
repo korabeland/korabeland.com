@@ -102,6 +102,11 @@ const NAV_LINKS: readonly NavLink[] = [
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- theme-color must precede the shift script below: the script rewrites it
+         on day resolution, so the element has to already exist in the DOM when
+         the script runs. Default is night; the script swaps it to the day
+         value when the resolved shift is day. -->
+    <meta name="theme-color" content="#16181c" />
     <!-- Pre-paint shift resolution (R7) — must run before any stylesheet
          applies so there is no flash of the wrong palette. Astro injects the
          global.css link into <head> regardless of import position, so the
@@ -173,7 +178,6 @@ const NAV_LINKS: readonly NavLink[] = [
       })();
     </script>
     <meta name="description" content={description} />
-    <meta name="theme-color" content="#16181c" />
     {noindex && <meta name="robots" content="noindex" />}
     <link rel="canonical" href={canonicalUrl} />
     <!-- Tab + iOS icons: the illustrated portrait, shrunk down. -->

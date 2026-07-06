@@ -78,7 +78,14 @@ test.describe("shift toggle — clean storage", () => {
     page,
   }) => {
     const errors: string[] = [];
-    page.on("pageerror", (err) => errors.push(err.message));
+    page.on("pageerror", (err) => {
+      // Astro's dev toolbar reads localStorage unguarded (getSettings, bundled
+      // under .vite/deps). That code ships only in dev, never to production, so
+      // its throw is not our concern — this test asserts our own scripts stay
+      // silent. Filter it the way accessibility.test.ts filters vite-error-overlay.
+      if ((err.stack ?? "").includes("node_modules/.vite/deps")) return;
+      errors.push(err.message);
+    });
 
     await page.addInitScript(() => {
       Object.defineProperty(window, "localStorage", {

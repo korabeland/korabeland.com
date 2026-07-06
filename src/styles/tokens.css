@@ -79,7 +79,10 @@
   --ink-soft: oklch(0.43 0.01 250); /* #565a62 */
   --ink-mute: oklch(0.52 0.01 250); /* #6d717a */
   --rule: oklch(0.88 0.008 100); /* #dbd9cf */
-  --amber: oklch(0.6 0.11 70); /* #a4732a */
+  /* Darkened from oklch(0.6 0.11 70) so amber text clears WCAG AA (4.5:1) on
+     day paper — the original 3.54:1 failed at every small size once R7 made
+     the day palette reachable. Now 4.74:1. Sync to DESIGN.md §2 (parent repo).*/
+  --amber: oklch(0.53 0.12 70); /* #975d00 */
   --moss: oklch(0.48 0.06 145); /* #4a6f4d */
   --moss-soft: oklch(0.78 0.04 145); /* #b7ccb9 */
   /* Focus ring re-pins against light paper */
