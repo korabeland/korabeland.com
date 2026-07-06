@@ -272,6 +272,29 @@ test("robots.txt disallows /dev/ and /keystatic", async ({ request }) => {
   expect(text).toContain("Disallow: /keystatic");
 });
 
+// llms.txt advertises routes to LLM crawlers; every concrete path it names must
+// resolve (no 404). Guards against the file drifting back to phantom routes
+// (/now, /contact, /resume.json) or naming a page that later gets renamed.
+test("llms.txt references only routes that resolve", async ({ request }) => {
+  const resp = await request.get("/llms.txt");
+  expect(resp.status()).toBe(200);
+  const text = await resp.text();
+  // Bullet lines like "* /work - ...". Take the path token, skip placeholder
+  // patterns ("/work/<slug>") which are illustrative, not literal routes.
+  const paths = text
+    .split("\n")
+    .map((line) => line.match(/^\*\s+(\/\S*)/)?.[1])
+    .filter((p): p is string => p !== undefined && !p.includes("<"));
+  expect(paths.length).toBeGreaterThan(0);
+  for (const path of paths) {
+    const routeResp = await request.get(path);
+    expect(
+      routeResp.status(),
+      `llms.txt route ${path} should not 404`,
+    ).not.toBe(404);
+  }
+});
+
 // sitemap must not expose /dev/ paths (build-time output — available in CI/after build)
 test("sitemap-0.xml contains no /dev/ URLs", async ({ request }) => {
   const indexResp = await request.get("/sitemap-index.xml");
