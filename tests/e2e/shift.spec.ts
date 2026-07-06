@@ -13,29 +13,26 @@ import { expect, test } from "@playwright/test";
 test.describe("shift toggle — clean storage", () => {
   test.use({ storageState: { cookies: [], origins: [] } });
 
-  test("clicking the toggle flips data-time, aria-pressed, and the label", async ({
+  test("clicking the toggle flips data-time, aria-pressed, label, and theme-color", async ({
     page,
   }) => {
-    await page.goto("/");
+    // Start from a known night state via the (non-persisted) query override so
+    // the post-click assertions are absolute, not relative to the CI wall clock.
+    await page.goto("/?shift=night");
     const toggle = page.locator(".shift-toggle");
     await expect(toggle).toBeVisible();
-
-    const before = await page.evaluate(
-      () => document.documentElement.dataset.time,
-    );
-    const wasDay = before === "day";
+    await expect(toggle).toHaveText("shift: night");
+    await expect(toggle).toHaveAttribute("aria-pressed", "false");
 
     await toggle.click();
 
-    const after = await page.evaluate(
-      () => document.documentElement.dataset.time,
+    await expect(page.locator("html")).toHaveAttribute("data-time", "day");
+    await expect(toggle).toHaveAttribute("aria-pressed", "true");
+    await expect(toggle).toHaveText("shift: day");
+    await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute(
+      "content",
+      "#f2f1ea",
     );
-    expect(after).toBe(wasDay ? "night" : "day");
-    await expect(toggle).toHaveAttribute(
-      "aria-pressed",
-      wasDay ? "false" : "true",
-    );
-    await expect(toggle).toHaveText(wasDay ? "shift: night" : "shift: day");
   });
 
   test("an explicit choice survives a reload and a cross-page navigation", async ({
@@ -46,6 +43,12 @@ test.describe("shift toggle — clean storage", () => {
     await toggle.click();
     const chosen = await page.evaluate(
       () => document.documentElement.dataset.time,
+    );
+    // The click must write the explicit choice to localStorage, not merely
+    // change the current view — otherwise "survives reload" could pass by an
+    // hour coincidence.
+    expect(await page.evaluate(() => localStorage.getItem("korab-shift"))).toBe(
+      chosen,
     );
 
     await page.reload();
@@ -79,6 +82,7 @@ test.describe("shift toggle — clean storage", () => {
 
     await page.addInitScript(() => {
       Object.defineProperty(window, "localStorage", {
+        configurable: true,
         get() {
           throw new Error("blocked");
         },
@@ -86,10 +90,36 @@ test.describe("shift toggle — clean storage", () => {
     });
 
     await page.goto("/");
+
+    // The block must actually be in effect, or this test proves nothing.
+    const blocked = await page.evaluate(() => {
+      try {
+        const probe = window.localStorage;
+        return probe === undefined;
+      } catch {
+        return true;
+      }
+    });
+    expect(blocked).toBe(true);
+
+    // The head script swallowed the throw and still applied a palette.
     await expect(page.locator("html")).toHaveAttribute(
       "data-time",
       /day|night/,
     );
+
+    // The toggle still flips the current view even though it cannot persist.
+    const toggle = page.locator(".shift-toggle");
+    await expect(toggle).toBeVisible();
+    const before = await page.evaluate(
+      () => document.documentElement.dataset.time,
+    );
+    await toggle.click();
+    const after = await page.evaluate(
+      () => document.documentElement.dataset.time,
+    );
+    expect(after).not.toBe(before);
+
     expect(errors).toEqual([]);
   });
 });
@@ -112,11 +142,19 @@ test.describe("shift toggle — stored night, query override", () => {
   }) => {
     await page.goto("/?shift=day");
     await expect(page.locator("html")).toHaveAttribute("data-time", "day");
-
-    const stored = await page.evaluate(() =>
-      localStorage.getItem("korab-shift"),
+    await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute(
+      "content",
+      "#f2f1ea",
     );
+
+    // The query override neither overwrites the explicit stored choice nor
+    // writes the session default (that write lives only in the hour branch).
+    const [stored, session] = await page.evaluate(() => [
+      localStorage.getItem("korab-shift"),
+      sessionStorage.getItem("korab-shift-session"),
+    ]);
     expect(stored).toBe("night");
+    expect(session).toBeNull();
   });
 });
 

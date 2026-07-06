@@ -104,6 +104,24 @@ test("/colophon renders the colophon page", async ({ page }) => {
   await expect(page.locator("article.colophon h1")).toContainText("Colophon");
 });
 
+// R9 shift-log: the mono summary line is the accessible representation, driven
+// by real seed data (never hardcoded); the cell grid is aria-hidden decoration.
+// axe checks for violations but not this subtree-exclusion contract, so pin it.
+test("/colophon shift-log exposes a real-data summary and hides the grid", async ({
+  page,
+}) => {
+  await page.goto("/colophon");
+  const summary = page.locator(".shiftlog-summary");
+  await expect(summary).toBeVisible();
+  await expect(summary).toHaveText(
+    /\d[\d,]* contributions · busiest week \d+ · streak \d+ days/,
+  );
+  await expect(page.locator(".shiftlog-grid")).toHaveAttribute(
+    "aria-hidden",
+    "true",
+  );
+});
+
 // /projects and /projects/[slug] redirect to their /work equivalents.
 test("/projects redirects to /work", async ({ page }) => {
   const response = await page.goto("/projects");

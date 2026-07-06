@@ -50,7 +50,9 @@ const sourceNote = data.source === "seed" ? " (seed)" : "";
 
   .shiftlog-caption {
     margin: 0 0 var(--s-3);
-    color: var(--ink-mute);
+    /* --ink-soft, not --ink-mute: this is small mono (10.5px); --ink-mute
+       fails WCAG AA in the day palette (4.32:1). See tokens.css:32-34. */
+    color: var(--ink-soft);
   }
 
   .shiftlog-scroll {
