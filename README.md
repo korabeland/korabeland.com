@@ -1,6 +1,6 @@
 # Personal Site
 
-Korab's personal website — Astro 5 + Keystatic + shadcn/ui + Tailwind 4, deployed on Vercel. Built and maintained by an AI team orchestrated through Claude Code. You never need to touch the code.
+Korab's personal website — Astro 6 + Keystatic + shadcn/ui + Tailwind 4, deployed on Vercel. Built and maintained by an AI team orchestrated through Claude Code. You never need to touch the code.
 
 ---
 
@@ -35,9 +35,9 @@ brew install ollama
 ### Quick Start
 
 ```sh
-# 1. Clone the repo
-git clone https://github.com/korabeland/personal-brand.git
-cd "personal-brand/Dev Team"
+# 1. Clone the repo (independent repo — not nested under personal-brand)
+git clone https://github.com/korabeland/korabeland.com.git
+cd korabeland.com
 
 # 2. Switch to the pinned Node version
 nvm install   # reads .nvmrc automatically
@@ -107,7 +107,7 @@ This is an AI-orchestrated build. You interact through:
 
 Every change produces a review page in the PR comment: preview URL, screenshots at 4 viewports, before/after diffs, and a plain-English summary of what changed.
 
-See `setup prompts/00-master-plan-v2.md` for the full system design.
+For the codebase layout (directory tree, stack, build commands, file-ownership rules), see [`AGENTS.md`](AGENTS.md) §1–2. See `setup prompts/00-master-plan-v2.md` for the full system design.
 
 ---
 
