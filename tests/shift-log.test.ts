@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import seedJson from "@/content/shift-log/contributions.seed.json";
 import {
   busiestWeek,
   type ContributionData,
@@ -11,6 +12,14 @@ import {
   longestStreak,
   summaryStats,
 } from "@/lib/shift-log";
+
+const CONTRIBUTION_LEVELS: ContributionLevel[] = [
+  "NONE",
+  "FIRST_QUARTILE",
+  "SECOND_QUARTILE",
+  "THIRD_QUARTILE",
+  "FOURTH_QUARTILE",
+];
 
 /** Builds a week from parallel arrays of counts and levels, dated sequentially from `startDate`. */
 function makeWeek(
@@ -103,6 +112,44 @@ describe("summary stats — happy path", () => {
   it("finds the busiest week by index, total, and startDate", () => {
     const result = busiestWeek(data);
     expect(result).toEqual({ index: 1, total: 12, startDate: "2026-06-08" });
+  });
+
+  it("counts a lone contributing day as a current streak of 1", () => {
+    const days = flattenDays(
+      makeData([
+        makeWeek(
+          "2026-06-01",
+          [1, 0, 0, 0, 0, 0, 0],
+          ["FIRST_QUARTILE", "NONE", "NONE", "NONE", "NONE", "NONE", "NONE"],
+        ),
+      ]),
+    );
+    // The loop must terminate at index 0 without an interior zero to stop it.
+    expect(currentStreak([days[0]])).toBe(1);
+    expect(longestStreak([days[0]])).toBe(1);
+  });
+
+  it("streaks equal the array length when every day contributes", () => {
+    const days = flattenDays(
+      makeData([
+        makeWeek(
+          "2026-06-01",
+          [1, 2, 1, 3, 1, 2, 1],
+          [
+            "FIRST_QUARTILE",
+            "SECOND_QUARTILE",
+            "FIRST_QUARTILE",
+            "THIRD_QUARTILE",
+            "FIRST_QUARTILE",
+            "SECOND_QUARTILE",
+            "FIRST_QUARTILE",
+          ],
+        ),
+      ]),
+    );
+    // No zero anywhere: both loops must run to the boundary and count all 7.
+    expect(currentStreak(days)).toBe(7);
+    expect(longestStreak(days)).toBe(7);
   });
 
   it("rolls busiestWeekTotal into summaryStats", () => {
@@ -279,5 +326,40 @@ describe("empty weeks array", () => {
 
   it("returns an empty array from flattenDays", () => {
     expect(flattenDays(data)).toEqual([]);
+  });
+});
+
+// The committed seed is the production fallback data — it ships on every
+// tokenless build (dev, CI, Vercel shallow-clone). A corrupted seed would sail
+// through the suite and render a broken grid in prod, so validate its shape.
+describe("committed seed", () => {
+  const seed = seedJson as ContributionData;
+
+  it("declares itself as seed with an ISO fetchedAt date", () => {
+    expect(seed.source).toBe("seed");
+    expect(seed.fetchedAt).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(typeof seed.total).toBe("number");
+  });
+
+  it("carries at least 52 weeks", () => {
+    expect(seed.weeks.length).toBeGreaterThanOrEqual(52);
+  });
+
+  it("has only valid enum levels and numeric counts on every day", () => {
+    for (const day of flattenDays(seed)) {
+      expect(CONTRIBUTION_LEVELS).toContain(day.level);
+      // No day maps to the defensive default — every level is a real bucket.
+      expect(levelToIntensity(day.level)).not.toBeUndefined();
+      expect(typeof day.count).toBe("number");
+      expect(day.date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    }
+  });
+
+  it("computes summary stats without throwing", () => {
+    const stats = summaryStats(seed);
+    expect(stats.total).toBe(seed.total);
+    expect(stats.busiestWeekTotal).toBeGreaterThanOrEqual(0);
+    expect(stats.currentStreak).toBeGreaterThanOrEqual(0);
+    expect(stats.longestStreak).toBeGreaterThanOrEqual(stats.currentStreak);
   });
 });

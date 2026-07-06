@@ -7,7 +7,13 @@
 // runs `pnpm dev`, and a live fetch there would regenerate the JSON from real
 // data on every test run, drifting colophon baselines daily. Dev and tests
 // deliberately serve the committed seed via the loader's fallback.
-import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  writeFileSync,
+} from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -51,6 +57,21 @@ interface RawDay {
   contributionLevel: string;
 }
 
+// The response is validated at runtime before use; this type makes the
+// optional-chained navigation compile without asserting the data is present.
+interface GraphQLCalendarResponse {
+  data?: {
+    user?: {
+      contributionsCollection?: {
+        contributionCalendar?: {
+          totalContributions: number;
+          weeks: { contributionDays: RawDay[] }[];
+        };
+      };
+    };
+  };
+}
+
 const QUERY = `query($login: String!) {
   user(login: $login) {
     contributionsCollection {
@@ -78,7 +99,9 @@ async function fetchCalendar(token: string): Promise<{
       body: JSON.stringify({ query: QUERY, variables: { login: LOGIN } }),
     });
     if (!resp.ok) {
-      console.warn(`gen-shift-log: GitHub GraphQL returned HTTP ${resp.status}`);
+      console.warn(
+        `gen-shift-log: GitHub GraphQL returned HTTP ${resp.status}`,
+      );
       return null;
     }
     json = await resp.json();
@@ -90,10 +113,8 @@ async function fetchCalendar(token: string): Promise<{
   // Validate shape before accepting. contributionLevel returns enum STRINGS
   // (NONE..FOURTH_QUARTILE), not 0-4 numbers — validating against numbers would
   // reject every real response and permanently route production to the seed.
-  const calendar = (json as Record<string, never>)?.data?.user
-    ?.contributionsCollection?.contributionCalendar as
-    | { totalContributions: number; weeks: { contributionDays: RawDay[] }[] }
-    | undefined;
+  const calendar = (json as GraphQLCalendarResponse)?.data?.user
+    ?.contributionsCollection?.contributionCalendar;
 
   if (!calendar || !Array.isArray(calendar.weeks)) {
     console.warn("gen-shift-log: response missing contributionCalendar/weeks");
@@ -106,7 +127,8 @@ async function fetchCalendar(token: string): Promise<{
     return null;
   }
 
-  const weeks: { days: { date: string; count: number; level: string }[] }[] = [];
+  const weeks: { days: { date: string; count: number; level: string }[] }[] =
+    [];
   for (const week of calendar.weeks) {
     if (!Array.isArray(week.contributionDays)) {
       console.warn("gen-shift-log: a week is missing contributionDays");
