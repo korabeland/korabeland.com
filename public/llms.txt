@@ -1,6 +1,6 @@
 # Korab Eland
 
-> Operator with 13 years across marketing, CX and operations, now building the AI-driven kind. Turns ambiguous problems into systems that ship. Relocating from Melbourne to Washington, DC; US citizen, no visa sponsorship required. Open to AI, data, and product roles.
+> Operator with 13 years across marketing, CX and operations, now building the AI-driven kind. Turns ambiguous problems into systems that ship. Relocating from Melbourne to Washington, DC; US and Australian citizen, no US visa sponsorship required. Open to AI, data, and product roles.
 
 ## Key Pages
 
@@ -17,7 +17,7 @@
 * 13 years across marketing, CX and operations at Keypath Education, moving from media buyer to digital media specialist to marketing manager to marketing and CX manager to CX manager for the Australian portfolio.
 * Led the evidence work behind a lead-scoring model that replaced fixed tiers with a decile-based probability score.
 * Ran an end-to-end AI-driven SMS engagement pilot, measured against a randomised holdout.
-* Relocating from Melbourne, Australia to Washington, DC. US citizen; no visa sponsorship required.
+* Relocating from Melbourne, Australia to Washington, DC. US and Australian citizen; no US visa sponsorship required.
 * Open to US-remote roles and roles based in the Washington, DC area.
 * Open to AI, data, and product roles where operator judgement and evidence-driven decision making are the core offer.
 

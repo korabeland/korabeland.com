@@ -214,11 +214,14 @@ test("home JSON-LD graph includes a Person node", async ({ page }) => {
   const address = personNode?.address as Record<string, unknown> | undefined;
   expect(address).toBeTruthy();
   expect(address?.addressLocality).toBe("Melbourne");
+  // Dual citizenship: nationality is an array of Country nodes (US + AU).
   const nationality = personNode?.nationality as
-    | Record<string, unknown>
+    | Array<Record<string, unknown>>
     | undefined;
-  expect(nationality).toBeTruthy();
-  expect(nationality?.name).toBe("United States");
+  expect(Array.isArray(nationality)).toBe(true);
+  const names = (nationality ?? []).map((n) => n.name);
+  expect(names).toContain("United States");
+  expect(names).toContain("Australia");
 });
 
 // /about references the Person node via mainEntity rather than duplicating it.
