@@ -1,0 +1,83 @@
+---
+// ShiftToggle — the console control for the night/day shift (R7).
+//
+// Server-rendered `hidden`: the pre-paint head script in BaseLayout.astro
+// resolves and applies the shift before this button's own script runs, so a
+// no-JS visitor never sees a dead control (structural guarantee, not a
+// runtime check). Its own script reveals it, syncs the label/aria-pressed to
+// whatever `data-time` the head script already set, and on click flips the
+// shift, persists it as the explicit choice (localStorage only — this is not
+// the session-cached default), and keeps `theme-color` coherent.
+//
+// Storage key/attribute contract is locked across units — see src/lib/shift.ts
+// and docs/plans/2026-07-06-002-feat-console-ux-enhancements-plan.md (R7).
+---
+
+<button class="shift-toggle" type="button" aria-pressed="false" hidden>
+  shift: night
+</button>
+
+<script>
+  const SHIFT_KEY = "korab-shift";
+  const THEME_COLOR = { day: "#f2f1ea", night: "#16181c" } as const;
+
+  const button = document.querySelector<HTMLButtonElement>(".shift-toggle");
+  if (button) {
+    const setLabel = (isDay: boolean) => {
+      button.textContent = isDay ? "shift: day" : "shift: night";
+      button.setAttribute("aria-pressed", String(isDay));
+    };
+
+    const currentIsDay = document.documentElement.dataset.time === "day";
+    setLabel(currentIsDay);
+    button.hidden = false;
+
+    button.addEventListener("click", () => {
+      const nextIsDay = document.documentElement.dataset.time !== "day";
+      document.documentElement.dataset.time = nextIsDay ? "day" : "night";
+
+      try {
+        localStorage.setItem(SHIFT_KEY, nextIsDay ? "day" : "night");
+      } catch {
+        // Storage blocked (private mode, etc.) — the current view still
+        // reflects the flip; it just won't persist across reloads.
+      }
+
+      const meta = document.querySelector<HTMLMetaElement>(
+        'meta[name="theme-color"]',
+      );
+      if (meta) {
+        meta.setAttribute("content", nextIsDay ? THEME_COLOR.day : THEME_COLOR.night);
+      }
+
+      setLabel(nextIsDay);
+    });
+  }
+</script>
+
+<style>
+  .shift-toggle {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    background: none;
+    border: 1px solid var(--rule);
+    border-radius: var(--r-0);
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: color 200ms ease, border-color 200ms ease;
+  }
+
+  .shift-toggle:hover,
+  .shift-toggle:focus-visible {
+    color: var(--amber);
+    border-color: var(--amber);
+  }
+
+  .shift-toggle:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+  }
+</style>
