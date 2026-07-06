@@ -208,6 +208,17 @@ test("home JSON-LD graph includes a Person node", async ({ page }) => {
   expect(personNode).toBeTruthy();
   expect(personNode?.name).toBe("Korab Eland");
   expect(personNode?.["@id"]).toBe("https://korabeland.com/#person");
+
+  // Relocation readout: address stays factually current (Melbourne), and
+  // nationality is added to signal work-authorization intent (R5).
+  const address = personNode?.address as Record<string, unknown> | undefined;
+  expect(address).toBeTruthy();
+  expect(address?.addressLocality).toBe("Melbourne");
+  const nationality = personNode?.nationality as
+    | Record<string, unknown>
+    | undefined;
+  expect(nationality).toBeTruthy();
+  expect(nationality?.name).toBe("United States");
 });
 
 // /about references the Person node via mainEntity rather than duplicating it.

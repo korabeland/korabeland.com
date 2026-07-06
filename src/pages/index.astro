@@ -27,13 +27,14 @@ const jsonLd = {
       name: "Korab Eland",
       url: "https://korabeland.com",
       description:
-        "Operator with 13 years across marketing, CX and operations. Turns ambiguous problems into systems that ship, now building with AI.",
+        "Operator with 13 years across marketing, CX and operations. Turns ambiguous problems into systems that ship, now building with AI. Relocating to Washington, DC; US citizen, no visa sponsorship required.",
       sameAs: ["https://www.linkedin.com/in/korabeland"],
       address: {
         "@type": "PostalAddress",
         addressLocality: "Melbourne",
         addressCountry: "AU",
       },
+      nationality: { "@type": "Country", name: "United States" },
     },
     {
       "@type": "WebSite",
@@ -65,7 +66,7 @@ function formatDate(iso: string | null): string {
     <!-- ─── Hero: the readout ─────────────────────────────────────────── -->
     <section class="hero" aria-labelledby="hero-heading">
       <div class="hero-text">
-        <p class="t-label hero-eyebrow">korab eland · operator · melbourne</p>
+        <p class="t-label hero-eyebrow">korab eland · operator · washington dc</p>
         <h1 id="hero-heading" class="t-display hero-title">
           I turn ambiguous problems into systems that <span class="hero-ship"><span class="sr-only">ship</span><span class="hero-ship-word" aria-hidden="true">ship</span></span>.
         </h1>
@@ -73,6 +74,7 @@ function formatDate(iso: string | null): string {
           13 years across marketing, CX and operations. Now building the AI-driven kind:
           evidence in, decisions out, designed for handoff.
         </p>
+        <p class="t-mono hero-reloc">⌖ melbourne → washington dc · us citizen · no sponsorship needed</p>
         <p class="t-label hero-avail">
           <StatusChip status="available" variant="pulse" label="open to ai · data · product roles" />
         </p>
@@ -87,7 +89,7 @@ function formatDate(iso: string | null): string {
         />
         <figcaption class="t-mono hero-portrait-cap">
           <span>korab eland</span>
-          <span class="hero-portrait-loc">⌖ melbourne</span>
+          <span class="hero-portrait-loc">⌖ washington dc</span>
         </figcaption>
       </figure>
     </section>
@@ -248,6 +250,13 @@ function formatDate(iso: string | null): string {
     color: var(--ink-soft);
     max-width: 52ch;
     margin: 0;
+  }
+
+  .hero-reloc {
+    color: var(--ink-soft);
+    margin: var(--s-4) 0 0;
+    text-transform: none;
+    letter-spacing: 0.02em;
   }
 
   /* Availability status line — the last line of the readout. The breathing
