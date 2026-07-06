@@ -5,12 +5,19 @@
 // carries the final value, so no-JS and reduced-motion visitors see it
 // immediately — the script self-disables under prefers-reduced-motion.
 // DESIGN.md §4 "Metrics block".
+//
+// R2/AE4 — every metric answers "according to whom, measured how, over what
+// period" via a native <details>/<summary> disclosure. The row becomes a
+// <details> element; <summary> keeps the existing label/value markup plus a
+// mono marker glyph. Click/tap/Enter toggle it natively — no JS required, no
+// tooltip library, no island.
 
 import { parseCountUp } from "../../lib/metric-countup";
 
 interface Metric {
   value: string;
   label: string;
+  provenance: string;
 }
 
 interface Props {
@@ -24,14 +31,20 @@ const rows = metrics.map((m) => ({ ...m, countUp: parseCountUp(m.value) }));
 
 <div class="metrics">
   {rows.map((m) => (
-    <div class="metric">
-      <span class="metric-label">{m.label}</span>
-      <span
-        class="t-mono metric-value"
-        data-countup-target={m.countUp.animatable ? m.countUp.target : undefined}
-        data-countup-suffix={m.countUp.animatable ? m.countUp.suffix : undefined}
-      >{m.value}</span>
-    </div>
+    <details class="metric-details">
+      <summary class="metric">
+        <span class="metric-label">{m.label}</span>
+        <span class="metric-value-group">
+          <span
+            class="t-mono metric-value"
+            data-countup-target={m.countUp.animatable ? m.countUp.target : undefined}
+            data-countup-suffix={m.countUp.animatable ? m.countUp.suffix : undefined}
+          >{m.value}</span>
+          <span class="metric-marker t-mono" aria-hidden="true">＋</span>
+        </span>
+      </summary>
+      <p class="metric-provenance t-mono">{m.provenance}</p>
+    </details>
   ))}
 </div>
 
@@ -95,20 +108,42 @@ const rows = metrics.map((m) => ({ ...m, countUp: parseCountUp(m.value) }));
     flex-direction: column;
     max-width: 680px;
   }
+  .metric-details {
+    border-bottom: 1px solid var(--rule);
+  }
+  .metric-details:first-child {
+    border-top: 1px solid var(--rule);
+  }
   .metric {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
     gap: var(--s-5);
     padding: var(--s-3) 0;
-    border-bottom: 1px solid var(--rule);
+    cursor: pointer;
+    list-style: none;
   }
-  .metric:first-child {
-    border-top: 1px solid var(--rule);
+  .metric::-webkit-details-marker {
+    display: none;
+  }
+  .metric::marker {
+    content: "";
+  }
+  .metric:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
   }
   .metric-label {
     font-size: 15px;
     color: var(--ink-soft);
+    min-width: 0;
+  }
+  .metric-value-group {
+    display: flex;
+    align-items: baseline;
+    gap: var(--s-2);
+    white-space: nowrap;
+    flex-shrink: 0;
   }
   .metric-value {
     text-transform: none;
@@ -117,5 +152,27 @@ const rows = metrics.map((m) => ({ ...m, countUp: parseCountUp(m.value) }));
     font-size: 15px;
     font-weight: 500;
     white-space: nowrap;
+  }
+  .metric-marker {
+    font-size: 13px;
+    color: var(--ink-soft);
+    transition: color 160ms ease;
+  }
+  .metric:hover .metric-marker,
+  .metric:focus-visible .metric-marker {
+    color: var(--amber);
+  }
+  .metric-details[open] .metric-marker {
+    color: var(--amber);
+  }
+  .metric-provenance {
+    margin: 0 0 var(--s-3);
+    text-transform: none;
+    letter-spacing: normal;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--ink-soft);
+    max-width: 100%;
+    overflow-wrap: break-word;
   }
 </style>

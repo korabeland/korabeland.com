@@ -4,6 +4,7 @@ import keystaticConfig from "../../keystatic.config";
 export interface ProjectFactsMetric {
   value: string;
   label: string;
+  provenance: string;
 }
 export interface ProjectFieldLogEntry {
   week: string;
@@ -29,6 +30,37 @@ export interface ProjectSummary {
   nextProject: string;
 }
 
+/**
+ * The subset of a Keystatic `outcomeMetrics` entry the mapper needs, declared
+ * explicitly so `mapMetrics` is testable with plain fixtures instead of a
+ * live filesystem reader (pure-logic split per `src/lib/metric-countup.ts`).
+ */
+export interface RawOutcomeMetric {
+  value: string;
+  label: string;
+  provenance: string | null;
+}
+
+/**
+ * Carries `value`/`label`/`provenance` through for every metric, throwing at
+ * build time when a metric lacks provenance (AE4: no metric ships without
+ * provenance — enforced by the build, not review discipline).
+ */
+export function mapMetrics(
+  slug: string,
+  metrics: readonly RawOutcomeMetric[],
+): ProjectFactsMetric[] {
+  return metrics.map((m) => {
+    const provenance = m.provenance?.trim() ?? "";
+    if (!provenance) {
+      throw new Error(
+        `Metric "${m.label}" in project "${slug}" is missing provenance (AE4: no metric ships without provenance).`,
+      );
+    }
+    return { value: m.value, label: m.label, provenance };
+  });
+}
+
 const reader = createReader(process.cwd(), keystaticConfig);
 
 export async function listProjects(): Promise<ProjectSummary[]> {
@@ -49,10 +81,7 @@ export async function listProjects(): Promise<ProjectSummary[]> {
       shippedAt: project.shippedAt,
       heroImage: project.heroImage,
       tags: [...project.tags],
-      outcomeMetrics: project.outcomeMetrics.map((m) => ({
-        value: m.value,
-        label: m.label,
-      })),
+      outcomeMetrics: mapMetrics(slug, project.outcomeMetrics),
       fieldLog: project.fieldLog.map((f) => ({
         week: f.week,
         title: f.title,
