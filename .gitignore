@@ -53,6 +53,10 @@ tests/visual/diffs/
 # Trail-register: generated per-build by scripts/gen-trail-register.ts.
 # Seed (commits.seed.json) is committed as the shallow-clone fallback.
 src/content/trail-register/commits.json
+
+# Shift-log: generated per-build by scripts/gen-shift-log.ts.
+# Seed (contributions.seed.json) is committed as the fallback.
+src/content/shift-log/contributions.json
 .vercel
 .env*.local
 
