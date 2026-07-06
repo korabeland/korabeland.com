@@ -6,7 +6,7 @@
 // interior pages (the "logged-in operator"). The availability signal
 // lives in the homepage hero readout; every footer carries a quiet echo.
 
-import { Image } from "astro:assets";
+import { getImage, Image } from "astro:assets";
 import "../styles/global.css";
 // Critical font files, preloaded so first paint already has them (CLS).
 import mono400 from "@fontsource/jetbrains-mono/files/jetbrains-mono-latin-400-normal.woff2?url";
@@ -48,6 +48,23 @@ const {
 // carries the full framed portrait in its hero instead.
 const showBadge = active !== "home";
 
+// Browser-tab + iOS icons are the same illustrated portrait, shrunk down —
+// generated from the one imported asset so they always track the source.
+// PNG is forced: the favicon/apple-touch-icon contexts want it over the
+// modern formats the image pipeline would otherwise emit.
+const favicon = await getImage({
+  src: portrait,
+  width: 32,
+  height: 32,
+  format: "png",
+});
+const touchIcon = await getImage({
+  src: portrait,
+  width: 180,
+  height: 180,
+  format: "png",
+});
+
 const siteUrl = Astro.site?.href.replace(/\/$/, "") ?? "https://korabeland.com";
 const ogImageUrl = ogImage ? `${siteUrl}${ogImage}` : undefined;
 // Prerendered directory-style routes (page/index.html) carry a trailing
@@ -88,6 +105,9 @@ const NAV_LINKS: readonly NavLink[] = [
     <meta name="theme-color" content="#16181c" />
     {noindex && <meta name="robots" content="noindex" />}
     <link rel="canonical" href={canonicalUrl} />
+    <!-- Tab + iOS icons: the illustrated portrait, shrunk down. -->
+    <link rel="icon" type="image/png" sizes="32x32" href={favicon.src} />
+    <link rel="apple-touch-icon" href={touchIcon.src} />
     <!-- Fonts are self-hosted; preload the critical weights so they land
          before first paint (no swap, no layout shift). -->
     <link rel="preload" href={grotesk400} as="font" type="font/woff2" crossorigin />
