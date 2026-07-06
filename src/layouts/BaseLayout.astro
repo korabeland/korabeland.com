@@ -450,10 +450,14 @@ const NAV_LINKS: readonly NavLink[] = [
       row-gap: var(--s-3);
     }
     .chrome-nav-row {
-      justify-content: space-between;
+      flex-wrap: wrap;
+      justify-content: flex-start;
       gap: var(--s-3);
     }
+    /* Nav takes the full first line so no label is clipped; the toggle wraps
+       to its own line below rather than squeezing the nav. */
     .chrome-nav {
+      flex: 1 1 100%;
       overflow-x: auto;
     }
     .chrome-nav ul {
