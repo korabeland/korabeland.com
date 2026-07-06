@@ -164,6 +164,34 @@ for (const route of routes) {
   });
 }
 
+// Favicon + iOS touch icon are emitted once from BaseLayout, so they appear on
+// every route — asserting on "/" proves the shared shell wiring. GETting each
+// href confirms the portrait-derived PNGs were actually emitted, not just that
+// the tags were written.
+test("favicon and apple-touch-icon are present and resolve", async ({
+  page,
+}) => {
+  await page.goto("/");
+
+  // Tab favicon: PNG link whose generated asset resolves.
+  const favicon = page.locator('link[rel~="icon"]');
+  await expect(favicon).toHaveCount(1);
+  await expect(favicon).toHaveAttribute("type", "image/png");
+  const faviconHref = await favicon.getAttribute("href");
+  expect(faviconHref).toBeTruthy();
+  const faviconResp = await page.request.get(faviconHref ?? "");
+  expect(faviconResp.status()).toBe(200);
+  expect(faviconResp.headers()["content-type"]).toContain("image/png");
+
+  // iOS home-screen / bookmark icon.
+  const touchIcon = page.locator('link[rel="apple-touch-icon"]');
+  await expect(touchIcon).toHaveCount(1);
+  const touchHref = await touchIcon.getAttribute("href");
+  expect(touchHref).toBeTruthy();
+  const touchResp = await page.request.get(touchHref ?? "");
+  expect(touchResp.status()).toBe(200);
+});
+
 // Home embeds a JSON-LD @graph containing a schema.org Person node for
 // Korab — the canonical identity anchor other pages' JSON-LD references via
 // @id / mainEntity.
