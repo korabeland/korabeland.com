@@ -23,7 +23,8 @@ const outDir = resolve(repoRoot, "src/content/shift-log");
 const outFile = resolve(outDir, "contributions.json");
 const seedFile = resolve(outDir, "contributions.seed.json");
 
-const LOGIN = process.env.GITHUB_CONTRIB_LOGIN ?? "korabeland";
+// No login constant: the live path queries `viewer`, so the account is
+// whoever owns GITHUB_CONTRIB_TOKEN (Korab). The seed is a fixed committed file.
 const CONTRIBUTION_LEVELS = [
   "NONE",
   "FIRST_QUARTILE",
@@ -61,7 +62,7 @@ interface RawDay {
 // optional-chained navigation compile without asserting the data is present.
 interface GraphQLCalendarResponse {
   data?: {
-    user?: {
+    viewer?: {
       contributionsCollection?: {
         contributionCalendar?: {
           totalContributions: number;
@@ -72,8 +73,16 @@ interface GraphQLCalendarResponse {
   };
 }
 
-const QUERY = `query($login: String!) {
-  user(login: $login) {
+// `viewer`, NOT `user(login:)`. The public `user(login:)` calendar returns
+// PUBLIC contributions only, regardless of token — so it would ignore private
+// work entirely. `viewer` resolves to the token owner and includes PRIVATE
+// contribution counts *iff* "Include private contributions on my profile" is
+// enabled in GitHub profile settings. Both the query and that setting are
+// load-bearing: flip one without the other and private work stays invisible.
+// (The tokenless path copies a committed public seed — public-only by nature —
+// so private counts only ever appear on the live token GraphQL path.)
+const QUERY = `query {
+  viewer {
     contributionsCollection {
       contributionCalendar {
         totalContributions
@@ -96,7 +105,7 @@ async function fetchCalendar(token: string): Promise<{
         "Content-Type": "application/json",
         "User-Agent": "korabeland.com-shift-log",
       },
-      body: JSON.stringify({ query: QUERY, variables: { login: LOGIN } }),
+      body: JSON.stringify({ query: QUERY }),
     });
     if (!resp.ok) {
       console.warn(
@@ -113,7 +122,7 @@ async function fetchCalendar(token: string): Promise<{
   // Validate shape before accepting. contributionLevel returns enum STRINGS
   // (NONE..FOURTH_QUARTILE), not 0-4 numbers — validating against numbers would
   // reject every real response and permanently route production to the seed.
-  const calendar = (json as GraphQLCalendarResponse)?.data?.user
+  const calendar = (json as GraphQLCalendarResponse)?.data?.viewer
     ?.contributionsCollection?.contributionCalendar;
 
   if (!calendar || !Array.isArray(calendar.weeks)) {
