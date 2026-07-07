@@ -9,7 +9,7 @@ import type { GetStaticPaths } from "astro";
 import CaseStudy from "../../components/CaseStudy/index.astro";
 import { PostContent } from "../../components/PostContent";
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import { listProjects, readProject } from "../../lib/projects";
+import { listProjects, mapMetrics, readProject } from "../../lib/projects";
 
 export const getStaticPaths: GetStaticPaths = async () => {
   const projects = await listProjects();
@@ -55,10 +55,7 @@ const facts = [
   { label: "status", value: status },
 ];
 
-const outcomeMetrics = project.outcomeMetrics.map((m) => ({
-  value: m.value,
-  label: m.label,
-}));
+const outcomeMetrics = mapMetrics(slug, project.outcomeMetrics);
 const fieldLog = project.fieldLog.map((f) => ({
   week: f.week,
   title: f.title,

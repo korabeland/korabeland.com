@@ -12,6 +12,7 @@ import SkillsSection from "../components/SkillsSection/SkillsSection.astro";
 import StatusChip from "../components/StatusChip/StatusChip.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { readSkills } from "../lib/skills";
+import { STATUS } from "../lib/status";
 
 const skills = await readSkills();
 
@@ -50,7 +51,7 @@ const jsonLd = {
       />
       <figcaption class="t-mono about-portrait-cap">
         <span>korab eland</span>
-        <span class="about-portrait-loc">⌖ melbourne</span>
+        <span class="about-portrait-loc">{STATUS.targetReadout}</span>
       </figcaption>
     </figure>
 
@@ -110,6 +111,7 @@ const jsonLd = {
       <p class="t-mono about-status">
         <StatusChip status="available" variant="pulse" label="currently exploring ai / data / product roles" />
       </p>
+      <p class="t-mono about-authorization">{STATUS.aboutLine}</p>
       <p class="t-mono about-links">
         <a href="mailto:korabeland@gmail.com">email</a> ·{" "}
         <a href="https://www.linkedin.com/in/korabeland" rel="me">linkedin</a> ·{" "}
@@ -163,7 +165,7 @@ const jsonLd = {
   }
 
   .about-portrait-loc {
-    color: var(--amber);
+    color: var(--signal);
   }
 
   @media (max-width: 680px) {
@@ -224,7 +226,7 @@ const jsonLd = {
 
   .about-operate a:hover,
   .about-operate a:focus-visible {
-    color: var(--amber);
+    color: var(--signal);
   }
 
   .about-close {
@@ -243,6 +245,15 @@ const jsonLd = {
     letter-spacing: 0.02em;
   }
 
+  .about-authorization {
+    text-transform: none;
+    letter-spacing: 0.02em;
+    color: var(--ink-soft);
+    font-size: 13px;
+    line-height: 1.5;
+    margin: 0;
+  }
+
   .about-links {
     text-transform: none;
     letter-spacing: 0.02em;
@@ -257,8 +268,8 @@ const jsonLd = {
 
   .about-links a:hover,
   .about-links a:focus-visible {
-    color: var(--amber);
-    border-bottom-color: var(--amber);
+    color: var(--signal);
+    border-bottom-color: var(--signal);
   }
 
 </style>

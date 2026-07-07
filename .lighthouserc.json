@@ -1,7 +1,10 @@
 {
   "ci": {
     "collect": {
-      "url": ["http://localhost:4321", "http://localhost:4321/colophon"],
+      "url": [
+        "http://localhost:4321/?shift=night",
+        "http://localhost:4321/colophon?shift=night"
+      ],
       "startServerCommand": "pnpm build && node scripts/static-preview.mjs",
       "startServerReadyPattern": "static-preview:",
       "settings": {

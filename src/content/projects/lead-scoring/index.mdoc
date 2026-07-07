@@ -17,12 +17,15 @@ tags:
 outcomeMetrics:
   - value: hundreds → 0
     label: Call effort on lowest tier, per application
-  - value: none measured
-    label: Conversion impact of removing those calls
-  - value: '6'
-    label: Stakeholders aligned, across four functions
+    provenance: >-
+      Before/after comparison of outbound call attempts against the
+      lowest-tier lead bucket, per resulting application, once calling was
+      stopped for that tier.
   - value: ~600k leads
     label: Dataset assembled for model build
+    provenance: >-
+      Approximate row count of the lead dataset with point-in-time features,
+      assembled from the analysis query written to scope the model build.
 fieldLog: []
 reflection: ''
 nextProject: ai-sms-pilot

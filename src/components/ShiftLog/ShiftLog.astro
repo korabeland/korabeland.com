@@ -1,0 +1,105 @@
+---
+// ShiftLog — GitHub contribution grid in console grammar (R9).
+//
+// The accessible representation is the mono summary line, computed from the
+// real data via src/lib/shift-log.ts (never hardcoded). The 52-53×7 cell
+// grid is aria-hidden decoration layered on top of that — screen readers
+// see only the summary and the staleness caption. Pure CSS grid, zero
+// client JS: each cell gets an intensity class (0-4) mapped to amber
+// strength via scoped CSS.
+
+import type { ContributionData } from "../../lib/shift-log";
+import { levelToIntensity, summaryStats } from "../../lib/shift-log";
+
+interface Props {
+  data: ContributionData;
+}
+
+const { data } = Astro.props;
+
+const stats = summaryStats(data);
+const totalLabel = data.total.toLocaleString("en-US");
+const sourceNote = data.source === "seed" ? " (seed)" : "";
+---
+
+<div class="shiftlog">
+  <p class="t-mono shiftlog-summary">
+    {`${totalLabel} contributions · busiest week ${stats.busiestWeekTotal} · streak ${stats.currentStreak} days`}
+  </p>
+  <p class="t-mono small shiftlog-caption">
+    data as of {data.fetchedAt}{sourceNote}
+  </p>
+  <div class="shiftlog-scroll">
+    <div class="shiftlog-grid" aria-hidden="true">
+      {data.weeks.map((week) => (
+        <div class="shiftlog-week">
+          {week.days.map((day) => (
+            <span class={`shiftlog-cell shiftlog-cell--${levelToIntensity(day.level)}`} />
+          ))}
+        </div>
+      ))}
+    </div>
+  </div>
+</div>
+
+<style>
+  .shiftlog-summary {
+    margin: 0 0 var(--s-1);
+  }
+
+  .shiftlog-caption {
+    margin: 0 0 var(--s-3);
+    /* --ink-soft, not --ink-mute: this is small mono (10.5px); --ink-mute
+       fails WCAG AA in the day palette (4.32:1). See tokens.css:32-34. */
+    color: var(--ink-soft);
+  }
+
+  .shiftlog-scroll {
+    /* Grid is ~530px wide (53 cols × 8px + gaps) — wider than the 375px
+       viewport. This container scrolls internally so the grid never causes
+       horizontal PAGE overflow; the prose column stays fixed. */
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+
+  .shiftlog-grid {
+    display: inline-flex;
+    gap: 2px;
+  }
+
+  .shiftlog-week {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .shiftlog-cell {
+    display: block;
+    width: 8px;
+    height: 8px;
+  }
+
+  /* Intensity → colour, signal scale. Levels 1-4 mix increasing --signal over
+     paper so both night and day palettes (which redefine --signal/--paper
+     via [data-time="day"]) stay correct without a duplicated rule set.
+     Mix in oklab, NOT oklch: in BOTH palettes the accent and paper hues sit
+     far apart (night amber ~70 vs paper ~250; day indigo ~268 vs cream ~100),
+     so oklch hue interpolation detours through green and the low cells read as
+     moss. oklab interpolates rectangularly — a clean ramp in either shift. */
+  .shiftlog-cell--0 {
+    background: var(--rule);
+  }
+  .shiftlog-cell--1 {
+    background: color-mix(in oklab, var(--signal) 25%, var(--paper));
+  }
+  .shiftlog-cell--2 {
+    background: color-mix(in oklab, var(--signal) 50%, var(--paper));
+  }
+  .shiftlog-cell--3 {
+    background: color-mix(in oklab, var(--signal) 75%, var(--paper));
+  }
+  .shiftlog-cell--4 {
+    background: var(--signal);
+  }
+</style>

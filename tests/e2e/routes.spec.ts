@@ -104,6 +104,24 @@ test("/colophon renders the colophon page", async ({ page }) => {
   await expect(page.locator("article.colophon h1")).toContainText("Colophon");
 });
 
+// R9 shift-log: the mono summary line is the accessible representation, driven
+// by real seed data (never hardcoded); the cell grid is aria-hidden decoration.
+// axe checks for violations but not this subtree-exclusion contract, so pin it.
+test("/colophon shift-log exposes a real-data summary and hides the grid", async ({
+  page,
+}) => {
+  await page.goto("/colophon");
+  const summary = page.locator(".shiftlog-summary");
+  await expect(summary).toBeVisible();
+  await expect(summary).toHaveText(
+    /\d[\d,]*\s+contributions\s+·\s+busiest week\s+\d+\s+·\s+streak\s+\d+\s+days/,
+  );
+  await expect(page.locator(".shiftlog-grid")).toHaveAttribute(
+    "aria-hidden",
+    "true",
+  );
+});
+
 // /projects and /projects/[slug] redirect to their /work equivalents.
 test("/projects redirects to /work", async ({ page }) => {
   const response = await page.goto("/projects");
@@ -270,6 +288,29 @@ test("robots.txt disallows /dev/ and /keystatic", async ({ request }) => {
   const text = await resp.text();
   expect(text).toContain("Disallow: /dev/");
   expect(text).toContain("Disallow: /keystatic");
+});
+
+// llms.txt advertises routes to LLM crawlers; every concrete path it names must
+// resolve (no 404). Guards against the file drifting back to phantom routes
+// (/now, /contact, /resume.json) or naming a page that later gets renamed.
+test("llms.txt references only routes that resolve", async ({ request }) => {
+  const resp = await request.get("/llms.txt");
+  expect(resp.status()).toBe(200);
+  const text = await resp.text();
+  // Bullet lines like "* /work - ...". Take the path token, skip placeholder
+  // patterns ("/work/<slug>") which are illustrative, not literal routes.
+  const paths = text
+    .split("\n")
+    .map((line) => line.match(/^\*\s+(\/\S*)/)?.[1])
+    .filter((p): p is string => p !== undefined && !p.includes("<"));
+  expect(paths.length).toBeGreaterThan(0);
+  for (const path of paths) {
+    const routeResp = await request.get(path);
+    expect(
+      routeResp.status(),
+      `llms.txt route ${path} should not 404`,
+    ).not.toBe(404);
+  }
 });
 
 // sitemap must not expose /dev/ paths (build-time output — available in CI/after build)

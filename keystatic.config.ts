@@ -73,6 +73,13 @@ export default config({
               label: "Label",
               validation: { isRequired: true },
             }),
+            provenance: fields.text({
+              label: "Provenance",
+              description:
+                "How this number was measured, over what period, what counted. Real records only — no metric ships without it (AE4).",
+              multiline: true,
+              validation: { isRequired: true },
+            }),
           }),
           {
             label: "Outcome metrics",

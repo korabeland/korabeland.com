@@ -208,6 +208,20 @@ test("home JSON-LD graph includes a Person node", async ({ page }) => {
   expect(personNode).toBeTruthy();
   expect(personNode?.name).toBe("Korab Eland");
   expect(personNode?.["@id"]).toBe("https://korabeland.com/#person");
+
+  // Relocation readout: address stays factually current (Melbourne), and
+  // nationality is added to signal work-authorization intent (R5).
+  const address = personNode?.address as Record<string, unknown> | undefined;
+  expect(address).toBeTruthy();
+  expect(address?.addressLocality).toBe("Melbourne");
+  // Dual citizenship: nationality is an array of Country nodes (US + AU).
+  const nationality = personNode?.nationality as
+    | Array<Record<string, unknown>>
+    | undefined;
+  expect(Array.isArray(nationality)).toBe(true);
+  const names = (nationality ?? []).map((n) => n.name);
+  expect(names).toContain("United States");
+  expect(names).toContain("Australia");
 });
 
 // /about references the Person node via mainEntity rather than duplicating it.

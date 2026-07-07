@@ -124,6 +124,15 @@ Memory captured from a `korabeland.com/` session should describe stack quirks (A
 
 ---
 
+## 6a. Status facts (single source of truth)
+
+Korab's location, relocation target, citizenship, work authorization, and nationality live in **one file: `src/lib/status.ts`**. The hero readout, the about-page authorization line, and the JSON-LD Person node all import from it, so they cannot drift.
+
+- **Never** hand-edit those facts in `src/pages/index.astro`, `src/pages/about.astro`, or the JSON-LD — change `src/lib/status.ts` and everything updates.
+- `public/llms.txt` is hand-written markdown (it can't import the module). `tests/status-sync.test.ts` fails CI if it stops matching `STATUS`, so update `llms.txt` whenever you change a fact.
+
+---
+
 ## 7. Merge workflow
 
 Korab works this repo solo. `main`'s branch protection has no required-approving-review count — that model assumes a second human distinct from the PR author, which doesn't exist here, and previously forced an admin bypass on every single merge. Required status checks instead: `verify-all` and `Devin Review` (Cognition Labs' automated PR review, runs on every PR automatically).
