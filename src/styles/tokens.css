@@ -80,10 +80,12 @@
   --ink-soft: oklch(0.43 0.01 250); /* #565a62 */
   --ink-mute: oklch(0.52 0.01 250); /* #6d717a */
   --rule: oklch(0.88 0.008 100); /* #dbd9cf */
-  /* Darkened from oklch(0.6 0.11 70) so amber text clears WCAG AA (4.5:1) on
-     day paper — the original 3.54:1 failed at every small size once R7 made
-     the day palette reachable. Now 4.74:1. Sync to DESIGN.md §2 (parent repo).*/
-  --signal: oklch(0.53 0.12 70); /* #975d00 */
+  /* Day runs a COOL accent, not a dimmed amber. Indigo/periwinkle is the true
+     complement of the portrait's orange field — the same hue already living in
+     the glasses and eyes — so day mode reads as its own character, not a washed
+     night. Blues also clear WCAG AA with headroom (5.93:1 on day paper) where
+     amber could only scrape 4.5:1 muddy. Sync to DESIGN.md §2 (parent repo). */
+  --signal: oklch(0.48 0.15 268); /* day: indigo/periwinkle #3a55b1 */
   --moss: oklch(0.48 0.06 145); /* #4a6f4d */
   --moss-soft: oklch(0.78 0.04 145); /* #b7ccb9 */
   /* Focus ring re-pins against light paper */

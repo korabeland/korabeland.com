@@ -80,13 +80,13 @@ const sourceNote = data.source === "seed" ? " (seed)" : "";
     height: 8px;
   }
 
-  /* Intensity → colour, amber scale. Levels 1-4 mix increasing amber over
+  /* Intensity → colour, signal scale. Levels 1-4 mix increasing --signal over
      paper so both night and day palettes (which redefine --signal/--paper
      via [data-time="day"]) stay correct without a duplicated rule set.
-     Mix in oklab, NOT oklch: amber (hue ~70) and the night paper (hue ~250)
-     are ~180° apart, so oklch hue interpolation passes through green (~145)
-     and the low cells read as moss. oklab interpolates rectangularly — a
-     clean warm ramp, amber staying the only signal colour. */
+     Mix in oklab, NOT oklch: in BOTH palettes the accent and paper hues sit
+     far apart (night amber ~70 vs paper ~250; day indigo ~268 vs cream ~100),
+     so oklch hue interpolation detours through green and the low cells read as
+     moss. oklab interpolates rectangularly — a clean ramp in either shift. */
   .shiftlog-cell--0 {
     background: var(--rule);
   }
