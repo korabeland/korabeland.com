@@ -13,6 +13,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import { listExperience } from "../lib/experience";
 import { listPosts } from "../lib/posts";
 import { listProjects, projectStatus } from "../lib/projects";
+import { STATUS } from "../lib/status";
 
 const projects = await listProjects();
 const experience = await listExperience();
@@ -26,18 +27,17 @@ const jsonLd = {
       "@id": "https://korabeland.com/#person",
       name: "Korab Eland",
       url: "https://korabeland.com",
-      description:
-        "Operator with 13 years across marketing, CX and operations. Turns ambiguous problems into systems that ship, now building with AI. Relocating to Washington, DC; US and Australian citizen, no US visa sponsorship required.",
+      description: STATUS.personDescription,
       sameAs: ["https://www.linkedin.com/in/korabeland"],
       address: {
         "@type": "PostalAddress",
         addressLocality: "Melbourne",
         addressCountry: "AU",
       },
-      nationality: [
-        { "@type": "Country", name: "United States" },
-        { "@type": "Country", name: "Australia" },
-      ],
+      nationality: STATUS.nationalities.map((name) => ({
+        "@type": "Country",
+        name,
+      })),
     },
     {
       "@type": "WebSite",
@@ -77,7 +77,7 @@ function formatDate(iso: string | null): string {
           13 years across marketing, CX and operations. Now building the AI-driven kind:
           evidence in, decisions out, designed for handoff.
         </p>
-        <p class="t-mono hero-reloc">⌖ melbourne → washington dc</p>
+        <p class="t-mono hero-reloc">{STATUS.heroReadout}</p>
         <p class="t-label hero-avail">
           <StatusChip status="available" variant="pulse" label="open to ai · data · product roles" />
         </p>

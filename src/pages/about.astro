@@ -12,6 +12,7 @@ import SkillsSection from "../components/SkillsSection/SkillsSection.astro";
 import StatusChip from "../components/StatusChip/StatusChip.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { readSkills } from "../lib/skills";
+import { STATUS } from "../lib/status";
 
 const skills = await readSkills();
 
@@ -110,9 +111,7 @@ const jsonLd = {
       <p class="t-mono about-status">
         <StatusChip status="available" variant="pulse" label="currently exploring ai / data / product roles" />
       </p>
-      <p class="t-mono about-authorization">
-        relocating melbourne → washington dc · us and australian citizen · no us visa sponsorship needed
-      </p>
+      <p class="t-mono about-authorization">{STATUS.aboutLine}</p>
       <p class="t-mono about-links">
         <a href="mailto:korabeland@gmail.com">email</a> ·{" "}
         <a href="https://www.linkedin.com/in/korabeland" rel="me">linkedin</a> ·{" "}
