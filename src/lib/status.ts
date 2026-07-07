@@ -17,6 +17,8 @@
 const base = "Melbourne";
 const target = "Washington, DC"; // title case for prose / JSON-LD / llms.txt
 const targetConsole = "washington dc"; // lowercase for the console-styled UI
+const citizenship = "US and Australian citizen";
+const authorization = "no US visa sponsorship required";
 
 export const STATUS = {
   base,
@@ -24,15 +26,17 @@ export const STATUS = {
   /** Nationalities, in JSON-LD / prose casing. Order = primary first. */
   nationalities: ["United States", "Australia"] as const,
   /** Citizenship phrase used verbatim in llms.txt and the JSON-LD description. */
-  citizenship: "US and Australian citizen",
+  citizenship,
   /** Work-authorization phrase used verbatim in llms.txt and JSON-LD. */
-  authorization: "no US visa sponsorship required",
+  authorization,
 
   // Derived display strings — composed from the atoms above, never duplicated.
   /** Home hero: the one visible relocation line. */
   heroReadout: `⌖ ${base.toLowerCase()} → ${targetConsole}`,
+  /** About-page portrait caption: relocation target, console style. */
+  targetReadout: `⌖ ${targetConsole}`,
   /** About page: relocation + citizenship + work authorization, console style. */
-  aboutLine: `relocating ${base.toLowerCase()} → ${targetConsole} · us and australian citizen · no us visa sponsorship needed`,
+  aboutLine: `relocating ${base.toLowerCase()} → ${targetConsole} · ${citizenship.toLowerCase()} · ${authorization.toLowerCase()}`,
   /** JSON-LD Person description. */
-  personDescription: `Operator with 13 years across marketing, CX and operations. Turns ambiguous problems into systems that ship, now building with AI. Relocating to ${target}; US and Australian citizen, no US visa sponsorship required.`,
+  personDescription: `Operator with 13 years across marketing, CX and operations. Turns ambiguous problems into systems that ship, now building with AI. Relocating to ${target}; ${citizenship}, ${authorization}.`,
 } as const;

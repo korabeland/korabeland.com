@@ -3,7 +3,7 @@
 // inline copies that had drifted apart: the homepage hero availability dot, the
 // about-page availability dot, and the outcome-ledger status chip.
 //
-// Semantic colours are locked (docs/plans/2026-07-03-console-mvp.md): amber =
+// Semantic colours are locked (docs/plans/2026-07-03-console-mvp.md): signal =
 // active / in-flight / available, moss = shipped. The dot is decorative
 // (aria-hidden); the meaning always lives in the adjacent text. Motion is a
 // slow breathe, killed by the global reduced-motion guard in global.css.
@@ -23,10 +23,10 @@ interface Props {
 
 const { status, variant = "chip", label, class: className } = Astro.props;
 
-const TONE: Record<Status, "amber" | "moss"> = {
-  available: "amber",
-  "in-flight": "amber",
-  current: "amber",
+const TONE: Record<Status, "signal" | "moss"> = {
+  available: "signal",
+  "in-flight": "signal",
+  current: "signal",
   shipped: "moss",
 };
 const DEFAULT_LABEL: Record<Status, string> = {
