@@ -148,7 +148,7 @@ const rows = metrics.map((m) => ({ ...m, countUp: parseCountUp(m.value) }));
   .metric-value {
     text-transform: none;
     letter-spacing: 0.02em;
-    color: var(--amber);
+    color: var(--signal);
     font-size: 15px;
     font-weight: 500;
     white-space: nowrap;
@@ -160,10 +160,10 @@ const rows = metrics.map((m) => ({ ...m, countUp: parseCountUp(m.value) }));
   }
   .metric:hover .metric-marker,
   .metric:focus-visible .metric-marker {
-    color: var(--amber);
+    color: var(--signal);
   }
   .metric-details[open] .metric-marker {
-    color: var(--amber);
+    color: var(--signal);
   }
   .metric-provenance {
     margin: 0 0 var(--s-3);

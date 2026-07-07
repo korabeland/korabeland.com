@@ -81,7 +81,7 @@ const sourceNote = data.source === "seed" ? " (seed)" : "";
   }
 
   /* Intensity → colour, amber scale. Levels 1-4 mix increasing amber over
-     paper so both night and day palettes (which redefine --amber/--paper
+     paper so both night and day palettes (which redefine --signal/--paper
      via [data-time="day"]) stay correct without a duplicated rule set.
      Mix in oklab, NOT oklch: amber (hue ~70) and the night paper (hue ~250)
      are ~180° apart, so oklch hue interpolation passes through green (~145)
@@ -91,15 +91,15 @@ const sourceNote = data.source === "seed" ? " (seed)" : "";
     background: var(--rule);
   }
   .shiftlog-cell--1 {
-    background: color-mix(in oklab, var(--amber) 25%, var(--paper));
+    background: color-mix(in oklab, var(--signal) 25%, var(--paper));
   }
   .shiftlog-cell--2 {
-    background: color-mix(in oklab, var(--amber) 50%, var(--paper));
+    background: color-mix(in oklab, var(--signal) 50%, var(--paper));
   }
   .shiftlog-cell--3 {
-    background: color-mix(in oklab, var(--amber) 75%, var(--paper));
+    background: color-mix(in oklab, var(--signal) 75%, var(--paper));
   }
   .shiftlog-cell--4 {
-    background: var(--amber);
+    background: var(--signal);
   }
 </style>
