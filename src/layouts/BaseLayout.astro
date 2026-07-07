@@ -7,6 +7,7 @@
 // lives in the homepage hero readout; every footer carries a quiet echo.
 
 import { getImage, Image } from "astro:assets";
+import ShiftToggle from "../components/ShiftToggle/ShiftToggle.astro";
 import "../styles/global.css";
 // Critical font files, preloaded so first paint already has them (CLS).
 import mono400 from "@fontsource/jetbrains-mono/files/jetbrains-mono-latin-400-normal.woff2?url";
@@ -101,8 +102,82 @@ const NAV_LINKS: readonly NavLink[] = [
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content={description} />
+    <!-- theme-color must precede the shift script below: the script rewrites it
+         on day resolution, so the element has to already exist in the DOM when
+         the script runs. Default is night; the script swaps it to the day
+         value when the resolved shift is day. -->
     <meta name="theme-color" content="#16181c" />
+    <!-- Pre-paint shift resolution (R7) — must run before any stylesheet
+         applies so there is no flash of the wrong palette. Astro injects the
+         global.css link into <head> regardless of import position, so the
+         only reliable guarantee is source order: this inline, render-blocking
+         script is the first node in <head>, ahead of every other tag.
+         Precedence mirrors src/lib/shift.ts `resolveShift` exactly (that
+         module is what Vitest exercises; this copy can't import it — an
+         is:inline head script can't pull in a module graph and stay
+         render-blocking). Any failure (storage blocked, private mode, etc.)
+         falls back to night. -->
+    <script is:inline>
+      (function () {
+        var SHIFT_KEY = "korab-shift";
+        var SESSION_KEY = "korab-shift-session";
+        var NIGHT_COLOR = "#16181c";
+        var DAY_COLOR = "#f2f1ea";
+
+        function isValidShift(v) {
+          return v === "day" || v === "night";
+        }
+        function shiftFromHour(hour) {
+          return hour >= 7 && hour <= 18 ? "day" : "night";
+        }
+        function applyTheme(shift) {
+          document.documentElement.dataset.time = shift;
+          var meta = document.querySelector('meta[name="theme-color"]');
+          if (meta) {
+            meta.setAttribute("content", shift === "day" ? DAY_COLOR : NIGHT_COLOR);
+          }
+        }
+
+        try {
+          var params = new URLSearchParams(location.search);
+          var query = params.get("shift");
+          var stored = null;
+          var sessionDefault = null;
+          try {
+            stored = localStorage.getItem(SHIFT_KEY);
+          } catch (e) {
+            stored = null;
+          }
+          try {
+            sessionDefault = sessionStorage.getItem(SESSION_KEY);
+          } catch (e) {
+            sessionDefault = null;
+          }
+
+          var shift;
+          if (isValidShift(query)) {
+            shift = query;
+          } else if (isValidShift(stored)) {
+            shift = stored;
+          } else if (isValidShift(sessionDefault)) {
+            shift = sessionDefault;
+          } else {
+            shift = shiftFromHour(new Date().getHours());
+            try {
+              sessionStorage.setItem(SESSION_KEY, shift);
+            } catch (e) {
+              // Session persistence is best-effort; the resolved shift for
+              // this view is unaffected.
+            }
+          }
+
+          applyTheme(shift);
+        } catch (e) {
+          applyTheme("night");
+        }
+      })();
+    </script>
+    <meta name="description" content={description} />
     {noindex && <meta name="robots" content="noindex" />}
     <link rel="canonical" href={canonicalUrl} />
     <!-- Tab + iOS icons: the illustrated portrait, shrunk down. -->
@@ -153,22 +228,25 @@ const NAV_LINKS: readonly NavLink[] = [
           <span class="chrome-brand-text">korab eland</span>
         </a>
 
-        <nav class="chrome-nav" aria-label="Primary">
-          <ul>
-            {NAV_LINKS.map((link) => (
-              <li>
-                <a
-                  href={link.href}
-                  aria-label={link.ariaLabel}
-                  aria-current={active === link.key ? "page" : undefined}
-                  class={active === link.key ? "is-active" : undefined}
-                >
-                  {link.label}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </nav>
+        <div class="chrome-nav-row">
+          <nav class="chrome-nav" aria-label="Primary">
+            <ul>
+              {NAV_LINKS.map((link) => (
+                <li>
+                  <a
+                    href={link.href}
+                    aria-label={link.ariaLabel}
+                    aria-current={active === link.key ? "page" : undefined}
+                    class={active === link.key ? "is-active" : undefined}
+                  >
+                    {link.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+          <ShiftToggle />
+        </div>
 
       </div>
     </header>
@@ -298,7 +376,14 @@ const NAV_LINKS: readonly NavLink[] = [
 
   .chrome-nav a.is-active {
     color: var(--ink);
-    border-bottom-color: var(--amber);
+    border-bottom-color: var(--signal);
+  }
+
+  .chrome-nav-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--s-5);
   }
 
   .page-main {
@@ -351,11 +436,11 @@ const NAV_LINKS: readonly NavLink[] = [
   .site-footer a:hover,
   .site-footer a:focus-visible {
     color: var(--ink);
-    border-bottom-color: var(--amber);
+    border-bottom-color: var(--signal);
   }
 
   .footer-avail {
-    color: var(--amber);
+    color: var(--signal);
     letter-spacing: 0.06em;
   }
 
@@ -364,7 +449,15 @@ const NAV_LINKS: readonly NavLink[] = [
       grid-template-columns: 1fr;
       row-gap: var(--s-3);
     }
+    .chrome-nav-row {
+      flex-wrap: wrap;
+      justify-content: flex-start;
+      gap: var(--s-3);
+    }
+    /* Nav takes the full first line so no label is clipped; the toggle wraps
+       to its own line below rather than squeezing the nav. */
     .chrome-nav {
+      flex: 1 1 100%;
       overflow-x: auto;
     }
     .chrome-nav ul {

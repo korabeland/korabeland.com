@@ -13,6 +13,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import { listExperience } from "../lib/experience";
 import { listPosts } from "../lib/posts";
 import { listProjects, projectStatus } from "../lib/projects";
+import { STATUS } from "../lib/status";
 
 const projects = await listProjects();
 const experience = await listExperience();
@@ -26,14 +27,17 @@ const jsonLd = {
       "@id": "https://korabeland.com/#person",
       name: "Korab Eland",
       url: "https://korabeland.com",
-      description:
-        "Operator with 13 years across marketing, CX and operations. Turns ambiguous problems into systems that ship, now building with AI.",
+      description: STATUS.personDescription,
       sameAs: ["https://www.linkedin.com/in/korabeland"],
       address: {
         "@type": "PostalAddress",
         addressLocality: "Melbourne",
         addressCountry: "AU",
       },
+      nationality: STATUS.nationalities.map((name) => ({
+        "@type": "Country",
+        name,
+      })),
     },
     {
       "@type": "WebSite",
@@ -65,7 +69,7 @@ function formatDate(iso: string | null): string {
     <!-- ─── Hero: the readout ─────────────────────────────────────────── -->
     <section class="hero" aria-labelledby="hero-heading">
       <div class="hero-text">
-        <p class="t-label hero-eyebrow">korab eland · operator · melbourne</p>
+        <p class="t-label hero-eyebrow">korab eland · operator · builds with ai</p>
         <h1 id="hero-heading" class="t-display hero-title">
           I turn ambiguous problems into systems that <span class="hero-ship"><span class="sr-only">ship</span><span class="hero-ship-word" aria-hidden="true">ship</span></span>.
         </h1>
@@ -73,6 +77,7 @@ function formatDate(iso: string | null): string {
           13 years across marketing, CX and operations. Now building the AI-driven kind:
           evidence in, decisions out, designed for handoff.
         </p>
+        <p class="t-mono hero-reloc">{STATUS.heroReadout}</p>
         <p class="t-label hero-avail">
           <StatusChip status="available" variant="pulse" label="open to ai · data · product roles" />
         </p>
@@ -87,7 +92,6 @@ function formatDate(iso: string | null): string {
         />
         <figcaption class="t-mono hero-portrait-cap">
           <span>korab eland</span>
-          <span class="hero-portrait-loc">⌖ melbourne</span>
         </figcaption>
       </figure>
     </section>
@@ -221,7 +225,7 @@ function formatDate(iso: string | null): string {
   }
 
   .hero-ship {
-    color: var(--amber);
+    color: var(--signal);
   }
 
   /* The accessible name stays "…systems that ship." — the sr-only word is the
@@ -248,6 +252,13 @@ function formatDate(iso: string | null): string {
     color: var(--ink-soft);
     max-width: 52ch;
     margin: 0;
+  }
+
+  .hero-reloc {
+    color: var(--ink-soft);
+    margin: var(--s-4) 0 0;
+    text-transform: none;
+    letter-spacing: 0.02em;
   }
 
   /* Availability status line — the last line of the readout. The breathing
@@ -281,7 +292,7 @@ function formatDate(iso: string | null): string {
   }
 
   .hero-portrait-loc {
-    color: var(--amber);
+    color: var(--signal);
   }
 
   /* ─── Section chrome ───────────────────────────────────────────────── */
@@ -309,7 +320,7 @@ function formatDate(iso: string | null): string {
 
   .section-more:hover,
   .section-more:focus-visible {
-    color: var(--amber);
+    color: var(--signal);
   }
 
   /* ─── Outcome ledger — motion moment 1 of 3: rows stagger in once ──── */
@@ -428,7 +439,7 @@ function formatDate(iso: string | null): string {
 
   .close-body a:hover,
   .close-body a:focus-visible {
-    color: var(--amber);
+    color: var(--signal);
   }
 
   .close-contact {
@@ -446,8 +457,8 @@ function formatDate(iso: string | null): string {
 
   .close-contact a:hover,
   .close-contact a:focus-visible {
-    color: var(--amber);
-    border-bottom-color: var(--amber);
+    color: var(--signal);
+    border-bottom-color: var(--signal);
   }
 
   @media (max-width: 680px) {

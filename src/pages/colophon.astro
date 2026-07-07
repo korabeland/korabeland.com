@@ -3,9 +3,12 @@ export const prerender = true;
 
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import ShiftLog from "../components/ShiftLog/ShiftLog.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
+import type { ContributionData } from "../lib/shift-log";
 
 const trailRegisterRoot = resolve(process.cwd(), "src/content/trail-register");
+const shiftLogRoot = resolve(process.cwd(), "src/content/shift-log");
 
 interface CommitEntry {
   sha: string;
@@ -34,6 +37,32 @@ function loadCommits(): CommitEntry[] {
   return [];
 }
 
+// The prebuild hook (`scripts/gen-shift-log.ts`) writes contributions.json
+// from the GitHub GraphQL API. The seed file is the committed fallback for
+// a missing/expired token or a failed fetch — same tolerance as loadCommits.
+function loadContributions(): ContributionData | null {
+  for (const name of ["contributions.json", "contributions.seed.json"]) {
+    const file = resolve(shiftLogRoot, name);
+    if (!existsSync(file)) continue;
+    try {
+      const raw = JSON.parse(readFileSync(file, "utf8"));
+      if (
+        raw &&
+        typeof raw === "object" &&
+        Array.isArray(raw.weeks) &&
+        raw.weeks.length > 0 &&
+        typeof raw.total === "number" &&
+        typeof raw.fetchedAt === "string"
+      ) {
+        return raw as ContributionData;
+      }
+    } catch {
+      // fall through to the next candidate
+    }
+  }
+  return null;
+}
+
 function formatCommitDate(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
@@ -44,6 +73,7 @@ function formatCommitDate(iso: string): string {
 }
 
 const commits = loadCommits().slice(0, 14);
+const contributions = loadContributions();
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -124,6 +154,17 @@ const tools: { label: string; note: string }[] = [
             </li>
           ))}
         </ol>
+      </section>
+    )}
+
+    {contributions && (
+      <section aria-labelledby="shift-log" class="shift-log-section">
+        <h2 id="shift-log">Shift log</h2>
+        <p>
+          A year of public GitHub activity, straight from the same account
+          that ships this site.
+        </p>
+        <ShiftLog data={contributions} />
       </section>
     )}
 

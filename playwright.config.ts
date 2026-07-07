@@ -10,6 +10,21 @@ export default defineConfig({
     // deterministic and makes the static-default path the tested path; the
     // animated paths are verified manually in a normal browser.
     contextOptions: { reducedMotion: "reduce" },
+    // Pin the shift to night for every project by pre-seeding localStorage, so
+    // the time-based default (R7) can never make screenshots/axe depend on the
+    // CI clock — night is the canonical palette. The `a11y-day` project below
+    // overrides this to audit the day palette; `shift.spec.ts` overrides it
+    // per-test to exercise clean/day storage. Lighthouse pins via `?shift=`
+    // (see .lighthouserc.json) since it runs a fresh profile with no storage.
+    storageState: {
+      cookies: [],
+      origins: [
+        {
+          origin: "http://localhost:4321",
+          localStorage: [{ name: "korab-shift", value: "night" }],
+        },
+      ],
+    },
   },
   projects: [
     {
@@ -38,13 +53,36 @@ export default defineConfig({
       use: { viewport: { width: 1280, height: 800 } },
     },
     {
+      // Same axe suite, day palette. DESIGN.md §7 requires both shifts audited;
+      // the global night pin leaves day unaudited without this, and a latent
+      // day-token contrast failure would otherwise only surface for a visitor
+      // who lands during daytime. Overrides the night storageState to day.
+      name: "a11y-day",
+      testMatch: "**/accessibility.test.ts",
+      use: {
+        viewport: { width: 1280, height: 800 },
+        storageState: {
+          cookies: [],
+          origins: [
+            {
+              origin: "http://localhost:4321",
+              localStorage: [{ name: "korab-shift", value: "day" }],
+            },
+          ],
+        },
+      },
+    },
+    {
       name: "seo",
       testMatch: "**/seo.spec.ts",
       use: { viewport: { width: 1280, height: 800 } },
     },
     {
+      // Widened from **/routes.spec.ts so U2's shift.spec.ts and U6's
+      // provenance.spec.ts (both under tests/e2e/) actually run — the exact-file
+      // glob silently skipped any new spec while CI stayed green.
       name: "e2e",
-      testMatch: "**/routes.spec.ts",
+      testMatch: "**/e2e/*.spec.ts",
       use: { viewport: { width: 1280, height: 800 } },
     },
   ],

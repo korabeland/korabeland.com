@@ -16,6 +16,7 @@ interface Fact {
 interface Metric {
   value: string;
   label: string;
+  provenance: string;
 }
 interface LogEntry {
   week: string;
@@ -143,7 +144,7 @@ const statusKind = status === "shipped" ? "shipped" : "active";
 
   .progress-bar {
     height: 100%;
-    background: var(--amber);
+    background: var(--signal);
     width: 0%;
     transform-origin: left;
   }
@@ -174,7 +175,7 @@ const statusKind = status === "shipped" ? "shipped" : "active";
   }
   .return .t-mono:hover,
   .return .t-mono:focus-visible {
-    color: var(--amber);
+    color: var(--signal);
   }
 
   .head {
@@ -200,8 +201,8 @@ const statusKind = status === "shipped" ? "shipped" : "active";
     white-space: nowrap;
   }
   .chip--active {
-    color: var(--amber);
-    border-color: var(--amber);
+    color: var(--signal);
+    border-color: var(--signal);
   }
   .chip--shipped {
     color: var(--moss);
@@ -264,7 +265,7 @@ const statusKind = status === "shipped" ? "shipped" : "active";
     line-height: 1.45;
     margin: var(--s-6) 0;
     padding-left: var(--s-5);
-    border-left: 2px solid var(--amber);
+    border-left: 2px solid var(--signal);
     color: var(--ink);
   }
   .prose :global(ul) {
@@ -322,8 +323,8 @@ const statusKind = status === "shipped" ? "shipped" : "active";
   }
   .next-link:hover,
   .next-link:focus-visible {
-    color: var(--amber);
-    border-bottom-color: var(--amber);
+    color: var(--signal);
+    border-bottom-color: var(--signal);
   }
 
   @media (max-width: 680px) {
