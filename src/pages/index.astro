@@ -82,18 +82,35 @@ function formatDate(iso: string | null): string {
           <StatusChip status="available" variant="pulse" label="open to ai · data · product roles" />
         </p>
       </div>
-      <figure class="hero-portrait">
-        <Image
-          src={portrait}
-          alt="Illustrated portrait of Korab Eland"
-          widths={[360, 720]}
-          sizes="(max-width: 680px) 240px, 340px"
-          loading="eager"
-        />
-        <figcaption class="t-mono hero-portrait-cap">
-          <span>korab eland</span>
-        </figcaption>
-      </figure>
+      <div class="hero-aside">
+        <figure class="hero-portrait">
+          <Image
+            src={portrait}
+            alt="Illustrated portrait of Korab Eland"
+            widths={[360, 720]}
+            sizes="(max-width: 680px) 240px, 340px"
+            loading="eager"
+          />
+          <figcaption class="t-mono hero-portrait-cap">
+            <span>korab eland</span>
+          </figcaption>
+        </figure>
+        <div class="hero-contact">
+          <a class="hero-contact-row" href="mailto:korabeland@gmail.com">
+            <span class="t-label hero-contact-label">email</span>
+            <span class="hero-contact-value">korabeland@gmail.com</span>
+          </a>
+          <a
+            class="hero-contact-row"
+            href="https://www.linkedin.com/in/korabeland"
+            rel="me"
+            aria-label="LinkedIn profile"
+          >
+            <span class="t-label hero-contact-label">linkedin</span>
+            <span class="hero-contact-value">/in/korabeland</span>
+          </a>
+        </div>
+      </div>
     </section>
 
     <!-- ─── Outcome ledger ────────────────────────────────────────────── -->
@@ -270,11 +287,56 @@ function formatDate(iso: string | null): string {
     margin: var(--s-5) 0 0;
   }
 
+  .hero-aside {
+    justify-self: end;
+    max-width: 340px;
+    width: 100%;
+  }
+
   .hero-portrait {
     margin: 0;
-    max-width: 340px;
-    justify-self: end;
     border: 1px solid var(--rule);
+  }
+
+  /* Contact readout — labelled rows directly under the portrait (Option A).
+     Mirrors the figcaption/ledger idiom: hairline-bordered, mono, hover to
+     signal. The quieter close-section contact line stays as the footer echo. */
+  .hero-contact {
+    margin-top: var(--s-3);
+    border: 1px solid var(--rule);
+  }
+
+  .hero-contact-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--s-3);
+    padding: var(--s-3);
+    text-decoration: none;
+    transition: background 150ms ease;
+  }
+
+  .hero-contact-row + .hero-contact-row {
+    border-top: 1px solid var(--rule);
+  }
+
+  @media (hover: hover) {
+    .hero-contact-row:hover {
+      background: var(--paper-2);
+    }
+  }
+
+  .hero-contact-value {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.02em;
+    color: var(--ink-soft);
+    transition: color 150ms ease;
+  }
+
+  .hero-contact-row:hover .hero-contact-value,
+  .hero-contact-row:focus-visible .hero-contact-value {
+    color: var(--signal);
   }
 
   .hero-portrait img {
@@ -466,7 +528,7 @@ function formatDate(iso: string | null): string {
       grid-template-columns: 1fr;
       gap: var(--s-6);
     }
-    .hero-portrait {
+    .hero-aside {
       max-width: 240px;
       justify-self: start;
     }
