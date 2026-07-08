@@ -21,14 +21,17 @@ test.describe("shift toggle — clean storage", () => {
     await page.goto("/?shift=night");
     const toggle = page.locator(".shift-toggle");
     await expect(toggle).toBeVisible();
-    await expect(toggle).toHaveText("shift: night");
+    // Icon-only switch: night shows the moon on the knob, aria-pressed=false.
+    await expect(toggle.locator(".knob .knob-icon--moon")).toBeVisible();
+    await expect(toggle.locator(".knob .knob-icon--sun")).toBeHidden();
     await expect(toggle).toHaveAttribute("aria-pressed", "false");
 
     await toggle.click();
 
     await expect(page.locator("html")).toHaveAttribute("data-time", "day");
     await expect(toggle).toHaveAttribute("aria-pressed", "true");
-    await expect(toggle).toHaveText("shift: day");
+    await expect(toggle.locator(".knob .knob-icon--sun")).toBeVisible();
+    await expect(toggle.locator(".knob .knob-icon--moon")).toBeHidden();
     await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute(
       "content",
       "#f2f1ea",

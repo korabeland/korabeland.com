@@ -1,20 +1,44 @@
 ---
 // ShiftToggle — the console control for the night/day shift (R7).
 //
-// Server-rendered `hidden`: the pre-paint head script in BaseLayout.astro
-// resolves and applies the shift before this button's own script runs, so a
-// no-JS visitor never sees a dead control (structural guarantee, not a
-// runtime check). Its own script reveals it, syncs the label/aria-pressed to
-// whatever `data-time` the head script already set, and on click flips the
-// shift, persists it as the explicit choice (localStorage only — this is not
-// the session-cached default), and keeps `theme-color` coherent.
+// A sliding sun/moon switch. The knob position and which icon it carries are
+// driven PURELY by `:root[data-time]` in CSS, and the pre-paint head script in
+// BaseLayout.astro sets `data-time` before any stylesheet applies — so the
+// switch renders in its correct position at first paint with no flash and no
+// dependency on this component's own script (structural guarantee, not a
+// runtime check). The muted moon/sun on the track ends preview the two shifts;
+// the knob covers whichever end is active, leaving the *destination* icon
+// showing on the empty side.
+//
+// Server-rendered `hidden`: a no-JS visitor never sees a dead control. This
+// component's script only reveals the button, syncs aria-pressed/title to the
+// current `data-time`, and on click flips the shift, persists it as the
+// explicit choice (localStorage only — not the session-cached default), and
+// keeps `theme-color` coherent.
 //
 // Storage key/attribute contract is locked across units — see src/lib/shift.ts
 // and docs/plans/2026-07-06-002-feat-console-ux-enhancements-plan.md (R7).
+
+const MOON =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/></svg>';
+const SUN =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.9" y1="4.9" x2="6.3" y2="6.3"/><line x1="17.7" y1="17.7" x2="19.1" y2="19.1"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.9" y1="19.1" x2="6.3" y2="17.7"/><line x1="17.7" y1="6.3" x2="19.1" y2="4.9"/></svg>';
 ---
 
-<button class="shift-toggle" type="button" aria-pressed="false" hidden>
-  shift: night
+<button
+  class="shift-toggle"
+  type="button"
+  aria-pressed="false"
+  aria-label="Day shift"
+  title="Switch to day shift"
+  hidden
+>
+  <span class="ghost ghost--night" aria-hidden="true" set:html={MOON}></span>
+  <span class="ghost ghost--day" aria-hidden="true" set:html={SUN}></span>
+  <span class="knob">
+    <span class="knob-icon knob-icon--moon" aria-hidden="true" set:html={MOON}></span>
+    <span class="knob-icon knob-icon--sun" aria-hidden="true" set:html={SUN}></span>
+  </span>
 </button>
 
 <script>
@@ -23,13 +47,18 @@
 
   const button = document.querySelector<HTMLButtonElement>(".shift-toggle");
   if (button) {
-    const setLabel = (isDay: boolean) => {
-      button.textContent = isDay ? "shift: day" : "shift: night";
+    const sync = (isDay: boolean) => {
       button.setAttribute("aria-pressed", String(isDay));
+      // aria-label stays the stable name ("Day shift"); aria-pressed carries
+      // state. The title is a mouse-hover affordance that names the action —
+      // useful because the control itself is icon-only.
+      button.setAttribute(
+        "title",
+        isDay ? "Switch to night shift" : "Switch to day shift",
+      );
     };
 
-    const currentIsDay = document.documentElement.dataset.time === "day";
-    setLabel(currentIsDay);
+    sync(document.documentElement.dataset.time === "day");
     button.hidden = false;
 
     button.addEventListener("click", () => {
@@ -47,37 +76,103 @@
         'meta[name="theme-color"]',
       );
       if (meta) {
-        meta.setAttribute("content", nextIsDay ? THEME_COLOR.day : THEME_COLOR.night);
+        meta.setAttribute(
+          "content",
+          nextIsDay ? THEME_COLOR.day : THEME_COLOR.night,
+        );
       }
 
-      setLabel(nextIsDay);
+      sync(nextIsDay);
     });
   }
 </script>
 
 <style>
   .shift-toggle {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--ink-soft);
+    position: relative;
+    box-sizing: border-box;
+    flex: none;
+    width: 48px;
+    height: 24px;
+    padding: 0;
     background: none;
     border: 1px solid var(--rule);
     border-radius: var(--r-0);
-    padding: 5px 10px;
     cursor: pointer;
-    transition: color 200ms ease, border-color 200ms ease;
+    transition: border-color 200ms ease;
   }
 
   .shift-toggle:hover,
   .shift-toggle:focus-visible {
-    color: var(--signal);
     border-color: var(--signal);
   }
 
   .shift-toggle:focus-visible {
     outline: none;
     box-shadow: var(--focus-ring);
+  }
+
+  /* Muted destination icons printed on the track ends. The knob covers the
+     active end, so the icon that stays visible is the shift a click switches to. */
+  .ghost {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    width: 22px;
+    display: grid;
+    place-items: center;
+    color: var(--ink-mute);
+  }
+  .ghost--night {
+    left: 1px;
+  }
+  .ghost--day {
+    right: 1px;
+  }
+  .ghost :global(svg) {
+    width: 12px;
+    height: 12px;
+  }
+
+  .knob {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 18px;
+    height: 18px;
+    display: grid;
+    place-items: center;
+    background: var(--signal);
+    color: var(--paper);
+    transition: transform 240ms ease;
+  }
+  .knob :global(svg) {
+    width: 12px;
+    height: 12px;
+  }
+  .knob-icon {
+    display: grid;
+    place-items: center;
+  }
+  .knob-icon--sun {
+    display: none;
+  }
+
+  /* Day shift: knob slides to the sun end and carries the sun. Driven by the
+     head script's `data-time`, so it is correct at first paint. */
+  :global(html[data-time="day"]) .shift-toggle .knob {
+    transform: translateX(24px);
+  }
+  :global(html[data-time="day"]) .shift-toggle .knob-icon--moon {
+    display: none;
+  }
+  :global(html[data-time="day"]) .shift-toggle .knob-icon--sun {
+    display: grid;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .knob {
+      transition: none;
+    }
   }
 </style>
