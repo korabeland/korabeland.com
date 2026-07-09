@@ -42,10 +42,10 @@ const legendLevels = [0, 1, 2, 3, 4] as const;
   </p>
   <div class="shiftlog-panel">
     <div class="shiftlog-scroll">
-      <div class="shiftlog-cols">
+      <div class="shiftlog-cols" style={`--weeks:${data.weeks.length}`}>
         <div class="shiftlog-ticks t-mono" aria-hidden="true">
           {ticks.map((tick) => (
-            <span class="shiftlog-tick" style={`--tick-col:${tick.weekIndex}`}>
+            <span class="shiftlog-tick" style={`grid-column:${tick.weekIndex + 1}`}>
               {tick.label}
             </span>
           ))}
@@ -98,10 +98,10 @@ const legendLevels = [0, 1, 2, 3, 4] as const;
     // the effect reads as "the busy days light up as you pass," not a spotlight
     // (R8). If the day indigo-on-cream bloom ever reads harsh at this ceiling,
     // split MAX_MIX per palette rather than lowering it globally (KTD6).
-    const RADIUS = 40; // px of cursor influence
-    const MAX_BLUR = 8; // px box-shadow blur at the cursor
+    const RADIUS = 56; // px of cursor influence (~3 cells at the filled size)
+    const MAX_BLUR = 10; // px box-shadow blur at the cursor
     const MAX_MIX = 55; // % --signal in the bloom at full intensity
-    const MAX_SCALE = 1.25; // cell scale at full intensity
+    const MAX_SCALE = 1.22; // cell scale at full intensity
 
     type GlowCell = { el: HTMLElement; cx: number; cy: number };
     let cells: GlowCell[] = [];
@@ -175,13 +175,12 @@ const legendLevels = [0, 1, 2, 3, 4] as const;
 
 <style>
   .shiftlog {
-    /* Single source for the column pitch: cell edge + inter-cell gap. The grid,
-       the week columns, and the absolutely-placed month ticks all derive their
-       geometry from these, so ticks stay column-aligned if the cell size ever
-       changes. */
-    --cell: 8px;
+    /* The grid and the ticks row are both CSS grids of `--weeks` equal columns,
+       so ticks stay column-aligned at any width. Columns flex to fill the
+       container (1fr) but never shrink below --cell-min, at which point the grid
+       overflows and .shiftlog-scroll takes over (narrow viewports). */
+    --cell-min: 8px;
     --cell-gap: 2px;
-    --col-pitch: calc(var(--cell) + var(--cell-gap));
   }
 
   .shiftlog-summary {
@@ -206,9 +205,10 @@ const legendLevels = [0, 1, 2, 3, 4] as const;
   }
 
   .shiftlog-scroll {
-    /* Grid is ~530px wide (53 cols × 8px + gaps) — wider than the 375px
-       viewport. This container scrolls internally so the grid never causes
-       horizontal PAGE overflow; the prose column stays fixed. */
+    /* At the ~960px content column the grid fills the width; only below ~530px
+       (narrow viewports, where columns hit --cell-min) does it overflow, and
+       then this container scrolls internally so the grid never causes horizontal
+       PAGE overflow. */
     width: 100%;
     overflow-x: auto;
     /* overflow-x:auto computes overflow-y to a clipping value, which would
@@ -218,39 +218,42 @@ const legendLevels = [0, 1, 2, 3, 4] as const;
     padding-block: var(--s-3);
   }
 
-  /* Ticks + grid share one inline-flex column so both pan together inside the
-     scroll and the ticks row stretches to the grid's intrinsic width. */
+  /* Ticks + grid stacked, both full width so the grid fills the column. */
   .shiftlog-cols {
-    display: inline-flex;
+    display: flex;
     flex-direction: column;
     gap: var(--s-2);
+    width: 100%;
   }
 
+  /* Same column template as the grid, so each tick lands over its real week
+     column (R2) at any width. */
   .shiftlog-ticks {
-    position: relative;
-    align-self: stretch;
-    height: 12px;
+    display: grid;
+    grid-template-columns: repeat(var(--weeks), minmax(var(--cell-min), 1fr));
+    gap: var(--cell-gap);
+    align-items: end;
   }
 
   .shiftlog-tick {
-    position: absolute;
-    top: 0;
-    /* Anchored to a real week column, not evenly spaced (R2). */
-    left: calc(var(--tick-col) * var(--col-pitch));
+    /* grid-column (1-based week) set inline; label left-aligns in its column and
+       overflows right without disturbing the tracks. */
+    justify-self: start;
+    white-space: nowrap;
     font-size: 10px;
     line-height: 1;
-    white-space: nowrap;
     /* R4: small mono uses --ink-soft to clear WCAG AA in both palettes. axe
        skips this aria-hidden subtree, so this is verified visually. */
     color: var(--ink-soft);
   }
 
   .shiftlog-grid {
-    /* position: relative makes the grid the offsetParent, so the torch reads
-       each cell's offsetLeft/offsetTop against it (KTD5). The week columns stay
-       static. */
+    /* 53 equal columns that flex to fill the container width; position: relative
+       makes the grid the offsetParent so the torch reads each cell's
+       offsetLeft/offsetTop against it (KTD5). */
     position: relative;
-    display: inline-flex;
+    display: grid;
+    grid-template-columns: repeat(var(--weeks), minmax(var(--cell-min), 1fr));
     gap: var(--cell-gap);
   }
 
@@ -260,20 +263,31 @@ const legendLevels = [0, 1, 2, 3, 4] as const;
     gap: var(--cell-gap);
   }
 
-  .shiftlog-cell {
-    display: block;
-    width: var(--cell);
-    height: var(--cell);
+  /* Grid cells fill their column and stay square via aspect-ratio, so they grow
+     with the column width. A partial final week (fewer than 7 days) stacks from
+     the top — correct weekday alignment. */
+  .shiftlog-week .shiftlog-cell {
+    width: 100%;
+    aspect-ratio: 1;
   }
 
-  /* less → more legend: reuses the 0-4 swatches, right-aligned below the panel
-     body, no per-column alignment needed so it sits outside the scroll. */
+  .shiftlog-cell {
+    display: block;
+  }
+
+  /* less → more legend: reuses the 0-4 swatches at a fixed swatch size (not the
+     grid's fluid one), right-aligned below the panel body. */
   .shiftlog-legend {
     display: flex;
     align-items: center;
     justify-content: flex-end;
     gap: var(--s-1);
     margin-top: var(--s-3);
+  }
+
+  .shiftlog-legend .shiftlog-cell {
+    width: 11px;
+    height: 11px;
   }
 
   .shiftlog-legend-label {
