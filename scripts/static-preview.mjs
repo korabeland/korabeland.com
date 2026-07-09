@@ -14,7 +14,7 @@
 
 import { readFile, stat } from "node:fs/promises";
 import { createServer } from "node:http";
-import { extname, join, resolve } from "node:path";
+import { extname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
@@ -60,12 +60,16 @@ async function resolveRequest(urlPath) {
   if (cleanPath === "/_vercel/image") {
     const inner = new URLSearchParams(query).get("url");
     if (inner) {
-      const safeInner = decodeURIComponent(inner)
-        .replace(/\.+\//g, "/")
-        .replace(/^\/+/, "");
-      const target = join(ROOT, safeInner);
-      const body = await tryRead(target);
-      if (body) return { body, path: target };
+      // Resolve, then confine to ROOT via a prefix check — robust against `..`
+      // escapes (a bare `..` slips past a regex but not resolve+startsWith).
+      const target = resolve(
+        ROOT,
+        decodeURIComponent(inner).replace(/^\/+/, ""),
+      );
+      if (target === ROOT || target.startsWith(ROOT + sep)) {
+        const body = await tryRead(target);
+        if (body) return { body, path: target };
+      }
     }
     return null;
   }
