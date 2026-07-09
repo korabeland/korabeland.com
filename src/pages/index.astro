@@ -9,6 +9,7 @@ import { Image } from "astro:assets";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import portrait from "../assets/portrait-illustrated.jpg";
+import portraitDay from "../assets/portrait-illustrated-day.jpg";
 import ExperienceLedger from "../components/ExperienceLedger/ExperienceLedger.astro";
 import ShiftLog from "../components/ShiftLog/ShiftLog.astro";
 import StatusChip from "../components/StatusChip/StatusChip.astro";
@@ -142,12 +143,21 @@ const MAIL_ICON =
       <div class="hero-aside">
         <figure class="hero-portrait">
           <Image
+            class="portrait-night"
             src={portrait}
             alt="Illustrated portrait of Korab Eland"
             widths={[360, 720]}
             sizes="(max-width: 680px) 240px, 340px"
             loading="eager"
             fetchpriority="high"
+          />
+          <Image
+            class="portrait-day"
+            src={portraitDay}
+            alt="Illustrated portrait of Korab Eland"
+            widths={[360, 720]}
+            sizes="(max-width: 680px) 240px, 340px"
+            loading="eager"
           />
           <figcaption class="t-mono hero-portrait-cap">
             <span>korab eland</span>
@@ -389,6 +399,19 @@ const MAIL_ICON =
     display: block;
     width: 100%;
     height: auto;
+  }
+
+  /* Portrait tracks the shift: orange field by night (the no-JS default),
+     blue by day. The day variant stays hidden until the head script sets
+     data-time=day, mirroring the ShiftToggle idiom. */
+  .hero-portrait .portrait-day {
+    display: none;
+  }
+  :global(html[data-time="day"]) .hero-portrait .portrait-night {
+    display: none;
+  }
+  :global(html[data-time="day"]) .hero-portrait .portrait-day {
+    display: block;
   }
 
   .hero-portrait-cap {

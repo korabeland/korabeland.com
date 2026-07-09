@@ -8,6 +8,7 @@ export const prerender = true;
 
 import { Image } from "astro:assets";
 import portrait from "../assets/portrait-illustrated.jpg";
+import portraitDay from "../assets/portrait-illustrated-day.jpg";
 import SkillsSection from "../components/SkillsSection/SkillsSection.astro";
 import StatusChip from "../components/StatusChip/StatusChip.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
@@ -43,12 +44,21 @@ const jsonLd = {
 
     <figure class="about-portrait">
       <Image
+        class="portrait-night"
         src={portrait}
         alt="Illustrated portrait of Korab Eland"
         widths={[440, 880]}
         sizes="(max-width: 680px) 280px, 440px"
         loading="eager"
         fetchpriority="high"
+      />
+      <Image
+        class="portrait-day"
+        src={portraitDay}
+        alt="Illustrated portrait of Korab Eland"
+        widths={[440, 880]}
+        sizes="(max-width: 680px) 280px, 440px"
+        loading="eager"
       />
       <figcaption class="t-mono about-portrait-cap">
         <span>korab eland</span>
@@ -155,6 +165,19 @@ const jsonLd = {
     display: block;
     width: 100%;
     height: auto;
+  }
+
+  /* Portrait tracks the shift: orange field by night (the no-JS default),
+     blue by day. The day variant stays hidden until the head script sets
+     data-time=day, mirroring the ShiftToggle idiom. */
+  .about-portrait .portrait-day {
+    display: none;
+  }
+  :global(html[data-time="day"]) .about-portrait .portrait-night {
+    display: none;
+  }
+  :global(html[data-time="day"]) .about-portrait .portrait-day {
+    display: block;
   }
 
   .about-portrait-cap {

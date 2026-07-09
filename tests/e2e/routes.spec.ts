@@ -175,7 +175,10 @@ test("home hero renders the availability status line and portrait", async ({
     "open to ai · data · product roles",
   );
   await expect(page.locator(".hero-avail .statuschip-dot")).toBeVisible();
-  await expect(page.locator(".hero-portrait img")).toBeVisible();
+  // Portrait swaps with the shift: night (this test's pinned palette) shows
+  // the orange variant; the blue day variant is present but hidden until day.
+  await expect(page.locator(".hero-portrait .portrait-night")).toBeVisible();
+  await expect(page.locator(".hero-portrait .portrait-day")).toBeHidden();
   // Logo/badge removed from the rail; the toggle takes its place, left of the name.
   await expect(page.locator(".chrome-mark, .chrome-badge")).toHaveCount(0);
   await expect(page.locator(".chrome-left .shift-toggle")).toBeVisible();
