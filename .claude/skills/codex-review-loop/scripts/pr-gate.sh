@@ -22,7 +22,12 @@ IS_PR_CREATE="$(printf '%s' "$INPUT" | python3 "$SCRIPT_DIR/detect-pr-create.py"
 [ "${CODEX_GATE_OFF:-}" = "1" ] && exit 0
 
 REPO="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
-MARKER="$REPO/.git/codex-review-loop.json"
+# Resolve the git dir rather than assuming `$REPO/.git` is a directory — in a
+# linked worktree `.git` is a file (a gitdir pointer), so the marker lives in
+# the per-worktree gitdir. `--absolute-git-dir` returns that (and `<repo>/.git`
+# for a normal clone), so this works in both.
+GITDIR="$(git -C "$REPO" rev-parse --absolute-git-dir 2>/dev/null || echo "$REPO/.git")"
+MARKER="$GITDIR/codex-review-loop.json"
 HEAD="$(git -C "$REPO" rev-parse HEAD 2>/dev/null || echo unknown)"
 
 deny() {
