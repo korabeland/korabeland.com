@@ -6,7 +6,7 @@
 // interior pages (the "logged-in operator"). The availability signal
 // lives in the homepage hero readout; every footer carries a quiet echo.
 
-import { getImage, Image } from "astro:assets";
+import { getImage } from "astro:assets";
 import ShiftToggle from "../components/ShiftToggle/ShiftToggle.astro";
 import "../styles/global.css";
 // Critical font files, preloaded so first paint already has them (CLS).
@@ -44,10 +44,6 @@ const {
   fullBleed = false,
   hideFooter = false,
 } = Astro.props;
-
-// Interior pages get the small portrait badge in the rail; the homepage
-// carries the full framed portrait in its hero instead.
-const showBadge = active !== "home";
 
 // Browser-tab + iOS icons are the same illustrated portrait, shrunk down —
 // generated from the one imported asset so they always track the source.
@@ -209,24 +205,12 @@ const NAV_LINKS: readonly NavLink[] = [
     <a class="skip-link" href="#main">skip to content</a>
     <header class="chrome">
       <div class="chrome-inner">
-        <a class="chrome-brand" href="/" aria-label="Korab Eland, home">
-          {showBadge ? (
-            <Image
-              class="chrome-badge"
-              src={portrait}
-              alt=""
-              width={52}
-              height={52}
-              loading="eager"
-            />
-          ) : (
-            <svg class="chrome-mark" viewBox="0 0 18 18" aria-hidden="true">
-              <rect x="1.5" y="1.5" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1" />
-              <circle cx="9" cy="9" r="2.4" fill="currentColor" />
-            </svg>
-          )}
-          <span class="chrome-brand-text">korab eland</span>
-        </a>
+        <div class="chrome-left">
+          <ShiftToggle />
+          <a class="chrome-brand" href="/" aria-label="Korab Eland, home">
+            <span class="chrome-brand-text">korab eland</span>
+          </a>
+        </div>
 
         <div class="chrome-nav-row">
           <nav class="chrome-nav" aria-label="Primary">
@@ -245,7 +229,7 @@ const NAV_LINKS: readonly NavLink[] = [
               ))}
             </ul>
           </nav>
-          <ShiftToggle />
+          <a class="chrome-cta" href="mailto:korabeland@gmail.com">get in touch</a>
         </div>
 
       </div>
@@ -318,27 +302,17 @@ const NAV_LINKS: readonly NavLink[] = [
     gap: var(--s-5);
   }
 
+  .chrome-left {
+    display: flex;
+    align-items: center;
+    gap: var(--s-3);
+  }
+
   .chrome-brand {
     display: inline-flex;
     align-items: center;
-    gap: var(--s-2);
     color: var(--ink);
     text-decoration: none;
-  }
-
-  .chrome-mark {
-    width: 18px;
-    height: 18px;
-    color: var(--ink);
-  }
-
-  .chrome-badge {
-    width: 26px;
-    height: 26px;
-    border-radius: var(--r-1);
-    border: 1px solid var(--rule);
-    object-fit: cover;
-    display: block;
   }
 
   .chrome-brand-text {
@@ -346,6 +320,7 @@ const NAV_LINKS: readonly NavLink[] = [
     font-weight: 500;
     font-size: 18px;
     letter-spacing: -0.01em;
+    white-space: nowrap;
   }
 
   .chrome-nav ul {
@@ -384,6 +359,31 @@ const NAV_LINKS: readonly NavLink[] = [
     align-items: center;
     justify-content: flex-end;
     gap: var(--s-5);
+  }
+
+  /* Primary contact CTA — the one signal-filled control in the chrome. It
+     carries --paper as its text (paper flips with the shift, so it stays the
+     correct inverse of --signal in both day and night). Hover hollows it out. */
+  .chrome-cta {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    padding: 9px 15px;
+    background: var(--signal);
+    color: var(--paper);
+    border: 1px solid var(--signal);
+    text-decoration: none;
+    transition:
+      background 200ms ease,
+      color 200ms ease;
+  }
+
+  .chrome-cta:hover,
+  .chrome-cta:focus-visible {
+    background: transparent;
+    color: var(--signal);
   }
 
   .page-main {

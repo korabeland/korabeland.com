@@ -162,8 +162,9 @@ test("/off-trail with an unknown from= value falls back to generic copy", async 
 });
 
 // Availability signal — status line in the homepage hero readout, quiet
-// echo in every footer. The rail carries a portrait badge on interior
-// pages instead (the homepage hero has the full framed portrait).
+// echo in every footer. The header rail is identical on every page: the
+// shift toggle sits to the left of the wordmark (the old logo/badge was
+// removed), and the contact CTA anchors the right.
 test("home hero renders the availability status line and portrait", async ({
   page,
 }) => {
@@ -173,15 +174,20 @@ test("home hero renders the availability status line and portrait", async ({
   );
   await expect(page.locator(".hero-avail .statuschip-dot")).toBeVisible();
   await expect(page.locator(".hero-portrait img")).toBeVisible();
-  await expect(page.locator(".chrome-badge")).toHaveCount(0);
+  // Logo/badge removed from the rail; the toggle takes its place, left of the name.
+  await expect(page.locator(".chrome-mark, .chrome-badge")).toHaveCount(0);
+  await expect(page.locator(".chrome-left .shift-toggle")).toBeVisible();
 });
 
-test("footer carries the availability echo; interior rail shows the badge", async ({
+test("footer carries the availability echo; header shows the contact CTA", async ({
   page,
 }) => {
   await page.goto("/work");
   await expect(page.locator(".footer-avail")).toContainText("open to roles");
-  await expect(page.locator(".chrome-badge")).toBeVisible();
+  const cta = page.locator(".chrome-cta");
+  await expect(cta).toBeVisible();
+  await expect(cta).toHaveAttribute("href", "mailto:korabeland@gmail.com");
+  await expect(page.locator(".chrome-left .shift-toggle")).toBeVisible();
 });
 
 const NAV_ACTIVE_CASES = [
