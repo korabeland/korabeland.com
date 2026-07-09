@@ -50,6 +50,60 @@ export interface SummaryStats {
   longestStreak: number;
 }
 
+export interface MonthTick {
+  /** Three-letter month abbreviation, e.g. "Jul". */
+  label: string;
+  /** Index into `weeks` of the first week that falls in this month. */
+  weekIndex: number;
+}
+
+const MONTH_ABBR = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+] as const;
+
+/**
+ * One tick per month for the grid's top edge, each anchored to the first week
+ * whose first day falls in that month — so ticks land on real week columns, not
+ * even spacing (R2). A week straddling a boundary is attributed by its first
+ * day, matching GitHub's own week bucketing.
+ *
+ * The month is read straight off the "YYYY-MM-DD" string (positions 5-6) rather
+ * than via `new Date`, so the result is timezone-independent and byte-stable.
+ * Deduped by month label: a 52-53 week window wraps back to its starting month
+ * on the final column, and repeating that label would clutter the frame — the
+ * first occurrence wins, yielding a clean 12-label run.
+ */
+export function monthTicks(data: ContributionData): MonthTick[] {
+  const ticks: MonthTick[] = [];
+  const seen = new Set<string>();
+
+  data.weeks.forEach((week, weekIndex) => {
+    // Mirror busiestWeek's empty-day guard (shift-log.ts:100): a zero-length
+    // week yields "", which we skip rather than index into a bogus month.
+    const date = week.days[0]?.date ?? "";
+    if (!date) return;
+
+    const label = MONTH_ABBR[Number(date.slice(5, 7)) - 1];
+    if (!label || seen.has(label)) return;
+
+    seen.add(label);
+    ticks.push({ label, weekIndex });
+  });
+
+  return ticks;
+}
+
 /** Maps a contributionLevel enum string to the 0-4 amber visual intensity scale. */
 export function levelToIntensity(level: ContributionLevel): 0 | 1 | 2 | 3 | 4 {
   switch (level) {

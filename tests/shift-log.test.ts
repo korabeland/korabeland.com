@@ -10,6 +10,7 @@ import {
   flattenDays,
   levelToIntensity,
   longestStreak,
+  monthTicks,
   summaryStats,
 } from "@/lib/shift-log";
 
@@ -326,6 +327,112 @@ describe("empty weeks array", () => {
 
   it("returns an empty array from flattenDays", () => {
     expect(flattenDays(data)).toEqual([]);
+  });
+});
+
+describe("monthTicks", () => {
+  const ZERO_LEVELS: ContributionLevel[] = [
+    "NONE",
+    "NONE",
+    "NONE",
+    "NONE",
+    "NONE",
+    "NONE",
+    "NONE",
+  ];
+  const ZERO_COUNTS = [0, 0, 0, 0, 0, 0, 0];
+  // Independent re-derivation of the label, so the seed property check doesn't
+  // just re-run the implementation to "verify" itself.
+  const MONTH_ABBR = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+  const labelFor = (date: string) => MONTH_ABBR[Number(date.slice(5, 7)) - 1];
+
+  it("returns one tick per month, each at that month's first week, in order", () => {
+    const data = makeData([
+      makeWeek("2026-06-01", ZERO_COUNTS, ZERO_LEVELS), // Jun → tick
+      makeWeek("2026-06-08", ZERO_COUNTS, ZERO_LEVELS), // Jun → deduped
+      makeWeek("2026-07-06", ZERO_COUNTS, ZERO_LEVELS), // Jul → tick
+      makeWeek("2026-08-03", ZERO_COUNTS, ZERO_LEVELS), // Aug → tick
+    ]);
+
+    expect(monthTicks(data)).toEqual([
+      { label: "Jun", weekIndex: 0 },
+      { label: "Jul", weekIndex: 2 },
+      { label: "Aug", weekIndex: 3 },
+    ]);
+  });
+
+  it("attributes a week straddling a month boundary by its first day", () => {
+    // Jul 30 → Aug 5: five of seven days are August, but the first day is July.
+    const data = makeData([
+      makeWeek("2026-07-30", ZERO_COUNTS, ZERO_LEVELS),
+      makeWeek("2026-08-06", ZERO_COUNTS, ZERO_LEVELS),
+    ]);
+
+    expect(monthTicks(data)).toEqual([
+      { label: "Jul", weekIndex: 0 },
+      { label: "Aug", weekIndex: 1 },
+    ]);
+  });
+
+  it("yields 12 distinct labels with no duplicate across a 53-week wrap", () => {
+    const weeks: ContributionWeek[] = Array.from({ length: 53 }, (_, i) => {
+      const start = new Date("2025-07-06T00:00:00Z");
+      start.setUTCDate(start.getUTCDate() + i * 7);
+      return makeWeek(
+        start.toISOString().slice(0, 10),
+        ZERO_COUNTS,
+        ZERO_LEVELS,
+      );
+    });
+
+    const ticks = monthTicks(makeData(weeks));
+
+    expect(ticks).toHaveLength(12);
+    // The window ends back in July, but that label was already spent on week 0.
+    expect(new Set(ticks.map((t) => t.label)).size).toBe(12);
+    expect(ticks[0]).toEqual({ label: "Jul", weekIndex: 0 });
+  });
+
+  it("returns an empty array for an empty weeks array", () => {
+    expect(monthTicks(makeData([]))).toEqual([]);
+  });
+
+  it("skips a zero-length-days week without throwing", () => {
+    const data = makeData([
+      { days: [] },
+      makeWeek("2026-03-02", ZERO_COUNTS, ZERO_LEVELS),
+    ]);
+
+    expect(() => monthTicks(data)).not.toThrow();
+    expect(monthTicks(data)).toEqual([{ label: "Mar", weekIndex: 1 }]);
+  });
+
+  it("labels the committed seed in chronological order, one per month", () => {
+    const ticks = monthTicks(seedJson as ContributionData);
+
+    expect(ticks).toHaveLength(12);
+    expect(new Set(ticks.map((t) => t.label)).size).toBe(12);
+    for (let i = 1; i < ticks.length; i += 1) {
+      expect(ticks[i].weekIndex).toBeGreaterThan(ticks[i - 1].weekIndex);
+    }
+    // Every tick names the month of the week it points at.
+    for (const tick of ticks) {
+      const seedWeeks = (seedJson as ContributionData).weeks;
+      expect(tick.label).toBe(labelFor(seedWeeks[tick.weekIndex].days[0].date));
+    }
   });
 });
 

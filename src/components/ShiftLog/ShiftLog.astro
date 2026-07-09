@@ -9,7 +9,11 @@
 // strength via scoped CSS.
 
 import type { ContributionData } from "../../lib/shift-log";
-import { levelToIntensity, summaryStats } from "../../lib/shift-log";
+import {
+  levelToIntensity,
+  monthTicks,
+  summaryStats,
+} from "../../lib/shift-log";
 
 interface Props {
   data: ContributionData;
@@ -20,6 +24,9 @@ const { data } = Astro.props;
 const stats = summaryStats(data);
 const totalLabel = data.total.toLocaleString("en-US");
 const sourceNote = data.source === "seed" ? " (seed)" : "";
+const ticks = monthTicks(data);
+// The legend reuses the cell swatches at their real intensities (0-4).
+const legendLevels = [0, 1, 2, 3, 4] as const;
 ---
 
 <div class="shiftlog">
@@ -29,20 +36,48 @@ const sourceNote = data.source === "seed" ? " (seed)" : "";
   <p class="t-mono small shiftlog-caption">
     data as of {data.fetchedAt}{sourceNote}
   </p>
-  <div class="shiftlog-scroll">
-    <div class="shiftlog-grid" aria-hidden="true">
-      {data.weeks.map((week) => (
-        <div class="shiftlog-week">
-          {week.days.map((day) => (
-            <span class={`shiftlog-cell shiftlog-cell--${levelToIntensity(day.level)}`} />
+  <div class="shiftlog-panel">
+    <div class="shiftlog-scroll">
+      <div class="shiftlog-cols">
+        <div class="shiftlog-ticks t-mono" aria-hidden="true">
+          {ticks.map((tick) => (
+            <span class="shiftlog-tick" style={`--tick-col:${tick.weekIndex}`}>
+              {tick.label}
+            </span>
           ))}
         </div>
+        <div class="shiftlog-grid" aria-hidden="true">
+          {data.weeks.map((week) => (
+            <div class="shiftlog-week">
+              {week.days.map((day) => (
+                <span class={`shiftlog-cell shiftlog-cell--${levelToIntensity(day.level)}`} />
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+    <div class="shiftlog-legend t-mono" aria-hidden="true">
+      <span class="shiftlog-legend-label">less</span>
+      {legendLevels.map((level) => (
+        <span class={`shiftlog-cell shiftlog-cell--${level}`} />
       ))}
+      <span class="shiftlog-legend-label">more</span>
     </div>
   </div>
 </div>
 
 <style>
+  .shiftlog {
+    /* Single source for the column pitch: cell edge + inter-cell gap. The grid,
+       the week columns, and the absolutely-placed month ticks all derive their
+       geometry from these, so ticks stay column-aligned if the cell size ever
+       changes. */
+    --cell: 8px;
+    --cell-gap: 2px;
+    --col-pitch: calc(var(--cell) + var(--cell-gap));
+  }
+
   .shiftlog-summary {
     margin: 0 0 var(--s-1);
   }
@@ -54,6 +89,16 @@ const sourceNote = data.source === "seed" ? " (seed)" : "";
     color: var(--ink-soft);
   }
 
+  /* Recessed instrument frame: the grid reads as an owned panel, not a
+     github.com embed. --paper-2 sinks it below the page; --rule hairline and
+     --r-2 corners give it an inset edge. */
+  .shiftlog-panel {
+    background: var(--paper-2);
+    border: 1px solid var(--rule);
+    border-radius: var(--r-2);
+    padding: var(--s-3);
+  }
+
   .shiftlog-scroll {
     /* Grid is ~530px wide (53 cols × 8px + gaps) — wider than the 375px
        viewport. This container scrolls internally so the grid never causes
@@ -63,21 +108,64 @@ const sourceNote = data.source === "seed" ? " (seed)" : "";
     padding-bottom: 2px;
   }
 
+  /* Ticks + grid share one inline-flex column so both pan together inside the
+     scroll and the ticks row stretches to the grid's intrinsic width. */
+  .shiftlog-cols {
+    display: inline-flex;
+    flex-direction: column;
+    gap: var(--s-2);
+  }
+
+  .shiftlog-ticks {
+    position: relative;
+    align-self: stretch;
+    height: 12px;
+  }
+
+  .shiftlog-tick {
+    position: absolute;
+    top: 0;
+    /* Anchored to a real week column, not evenly spaced (R2). */
+    left: calc(var(--tick-col) * var(--col-pitch));
+    font-size: 10px;
+    line-height: 1;
+    white-space: nowrap;
+    /* R4: small mono uses --ink-soft to clear WCAG AA in both palettes. axe
+       skips this aria-hidden subtree, so this is verified visually. */
+    color: var(--ink-soft);
+  }
+
   .shiftlog-grid {
     display: inline-flex;
-    gap: 2px;
+    gap: var(--cell-gap);
   }
 
   .shiftlog-week {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: var(--cell-gap);
   }
 
   .shiftlog-cell {
     display: block;
-    width: 8px;
-    height: 8px;
+    width: var(--cell);
+    height: var(--cell);
+  }
+
+  /* less → more legend: reuses the 0-4 swatches, right-aligned below the panel
+     body, no per-column alignment needed so it sits outside the scroll. */
+  .shiftlog-legend {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--s-1);
+    margin-top: var(--s-3);
+  }
+
+  .shiftlog-legend-label {
+    font-size: 10px;
+    line-height: 1;
+    color: var(--ink-soft);
   }
 
   /* Intensity → colour, signal scale. Levels 1-4 mix increasing --signal over
