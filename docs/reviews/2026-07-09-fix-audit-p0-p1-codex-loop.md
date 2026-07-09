@@ -3,7 +3,7 @@
 - **Date:** 2026-07-09
 - **Base:** main
 - **Head at completion:** tip of `fix/audit-p0-p1` (see the PR-gate marker)
-- **Passes run:** 3 (all clean)
+- **Passes run:** 4 (all clean)
 - **Outcome:** clean
 
 ## Applied by the loop
@@ -22,6 +22,11 @@ None. Codex returned `verdict: clean` with no findings on every pass.
   the forced `format: png`/`width` in `getImage()` and serve a 640px webp, which
   browsers reject as an icon. Fixed by generating the two icons as static PNGs
   in `public/`, outside the astro:assets pipeline.
+- Pass 4 re-reviewed after addressing a Devin Review finding (`fix: confine the
+  image shim to ROOT with resolve + prefix check`) — still clean. Devin flagged
+  the `/_vercel/image` shim's regex path sanitisation as fragile against a bare
+  `..`; hardened it with `resolve()` + a `startsWith(ROOT)` prefix check.
+  Verified: legit asset serves 200, `../../package.json` and bare `..` both 404.
 
 ## Escalated to Korab (NOT applied)
 
