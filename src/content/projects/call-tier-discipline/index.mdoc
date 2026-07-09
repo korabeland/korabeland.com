@@ -1,0 +1,37 @@
+---
+slug: call-tier-discipline
+title: 'Call tiers: proving the bottom tier was not worth calling'
+description: >-
+  A capacity crunch prompted the question nobody had asked: where does call
+  effort actually go? The answer cut bottom-tier calling from 27.8% of effort
+  to 0.7% with conversion held.
+role: Led analysis + business case
+team: Admissions, insights, operations
+stack: SQL · Python · Dynamics 365
+outcome: 27.8% → 0.7% effort on bottom tier · conversion held
+startedAt: 2025-11-13
+tags:
+  - evidence
+  - operations
+  - analysis
+outcomeMetrics:
+  - value: 8×
+    label: Conversion gap, top vs bottom tier
+    provenance: >-
+      30-day application rates by lead tier, measured on mature cohorts only,
+      across tens of thousands of leads and call attempts from CRM call and
+      outcome data, August 2025 to February 2026.
+  - value: 27.8% → 0.7%
+    label: Share of call effort on the bottom tier
+    provenance: >-
+      Share of weekly outbound call attempts landing on bottom-tier leads,
+      before versus after calling stopped for that tier.
+fieldLog: []
+reflection: ''
+nextProject: lead-scoring
+---
+The bottom tier was absorbing **27.8% of outbound call effort** and producing almost nothing. Top-tier leads applied at **eight times the rate**. Nobody had checked, because call volume was the metric everyone watched, and volume looked healthy.
+
+The prompt was a capacity problem, not a curiosity. Leads were up **8.1%** while call output was down **16%**. Before anyone argued for more headcount, I asked where the existing effort was going. I pulled call attempts and lead outcomes from the CRM across seven months, measured 30-day application rates by tier on mature cohorts only, and split the timeline into three acts so a dialler backlog in the middle of the period could not masquerade as strategy.
+
+The decision followed the evidence: stop calling the bottom tier. Effort on that tier fell to **0.7%**, conversion held, and the reclaimed capacity went to the leads that actually convert. The analysis also earned the mandate to replace fixed tiers with a probability model, which became its own workstream.

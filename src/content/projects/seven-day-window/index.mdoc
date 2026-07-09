@@ -1,0 +1,43 @@
+---
+slug: seven-day-window
+title: 'The seven-day window: compressing the call cycle'
+description: >-
+  Moving the final call attempt from day 14 to day 7 nearly doubled first-week
+  reach and lifted contact-to-application by 38% relative. The confound got
+  disclosed, not buried.
+role: Designed test + analysis
+team: Admissions, insights
+stack: SQL · Python · Dynamics 365
+outcome: contact rate +9.8 pts · applications +38% relative
+startedAt: 2026-01-15
+tags:
+  - experimentation
+  - operations
+  - evidence
+outcomeMetrics:
+  - value: 45.5% → 55.3%
+    label: Leads contacted
+    provenance: >-
+      Strict 14-day cohorts immediately before and after the change at one
+      university partner, bottom-tier leads excluded since they are no longer
+      called.
+  - value: 23.2% → 45.0%
+    label: Leads reached in their first week
+    provenance: >-
+      Same cohorts; driven by average attempts per contacted lead rising from
+      2.09 to 3.36 inside the shorter window.
+  - value: +38%
+    label: Relative lift, contact-to-application within 21 days
+    provenance: >-
+      8.7% to 12.0% of contacted leads applying within 21 days, same cohort
+      method. A dialler backlog in the before period contributed some of the
+      operational improvement and is disclosed in the write-up.
+fieldLog: []
+reflection: ''
+nextProject: chat-capture-gap
+---
+Intent has a half-life. Our call strategy gave a new lead its final attempt on day 14, and by then most had moved on. Moving the last call to day 7 nearly doubled the share of leads reached in their first week, from **23.2% to 45.0%**.
+
+I compared strict 14-day cohorts either side of the change at one university partner, with tiers held constant. Overall contact rate rose from **45.5% to 55.3%**. Of the leads we contacted, **12.0% applied within 21 days**, up from 8.7%, a **38% relative lift**. Average attempts per contacted lead rose from 2.09 to 3.36. Same effort, spent while the lead still cared. Operationally the change held too: late tasks dropped and the average call cycle shortened from 10.5 days to 3.2.
+
+One honest caveat made the result credible rather than convenient. The before period carried a dialler backlog, so part of the improvement was operational recovery, not strategy. That went in the body of the write-up, not a footnote. The recommendation survived the caveat, and compressing the window became the playbook offered to other partners: spend attempts early, measure applications rather than activity.

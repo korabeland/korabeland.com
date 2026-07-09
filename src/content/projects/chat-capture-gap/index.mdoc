@@ -1,0 +1,38 @@
+---
+slug: chat-capture-gap
+title: 'The chat capture gap: 64,000 conversations, 25 leads a month'
+description: >-
+  Around a third of chat visitors volunteered their email, yet almost none
+  became CRM leads. Transcript analysis at scale sized the gap honestly and an
+  automation bridge is now closing it.
+role: Led analysis + integration design
+team: Growth, IT, marketing automation
+stack: Python · AI transcript analysis · Dynamics 365
+outcome: ~98% capture gap found · automation shipped
+startedAt: 2026-01-13
+tags:
+  - automation
+  - evidence
+  - integration
+outcomeMetrics:
+  - value: ~98%
+    label: Chat-provided emails that never became CRM leads
+    provenance: >-
+      Thirteen months of chat transcripts, around 64,000 conversations,
+      cross-referenced against CRM lead records. Roughly 1,600 email-providing
+      chats a month against about 25 captured leads.
+  - value: ~200–1,000
+    label: Modelled incremental registrations a year
+    provenance: >-
+      Scenario model at conservative, mid and optimistic conversion rates for
+      the genuinely incremental share of chat leads, after removing the ~40%
+      already in the CRM via brochure downloads.
+fieldLog: []
+reflection: ''
+nextProject: call-tier-discipline
+---
+Around **64,000 conversations** flowed through our chat platform in 13 months. A third of visitors typed in their email address. About **25 a month** became CRM leads. The rest went nowhere, not because anyone decided that, but because no pipe existed. Nobody had analysed the transcripts at scale before, so nobody had seen the gap.
+
+The obvious headline was also misleading, and saying so mattered. Manually captured chat leads converted exceptionally well, but they were high-intent by construction, so extrapolating their rates would have overstated the prize. I cross-referenced chat emails against existing CRM records, found around **40% were already known** via brochure downloads, and modelled only the genuinely incremental remainder at conservative, mid and optimistic conversion rates: **roughly 200 to 1,000 incremental registrations a year**. The business case led with the honest number, and it still cleared easily. The integration pays for itself with fewer than two additional registrations a year.
+
+The fix was deliberately boring: a lightweight automation bridge from the chat platform into Dynamics 365, plus an engagement strategy for email-only leads the outbound call model could not reach. The first automated journey now performs at parity with the manual process it replaced, and the capture gap is closing.
