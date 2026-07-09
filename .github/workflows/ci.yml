@@ -1,6 +1,9 @@
 name: CI
 on:
+  # Only on main for pushes — a PR from a branch in this repo would otherwise
+  # run the full job twice per commit (once for push, once for pull_request).
   push:
+    branches: [main]
   pull_request:
     branches: [main]
 jobs:
@@ -19,11 +22,20 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          # Keyed on the lockfile so a Playwright version bump busts it; a hit
+          # lets `playwright install` skip the ~1-2 min browser download.
+          key: ms-playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm verify
       - run: pnpm test
-      - name: Reset visual baselines (macOS-generated; Linux renders differently — Chromatic handles regression)
-        run: rm -rf tests/visual/baselines/
+      # Runs the screenshot project too, but only so Chromatic archives the
+      # pages — the local pixelmatch diff self-skips under CI (see
+      # screenshot.test.ts), so no baseline reset/reseed is needed here.
+      # Chromatic (below) is the real cross-environment visual gate.
       - run: pnpm test:visual
       - run: pnpm run audit
       - name: Chromatic visual diff
