@@ -34,16 +34,16 @@ function readGitLog(): TrailEntry[] | null {
     );
     const lines = stdout.split("\n").filter(Boolean);
     if (lines.length === 0) return null;
-    return lines.map((line) => {
-      const [sha, subject, author, date] = line.split(FIELD_SEP);
-      return {
-        sha,
-        shortSha: sha.slice(0, 7),
-        subject,
-        author,
-        date,
-      };
-    });
+    const entries: TrailEntry[] = [];
+    for (const line of lines) {
+      const parts = line.split(FIELD_SEP);
+      // Each line must be exactly the four fields we asked git to format.
+      // A malformed line means the log is untrustworthy — fall back to seed.
+      if (parts.length !== 4) return null;
+      const [sha, subject, author, date] = parts;
+      entries.push({ sha, shortSha: sha.slice(0, 7), subject, author, date });
+    }
+    return entries;
   } catch {
     return null;
   }
@@ -61,8 +61,12 @@ function fallbackToSeed(): void {
 
 mkdirSync(outDir, { recursive: true });
 
+// Accept whatever real git log we can get: on Vercel's shallow clone (~depth
+// 10) the log returns fewer than COMMIT_COUNT entries, but those are the real
+// latest commits and must win over the committed seed (whose newest entry
+// freezes at build-of-seed time). Only fall back when git gives us nothing.
 const entries = readGitLog();
-if (entries === null || entries.length < COMMIT_COUNT) {
+if (entries === null || entries.length === 0) {
   fallbackToSeed();
 } else {
   writeFileSync(outFile, `${JSON.stringify(entries, null, 2)}\n`, "utf8");

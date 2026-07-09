@@ -30,7 +30,14 @@ const posts = (await listPosts()).slice(0, 3);
 const shiftLogRoot = resolve(process.cwd(), "src/content/shift-log");
 
 function loadContributions(): ContributionData | null {
-  for (const name of ["contributions.json", "contributions.seed.json"]) {
+  // Only prefer the gitignored live file in a production build. In dev and
+  // under Playwright (which runs `pnpm dev`), a leftover contributions.json
+  // from an earlier tokened build would otherwise get screenshotted and drift
+  // the visual baselines the committed seed exists to keep stable.
+  const candidates = import.meta.env.PROD
+    ? ["contributions.json", "contributions.seed.json"]
+    : ["contributions.seed.json"];
+  for (const name of candidates) {
     const file = resolve(shiftLogRoot, name);
     if (!existsSync(file)) continue;
     try {
@@ -140,6 +147,7 @@ const MAIL_ICON =
             widths={[360, 720]}
             sizes="(max-width: 680px) 240px, 340px"
             loading="eager"
+            fetchpriority="high"
           />
           <figcaption class="t-mono hero-portrait-cap">
             <span>korab eland</span>

@@ -48,7 +48,28 @@ async function tryRead(candidatePath) {
 
 async function resolveRequest(urlPath) {
   // Strip query string
-  const cleanPath = urlPath.split("?")[0] || "/";
+  const [rawPath, query = ""] = urlPath.split("?");
+  const cleanPath = rawPath || "/";
+
+  // Vercel image-optimizer shim. With `imageService: true` the built <Image>
+  // markup points at `/_vercel/image?url=<asset>&w=&q=`, an endpoint only
+  // Vercel provides at runtime. This preview has no optimizer, so serve the
+  // underlying asset from dist directly — otherwise the portrait (the LCP
+  // element on `/`) 404s and the perf audit silently measures a page with no
+  // hero image, hiding the effect of `fetchpriority`.
+  if (cleanPath === "/_vercel/image") {
+    const inner = new URLSearchParams(query).get("url");
+    if (inner) {
+      const safeInner = decodeURIComponent(inner)
+        .replace(/\.+\//g, "/")
+        .replace(/^\/+/, "");
+      const target = join(ROOT, safeInner);
+      const body = await tryRead(target);
+      if (body) return { body, path: target };
+    }
+    return null;
+  }
+
   // Drop leading slash and protect against .. traversal
   const safe = cleanPath.replace(/\.+\//g, "/").replace(/^\/+/, "");
   const candidates = [];
