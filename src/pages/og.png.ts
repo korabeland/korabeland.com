@@ -4,10 +4,8 @@ import { Resvg } from "@resvg/resvg-js";
 import type { APIRoute } from "astro";
 import satori from "satori";
 
-// Fully deterministic (no request input), so prerender it to a static file at
-// build time — otherwise this route drags satori + resvg (~4.5 MB) into the
-// server function and pays a cold-start render per CDN miss.
-export const prerender = true;
+// Prerendered by default under `output: "static"` — emitted as a static
+// /og.png at build time, so satori + resvg never reach the server function.
 
 // Load Schibsted Grotesk WOFFs once at module init — avoids re-reading on
 // each request. Console OG: night ground, amber signal, grotesk wordmark.
