@@ -28,14 +28,24 @@ const ROUTES = [
 
 for (const route of ROUTES) {
   test(`screenshot: ${route}`, async ({ page }, testInfo) => {
+    await page.goto(route);
+    // Deterministic readiness: BaseLayout renders <main id="main"> on every
+    // route, so waiting for it is stable — unlike networkidle, which flakes on
+    // background revalidation and font swaps.
+    await page.locator("main#main").waitFor({ state: "visible" });
+
+    // In CI the pixelmatch baselines are untrustworthy — they're
+    // macOS-generated and Linux renders differently, so a local diff there only
+    // ever auto-seeds and passes (cost, no signal). Chromatic archives this same
+    // run and is the real cross-environment gate on PRs, so skip the local diff
+    // and never auto-seed in CI.
+    if (process.env.CI) return;
+
     ensureDirs();
     const viewport = testInfo.project.name;
     const slug =
       route === "/" ? "home" : route.replace(/\//g, "-").replace(/^-/, "");
     const name = `${slug}_${viewport}.png`;
-
-    await page.goto(route);
-    await page.waitForLoadState("networkidle");
 
     const screenshot = await page.screenshot({ fullPage: true });
     const baselinePath = join(BASELINE_DIR, name);
@@ -48,6 +58,15 @@ for (const route of ROUTES) {
     const baseline = PNG.sync.read(readFileSync(baselinePath));
     const current = PNG.sync.read(Buffer.from(screenshot));
     const { width: w, height: h } = baseline;
+    // pixelmatch throws an opaque "Image sizes do not match" if a layout change
+    // altered the full-page dimensions; surface that as an actionable message.
+    if (current.width !== w || current.height !== h) {
+      throw new Error(
+        `Baseline size mismatch on ${route} @ ${viewport}px: baseline is ` +
+          `${w}×${h}, current render is ${current.width}×${current.height}. ` +
+          `A layout change resized the page — delete the baseline to re-seed.`,
+      );
+    }
     const diffPng = new PNG({ width: w, height: h });
 
     const mismatch = pixelmatch(
