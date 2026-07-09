@@ -1,4 +1,9 @@
 ---
+export const prerender = true;
+
+// The 404 renders the generic OffTrail empty state with no props — it reads no
+// request or query input, so serve it as a static page rather than invoking
+// the server function on every scanner probe and typo URL.
 import OffTrail from "../components/OffTrail/OffTrail.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 ---

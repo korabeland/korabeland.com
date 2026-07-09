@@ -97,8 +97,11 @@ finding. Never leave the tree red.
 ## Marker file (contract with the PR-gate hook)
 
 The hook `scripts/pr-gate.sh` blocks `gh pr create` unless a fresh marker exists.
-Write it to `.git/codex-review-loop.json` (inside `.git/`, so it is per-clone and
-never committed):
+Write it to `"$(git rev-parse --absolute-git-dir)/codex-review-loop.json"` — the
+git dir, so it is per-clone and never committed. Resolve the path with git rather
+than hardcoding `.git/`: in a linked worktree `.git` is a *file* (a gitdir
+pointer), and the marker belongs in the per-worktree gitdir that
+`--absolute-git-dir` returns (it returns `<repo>/.git` for a normal clone):
 
 ```json
 {

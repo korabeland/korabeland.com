@@ -35,11 +35,14 @@ export async function listPosts(): Promise<PostSummary[]> {
       readTime: estimateReadTime(prose),
     });
   }
-  return entries.sort((a, b) => {
-    const ad = a.publishedAt ?? "";
-    const bd = b.publishedAt ?? "";
-    return bd.localeCompare(ad);
-  });
+  // Draft gate: a post without publishedAt is unpublished. Dropping it here
+  // keeps drafts off the homepage, /notes, and the sitemap (and avoids the
+  // dangling " · " separator a null date would render).
+  return entries
+    .filter((entry): entry is PostSummary & { publishedAt: string } =>
+      Boolean(entry.publishedAt),
+    )
+    .sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
 }
 
 export async function recentPosts(limit = 4): Promise<PostSummary[]> {

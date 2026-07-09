@@ -14,7 +14,7 @@
 
 import { readFile, stat } from "node:fs/promises";
 import { createServer } from "node:http";
-import { extname, join, resolve } from "node:path";
+import { extname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
@@ -47,8 +47,35 @@ async function tryRead(candidatePath) {
 }
 
 async function resolveRequest(urlPath) {
-  // Strip query string
-  const cleanPath = urlPath.split("?")[0] || "/";
+  // Strip the query string, splitting only at the FIRST "?" so an asset URL
+  // that itself carries a query string isn't truncated.
+  const q = urlPath.indexOf("?");
+  const rawPath = q === -1 ? urlPath : urlPath.slice(0, q);
+  const query = q === -1 ? "" : urlPath.slice(q + 1);
+  const cleanPath = rawPath || "/";
+
+  // Vercel image-optimizer shim. With `imageService: true` the built <Image>
+  // markup points at `/_vercel/image?url=<asset>&w=&q=`, an endpoint only
+  // Vercel provides at runtime. This preview has no optimizer, so serve the
+  // underlying asset from dist directly — otherwise the portrait (the LCP
+  // element on `/`) 404s and the perf audit silently measures a page with no
+  // hero image, hiding the effect of `fetchpriority`.
+  if (cleanPath === "/_vercel/image") {
+    const inner = new URLSearchParams(query).get("url");
+    if (inner) {
+      // URLSearchParams.get() already percent-decodes, so use `inner` as-is —
+      // a second decodeURIComponent would throw URIError on a literal `%`.
+      // Resolve, then confine to ROOT via a prefix check — robust against `..`
+      // escapes (a bare `..` slips past a regex but not resolve+startsWith).
+      const target = resolve(ROOT, inner.replace(/^\/+/, ""));
+      if (target === ROOT || target.startsWith(ROOT + sep)) {
+        const body = await tryRead(target);
+        if (body) return { body, path: target };
+      }
+    }
+    return null;
+  }
+
   // Drop leading slash and protect against .. traversal
   const safe = cleanPath.replace(/\.+\//g, "/").replace(/^\/+/, "");
   const candidates = [];

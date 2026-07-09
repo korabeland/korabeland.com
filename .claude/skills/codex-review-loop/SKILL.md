@@ -107,9 +107,11 @@ Do these in order (details in `references/loop-details.md`):
    commit (`git add` that file, `git commit --amend --no-edit`). The applied fixes
    are already committed from step 6; if nothing was applied (clean on first pass),
    there is no fix commit — commit the summary on its own.
-3. **Write the marker** `.git/codex-review-loop.json` (schema in `loop-details.md`)
-   AFTER the final commit, so its `head` matches what will be pushed. This is what
-   lets the PR-gate hook pass.
+3. **Write the marker** to
+   `"$(git rev-parse --absolute-git-dir)/codex-review-loop.json"` (schema in
+   `loop-details.md`; resolve the git dir with git so it works in a worktree,
+   where `.git` is a file) AFTER the final commit, so its `head` matches what
+   will be pushed. This is what lets the PR-gate hook pass.
 4. **Present escalations to Korab** if any. He decides on those before the PR opens —
    the loop does not apply them.
 
