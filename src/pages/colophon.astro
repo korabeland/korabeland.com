@@ -3,12 +3,9 @@ export const prerender = true;
 
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import ShiftLog from "../components/ShiftLog/ShiftLog.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
-import type { ContributionData } from "../lib/shift-log";
 
 const trailRegisterRoot = resolve(process.cwd(), "src/content/trail-register");
-const shiftLogRoot = resolve(process.cwd(), "src/content/shift-log");
 
 interface CommitEntry {
   sha: string;
@@ -37,32 +34,6 @@ function loadCommits(): CommitEntry[] {
   return [];
 }
 
-// The prebuild hook (`scripts/gen-shift-log.ts`) writes contributions.json
-// from the GitHub GraphQL API. The seed file is the committed fallback for
-// a missing/expired token or a failed fetch — same tolerance as loadCommits.
-function loadContributions(): ContributionData | null {
-  for (const name of ["contributions.json", "contributions.seed.json"]) {
-    const file = resolve(shiftLogRoot, name);
-    if (!existsSync(file)) continue;
-    try {
-      const raw = JSON.parse(readFileSync(file, "utf8"));
-      if (
-        raw &&
-        typeof raw === "object" &&
-        Array.isArray(raw.weeks) &&
-        raw.weeks.length > 0 &&
-        typeof raw.total === "number" &&
-        typeof raw.fetchedAt === "string"
-      ) {
-        return raw as ContributionData;
-      }
-    } catch {
-      // fall through to the next candidate
-    }
-  }
-  return null;
-}
-
 function formatCommitDate(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
@@ -72,8 +43,25 @@ function formatCommitDate(iso: string): string {
   return `${yyyy}.${mm}.${dd}`;
 }
 
+// Human-relative age for the featured commit — "shipped today / yesterday /
+// N days ago". Computed at build time (the page rebuilds on every push), so
+// it is accurate as of each deploy without any client JS.
+function relativeTime(iso: string): string {
+  const then = new Date(iso).getTime();
+  if (Number.isNaN(then)) return "";
+  const days = Math.floor((Date.now() - then) / 86_400_000);
+  if (days <= 0) return "today";
+  if (days === 1) return "yesterday";
+  if (days < 7) return `${days} days ago`;
+  const weeks = Math.floor(days / 7);
+  if (weeks === 1) return "last week";
+  if (days < 30) return `${weeks} weeks ago`;
+  const months = Math.floor(days / 30);
+  return months === 1 ? "last month" : `${months} months ago`;
+}
+
 const commits = loadCommits().slice(0, 14);
-const contributions = loadContributions();
+const [featured, ...rest] = commits;
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -120,6 +108,38 @@ const tools: { label: string; note: string }[] = [
       </p>
     </header>
 
+    {commits.length > 0 && (
+      <section aria-labelledby="build-log" class="build-log">
+        <h2 id="build-log">Build log</h2>
+        <p class="build-log-lede">Every change to this site, in the open.</p>
+
+        {/* featured is always defined here: commits.length > 0 guarantees it */}
+        <div class="commit-featured">
+          <div class="commit-featured-top">
+            <span class="commit-sha t-mono">{featured.shortSha}</span>
+            <time class="commit-when t-mono" datetime={featured.date}>
+              shipped {relativeTime(featured.date)}
+            </time>
+          </div>
+          <p class="commit-featured-subject t-mono">{featured.subject}</p>
+        </div>
+
+        {rest.length > 0 && (
+          <ol class="commit-list" aria-label="Earlier commits">
+            {rest.map((commit) => (
+              <li class="commit">
+                <span class="commit-sha t-mono">{commit.shortSha}</span>
+                <span class="commit-subject t-mono">{commit.subject}</span>
+                <time class="commit-date t-mono" datetime={commit.date}>
+                  {formatCommitDate(commit.date)}
+                </time>
+              </li>
+            ))}
+          </ol>
+        )}
+      </section>
+    )}
+
     <section aria-labelledby="stack">
       <h2 id="stack">Tools and stack</h2>
       <p>
@@ -134,39 +154,6 @@ const tools: { label: string; note: string }[] = [
         ))}
       </ul>
     </section>
-
-    {commits.length > 0 && (
-      <section aria-labelledby="build-log" class="build-log">
-        <h2 id="build-log">Build log</h2>
-        <p>
-          The last fourteen commits that shaped this site, straight from
-          <code>git log</code>. Regenerated at each build by
-          <code>scripts/gen-trail-register.ts</code>.
-        </p>
-        <ol class="commit-list" aria-label="Recent commits">
-          {commits.map((commit) => (
-            <li class="commit">
-              <span class="commit-sha t-mono">{commit.shortSha}</span>
-              <span class="commit-subject t-mono">{commit.subject}</span>
-              <time class="commit-date t-mono" datetime={commit.date}>
-                {formatCommitDate(commit.date)}
-              </time>
-            </li>
-          ))}
-        </ol>
-      </section>
-    )}
-
-    {contributions && (
-      <section aria-labelledby="shift-log" class="shift-log-section">
-        <h2 id="shift-log">Shift log</h2>
-        <p>
-          A year of public GitHub activity, straight from the same account
-          that ships this site.
-        </p>
-        <ShiftLog data={contributions} />
-      </section>
-    )}
 
     <section aria-labelledby="contact">
       <h2 id="contact">Get in touch</h2>
@@ -197,46 +184,99 @@ const tools: { label: string; note: string }[] = [
     margin: 0 0 var(--s-5);
   }
 
+  /* ─── Build log — the lead section: this site's own commits ─────────── */
+
+  .build-log-lede {
+    margin: 0 0 var(--s-4);
+    color: var(--ink-soft);
+  }
+
+  /* Featured latest commit — the most recent ship, enlarged and accent-marked
+     so recency reads at a glance. Its "shipped N days ago" is build-time. */
+  .commit-featured {
+    border: 1px solid var(--rule);
+    border-left: 2px solid var(--signal);
+    padding: var(--s-4);
+    margin: 0 0 var(--s-5);
+  }
+
+  .commit-featured-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--s-3);
+    margin: 0 0 var(--s-2);
+  }
+
+  .commit-featured .commit-sha {
+    margin: 0;
+    color: var(--moss);
+    letter-spacing: 0.04em;
+    font-size: 12px;
+  }
+
+  /* Compound selector beats `.colophon .t-mono` (0,2,0) so the reset actually
+     wins — a bare `.commit-when` (0,1,0) leaves a stray bottom margin on the
+     featured row's <time>, padding the space before the subject. */
+  .commit-featured .commit-when {
+    margin: 0;
+    color: var(--ink-soft);
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .commit-featured-subject {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--ink);
+    overflow-wrap: anywhere;
+  }
+
+  /* Earlier commits — a bigger, breathier list than the old 12px grid. */
   .build-log .commit-list {
     list-style: none;
     padding: 0;
-    margin: var(--s-4) 0 0;
+    margin: 0;
     border-top: 1px solid var(--rule);
   }
 
   .build-log .commit {
     display: grid;
-    grid-template-columns: 72px 1fr auto;
-    gap: var(--s-3);
+    grid-template-columns: 76px 1fr auto;
+    gap: var(--s-4);
     align-items: baseline;
-    padding: 10px 0;
+    padding: 12px 0;
     border-bottom: 1px solid var(--rule);
-    font-size: 12px;
+    font-size: 13px;
     line-height: 1.5;
   }
 
+  /* Override the 11px .t-mono pin so the promoted list actually reads larger. */
   .build-log .commit-sha {
     margin: 0;
     color: var(--moss);
     letter-spacing: 0.04em;
+    font-size: 13px;
   }
 
   .build-log .commit-subject {
     margin: 0;
     color: var(--ink-soft);
     overflow-wrap: anywhere;
+    font-size: 13px;
   }
 
   .build-log .commit-date {
     margin: 0;
     color: var(--ink-mute);
-    font-size: 11px;
+    font-size: 12px;
     white-space: nowrap;
   }
 
   @media (max-width: 640px) {
     .build-log .commit {
-      grid-template-columns: 64px 1fr;
+      grid-template-columns: 68px 1fr;
     }
     .build-log .commit-date {
       grid-column: 1 / -1;
