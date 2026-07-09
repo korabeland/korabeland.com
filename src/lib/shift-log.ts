@@ -129,6 +129,31 @@ export function flattenDays(data: ContributionData): ContributionDay[] {
 }
 
 /**
+ * Linear cursor-glow intensity at `distance` from the pointer, over a `radius`
+ * of influence: 1 at the cursor, 0 at (and beyond) the radius edge. Clamped to
+ * [0, 1] so a cell past the radius contributes nothing rather than a negative
+ * box-shadow, and guards `radius <= 0` (returns 0) so it never divides into NaN.
+ *
+ * Pure so the torch's falloff math is unit-tested here; the mousemove/rAF DOM
+ * wiring that calls it lives in ShiftLog.astro and is covered by e2e (KTD3).
+ */
+export function glowFalloff(distance: number, radius: number): number {
+  if (radius <= 0) return 0;
+  const t = 1 - distance / radius;
+  return Math.max(0, Math.min(1, t));
+}
+
+/**
+ * Whether a cell at the given 0-4 intensity (as produced by `levelToIntensity`)
+ * is a glow candidate. Only the top two buckets bloom under the cursor; the
+ * quiet days (0-2) stay flat, so the effect reads as "the busy days light up"
+ * rather than a uniform spotlight (R6/R8).
+ */
+export function isGlowCandidate(intensity: number): boolean {
+  return intensity >= 3;
+}
+
+/**
  * The week with the highest summed count. Ties resolve to the earliest week.
  * An empty `weeks` array returns the empty sentinel.
  */

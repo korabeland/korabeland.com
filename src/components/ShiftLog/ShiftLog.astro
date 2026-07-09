@@ -4,9 +4,13 @@
 // The accessible representation is the mono summary line, computed from the
 // real data via src/lib/shift-log.ts (never hardcoded). The 52-53×7 cell
 // grid is aria-hidden decoration layered on top of that — screen readers
-// see only the summary and the staleness caption. Pure CSS grid, zero
-// client JS: each cell gets an intensity class (0-4) mapped to amber
-// strength via scoped CSS.
+// see only the summary and the staleness caption. Each cell gets an intensity
+// class (0-4) mapped to signal strength via scoped CSS.
+//
+// The one script below is this component's first client JS — a cursor torch
+// that blooms the busy days near the pointer. It is a deliberate exception to
+// the zero-JS property: double-gated on a fine pointer AND motion allowed, so
+// touch and reduced-motion visitors get the static framed grid untouched (R9).
 
 import type { ContributionData } from "../../lib/shift-log";
 import {
@@ -49,9 +53,17 @@ const legendLevels = [0, 1, 2, 3, 4] as const;
         <div class="shiftlog-grid" aria-hidden="true">
           {data.weeks.map((week) => (
             <div class="shiftlog-week">
-              {week.days.map((day) => (
-                <span class={`shiftlog-cell shiftlog-cell--${levelToIntensity(day.level)}`} />
-              ))}
+              {week.days.map((day) => {
+                const intensity = levelToIntensity(day.level);
+                // data-level lets the torch read the 0-4 intensity without
+                // parsing the class string (KTD5).
+                return (
+                  <span
+                    class={`shiftlog-cell shiftlog-cell--${intensity}`}
+                    data-level={intensity}
+                  />
+                );
+              })}
             </div>
           ))}
         </div>
@@ -66,6 +78,100 @@ const legendLevels = [0, 1, 2, 3, 4] as const;
     </div>
   </div>
 </div>
+
+<script>
+  import { glowFalloff, isGlowCandidate } from "../../lib/shift-log";
+
+  // Cursor torch. Double-gate first (KTD2): only a fine pointer with motion
+  // allowed attaches listeners — touch and prefers-reduced-motion keep the
+  // static framed grid (R9). This is the codebase's first `pointer:` media
+  // query, so the gate is covered by e2e and verified manually.
+  const grid = document.querySelector<HTMLElement>(".shiftlog-grid");
+  const finePointer = window.matchMedia("(pointer: fine)").matches;
+  const reduceMotion = window.matchMedia(
+    "(prefers-reduced-motion: reduce)",
+  ).matches;
+
+  if (grid && finePointer && !reduceMotion) {
+    // Visually tuned in both palettes. Peak mix is held below the swatch-4 fill
+    // (100% signal) so a hot day at the cursor never out-glows its own cell —
+    // the effect reads as "the busy days light up as you pass," not a spotlight
+    // (R8). If the day indigo-on-cream bloom ever reads harsh at this ceiling,
+    // split MAX_MIX per palette rather than lowering it globally (KTD6).
+    const RADIUS = 40; // px of cursor influence
+    const MAX_BLUR = 8; // px box-shadow blur at the cursor
+    const MAX_MIX = 55; // % --signal in the bloom at full intensity
+    const MAX_SCALE = 1.25; // cell scale at full intensity
+
+    type GlowCell = { el: HTMLElement; cx: number; cy: number };
+    let cells: GlowCell[] = [];
+    let pointerX = 0;
+    let pointerY = 0;
+    let frame = 0;
+
+    // Cache each busy (intensity 3-4) cell's center relative to the grid.
+    // offset*/dataset are transform-immune and scroll-invariant, so the cache
+    // survives an active glow and the internal horizontal scroll (KTD5).
+    const measure = () => {
+      cells = [];
+      for (const el of grid.querySelectorAll<HTMLElement>(".shiftlog-cell")) {
+        if (!isGlowCandidate(Number(el.dataset.level))) continue;
+        cells.push({
+          el,
+          cx: el.offsetLeft + el.offsetWidth / 2,
+          cy: el.offsetTop + el.offsetHeight / 2,
+        });
+      }
+    };
+
+    const clearCell = (cell: GlowCell) => {
+      cell.el.style.boxShadow = "";
+      cell.el.style.transform = "";
+    };
+
+    const paint = () => {
+      frame = 0;
+      for (const cell of cells) {
+        const dist = Math.hypot(pointerX - cell.cx, pointerY - cell.cy);
+        const t = glowFalloff(dist, RADIUS);
+        if (t <= 0) {
+          clearCell(cell);
+          continue;
+        }
+        const mix = (t * MAX_MIX).toFixed(1);
+        const blur = (t * MAX_BLUR).toFixed(1);
+        const scale = (1 + t * (MAX_SCALE - 1)).toFixed(3);
+        // oklab, never oklch — signal↔transparent in oklch detours through
+        // green (matches the cell ramp's own warning).
+        cell.el.style.boxShadow = `0 0 ${blur}px color-mix(in oklab, var(--signal) ${mix}%, transparent)`;
+        cell.el.style.transform = `scale(${scale})`;
+      }
+    };
+
+    const onMove = (event: MouseEvent) => {
+      // Cursor in grid-local coordinates; the live rect absorbs internal scroll.
+      const rect = grid.getBoundingClientRect();
+      pointerX = event.clientX - rect.left;
+      pointerY = event.clientY - rect.top;
+      if (!frame) frame = requestAnimationFrame(paint);
+    };
+
+    const onLeave = () => {
+      if (frame) {
+        cancelAnimationFrame(frame);
+        frame = 0;
+      }
+      // R7 — no cell is left glowing once the cursor leaves the grid.
+      for (const cell of cells) clearCell(cell);
+    };
+
+    measure();
+    grid.addEventListener("mousemove", onMove);
+    grid.addEventListener("mouseleave", onLeave);
+    // Positions are layout-derived; recompute them when the grid reflows.
+    window.addEventListener("resize", measure);
+  }
+</script>
 
 <style>
   .shiftlog {
@@ -105,7 +211,11 @@ const legendLevels = [0, 1, 2, 3, 4] as const;
        horizontal PAGE overflow; the prose column stays fixed. */
     width: 100%;
     overflow-x: auto;
-    padding-bottom: 2px;
+    /* overflow-x:auto computes overflow-y to a clipping value, which would
+       shave the torch bloom + scale off the top (Sunday) and bottom (Saturday)
+       rows — the rows the effect most needs. Vertical padding ≥ the max blur
+       (8px) keeps the bloom inside the clip box. */
+    padding-block: var(--s-3);
   }
 
   /* Ticks + grid share one inline-flex column so both pan together inside the
@@ -136,6 +246,10 @@ const legendLevels = [0, 1, 2, 3, 4] as const;
   }
 
   .shiftlog-grid {
+    /* position: relative makes the grid the offsetParent, so the torch reads
+       each cell's offsetLeft/offsetTop against it (KTD5). The week columns stay
+       static. */
+    position: relative;
     display: inline-flex;
     gap: var(--cell-gap);
   }

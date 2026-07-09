@@ -8,6 +8,8 @@ import {
   type ContributionWeek,
   currentStreak,
   flattenDays,
+  glowFalloff,
+  isGlowCandidate,
   levelToIntensity,
   longestStreak,
   monthTicks,
@@ -433,6 +435,44 @@ describe("monthTicks", () => {
       const seedWeeks = (seedJson as ContributionData).weeks;
       expect(tick.label).toBe(labelFor(seedWeeks[tick.weekIndex].days[0].date));
     }
+  });
+});
+
+describe("glowFalloff", () => {
+  const R = 36;
+
+  it("is full intensity at the cursor and zero at the radius edge", () => {
+    expect(glowFalloff(0, R)).toBe(1);
+    expect(glowFalloff(R, R)).toBe(0);
+  });
+
+  it("interpolates linearly between the cursor and the edge", () => {
+    expect(glowFalloff(R / 2, R)).toBeCloseTo(0.5);
+    expect(glowFalloff(R / 4, R)).toBeCloseTo(0.75);
+  });
+
+  it("clamps to 0 past the radius rather than going negative", () => {
+    expect(glowFalloff(R * 2, R)).toBe(0);
+    expect(glowFalloff(R + 0.01, R)).toBe(0);
+  });
+
+  it("never returns NaN when the radius is zero", () => {
+    const t = glowFalloff(0, 0);
+    expect(Number.isNaN(t)).toBe(false);
+    expect(t).toBe(0);
+  });
+});
+
+describe("isGlowCandidate", () => {
+  it("lights only the top two intensities (3 and 4)", () => {
+    expect(isGlowCandidate(3)).toBe(true);
+    expect(isGlowCandidate(4)).toBe(true);
+  });
+
+  it("leaves the quiet intensities (0-2) flat", () => {
+    expect(isGlowCandidate(0)).toBe(false);
+    expect(isGlowCandidate(1)).toBe(false);
+    expect(isGlowCandidate(2)).toBe(false);
   });
 });
 
