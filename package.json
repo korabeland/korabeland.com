@@ -10,7 +10,6 @@
     "build": "astro build",
     "preview": "astro preview",
     "sync": "astro sync",
-    "gen:barrels": "tsx scripts/gen-barrels.ts",
     "gen:trail-register": "tsx scripts/gen-trail-register.ts",
     "gen:shift-log": "tsx scripts/gen-shift-log.ts",
     "verify": "biome check . && tsc --noEmit && astro check",

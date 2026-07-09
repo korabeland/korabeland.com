@@ -38,6 +38,10 @@ playwright-report/
 test-results/
 chromatic-*.json
 
+# PR-preview screenshots — generated per-branch by /open-pr and attached to the
+# PR, never committed (they deploy world-readable from public/ otherwise).
+public/pr-previews/
+
 # IDE
 .vscode/
 .idea/

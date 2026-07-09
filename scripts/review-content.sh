@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Pre-commit gate: send staged content files to LM Studio for a spelling /
-# grammar / voice review. Exits 0 if clean or if no content is staged; exits 1
-# if the model finds issues or if LM Studio is unreachable while content is
-# staged. Bypass with `git commit --no-verify`.
+# Manual content review (NOT wired into any git hook): send staged content files
+# to LM Studio for a spelling / grammar / voice review. Run it by hand before
+# committing prose. Exits 0 if clean or if no content is staged; exits 1 if the
+# model finds issues or if LM Studio is unreachable while content is staged.
 set -euo pipefail
 
 LM_STUDIO_URL=${LM_STUDIO_URL:-http://localhost:1234}
