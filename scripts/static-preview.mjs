@@ -60,12 +60,11 @@ async function resolveRequest(urlPath) {
   if (cleanPath === "/_vercel/image") {
     const inner = new URLSearchParams(query).get("url");
     if (inner) {
+      // URLSearchParams.get() already percent-decodes, so use `inner` as-is —
+      // a second decodeURIComponent would throw URIError on a literal `%`.
       // Resolve, then confine to ROOT via a prefix check — robust against `..`
       // escapes (a bare `..` slips past a regex but not resolve+startsWith).
-      const target = resolve(
-        ROOT,
-        decodeURIComponent(inner).replace(/^\/+/, ""),
-      );
+      const target = resolve(ROOT, inner.replace(/^\/+/, ""));
       if (target === ROOT || target.startsWith(ROOT + sep)) {
         const body = await tryRead(target);
         if (body) return { body, path: target };
