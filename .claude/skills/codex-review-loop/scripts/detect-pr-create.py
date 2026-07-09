@@ -16,7 +16,7 @@ except Exception:
     print("no")
     sys.exit(0)
 
-stripped = re.sub(r"""(["']).*?\1""", "", cmd)  # drop quoted spans
+stripped = re.sub(r"""(["']).*?\1""", "", cmd, flags=re.S)  # drop quoted spans (incl. multi-line)
 stripped = stripped.replace("\n", ";")  # a newline is a full command separator
 norm = re.sub(r"[ \t]+", " ", stripped)  # collapse only horizontal whitespace
 hit = re.search(r"(?:^|[;&|]|&&|\bthen\b|\bdo\b)\s*gh\s+pr\s+create\b", norm)
