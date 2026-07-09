@@ -3,12 +3,12 @@
 - **Date:** 2026-07-09
 - **Base:** main
 - **Head at completion:** tip of `fix/audit-p0-p1` (see the PR-gate marker)
-- **Passes run:** 2 (both clean)
+- **Passes run:** 3 (all clean)
 - **Outcome:** clean
 
 ## Applied by the loop
 
-None. Codex returned `verdict: clean` with no findings.
+None. Codex returned `verdict: clean` with no findings on every pass.
 
 - Pass 1 reviewed the audit P0/P1 diff — clean.
 - Pass 2 re-reviewed after adding the worktree fix to the PR-gate hook
@@ -16,6 +16,12 @@ None. Codex returned `verdict: clean` with no findings.
   fix was made because in a linked git worktree `.git` is a file, so the hook's
   `$REPO/.git/codex-review-loop.json` marker path was unwritable and the gate
   could never pass; approved by Korab.
+- Pass 3 re-reviewed after the favicon fix (`fix: serve favicon +
+  apple-touch-icon as static PNGs`) — still clean. CI's `verify-all` had failed
+  on the seo favicon test: `imageService: true` makes Vercel's optimizer ignore
+  the forced `format: png`/`width` in `getImage()` and serve a 640px webp, which
+  browsers reject as an icon. Fixed by generating the two icons as static PNGs
+  in `public/`, outside the astro:assets pipeline.
 
 ## Escalated to Korab (NOT applied)
 
