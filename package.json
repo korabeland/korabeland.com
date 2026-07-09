@@ -10,7 +10,6 @@
     "build": "astro build",
     "preview": "astro preview",
     "sync": "astro sync",
-    "gen:barrels": "tsx scripts/gen-barrels.ts",
     "gen:trail-register": "tsx scripts/gen-trail-register.ts",
     "gen:shift-log": "tsx scripts/gen-shift-log.ts",
     "verify": "biome check . && tsc --noEmit && astro check",
@@ -22,7 +21,6 @@
   "pnpm": {
     "onlyBuiltDependencies": [
       "esbuild",
-      "odiff-bin",
       "sharp"
     ]
   },
@@ -38,37 +36,31 @@
     "@markdoc/markdoc": "^0.5.7",
     "@resvg/resvg-js": "^2.6.2",
     "@tailwindcss/vite": "^4.2.2",
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
     "astro": "^6.1.7",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
-    "lucide-react": "^1.8.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "satori": "^0.26.0",
     "sharp": "^0.35.3",
-    "tailwind-merge": "^3.5.0",
-    "tailwindcss": "^4.2.2",
-    "typescript": "^5.9.3"
+    "tailwindcss": "^4.2.2"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.9",
     "@axe-core/playwright": "^4.11.1",
     "@biomejs/biome": "^2.4.12",
     "@chromatic-com/playwright": "^0.13.1",
-    "@houtini/lm": "2.9.0",
     "@lhci/cli": "^0.15.1",
     "@playwright/test": "^1.59.1",
     "@types/pngjs": "^6.0.5",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
     "chromatic": "^16.3.0",
     "happy-dom": "^20.9.0",
     "husky": "^9.1.7",
-    "odiff-bin": "^4.3.8",
     "pixelmatch": "^7.1.0",
     "pngjs": "^7.0.0",
     "qrcode": "^1.5.4",
     "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
     "vitest": "^2.1.9"
   }
 }

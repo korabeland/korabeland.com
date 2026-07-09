@@ -1,5 +1,10 @@
 # Launch Readiness Report — korabeland.com
 
+> **⚠️ Superseded — historical.** This report predates the 2026-07-03 console
+> redesign and references kiosk/MapSurface-era code that no longer exists. For
+> the current launch state see
+> [docs/reviews/2026-07-04-console-mvp-launch.md](reviews/2026-07-04-console-mvp-launch.md).
+
 **Date:** 2026-04-19  
 **Deployment:** [https://korabeland.com](https://korabeland.com) (Vercel, commit `8257e0a`)  
 **Checked by:** Claude Sonnet 4.6 via Claude Code

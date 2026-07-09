@@ -6,9 +6,8 @@ import { expect, test } from "@playwright/test";
 // determinism, so tests here that need clean or day-seeded storage clear or
 // set it explicitly instead of assuming a blank slate.
 //
-// Note: this file only executes once U3 widens the `e2e` project's
-// `testMatch` from `**/routes.spec.ts` to `**/e2e/*.spec.ts` — until then it
-// is present but not run by CI.
+// The `e2e` project's `testMatch` is `**/e2e/*.spec.ts`, so this file runs in
+// CI alongside the other e2e specs.
 
 test.describe("shift toggle — clean storage", () => {
   test.use({ storageState: { cookies: [], origins: [] } });
