@@ -2,13 +2,20 @@
 
 - **Date:** 2026-07-09
 - **Base:** main
-- **Head at completion:** 9924620
-- **Passes run:** 1
+- **Head at completion:** tip of `fix/audit-p0-p1` (see the PR-gate marker)
+- **Passes run:** 2 (both clean)
 - **Outcome:** clean
 
 ## Applied by the loop
 
-None. Codex returned `verdict: clean` with no findings on the first pass.
+None. Codex returned `verdict: clean` with no findings.
+
+- Pass 1 reviewed the audit P0/P1 diff — clean.
+- Pass 2 re-reviewed after adding the worktree fix to the PR-gate hook
+  (`fix(codex-loop): resolve the PR-gate marker via git`) — still clean. That
+  fix was made because in a linked git worktree `.git` is a file, so the hook's
+  `$REPO/.git/codex-review-loop.json` marker path was unwritable and the gate
+  could never pass; approved by Korab.
 
 ## Escalated to Korab (NOT applied)
 
