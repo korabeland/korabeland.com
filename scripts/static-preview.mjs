@@ -47,8 +47,11 @@ async function tryRead(candidatePath) {
 }
 
 async function resolveRequest(urlPath) {
-  // Strip query string
-  const [rawPath, query = ""] = urlPath.split("?");
+  // Strip the query string, splitting only at the FIRST "?" so an asset URL
+  // that itself carries a query string isn't truncated.
+  const q = urlPath.indexOf("?");
+  const rawPath = q === -1 ? urlPath : urlPath.slice(0, q);
+  const query = q === -1 ? "" : urlPath.slice(q + 1);
   const cleanPath = rawPath || "/";
 
   // Vercel image-optimizer shim. With `imageService: true` the built <Image>
