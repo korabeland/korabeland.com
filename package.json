@@ -13,7 +13,7 @@
     "gen:barrels": "tsx scripts/gen-barrels.ts",
     "gen:trail-register": "tsx scripts/gen-trail-register.ts",
     "gen:shift-log": "tsx scripts/gen-shift-log.ts",
-    "verify": "biome check . && tsc --noEmit",
+    "verify": "biome check . && tsc --noEmit && astro check",
     "test": "vitest run",
     "test:visual": "playwright test",
     "audit": "lhci autorun",
@@ -53,6 +53,7 @@
     "typescript": "^5.9.3"
   },
   "devDependencies": {
+    "@astrojs/check": "^0.9.9",
     "@axe-core/playwright": "^4.11.1",
     "@biomejs/biome": "^2.4.12",
     "@chromatic-com/playwright": "^0.13.1",
