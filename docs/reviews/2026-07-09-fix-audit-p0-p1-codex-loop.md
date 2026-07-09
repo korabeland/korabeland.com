@@ -3,13 +3,22 @@
 - **Date:** 2026-07-09
 - **Base:** main
 - **Head at completion:** tip of `fix/audit-p0-p1` (see the PR-gate marker)
-- **Passes run:** 4 (all clean)
-- **Outcome:** clean
+- **Passes run:** 7
+- **Outcome:** stopped — two real bugs found and fixed (passes 5–6); pass 7's
+  three findings were verified non-applicable / oscillation and declined.
 
 ## Applied by the loop
 
-None. Codex returned `verdict: clean` with no findings on every pass.
+Passes 1–4 clean; passes 5–6 each surfaced a genuine bug (both fixed):
 
+- Pass 5 — **bug (fixed):** `static-preview.mjs` double-decoded the image `url`
+  (`URLSearchParams.get()` already decodes), so a literal `%` (`?url=%25`) threw
+  `URIError` in the un-caught async handler. Dropped the extra decode. Verified:
+  portrait 200, `%25` and traversal both 404, server stays up.
+- Pass 6 — **bug (fixed):** `static-preview.mjs` split the URL on every `?`, so
+  an asset url carrying its own query string was truncated. Split at the first
+  `?` only. Plus a **simplification**: narrowed `posts.ts`'s draft-gate filter
+  with a type guard.
 - Pass 1 reviewed the audit P0/P1 diff — clean.
 - Pass 2 re-reviewed after adding the worktree fix to the PR-gate hook
   (`fix(codex-loop): resolve the PR-gate marker via git`) — still clean. That
@@ -28,9 +37,23 @@ None. Codex returned `verdict: clean` with no findings on every pass.
   `..`; hardened it with `resolve()` + a `startsWith(ROOT)` prefix check.
   Verified: legit asset serves 200, `../../package.json` and bare `..` both 404.
 
-## Escalated to Korab (NOT applied)
+## Stopped / declined (pass 7 — verified non-applicable)
 
-None.
+The loop stopped at pass 7 (cap exceeded + oscillation). All three findings were
+checked and declined; none are real:
+
+- **static-preview MIME (medium):** claims the shim could serve
+  `application/octet-stream`. Can't occur — Astro's `_astro/*` asset URLs always
+  carry an extension, so `tryRead()` returns the right image type (verified 200
+  `image/jpeg`). Codex's fix (label bytes from the `f`/format param) would be
+  *wrong*: the shim serves the original bytes, so a `f=webp` label on jpeg bytes
+  would lie. Local-only preview tool.
+- **contributions.json shared reader (low):** claims other routes could read the
+  live file. Verified false — the homepage is the **sole** consumer
+  (`shift-log.ts` is pure stats; `ShiftLog.astro` takes data as a prop). The
+  page-local PROD gate is complete.
+- **posts.ts type guard (low):** **oscillation** — pass 6 asked for this exact
+  type guard; pass 7 asks to revert it. Both forms are fine; kept the guard.
 
 ## Reverted
 
