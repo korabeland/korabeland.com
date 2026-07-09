@@ -10,7 +10,8 @@ test("/nonexistent route returns 404 with OffTrail component", async ({
   await expect(page.locator("#off-trail-title")).toHaveText("no signal");
 });
 
-// / — home console renders the hero, outcome ledger, recent notes, and close.
+// / — home console renders the hero, outcome ledger, shift-log band, recent
+// notes, and close.
 test("/ renders the operator's console home", async ({ page }) => {
   const response = await page.goto("/");
   expect(response?.status()).toBe(200);
@@ -104,13 +105,14 @@ test("/colophon renders the colophon page", async ({ page }) => {
   await expect(page.locator("article.colophon h1")).toContainText("Colophon");
 });
 
-// R9 shift-log: the mono summary line is the accessible representation, driven
-// by real seed data (never hardcoded); the cell grid is aria-hidden decoration.
-// axe checks for violations but not this subtree-exclusion contract, so pin it.
-test("/colophon shift-log exposes a real-data summary and hides the grid", async ({
+// R9 shift-log now lives on the home page as a band: the mono summary line is
+// the accessible representation, driven by real seed data (never hardcoded);
+// the cell grid is aria-hidden decoration. axe checks for violations but not
+// this subtree-exclusion contract, so pin it.
+test("/ shift-log exposes a real-data summary and hides the grid", async ({
   page,
 }) => {
-  await page.goto("/colophon");
+  await page.goto("/");
   const summary = page.locator(".shiftlog-summary");
   await expect(summary).toBeVisible();
   await expect(summary).toHaveText(
