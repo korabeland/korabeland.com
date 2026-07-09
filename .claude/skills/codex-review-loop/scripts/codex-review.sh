@@ -81,7 +81,7 @@ if ! printf '%s' "$DIFF" | codex exec \
   exit 1
 fi
 
-if ! python3 -c "import json; json.load(open('$OUT'))" 2>/dev/null; then
+if ! python3 -c 'import json,sys; json.load(open(sys.argv[1]))' "$OUT" 2>/dev/null; then
   echo "codex output at $OUT was not valid JSON (schema not honored?)" >&2
   exit 2
 fi
