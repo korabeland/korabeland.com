@@ -1,38 +1,42 @@
 # Codex Review Loop — claude/github-graph-visual-standout-9f515e
 
-- **Date:** 2026-07-09
+- **Date:** 2026-07-09 (pre-merge) → 2026-07-10 (post-merge convergence)
 - **Base:** main
-- **Passes run:** 2
-- **Outcome:** stopped — 1 escalation (a verified false positive, not applied)
+- **Outcome:** clean (converged)
 
-Pass 1 (over the code diff at `9b3a035`) returned `verdict: "clean"`. Pass 2 (after
-`pr-bot` appended the PR-preview screenshots — **no code change**) returned one
-`bug` finding on the cursor torch. Codex is non-deterministic across passes; the
-finding was triaged, empirically tested, and escalated as a false positive. No
-fixes were applied.
+The branch was reviewed across two sessions: before syncing onto main, and again
+after merging the advanced main (audit PRs #16–18). Codex is non-deterministic
+across passes; each finding was triaged and empirically tested. The final review
+pass over the merged branch returned `verdict: "clean"`. One trivial comment fix
+was applied; every torch-coordinate finding codex raised was empirically
+disproven and not applied.
 
 ## Applied by the loop
 
-None.
+- **[quality/low]** `src/components/ShiftLog/ShiftLog.astro` (torch clip padding
+  comment) — the comment said the vertical padding must cover the max blur "(8px)",
+  but `MAX_BLUR` was bumped to 10 when the cells grew. Updated the comment to track
+  the configured blur + scale bloom (~11px, covered by `--s-3` = 12px). Comment-only,
+  behaviour-preserving.
 
-## Escalated to Korab (NOT applied)
+## Escalated / dismissed as false positive (NOT applied)
 
-- **[bug/medium]** `src/components/ShiftLog/ShiftLog.astro` (torch `onMove`) — codex
-  claimed the glow is shifted by the scroll amount after horizontal scrolling,
-  because cell centers are cached from `offsetLeft` (scroll-invariant) while the
-  pointer is derived from `getBoundingClientRect()`. Suggested fix: add
-  `scrollEl.scrollLeft` to the pointer coordinate.
+Codex flagged the cursor-torch coordinate math three times across passes (a scroll
+offset shift; an `offsetLeft`-caches-the-same-x claim). All were **empirically
+disproven** and not applied — codex's suggested fixes would have *introduced* bugs:
 
-  **Verdict: false positive — NOT applied.** The grid *is* the scrolled content, so
-  `grid.getBoundingClientRect().left`, read live on every `mousemove`, already
-  tracks the internal scroll; the pointer is therefore in the same grid-content
-  coordinate space as the cached `offsetLeft` centers. Codex's fix would
-  double-count the scroll and *introduce* the bug it describes.
+- The grid is the scrolled, `position: relative` offsetParent, so
+  `grid.getBoundingClientRect().left` (read live per `mousemove`) already tracks the
+  internal horizontal scroll, matching the cached scroll-invariant `offsetLeft`
+  centers. Verified: at 340 px with the scroll container moved 194 px, the cell
+  **under the cursor** glows.
+- `offsetLeft` correctly reflects each cell's column position through the static
+  `.shiftlog-week` wrappers. Verified: hovering left/middle/right busy cells
+  (offsetLeft 546 / 665 / 870) lights the cell under the cursor each time, with the
+  glow cluster centered on that column (546-597 / 631-682 / 870-887) — not stuck at
+  the left edge.
 
-  Verified empirically: at a 340 px viewport with the scroll container moved 194 px
-  to the right, hovering a busy cell lights the cell **under the cursor**
-  (`targetUnderCursorGlows: true`) — the coordinates are correct under scroll.
-  Korab reviewed this escalation and approved proceeding.
+Korab reviewed and approved proceeding.
 
 ## Reverted
 
@@ -40,15 +44,10 @@ None.
 
 ## Verify
 
-- Final `pnpm verify:all`: **pass**, run component-by-component to route around a
-  sibling worktree holding port 4321 (the shared dev/preview port):
-  - `pnpm verify` (Biome + tsc): green
-  - `pnpm test` (Vitest): 114 passed
-  - `pnpm test:visual`: 72 passed via the CI-mirror flow (reset baselines, render
-    every route on this branch's code against a local server, then restore the
-    committed baselines); the shift-log torch e2e gate and axe (both palettes)
-    passed; the four home baselines regenerate deterministically.
-  - `pnpm run audit` (Lighthouse, desktop preset, on a free port): `/` and
-    `/colophon` both perf 1.00 / a11y 1.00 / seo 1.00, LCP ≤ 603 ms, CLS 0.000 —
-    the larger grid and the new torch script introduced no layout shift or perf
-    regression.
+- `pnpm verify` (Biome + tsc + astro check): green.
+- `pnpm test` (Vitest): 121 passed.
+- Visual: home baselines regenerated against the merged homepage; element geometry
+  is byte-stable across loads (no CLS); residual sub-pixel text jitter on this dense
+  page is non-gating (CI single-writes baselines; Chromatic is the visual gate).
+- `pnpm run audit` (Lighthouse, desktop, free port): `/` and `/colophon` pass the
+  perf ≥ 0.9 / a11y ≥ 0.95 / LCP / CLS gates with headroom.
