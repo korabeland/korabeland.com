@@ -213,8 +213,9 @@ const legendLevels = [0, 1, 2, 3, 4] as const;
     overflow-x: auto;
     /* overflow-x:auto computes overflow-y to a clipping value, which would
        shave the torch bloom + scale off the top (Sunday) and bottom (Saturday)
-       rows — the rows the effect most needs. Vertical padding ≥ the max blur
-       (8px) keeps the bloom inside the clip box. */
+       rows — the rows the effect most needs. Vertical padding must cover the
+       torch's max bloom (MAX_BLUR + the scale expansion, ~11px at MAX_BLUR=10);
+       --s-3 (12px) keeps it inside the clip box. */
     padding-block: var(--s-3);
   }
 
