@@ -34,7 +34,10 @@ test("/ renders the operator's console home", async ({ page }) => {
   await expect(page.locator(".hero-eyebrow")).toContainText("korab eland");
   await expect(page.locator("h1#hero-heading")).toContainText("ship");
   await expect(page.locator("#ledger-heading")).toContainText("outcome ledger");
-  await expect(page.locator(".ledger-row")).not.toHaveCount(0);
+  // U8 curation: home features exactly three case studies; the full index
+  // stays one click away via the ledger's more-link.
+  await expect(page.locator(".ledger-row")).toHaveCount(3);
+  await expect(page.locator('a.section-more[href="/work"]')).toBeVisible();
   await expect(page.locator("#close-heading")).toContainText(
     "the short version",
   );
@@ -63,6 +66,11 @@ test("/work renders the case-study index", async ({ page }) => {
   );
   await expect(page.locator('a[href="/work/lead-scoring"]')).toBeVisible();
   await expect(page.locator('a[href="/work/ai-sms-pilot"]')).toBeVisible();
+  // /work stays the FULL index — every published case study gets a row
+  // (home curates to three; this page must not).
+  await expect(page.locator(".ledger-row")).toHaveCount(
+    allProjectRoutes.length,
+  );
 });
 
 // /work/lead-scoring — case-study detail renders title, fact strip, and body.
