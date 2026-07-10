@@ -1,0 +1,165 @@
+---
+// ProjectLedger — the outcome ledger list (title / mono outcome datum /
+// status chip). Shared by the homepage's "work · outcome ledger" section and
+// /work's "all case studies" index — previously hand-duplicated across both
+// pages with identical grammar. Surface differences are parameters: heading
+// copy, the home-only "all case studies →" link, the empty-state copy
+// (differs per page — preserved verbatim), and the home-only per-row
+// stagger-in reveal.
+
+import StatusChip from "../StatusChip/StatusChip.astro";
+
+export interface LedgerItem {
+  slug: string;
+  title: string;
+  outcome: string;
+  status: "shipped" | "in-flight";
+}
+
+interface Props {
+  items: LedgerItem[];
+  /** Section heading copy (t-label). */
+  headingText: string;
+  /** id shared by the heading and the section's aria-labelledby. */
+  headingId?: string;
+  /** Home-only "all case studies →" link in the section head. */
+  moreLink?: { href: string; label: string };
+  /** Empty-state copy — differs per surface, preserved verbatim. */
+  emptyMessage: string;
+  /** Home-only per-row stagger-in reveal (index-based --row custom property).
+   *  Gated by a `data-stagger` attribute rather than a class so /work's rows
+   *  (no --row set) never pick up the animation via an invalid var(). */
+  stagger?: boolean;
+}
+
+const {
+  items,
+  headingText,
+  headingId = "ledger-heading",
+  moreLink,
+  emptyMessage,
+  stagger = false,
+} = Astro.props;
+---
+
+<section class="ledger-section" aria-labelledby={headingId}>
+  <div class="section-head">
+    <h2 id={headingId} class="t-label">{headingText}</h2>
+    {moreLink && (
+      <a class="t-mono section-more" href={moreLink.href}>
+        {moreLink.label}
+      </a>
+    )}
+  </div>
+
+  {
+    items.length > 0 ? (
+      <ol class="ledger">
+        {items.map((item, i) => (
+          <li
+            class="ledger-row"
+            style={stagger ? `--row: ${i}` : undefined}
+            data-stagger={stagger ? "" : undefined}
+          >
+            <a class="ledger-link" href={`/work/${item.slug}`}>
+              <span class="ledger-name">{item.title}</span>
+              <span class="t-mono ledger-datum">{item.outcome}</span>
+              <StatusChip status={item.status} variant="chip" />
+            </a>
+          </li>
+        ))}
+      </ol>
+    ) : (
+      <p class="t-mono ledger-empty">{emptyMessage}</p>
+    )
+  }
+</section>
+
+<style>
+  .section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--s-4);
+    border-bottom: 1px solid var(--ink);
+    padding-bottom: var(--s-2);
+  }
+
+  .section-head h2 {
+    margin: 0;
+    color: var(--ink-soft);
+  }
+
+  .section-more {
+    text-transform: none;
+    letter-spacing: 0.04em;
+    color: var(--ink-soft);
+    text-decoration: none;
+  }
+
+  .section-more:hover,
+  .section-more:focus-visible {
+    color: var(--signal);
+  }
+
+  .ledger {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .ledger-row {
+    border-bottom: 1px solid var(--rule);
+  }
+
+  /* Home-only stagger-in reveal — see the `stagger` prop note above. */
+  .ledger-row[data-stagger] {
+    animation: reveal 0.45s ease both;
+    animation-delay: calc(var(--row) * 60ms);
+  }
+
+  .ledger-link {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: var(--s-5);
+    padding: var(--s-4) var(--s-2);
+    text-decoration: none;
+    transition: background 150ms ease;
+  }
+
+  @media (hover: hover) {
+    .ledger-link:hover {
+      background: var(--paper-2);
+    }
+  }
+
+  .ledger-name {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 17px;
+    color: var(--ink);
+    line-height: 1.35;
+  }
+
+  .ledger-datum {
+    text-transform: none;
+    letter-spacing: 0.02em;
+    color: var(--ink-soft);
+  }
+
+  .ledger-empty {
+    padding: var(--s-5) var(--s-2);
+    margin: 0;
+  }
+
+  @media (max-width: 680px) {
+    .ledger-link {
+      grid-template-columns: 1fr auto;
+    }
+    .ledger-datum {
+      grid-column: 1 / -1;
+      order: 3;
+    }
+  }
+</style>

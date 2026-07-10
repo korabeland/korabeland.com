@@ -4,9 +4,7 @@
 // Copy is disclosure-cleared per docs/plans/2026-07-03-console-mvp.md —
 // do not add specifics (names, vendors, metrics, comp, transitions).
 
-import { Image } from "astro:assets";
-import portrait from "../assets/portrait-illustrated.jpg";
-import portraitDay from "../assets/portrait-illustrated-day.jpg";
+import Portrait from "../components/Portrait/index.astro";
 import SkillsSection from "../components/SkillsSection/SkillsSection.astro";
 import StatusChip from "../components/StatusChip/StatusChip.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
@@ -41,23 +39,7 @@ const jsonLd = {
     </header>
 
     <figure class="about-portrait">
-      <Image
-        class="portrait-night"
-        src={portrait}
-        alt="Illustrated portrait of Korab Eland"
-        widths={[440, 880]}
-        sizes="(max-width: 680px) 280px, 440px"
-        loading="eager"
-        fetchpriority="high"
-      />
-      <Image
-        class="portrait-day"
-        src={portraitDay}
-        alt="Illustrated portrait of Korab Eland"
-        widths={[440, 880]}
-        sizes="(max-width: 680px) 280px, 440px"
-        loading="eager"
-      />
+      <Portrait widths={[440, 880]} sizes="(max-width: 680px) 280px, 440px" />
       <figcaption class="t-mono about-portrait-cap">
         <span>korab eland</span>
         <span class="about-portrait-loc">{STATUS.targetReadout}</span>
@@ -157,25 +139,6 @@ const jsonLd = {
     margin: 0 0 var(--s-7);
     max-width: 440px;
     border: 1px solid var(--rule);
-  }
-
-  .about-portrait img {
-    display: block;
-    width: 100%;
-    height: auto;
-  }
-
-  /* Portrait tracks the shift: orange field by night (the no-JS default),
-     blue by day. The day variant stays hidden until the head script sets
-     data-time=day, mirroring the ShiftToggle idiom. */
-  .about-portrait .portrait-day {
-    display: none;
-  }
-  :global(html[data-time="day"]) .about-portrait .portrait-night {
-    display: none;
-  }
-  :global(html[data-time="day"]) .about-portrait .portrait-day {
-    display: block;
   }
 
   .about-portrait-cap {

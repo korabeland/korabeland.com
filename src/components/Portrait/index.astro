@@ -1,0 +1,56 @@
+---
+// Portrait — the day/night illustrated-portrait <Image> pair, toggled purely
+// by CSS off the shift's `data-time` attribute on <html> (mirrors the
+// ShiftToggle idiom). Previously hand-duplicated between the homepage hero
+// and /about, each with its own widths/sizes. Both callers keep their exact
+// per-surface widths/sizes via props; the image pair, alt text, loading
+// strategy, and toggle CSS are the shared, single-owner part.
+
+import { Image } from "astro:assets";
+import portrait from "../../assets/portrait-illustrated.jpg";
+import portraitDay from "../../assets/portrait-illustrated-day.jpg";
+
+interface Props {
+  widths: number[];
+  sizes: string;
+  alt?: string;
+}
+
+const {
+  widths,
+  sizes,
+  alt = "Illustrated portrait of Korab Eland",
+} = Astro.props;
+---
+
+<Image
+  class="portrait-night"
+  src={portrait}
+  alt={alt}
+  widths={widths}
+  sizes={sizes}
+  loading="eager"
+  fetchpriority="high"
+/>
+<Image class="portrait-day" src={portraitDay} alt={alt} widths={widths} sizes={sizes} loading="eager" />
+
+<style>
+  img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  /* Portrait tracks the shift: orange field by night (the no-JS default),
+     blue by day. The day variant stays hidden until the head script sets
+     data-time=day, mirroring the ShiftToggle idiom. */
+  .portrait-day {
+    display: none;
+  }
+  :global(html[data-time="day"]) .portrait-night {
+    display: none;
+  }
+  :global(html[data-time="day"]) .portrait-day {
+    display: block;
+  }
+</style>
