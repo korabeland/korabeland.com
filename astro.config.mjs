@@ -17,6 +17,11 @@ export default defineConfig({
   // the server function) for Vercel's native image optimizer, slimming the
   // lambda to little more than the SSR routes it still needs to serve.
   adapter: vercel({ imageService: true }),
+  // Inline all page CSS instead of linking external stylesheets: the mobile
+  // Lighthouse audit measured ~750ms of render-blocking CSS on the critical
+  // path (BaseLayout.css + page CSS) before first paint. Inlining trades a
+  // slightly larger HTML payload for zero extra round trips.
+  build: { inlineStylesheets: "always" },
   trailingSlash: "never",
   // /projects moved to /work in the console redesign (2026-07-03).
   redirects: {

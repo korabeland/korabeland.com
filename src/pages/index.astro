@@ -127,6 +127,20 @@ const MAIL_ICON =
   ogImage="/og.png"
 >
   <script type="application/ld+json" slot="jsonld" set:html={JSON.stringify(jsonLd)} />
+  {/* Preload the night portrait (the home LCP element on mobile) so the
+      fetch starts at head-parse instead of when the parser reaches the
+      hero <picture> (~700ms later on slow-4G). Mirrors the AVIF srcset
+      Portrait renders — tests/e2e/hero-delivery.spec.ts guards the two
+      against drift. Night only: it's the no-JS/default variant. */}
+  <link
+    slot="head"
+    rel="preload"
+    as="image"
+    type="image/avif"
+    imagesrcset="/portrait/portrait-illustrated.gen.360.avif 360w, /portrait/portrait-illustrated.gen.720.avif 720w, /portrait/portrait-illustrated.gen.1040.avif 1040w"
+    imagesizes="(max-width: 680px) 240px, 340px"
+    fetchpriority="high"
+  />
 
   <div class="home">
     <!-- ─── Hero: the readout ─────────────────────────────────────────── -->
@@ -147,7 +161,7 @@ const MAIL_ICON =
       </div>
       <div class="hero-aside">
         <figure class="hero-portrait">
-          <Portrait widths={[360, 720]} sizes="(max-width: 680px) 240px, 340px" />
+          <Portrait sizes="(max-width: 680px) 240px, 340px" />
           <figcaption class="t-mono hero-portrait-cap">
             <span>korab eland</span>
             <span class="hero-social">

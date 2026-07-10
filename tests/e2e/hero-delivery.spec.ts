@@ -152,3 +152,28 @@ test.describe("case study hero delivery", () => {
     await assertHeroDimensions(page, "img.head-image");
   });
 });
+
+// Home preloads its mobile LCP element (the night portrait) from the head.
+// The preload's imagesrcset is hand-mirrored in src/pages/index.astro from
+// the markup Portrait renders — this pins the two together so a variant
+// rename or width change can't silently turn the preload into a no-op
+// double-download.
+test("home LCP preload mirrors the night portrait's AVIF srcset", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const preload = page.locator(
+    'link[rel="preload"][as="image"][type="image/avif"]',
+  );
+  await expect(preload).toHaveCount(1);
+  const preloadSrcset = await preload.getAttribute("imagesrcset");
+  const renderedSrcset = await page
+    .locator('picture.portrait-night source[type="image/avif"]')
+    .getAttribute("srcset");
+  expect(preloadSrcset).toBe(renderedSrcset);
+  expect(await preload.getAttribute("imagesizes")).toBe(
+    await page
+      .locator('picture.portrait-night source[type="image/avif"]')
+      .getAttribute("sizes"),
+  );
+});

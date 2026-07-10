@@ -16,6 +16,7 @@ import { readFile, stat } from "node:fs/promises";
 import { createServer } from "node:http";
 import { extname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+import { gzipSync } from "node:zlib";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const ROOT = resolve(__dirname, "..", "dist", "client");
@@ -103,10 +104,27 @@ const server = createServer(async (req, res) => {
   const hit = await resolveRequest(req.url);
   if (hit) {
     const ext = extname(hit.path);
-    res.writeHead(200, {
+    const headers = {
       "Content-Type": MIME[ext] ?? "application/octet-stream",
       "Cache-Control": "no-store",
-    });
+    };
+    // Compress text responses when the client accepts gzip. Production
+    // (Vercel) always serves text brotli/gzip-compressed — without this the
+    // Lighthouse audit charges the full raw HTML/CSS/JS weight against the
+    // simulated slow-4G budget and measures a delivery penalty production
+    // doesn't have (123KB raw vs ~25KB compressed for the home document).
+    // Images are already-compressed formats; leave them as-is.
+    const compressible = /^\.(html|css|js|json|svg|txt|xml)$/.test(ext);
+    if (
+      compressible &&
+      (req.headers["accept-encoding"] ?? "").includes("gzip")
+    ) {
+      headers["Content-Encoding"] = "gzip";
+      res.writeHead(200, headers);
+      res.end(gzipSync(hit.body));
+      return;
+    }
+    res.writeHead(200, headers);
     res.end(hit.body);
     return;
   }

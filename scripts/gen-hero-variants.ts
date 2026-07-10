@@ -1,11 +1,14 @@
 #!/usr/bin/env tsx
-// Generates width-tiered AVIF/WebP/PNG variants for Keystatic hero images
-// (posts + projects) so ReadingRoom/CaseStudy never ship the original,
-// multi-MB `public/` source to the browser. `imageService: true` (see
-// astro.config.mjs) makes astro:assets/<Image> unusable for public/ paths on
-// this site — it ignores requested widths/formats — so this script does the
-// resizing itself, ahead of build, the same way the favicons already bypass
-// the pipeline (see BaseLayout.astro).
+// Generates width-tiered AVIF/WebP/(PNG|JPEG) variants for images the site's
+// imageService cascade can't optimize: Keystatic hero images (posts +
+// projects, under `public/`) and the two illustrated portraits (under
+// `src/assets/`). `imageService: true` (see astro.config.mjs) swaps Astro's
+// bundled sharp for Vercel's native image optimizer — which ignores
+// requested widths/formats for BOTH `public/` paths and astro:assets
+// `<Image>` sources alike (confirmed by the mobile-LCP audit: the portrait
+// shipped at full 1200w via `/_vercel/image` regardless of its `widths`
+// prop). This script does the resizing itself, ahead of build, the same way
+// the favicons already bypass the pipeline (see BaseLayout.astro).
 //
 // Unlike gen-trail-register/gen-shift-log, there is no committed seed to
 // fall back to: a failure here must stop the build loudly, not silently
@@ -19,16 +22,23 @@ import keystaticConfig from "../keystatic.config";
 
 const repoRoot = resolve(process.cwd());
 
-const WIDTHS = [640, 960, 1280] as const;
-const PNG_FALLBACK_WIDTH = 960;
+const HERO_WIDTHS = [640, 960, 1280] as const;
+const HERO_PNG_FALLBACK_WIDTH = 960;
+
+const PORTRAIT_WIDTHS = [360, 720, 1040] as const;
+const PORTRAIT_JPEG_FALLBACK_WIDTH = 720;
+const PORTRAIT_OUT_DIR = "public/portrait";
+
 const MAX_BYTES = 200 * 1024;
 
 // Quality ladders to step down through when the default quality overshoots
 // the 200KB budget. AVIF compresses hardest, so it can start low; PNG needs
-// palette quantization (libimagequant) to hit budget on a photographic hero.
+// palette quantization (libimagequant) to hit budget on photographic content;
+// JPEG uses mozjpeg for the same reason.
 const AVIF_QUALITIES = [50, 42, 34, 26, 20];
 const WEBP_QUALITIES = [75, 65, 55, 45, 35];
 const PNG_QUALITIES = [90, 80, 70, 60, 50, 40];
+const JPEG_QUALITIES = [80, 70, 60, 50, 40, 30];
 
 interface HeroSource {
   /** Absolute path to the source file on disk. */
@@ -178,87 +188,180 @@ async function generatePng(
   return buffer.length;
 }
 
-async function processSource(source: HeroSource): Promise<void> {
-  const srcFile = source.diskPath;
-  if (!existsSync(srcFile)) {
+async function generateJpeg(
+  srcFile: string,
+  width: number,
+  outFile: string,
+): Promise<number> {
+  const buffer = await encodeUnderBudget(
+    () => sharp(srcFile).resize({ width, withoutEnlargement: true }),
+    JPEG_QUALITIES,
+    (img, quality) => img.jpeg({ quality, mozjpeg: true }),
+    outFile,
+  );
+  writeFileSync(outFile, buffer);
+  return buffer.length;
+}
+
+interface VariantJob {
+  /** Absolute path to the source file. */
+  srcFile: string;
+  /** Absolute output path prefix, without extension — e.g. ".../public/portrait/portrait-illustrated". */
+  outBase: string;
+  /** Human label for logging, e.g. "post:system-designer-personal-os" or "portrait:night". */
+  label: string;
+  widths: readonly number[];
+  fallback: { format: "png" | "jpeg"; width: number };
+}
+
+/**
+ * Shared core behind both the Keystatic hero pass and the static-portrait
+ * pass: read source dimensions, pick the width tiers that fit, skip if the
+ * output is already fresh, emit AVIF/WebP per tier plus one fallback
+ * (PNG for heroes, JPEG for the photographic portraits), and write the
+ * sibling meta.json the components read at build time.
+ */
+async function generateVariantSet(job: VariantJob): Promise<void> {
+  if (!existsSync(job.srcFile)) {
     throw new Error(
-      `gen-hero-variants: ${source.label} references missing file ${srcFile}`,
+      `gen-hero-variants: ${job.label} references missing file ${job.srcFile}`,
     );
   }
 
-  const ext = extname(srcFile);
-  const base = srcFile.slice(0, -ext.length);
-
-  const metadata = await sharp(srcFile).metadata();
+  const metadata = await sharp(job.srcFile).metadata();
   const srcWidth = metadata.width;
   const srcHeight = metadata.height;
   if (!srcWidth || !srcHeight) {
     throw new Error(
-      `gen-hero-variants: could not read dimensions for ${srcFile}`,
+      `gen-hero-variants: could not read dimensions for ${job.srcFile}`,
     );
   }
 
-  const filteredWidths = WIDTHS.filter((w) => w <= srcWidth);
-  // Guard against a hero narrower than our smallest tier (unlikely but
+  const filteredWidths = job.widths.filter((w) => w <= srcWidth);
+  // Guard against a source narrower than our smallest tier (unlikely but
   // possible) — always emit at least one tier, at the source's own width,
   // rather than shipping an empty srcset.
   const widths = filteredWidths.length > 0 ? filteredWidths : [srcWidth];
 
-  const metaFile = `${base}.gen.meta.json`;
+  const fallbackExt = job.fallback.format === "png" ? "png" : "jpg";
+  const fallbackFile = `${job.outBase}.gen.${job.fallback.width}.${fallbackExt}`;
+  const metaFile = `${job.outBase}.gen.meta.json`;
   const outFiles = [
     ...widths.flatMap((w) => [
-      `${base}.gen.${w}.avif`,
-      `${base}.gen.${w}.webp`,
+      `${job.outBase}.gen.${w}.avif`,
+      `${job.outBase}.gen.${w}.webp`,
     ]),
-    `${base}.gen.${PNG_FALLBACK_WIDTH}.png`,
+    fallbackFile,
     metaFile,
   ];
 
-  if (isFresh(srcFile, outFiles)) {
-    console.log(`gen-hero-variants: ${source.label} up to date, skipping`);
+  if (isFresh(job.srcFile, outFiles)) {
+    console.log(`gen-hero-variants: ${job.label} up to date, skipping`);
     return;
   }
 
-  mkdirSync(dirname(base), { recursive: true });
+  mkdirSync(dirname(job.outBase), { recursive: true });
 
   for (const w of widths) {
-    const avifBytes = await generateAvif(srcFile, w, `${base}.gen.${w}.avif`);
-    console.log(
-      `gen-hero-variants: ${source.label} ${w}w.avif → ${(avifBytes / 1024).toFixed(1)}KB`,
+    const avifBytes = await generateAvif(
+      job.srcFile,
+      w,
+      `${job.outBase}.gen.${w}.avif`,
     );
-    const webpBytes = await generateWebp(srcFile, w, `${base}.gen.${w}.webp`);
     console.log(
-      `gen-hero-variants: ${source.label} ${w}w.webp → ${(webpBytes / 1024).toFixed(1)}KB`,
+      `gen-hero-variants: ${job.label} ${w}w.avif → ${(avifBytes / 1024).toFixed(1)}KB`,
+    );
+    const webpBytes = await generateWebp(
+      job.srcFile,
+      w,
+      `${job.outBase}.gen.${w}.webp`,
+    );
+    console.log(
+      `gen-hero-variants: ${job.label} ${w}w.webp → ${(webpBytes / 1024).toFixed(1)}KB`,
     );
   }
 
-  // PNG fallback is always named `.gen.960.png` (the naming convention),
-  // but resized no larger than the source to avoid upscaling a narrow hero.
-  const pngWidth = Math.min(PNG_FALLBACK_WIDTH, srcWidth);
-  const pngFile = `${base}.gen.${PNG_FALLBACK_WIDTH}.png`;
-  const pngBytes = await generatePng(srcFile, pngWidth, pngFile);
+  // The fallback is always named `.gen.<fallback.width>.<ext>` (the naming
+  // convention), but resized no larger than the source to avoid upscaling.
+  const fallbackWidth = Math.min(job.fallback.width, srcWidth);
+  const fallbackBytes =
+    job.fallback.format === "png"
+      ? await generatePng(job.srcFile, fallbackWidth, fallbackFile)
+      : await generateJpeg(job.srcFile, fallbackWidth, fallbackFile);
   console.log(
-    `gen-hero-variants: ${source.label} ${PNG_FALLBACK_WIDTH}.png → ${(pngBytes / 1024).toFixed(1)}KB`,
+    `gen-hero-variants: ${job.label} ${job.fallback.width}.${fallbackExt} → ${(fallbackBytes / 1024).toFixed(1)}KB`,
   );
 
   writeFileSync(
     metaFile,
     `${JSON.stringify({ width: srcWidth, height: srcHeight, widths }, null, 2)}\n`,
   );
-  console.log(`gen-hero-variants: ${source.label} wrote ${metaFile}`);
+  console.log(`gen-hero-variants: ${job.label} wrote ${metaFile}`);
+}
+
+async function processHeroSource(source: HeroSource): Promise<void> {
+  const ext = extname(source.diskPath);
+  const outBase = source.diskPath.slice(0, -ext.length);
+  await generateVariantSet({
+    srcFile: source.diskPath,
+    outBase,
+    label: source.label,
+    widths: HERO_WIDTHS,
+    fallback: { format: "png", width: HERO_PNG_FALLBACK_WIDTH },
+  });
+}
+
+interface PortraitSource {
+  srcFile: string;
+  /** Output filename stem, e.g. "portrait-illustrated". */
+  basename: string;
+  label: string;
+}
+
+// The two illustrated-portrait sources (src/assets/, imported by
+// Portrait/index.astro's predecessor via astro:assets — dropped in favour of
+// these static variants because imageService: true ignores requested
+// widths/formats for astro:assets sources exactly like it does public/
+// paths). Not Keystatic-managed, so there's no collection to enumerate these
+// from — hardcoded, same as the favicon regeneration note in BaseLayout.astro.
+const PORTRAIT_SOURCES: PortraitSource[] = [
+  {
+    srcFile: resolve(repoRoot, "src/assets/portrait-illustrated.jpg"),
+    basename: "portrait-illustrated",
+    label: "portrait:night",
+  },
+  {
+    srcFile: resolve(repoRoot, "src/assets/portrait-illustrated-day.jpg"),
+    basename: "portrait-illustrated-day",
+    label: "portrait:day",
+  },
+];
+
+async function processPortraitSources(): Promise<void> {
+  const outDir = resolve(repoRoot, PORTRAIT_OUT_DIR);
+  for (const portrait of PORTRAIT_SOURCES) {
+    await generateVariantSet({
+      srcFile: portrait.srcFile,
+      outBase: resolve(outDir, portrait.basename),
+      label: portrait.label,
+      widths: PORTRAIT_WIDTHS,
+      fallback: { format: "jpeg", width: PORTRAIT_JPEG_FALLBACK_WIDTH },
+    });
+  }
 }
 
 async function main(): Promise<void> {
   const sources = await collectHeroSources();
   if (sources.length === 0) {
     console.log(
-      "gen-hero-variants: no hero images in posts or projects — nothing to do",
+      "gen-hero-variants: no hero images in posts or projects — skipping the Keystatic pass",
     );
-    return;
+  } else {
+    for (const source of sources) {
+      await processHeroSource(source);
+    }
   }
-  for (const source of sources) {
-    await processSource(source);
-  }
+  await processPortraitSources();
 }
 
 main().catch((err) => {

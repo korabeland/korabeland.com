@@ -196,6 +196,9 @@ const NAV_LINKS: readonly NavLink[] = [
     <meta name="twitter:description" content={description} />
     {ogImageUrl && <meta name="twitter:image" content={ogImageUrl} />}
     <slot name="jsonld" />
+    <!-- Per-page head extensions (e.g. the home page preloads its LCP
+         image). Keep after the meta block so pages can't shadow it. -->
+    <slot name="head" />
   </head>
   <body>
     <a class="skip-link" href="#main">skip to content</a>
