@@ -19,7 +19,7 @@
     "verify": "biome check . && tsc --noEmit && astro check",
     "test": "vitest run",
     "test:visual": "playwright test",
-    "audit": "lhci autorun && lhci autorun --config=.lighthouserc.mobile.json",
+    "audit": "pnpm build && lhci autorun && lhci autorun --config=.lighthouserc.mobile.json",
     "verify:all": "pnpm verify && pnpm test && pnpm test:visual && pnpm run audit"
   },
   "pnpm": {
