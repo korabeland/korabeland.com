@@ -5,6 +5,8 @@
 // Motion moment 3 of 3: reading-progress meter, CSS scroll-driven, guarded
 // by @supports + prefers-reduced-motion. See DESIGN.md §4-5.
 
+import { existsSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import FactStrip from "./FactStrip.astro";
 import FieldLog from "./FieldLog.astro";
 import OutcomeMetrics from "./OutcomeMetrics.astro";
@@ -56,6 +58,56 @@ const {
 } = Astro.props;
 
 const statusKind = status === "shipped" ? "shipped" : "active";
+
+// heroImage arrives as the bare Keystatic filename, not a resolved public
+// path — the existing <img src> relies on that resolving relative to the
+// /work/<slug> URL. Variants live next to the source in public/work/ (this
+// collection's fixed heroImage `directory`, see keystatic.config.ts) and are
+// emitted by scripts/gen-hero-variants.ts via predev/prebuild.
+interface HeroMeta {
+  width: number;
+  height: number;
+  widths: number[];
+}
+
+interface HeroPicture {
+  avifSrcset: string;
+  webpSrcset: string;
+  fallbackSrc: string;
+  width: number;
+  height: number;
+}
+
+function loadHeroPicture(filename: string): HeroPicture {
+  const basename = filename.replace(/\.[^./]+$/, "");
+  const metaPath = resolve(
+    process.cwd(),
+    "public/work",
+    `${basename}.gen.meta.json`,
+  );
+  if (!existsSync(metaPath)) {
+    throw new Error(
+      `CaseStudy: missing hero variants for "${filename}" (expected ${metaPath}). Run \`pnpm exec tsx scripts/gen-hero-variants.ts\` — see scripts/gen-hero-variants.ts.`,
+    );
+  }
+  const meta: HeroMeta = JSON.parse(readFileSync(metaPath, "utf8"));
+  return {
+    avifSrcset: meta.widths
+      .map((w) => `${basename}.gen.${w}.avif ${w}w`)
+      .join(", "),
+    webpSrcset: meta.widths
+      .map((w) => `${basename}.gen.${w}.webp ${w}w`)
+      .join(", "),
+    fallbackSrc: `${basename}.gen.960.png`,
+    width: meta.width,
+    height: meta.height,
+  };
+}
+
+const hero = heroImage ? loadHeroPicture(heroImage) : null;
+// Keyed to .head's own 1000px max-width (see below) — deliberately not
+// shared with ReadingRoom's 620px reading-column sizes value.
+const HERO_SIZES = "(max-width: 1040px) 100vw, 1000px";
 ---
 
 <div class="progress-track" aria-hidden="true">
@@ -78,7 +130,22 @@ const statusKind = status === "shipped" ? "shipped" : "active";
   <h1 class="t-display head-title">{title}</h1>
   {subtitle && <p class="head-subtitle">{subtitle}</p>}
 
-  {heroImage && <img class="head-image" src={heroImage} alt={heroImageAlt} />}
+  {hero && (
+    <picture>
+      <source type="image/avif" srcset={hero.avifSrcset} sizes={HERO_SIZES} />
+      <source type="image/webp" srcset={hero.webpSrcset} sizes={HERO_SIZES} />
+      <img
+        class="head-image"
+        src={hero.fallbackSrc}
+        alt={heroImageAlt}
+        width={hero.width}
+        height={hero.height}
+        loading="eager"
+        fetchpriority="high"
+        sizes={HERO_SIZES}
+      />
+    </picture>
+  )}
 </section>
 
 {/* Fact strip: Role / Team / Stack / Span / Status */}

@@ -2,6 +2,8 @@
 // ReadingRoom/index.astro — three-column blog reading layout.
 // 220px sidebar · 620px reading column · 260px margin-notes rail.
 
+import { existsSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import LeftSidebar from "./LeftSidebar.astro";
 import RightSidebar from "./RightSidebar.astro";
 
@@ -45,6 +47,56 @@ const {
   heroImage,
   heroImageAlt = "",
 } = Astro.props;
+
+// heroImage arrives as the bare Keystatic filename ("personal-os-hero.png"),
+// not a resolved public path — the existing <img src> relies on that
+// resolving relative to the /notes/<slug> URL. Variants live next to the
+// source in public/notes/ (this collection's fixed heroImage `directory`,
+// see keystatic.config.ts) and are emitted by scripts/gen-hero-variants.ts
+// via predev/prebuild — read the sibling meta.json here at build time for
+// the width/height/tiers, keeping the relative-path trick intact.
+interface HeroMeta {
+  width: number;
+  height: number;
+  widths: number[];
+}
+
+interface HeroPicture {
+  avifSrcset: string;
+  webpSrcset: string;
+  fallbackSrc: string;
+  width: number;
+  height: number;
+}
+
+function loadHeroPicture(filename: string): HeroPicture {
+  const basename = filename.replace(/\.[^./]+$/, "");
+  const metaPath = resolve(
+    process.cwd(),
+    "public/notes",
+    `${basename}.gen.meta.json`,
+  );
+  if (!existsSync(metaPath)) {
+    throw new Error(
+      `ReadingRoom: missing hero variants for "${filename}" (expected ${metaPath}). Run \`pnpm exec tsx scripts/gen-hero-variants.ts\` — see scripts/gen-hero-variants.ts.`,
+    );
+  }
+  const meta: HeroMeta = JSON.parse(readFileSync(metaPath, "utf8"));
+  return {
+    avifSrcset: meta.widths
+      .map((w) => `${basename}.gen.${w}.avif ${w}w`)
+      .join(", "),
+    webpSrcset: meta.widths
+      .map((w) => `${basename}.gen.${w}.webp ${w}w`)
+      .join(", "),
+    fallbackSrc: `${basename}.gen.960.png`,
+    width: meta.width,
+    height: meta.height,
+  };
+}
+
+const hero = heroImage ? loadHeroPicture(heroImage) : null;
+const HERO_SIZES = "(max-width: 680px) 100vw, 620px";
 ---
 
 <div class="return">
@@ -72,9 +124,21 @@ const {
 
     <div class="rule-soft rule-top"></div>
 
-    {heroImage && (
+    {hero && (
       <figure class="hero">
-        <img src={heroImage} alt={heroImageAlt} loading="eager" />
+        <picture>
+          <source type="image/avif" srcset={hero.avifSrcset} sizes={HERO_SIZES} />
+          <source type="image/webp" srcset={hero.webpSrcset} sizes={HERO_SIZES} />
+          <img
+            src={hero.fallbackSrc}
+            alt={heroImageAlt}
+            width={hero.width}
+            height={hero.height}
+            loading="eager"
+            fetchpriority="high"
+            sizes={HERO_SIZES}
+          />
+        </picture>
       </figure>
     )}
 
