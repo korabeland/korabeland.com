@@ -66,3 +66,7 @@ src/content/shift-log/contributions.json
 
 # Stray local build log (accidentally committed via git add -A in 136e7ae)
 build-archive.log
+
+# Git worktrees checked out under the main repo (each has its own tree/branch;
+# committed here only via the worktree's own git dir, never the main checkout).
+.claude/worktrees/
