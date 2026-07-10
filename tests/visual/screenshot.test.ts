@@ -19,6 +19,8 @@ const ROUTES = [
   "/work",
   "/work/lead-scoring",
   "/work/ai-sms-pilot",
+  "/lab",
+  "/lab/perian",
   "/about",
   "/notes",
   "/notes/hello-world",
