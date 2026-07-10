@@ -214,10 +214,19 @@ body {
   *::after {
     /* biome-ignore lint/complexity/noImportantStyles: reduced-motion override */
     animation-duration: 0.001ms !important;
+    /* Delay must be zeroed too: a stagger like the ledger's
+       `animation-delay: calc(var(--row) * 60ms)` otherwise still applies,
+       leaving `both`-fill elements invisible during the wait — reduced-motion
+       visitors saw content pop in row by row, and screenshots caught rows
+       mid-delay (nondeterministic visual baselines). */
+    /* biome-ignore lint/complexity/noImportantStyles: reduced-motion override */
+    animation-delay: 0.001ms !important;
     /* biome-ignore lint/complexity/noImportantStyles: reduced-motion override */
     animation-iteration-count: 1 !important;
     /* biome-ignore lint/complexity/noImportantStyles: reduced-motion override */
     transition-duration: 0.001ms !important;
+    /* biome-ignore lint/complexity/noImportantStyles: reduced-motion override */
+    transition-delay: 0.001ms !important;
   }
 }
 

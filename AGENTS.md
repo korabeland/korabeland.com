@@ -57,11 +57,11 @@ src/content/
 ## 2. Build & verify
 
 - `pnpm dev` — local dev server
-- `pnpm build` — production build (runs the prebuild hooks: `gen-trail-register.ts` + `gen-shift-log.ts`)
+- `pnpm build` — production build (prebuild hooks: `gen-trail-register.ts` + `gen-shift-log.ts` + `gen-hero-variants.ts`; the last also runs on `predev`)
 - `pnpm verify` — Biome + `tsc --noEmit` + `astro check` (`.astro` frontmatter)
 - `pnpm test` — Vitest (non-visual, non-E2E)
-- `pnpm test:visual` — Playwright visual + E2E
-- `pnpm audit` — Lighthouse CI + axe-core
+- `pnpm test:visual` — Playwright visual + E2E. Local pixelmatch baselines are **advisory**; the blocking visual gate is Chromatic in CI — see `docs/decisions/2026-07-10-visual-approval-policy.md`. Never delete/blind-reseed a baseline to go green.
+- `pnpm run audit` — Lighthouse CI, desktop (`.lighthouserc.json`) + mobile (`.lighthouserc.mobile.json`) profiles. Not to be confused with bare `pnpm audit --prod` (pnpm's built-in dependency security audit, a blocking CI step).
 - `pnpm verify:all` — chains all four; must pass before any PR is opened
 
 **Testing conventions (established 2026-07-05):**
