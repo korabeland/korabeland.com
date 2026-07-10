@@ -50,6 +50,60 @@ export interface SummaryStats {
   longestStreak: number;
 }
 
+export interface MonthTick {
+  /** Three-letter month abbreviation, e.g. "Jul". */
+  label: string;
+  /** Index into `weeks` of the first week that falls in this month. */
+  weekIndex: number;
+}
+
+const MONTH_ABBR = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+] as const;
+
+/**
+ * One tick per month for the grid's top edge, each anchored to the first week
+ * whose first day falls in that month — so ticks land on real week columns, not
+ * even spacing (R2). A week straddling a boundary is attributed by its first
+ * day, matching GitHub's own week bucketing.
+ *
+ * The month is read straight off the "YYYY-MM-DD" string (positions 5-6) rather
+ * than via `new Date`, so the result is timezone-independent and byte-stable.
+ * Deduped by month label: a 52-53 week window wraps back to its starting month
+ * on the final column, and repeating that label would clutter the frame — the
+ * first occurrence wins, yielding a clean 12-label run.
+ */
+export function monthTicks(data: ContributionData): MonthTick[] {
+  const ticks: MonthTick[] = [];
+  const seen = new Set<string>();
+
+  data.weeks.forEach((week, weekIndex) => {
+    // Mirror busiestWeek's empty-day guard (shift-log.ts:100): a zero-length
+    // week yields "", which we skip rather than index into a bogus month.
+    const date = week.days[0]?.date ?? "";
+    if (!date) return;
+
+    const label = MONTH_ABBR[Number(date.slice(5, 7)) - 1];
+    if (!label || seen.has(label)) return;
+
+    seen.add(label);
+    ticks.push({ label, weekIndex });
+  });
+
+  return ticks;
+}
+
 /** Maps a contributionLevel enum string to the 0-4 amber visual intensity scale. */
 export function levelToIntensity(level: ContributionLevel): 0 | 1 | 2 | 3 | 4 {
   switch (level) {
@@ -72,6 +126,31 @@ export function levelToIntensity(level: ContributionLevel): 0 | 1 | 2 | 3 | 4 {
 /** All days in chronological order (weeks are already chronological). */
 export function flattenDays(data: ContributionData): ContributionDay[] {
   return data.weeks.flatMap((week) => week.days);
+}
+
+/**
+ * Linear cursor-glow intensity at `distance` from the pointer, over a `radius`
+ * of influence: 1 at the cursor, 0 at (and beyond) the radius edge. Clamped to
+ * [0, 1] so a cell past the radius contributes nothing rather than a negative
+ * box-shadow, and guards `radius <= 0` (returns 0) so it never divides into NaN.
+ *
+ * Pure so the torch's falloff math is unit-tested here; the mousemove/rAF DOM
+ * wiring that calls it lives in ShiftLog.astro and is covered by e2e (KTD3).
+ */
+export function glowFalloff(distance: number, radius: number): number {
+  if (radius <= 0) return 0;
+  const t = 1 - distance / radius;
+  return Math.max(0, Math.min(1, t));
+}
+
+/**
+ * Whether a cell at the given 0-4 intensity (as produced by `levelToIntensity`)
+ * is a glow candidate. Only the top two buckets bloom under the cursor; the
+ * quiet days (0-2) stay flat, so the effect reads as "the busy days light up"
+ * rather than a uniform spotlight (R6/R8).
+ */
+export function isGlowCandidate(intensity: number): boolean {
+  return intensity >= 3;
 }
 
 /**

@@ -8,8 +8,11 @@ import {
   type ContributionWeek,
   currentStreak,
   flattenDays,
+  glowFalloff,
+  isGlowCandidate,
   levelToIntensity,
   longestStreak,
+  monthTicks,
   summaryStats,
 } from "@/lib/shift-log";
 
@@ -326,6 +329,150 @@ describe("empty weeks array", () => {
 
   it("returns an empty array from flattenDays", () => {
     expect(flattenDays(data)).toEqual([]);
+  });
+});
+
+describe("monthTicks", () => {
+  const ZERO_LEVELS: ContributionLevel[] = [
+    "NONE",
+    "NONE",
+    "NONE",
+    "NONE",
+    "NONE",
+    "NONE",
+    "NONE",
+  ];
+  const ZERO_COUNTS = [0, 0, 0, 0, 0, 0, 0];
+  // Independent re-derivation of the label, so the seed property check doesn't
+  // just re-run the implementation to "verify" itself.
+  const MONTH_ABBR = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+  const labelFor = (date: string) => MONTH_ABBR[Number(date.slice(5, 7)) - 1];
+
+  it("returns one tick per month, each at that month's first week, in order", () => {
+    const data = makeData([
+      makeWeek("2026-06-01", ZERO_COUNTS, ZERO_LEVELS), // Jun → tick
+      makeWeek("2026-06-08", ZERO_COUNTS, ZERO_LEVELS), // Jun → deduped
+      makeWeek("2026-07-06", ZERO_COUNTS, ZERO_LEVELS), // Jul → tick
+      makeWeek("2026-08-03", ZERO_COUNTS, ZERO_LEVELS), // Aug → tick
+    ]);
+
+    expect(monthTicks(data)).toEqual([
+      { label: "Jun", weekIndex: 0 },
+      { label: "Jul", weekIndex: 2 },
+      { label: "Aug", weekIndex: 3 },
+    ]);
+  });
+
+  it("attributes a week straddling a month boundary by its first day", () => {
+    // Jul 30 → Aug 5: five of seven days are August, but the first day is July.
+    const data = makeData([
+      makeWeek("2026-07-30", ZERO_COUNTS, ZERO_LEVELS),
+      makeWeek("2026-08-06", ZERO_COUNTS, ZERO_LEVELS),
+    ]);
+
+    expect(monthTicks(data)).toEqual([
+      { label: "Jul", weekIndex: 0 },
+      { label: "Aug", weekIndex: 1 },
+    ]);
+  });
+
+  it("yields 12 distinct labels with no duplicate across a 53-week wrap", () => {
+    const weeks: ContributionWeek[] = Array.from({ length: 53 }, (_, i) => {
+      const start = new Date("2025-07-06T00:00:00Z");
+      start.setUTCDate(start.getUTCDate() + i * 7);
+      return makeWeek(
+        start.toISOString().slice(0, 10),
+        ZERO_COUNTS,
+        ZERO_LEVELS,
+      );
+    });
+
+    const ticks = monthTicks(makeData(weeks));
+
+    expect(ticks).toHaveLength(12);
+    // The window ends back in July, but that label was already spent on week 0.
+    expect(new Set(ticks.map((t) => t.label)).size).toBe(12);
+    expect(ticks[0]).toEqual({ label: "Jul", weekIndex: 0 });
+  });
+
+  it("returns an empty array for an empty weeks array", () => {
+    expect(monthTicks(makeData([]))).toEqual([]);
+  });
+
+  it("skips a zero-length-days week without throwing", () => {
+    const data = makeData([
+      { days: [] },
+      makeWeek("2026-03-02", ZERO_COUNTS, ZERO_LEVELS),
+    ]);
+
+    expect(() => monthTicks(data)).not.toThrow();
+    expect(monthTicks(data)).toEqual([{ label: "Mar", weekIndex: 1 }]);
+  });
+
+  it("labels the committed seed in chronological order, one per month", () => {
+    const ticks = monthTicks(seedJson as ContributionData);
+
+    expect(ticks).toHaveLength(12);
+    expect(new Set(ticks.map((t) => t.label)).size).toBe(12);
+    for (let i = 1; i < ticks.length; i += 1) {
+      expect(ticks[i].weekIndex).toBeGreaterThan(ticks[i - 1].weekIndex);
+    }
+    // Every tick names the month of the week it points at.
+    for (const tick of ticks) {
+      const seedWeeks = (seedJson as ContributionData).weeks;
+      expect(tick.label).toBe(labelFor(seedWeeks[tick.weekIndex].days[0].date));
+    }
+  });
+});
+
+describe("glowFalloff", () => {
+  const R = 36;
+
+  it("is full intensity at the cursor and zero at the radius edge", () => {
+    expect(glowFalloff(0, R)).toBe(1);
+    expect(glowFalloff(R, R)).toBe(0);
+  });
+
+  it("interpolates linearly between the cursor and the edge", () => {
+    expect(glowFalloff(R / 2, R)).toBeCloseTo(0.5);
+    expect(glowFalloff(R / 4, R)).toBeCloseTo(0.75);
+  });
+
+  it("clamps to 0 past the radius rather than going negative", () => {
+    expect(glowFalloff(R * 2, R)).toBe(0);
+    expect(glowFalloff(R + 0.01, R)).toBe(0);
+  });
+
+  it("never returns NaN when the radius is zero", () => {
+    const t = glowFalloff(0, 0);
+    expect(Number.isNaN(t)).toBe(false);
+    expect(t).toBe(0);
+  });
+});
+
+describe("isGlowCandidate", () => {
+  it("lights only the top two intensities (3 and 4)", () => {
+    expect(isGlowCandidate(3)).toBe(true);
+    expect(isGlowCandidate(4)).toBe(true);
+  });
+
+  it("leaves the quiet intensities (0-2) flat", () => {
+    expect(isGlowCandidate(0)).toBe(false);
+    expect(isGlowCandidate(1)).toBe(false);
+    expect(isGlowCandidate(2)).toBe(false);
   });
 });
 
