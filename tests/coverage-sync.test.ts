@@ -211,7 +211,9 @@ describe("lighthouse route containment — both profiles", () => {
         resolve(POSTS_DIR, entry.name, "index.mdoc"),
         "utf8",
       );
-      return /^heroImage:\s*\S/m.test(raw) && !/^draft:\s*true/m.test(raw);
+      // Publish gate is `publishedAt` (same rule the readers apply) — a
+      // hero-bearing draft must NOT demand Lighthouse coverage.
+      return /^heroImage:\s*\S/m.test(raw) && isPublishedOnDisk(entry.name);
     })
     .map((entry) => `/notes/${entry.name}`);
 

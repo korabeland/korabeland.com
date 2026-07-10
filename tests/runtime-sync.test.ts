@@ -69,4 +69,40 @@ describe("runtime declarations stay in sync", () => {
       `package.json#engines.node declares major ${enginesMajor}, but .nvmrc declares ${nvmrcMajor}`,
     ).toBe(nvmrcMajor);
   });
+
+  it("engines.node's floor satisfies every dependency's own engines requirement", () => {
+    // engines.node was tightened to ">=22.12 <23" because astro itself
+    // declares ">=22.12.0" — a repo engines range looser than a dependency's
+    // lets Node 22.0–22.11 pass our gate and then fail at install/build.
+    // Guard the floor against the strictest known dependency requirement.
+    const pkg = JSON.parse(
+      readFileSync(resolve(process.cwd(), "package.json"), "utf8"),
+    );
+    const range: string = pkg.engines.node;
+    const floor = range.match(/>=\s*(\d+)(?:\.(\d+))?/);
+    if (!floor) throw new Error(`engines.node "${range}" has no >= floor`);
+    const [floorMajor, floorMinor] = [
+      Number.parseInt(floor[1], 10),
+      Number.parseInt(floor[2] ?? "0", 10),
+    ];
+
+    const astroEngines: string = JSON.parse(
+      readFileSync(
+        resolve(process.cwd(), "node_modules/astro/package.json"),
+        "utf8",
+      ),
+    ).engines.node;
+    const astroFloor = astroEngines.match(/>=\s*(\d+)(?:\.(\d+))?/);
+    if (!astroFloor) return; // astro stopped declaring a floor — nothing to check
+    const [astroMajor, astroMinor] = [
+      Number.parseInt(astroFloor[1], 10),
+      Number.parseInt(astroFloor[2] ?? "0", 10),
+    ];
+
+    expect(
+      floorMajor > astroMajor ||
+        (floorMajor === astroMajor && floorMinor >= astroMinor),
+      `package.json engines.node "${range}" permits Node versions below astro's own floor "${astroEngines}" — tighten the repo floor to at least ${astroMajor}.${astroMinor}`,
+    ).toBe(true);
+  });
 });

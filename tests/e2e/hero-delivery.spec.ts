@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { expect, type Page, test } from "@playwright/test";
 // Relative import (not "@/") to match tests/lib/collection-routes.ts's
 // convention — Playwright specs have no path-alias config, only Vitest does.
@@ -15,9 +17,16 @@ const GEN_HINT =
   "Hero variant files appear to be missing or stale — run `pnpm exec tsx scripts/gen-hero-variants.ts` (see scripts/gen-hero-variants.ts) and retry.";
 
 const MAX_HERO_BYTES = 200 * 1024;
-// personal-os-hero.png is 2816×1536 — the fixture this suite pins its aspect
-// ratio assertion to (see src/content/posts/system-designer-personal-os).
-const SOURCE_ASPECT_RATIO = 2816 / 1536;
+
+// Each hero's true dimensions come from its generator-emitted meta file, so
+// the aspect assertion tracks whatever source the content actually uses
+// instead of pinning one fixture's ratio onto every hero.
+function sourceAspectRatio(metaRelPath: string): number {
+  const meta = JSON.parse(
+    readFileSync(resolve(__dirname, "../..", metaRelPath), "utf8"),
+  ) as { width: number; height: number };
+  return meta.width / meta.height;
+}
 
 /**
  * Navigates to `route`, waits for the actual hero image request the browser
@@ -68,7 +77,11 @@ async function assertHeroDelivery(
   ).toBeLessThanOrEqual(MAX_HERO_BYTES);
 }
 
-async function assertHeroDimensions(page: Page, selector: string) {
+async function assertHeroDimensions(
+  page: Page,
+  selector: string,
+  expectedAspectRatio: number,
+) {
   const img = page.locator(selector);
   await expect(img, GEN_HINT).toBeVisible();
 
@@ -94,7 +107,7 @@ async function assertHeroDimensions(page: Page, selector: string) {
     `height="${heightAttr}" is not a positive integer.`,
   ).toBe(true);
 
-  expect(width / height).toBeCloseTo(SOURCE_ASPECT_RATIO, 2);
+  expect(width / height).toBeCloseTo(expectedAspectRatio, 2);
 }
 
 const HERO_POST_ROUTE = "/notes/system-designer-personal-os";
@@ -119,7 +132,11 @@ test.describe("post hero delivery — /notes/system-designer-personal-os", () =>
     page,
   }) => {
     await page.goto(HERO_POST_ROUTE);
-    await assertHeroDimensions(page, "figure.hero img");
+    await assertHeroDimensions(
+      page,
+      "figure.hero img",
+      sourceAspectRatio(`public/notes/${HERO_POST_BASENAME}.gen.meta.json`),
+    );
   });
 });
 
@@ -149,7 +166,13 @@ test.describe("case study hero delivery", () => {
     const basename = heroProject.heroImage.replace(/\.[^./]+$/, "");
 
     await assertHeroDelivery(page, route, basename);
-    await assertHeroDimensions(page, "img.head-image");
+    // Project heroes live under public/work (keystatic.config.ts heroImage
+    // directory) — each carries its own generator-emitted dimensions.
+    await assertHeroDimensions(
+      page,
+      "img.head-image",
+      sourceAspectRatio(`public/work/${basename}.gen.meta.json`),
+    );
   });
 });
 
