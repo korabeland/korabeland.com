@@ -11,7 +11,8 @@ echo ""
 
 # ---- Node version ----
 REQUIRED_NODE="$(cat .nvmrc | tr -d '[:space:]')"
-ACTUAL_NODE="$(node --version 2>/dev/null | tr -d 'v' || echo "not-installed")"
+# Compare majors: .nvmrc pins the line (e.g. "22"), not a patch release.
+ACTUAL_NODE="$(node --version 2>/dev/null | tr -d 'v' | cut -d. -f1 || echo "not-installed")"
 
 echo "Node:  required=${REQUIRED_NODE}  actual=${ACTUAL_NODE}"
 if [ "${ACTUAL_NODE}" != "${REQUIRED_NODE}" ]; then
