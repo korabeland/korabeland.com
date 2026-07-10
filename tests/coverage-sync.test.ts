@@ -196,3 +196,42 @@ describe("sync fs enumeration matches the async reader enumeration", () => {
     }
   });
 });
+
+// U6 — Lighthouse route containment. `.lighthouserc.json` (desktop) and
+// `.lighthouserc.mobile.json` are plain JSON and cannot enumerate the
+// collections themselves, so this guard validates them instead: both configs
+// must cover home, colophon, and every published post that carries a hero
+// image (image-heavy articles are exactly where LCP/CLS regress). Adding a
+// hero post without extending both configs fails here.
+describe("lighthouse route containment — both profiles", () => {
+  const heroPostPaths = readdirSync(POSTS_DIR, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .filter((entry) => {
+      const raw = readFileSync(
+        resolve(POSTS_DIR, entry.name, "index.mdoc"),
+        "utf8",
+      );
+      return /^heroImage:\s*\S/m.test(raw) && !/^draft:\s*true/m.test(raw);
+    })
+    .map((entry) => `/notes/${entry.name}`);
+
+  const requiredPaths = ["/", "/colophon", ...heroPostPaths];
+
+  for (const config of [".lighthouserc.json", ".lighthouserc.mobile.json"]) {
+    it(`${config} covers home, colophon, and every hero-bearing post`, () => {
+      const parsed = JSON.parse(
+        readFileSync(resolve(process.cwd(), config), "utf8"),
+      );
+      const covered = (parsed.ci.collect.url as string[]).map(
+        (u) => new URL(u).pathname,
+      );
+      for (const path of requiredPaths) {
+        expect(covered, `${config} must include ${path}`).toContain(path);
+      }
+    });
+  }
+
+  it("detects at least one hero-bearing post today (personal-os)", () => {
+    expect(heroPostPaths).toContain("/notes/system-designer-personal-os");
+  });
+});

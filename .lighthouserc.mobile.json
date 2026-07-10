@@ -1,4 +1,5 @@
 {
+  "_comment": "Mobile Lighthouse pass — second config because @lhci/cli applies ONE settings object per run (no per-URL override exists; verified against 0.15). No `preset` key: Lighthouse's default emulation IS mobile; `.lighthouserc.json` is the desktop override. Same thresholds as desktop — never loosen one profile to pass. `?shift=night` pins the palette (LHCI runs a fresh profile with no localStorage). Run via `pnpm run audit` (both configs, sequential).",
   "ci": {
     "collect": {
       "url": [
@@ -7,10 +8,7 @@
         "http://localhost:4321/notes/system-designer-personal-os?shift=night"
       ],
       "startServerCommand": "pnpm build && node scripts/static-preview.mjs",
-      "startServerReadyPattern": "static-preview:",
-      "settings": {
-        "preset": "desktop"
-      }
+      "startServerReadyPattern": "static-preview:"
     },
     "assert": {
       "assertions": {
