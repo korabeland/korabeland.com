@@ -1,7 +1,7 @@
 ---
 title: "fix: Site health remediation and recurrence prevention"
 type: fix
-status: active
+status: completed
 date: 2026-07-10
 origin: docs/brainstorms/2026-07-10-site-health-remediation-requirements.md
 ---

@@ -16,8 +16,16 @@ interface CommitEntry {
 // The prebuild hook (`scripts/gen-trail-register.ts`) writes commits.json from
 // `git log`. The seed file is the committed fallback for shallow Vercel clones
 // that don't run the hook.
+// Only prefer the gitignored live file in a production build — same guard as
+// the shift-log's loadContributions (src/pages/index.astro). Under Playwright
+// (`pnpm dev`, whose predev regenerates commits.json) the live log changes
+// with EVERY commit, which made the colophon's visual baselines stale the
+// moment anything landed. The committed seed keeps screenshots deterministic.
 function loadCommits(): CommitEntry[] {
-  for (const name of ["commits.json", "commits.seed.json"]) {
+  const candidates = import.meta.env.PROD
+    ? ["commits.json", "commits.seed.json"]
+    : ["commits.seed.json"];
+  for (const name of candidates) {
     const file = resolve(trailRegisterRoot, name);
     if (!existsSync(file)) continue;
     try {
