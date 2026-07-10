@@ -4,20 +4,25 @@ import { Resvg } from "@resvg/resvg-js";
 import type { APIRoute } from "astro";
 import satori from "satori";
 
+// Prerendered by default under `output: "static"` — emitted as a static
+// /og.png at build time, so satori + resvg never reach the server function.
+
 // Load Schibsted Grotesk WOFFs once at module init — avoids re-reading on
 // each request. Console OG: night ground, amber signal, grotesk wordmark.
+// Keep the Buffers as-is: `.buffer` would hand satori the whole underlying
+// (possibly pooled) ArrayBuffer, not just this file's bytes.
 const grotesk400 = readFileSync(
   resolve(
     process.cwd(),
     "node_modules/@fontsource/schibsted-grotesk/files/schibsted-grotesk-latin-400-normal.woff",
   ),
-).buffer;
+);
 const grotesk700 = readFileSync(
   resolve(
     process.cwd(),
     "node_modules/@fontsource/schibsted-grotesk/files/schibsted-grotesk-latin-700-normal.woff",
   ),
-).buffer;
+);
 
 // satori's ReactNode type requires JSX compilation; we pass a compatible vnode
 // object and cast via unknown since the runtime shape is correct.
@@ -177,7 +182,11 @@ export const GET: APIRoute = async () => {
   const resvg = new Resvg(svg, { fitTo: { mode: "width", value: 1200 } });
   const png = resvg.render().asPng();
 
-  return new Response(png.buffer as ArrayBuffer, {
+  // Copy into a tightly-sized Uint8Array so the body is exactly the PNG bytes.
+  // `png.buffer as ArrayBuffer` would expose the underlying (possibly pooled)
+  // allocation with trailing bytes — a latent footgun that only works today by
+  // accident of non-pooled allocations.
+  return new Response(new Uint8Array(png), {
     headers: {
       "Content-Type": "image/png",
       "Cache-Control": "public, max-age=86400, stale-while-revalidate=604800",

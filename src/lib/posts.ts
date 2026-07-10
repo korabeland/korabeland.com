@@ -13,10 +13,24 @@ const reader = createReader(process.cwd(), keystaticConfig);
 
 const WORDS_PER_MIN = 220;
 
-function estimateReadTime(text: string): string {
+export function estimateReadTime(text: string): string {
   const words = text.split(/\s+/).filter(Boolean).length;
   const minutes = Math.max(1, Math.round(words / WORDS_PER_MIN));
   return `${minutes} min`;
+}
+
+/**
+ * Draft gate + ordering. A post without `publishedAt` is unpublished, so it's
+ * dropped here — keeping drafts off the homepage, `/notes`, and the sitemap
+ * (and avoiding the dangling " · " separator a null date would render).
+ * Published posts sort newest-first. Pure so Vitest can cover it with fixtures.
+ */
+export function selectPublished(entries: PostSummary[]): PostSummary[] {
+  return entries
+    .filter((entry): entry is PostSummary & { publishedAt: string } =>
+      Boolean(entry.publishedAt),
+    )
+    .sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
 }
 
 export async function listPosts(): Promise<PostSummary[]> {
@@ -35,11 +49,7 @@ export async function listPosts(): Promise<PostSummary[]> {
       readTime: estimateReadTime(prose),
     });
   }
-  return entries.sort((a, b) => {
-    const ad = a.publishedAt ?? "";
-    const bd = b.publishedAt ?? "";
-    return bd.localeCompare(ad);
-  });
+  return selectPublished(entries);
 }
 
 export async function recentPosts(limit = 4): Promise<PostSummary[]> {

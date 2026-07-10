@@ -1,4 +1,8 @@
 ---
+// SSR: reads the ?from query param, so it can't be prerendered (opts out of
+// the static-by-default build).
+export const prerender = false;
+
 import OffTrail from "../components/OffTrail/OffTrail.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 

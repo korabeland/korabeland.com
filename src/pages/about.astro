@@ -1,6 +1,4 @@
 ---
-export const prerender = true;
-
 // About — the career narrative. Insight-first arc across 13 years, a short
 // note on how Korab runs his own work, and a quiet close with contact links.
 // Copy is disclosure-cleared per docs/plans/2026-07-03-console-mvp.md —
@@ -50,6 +48,7 @@ const jsonLd = {
         widths={[440, 880]}
         sizes="(max-width: 680px) 280px, 440px"
         loading="eager"
+        fetchpriority="high"
       />
       <Image
         class="portrait-day"

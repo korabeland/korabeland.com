@@ -25,8 +25,7 @@
       "!tests/visual/baselines",
       "!tests/visual/diffs",
       "!docs/design-references",
-      "!.claude/settings.local.json",
-      "!seed.spec.ts"
+      "!.claude/settings.local.json"
     ]
   },
   "overrides": [

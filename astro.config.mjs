@@ -8,8 +8,15 @@ import { defineConfig } from "astro/config";
 
 export default defineConfig({
   site: "https://korabeland.com",
-  output: "server",
-  adapter: vercel(),
+  // Static-by-default: every route prerenders unless it opts out with
+  // `export const prerender = false`. Only /off-trail (reads ?from) and the two
+  // dev/* previews are SSR. This makes forgetting an export fail safe (a static
+  // page) instead of silently turning a route into a per-request lambda.
+  output: "static",
+  // imageService: true swaps Astro's bundled Sharp (libvips ~17 MB, the bulk of
+  // the server function) for Vercel's native image optimizer, slimming the
+  // lambda to little more than the SSR routes it still needs to serve.
+  adapter: vercel({ imageService: true }),
   trailingSlash: "never",
   // /projects moved to /work in the console redesign (2026-07-03).
   redirects: {
