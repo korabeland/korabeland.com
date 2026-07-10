@@ -48,6 +48,16 @@ export default config({
           label: "Description",
           multiline: true,
         }),
+        category: fields.select({
+          label: "Category",
+          description:
+            "Professional case studies (/work) and AI code tinkering (/lab) render as separate, non-interleaved lists.",
+          options: [
+            { label: "Professional case study", value: "work" },
+            { label: "AI code tinkering", value: "side" },
+          ],
+          defaultValue: "work",
+        }),
         role: fields.text({ label: "Role" }),
         team: fields.text({ label: "Team" }),
         stack: fields.text({ label: "Stack" }),

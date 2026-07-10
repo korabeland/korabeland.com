@@ -14,11 +14,13 @@ import StatusChip from "../components/StatusChip/StatusChip.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { listExperience } from "../lib/experience";
 import { listPosts } from "../lib/posts";
-import { listProjects, projectStatus } from "../lib/projects";
+import { listProjects, projectHref, projectStatus } from "../lib/projects";
 import type { ContributionData } from "../lib/shift-log";
 import { STATUS } from "../lib/status";
 
-const projects = await listProjects();
+const allProjects = await listProjects();
+const projects = allProjects.filter((p) => p.category === "work");
+const labProjects = allProjects.filter((p) => p.category === "side");
 const experience = await listExperience();
 const posts = (await listPosts()).slice(0, 3);
 
@@ -207,7 +209,7 @@ const MAIL_ICON =
               const status = projectStatus(p);
               return (
                 <li class="ledger-row" style={`--row: ${i}`}>
-                  <a class="ledger-link" href={`/work/${p.slug}`}>
+                  <a class="ledger-link" href={projectHref(p)}>
                     <span class="ledger-name">{p.title}</span>
                     <span class="t-mono ledger-datum">{p.outcome}</span>
                     <StatusChip status={status} variant="chip" />
@@ -233,6 +235,31 @@ const MAIL_ICON =
             </a>
           </div>
           <ShiftLog data={contributions} />
+        </section>
+      )
+    }
+
+    <!-- ─── Lab ── AI code tinkering, kept apart from the work ledger ───── -->
+    {
+      labProjects.length > 0 && (
+        <section class="ledger-section" aria-labelledby="lab-heading">
+          <div class="section-head">
+            <h2 id="lab-heading" class="t-label">lab · AI code tinkering</h2>
+            <a class="t-mono section-more" href="/lab">
+              all tinkering →
+            </a>
+          </div>
+          <ol class="ledger">
+            {labProjects.map((p, i) => (
+              <li class="ledger-row" style={`--row: ${i}`}>
+                <a class="ledger-link" href={projectHref(p)}>
+                  <span class="ledger-name">{p.title}</span>
+                  <span class="t-mono ledger-datum">{p.outcome}</span>
+                  <StatusChip status={projectStatus(p)} variant="chip" />
+                </a>
+              </li>
+            ))}
+          </ol>
         </section>
       )
     }

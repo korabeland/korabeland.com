@@ -12,10 +12,13 @@ export interface ProjectFieldLogEntry {
   body: string;
 }
 
+export type ProjectCategory = "work" | "side";
+
 export interface ProjectSummary {
   slug: string;
   title: string;
   description: string;
+  category: ProjectCategory;
   role: string;
   team: string;
   stack: string;
@@ -73,6 +76,7 @@ export async function listProjects(): Promise<ProjectSummary[]> {
       slug,
       title: project.title,
       description: project.description ?? "",
+      category: project.category,
       role: project.role ?? "",
       team: project.team ?? "",
       stack: project.stack ?? "",
@@ -100,6 +104,17 @@ export async function listProjects(): Promise<ProjectSummary[]> {
 
 export async function readProject(slug: string) {
   return reader.collections.projects.read(slug);
+}
+
+/**
+ * Base route differs by category: professional case studies live under
+ * /work, AI code tinkering under /lab. Single source of truth so the two
+ * lists never cross-link into each other's route.
+ */
+export function projectHref(
+  p: Pick<ProjectSummary, "slug" | "category">,
+): string {
+  return `/${p.category === "side" ? "lab" : "work"}/${p.slug}`;
 }
 
 /**
