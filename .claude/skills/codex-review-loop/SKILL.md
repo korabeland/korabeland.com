@@ -3,7 +3,7 @@ name: codex-review-loop
 description: >-
   Headless OpenAI Codex review-and-simplify loop for korabeland.com, run before
   opening a pull request. Codex acts as an independent, read-only second reviewer
-  over the whole branch diff versus main, finding bugs, quality issues, and
+  over the whole branch diff versus origin/main, finding bugs, quality issues, and
   especially simplification opportunities in Claude-authored code; Claude then
   applies the safe fixes, re-runs verify, and re-reviews until codex is clean or a
   risky change needs Korab. ALWAYS use this when finishing a feature branch or
@@ -40,8 +40,10 @@ and the remote Devin Review gate that still runs on the PR.
 ## Prerequisites (check first)
 
 - **On a feature branch**, not `main`: `git branch --show-current` must not be `main`.
-- **There is a diff to review**: `git diff main...HEAD --stat` is non-empty. If empty,
-  there is nothing to do.
+- **There is a diff to review**: `git diff origin/main...HEAD --stat` is non-empty. If
+  empty, there is nothing to do. The loop reviews against `origin/main`, not the local
+  `main` ref — in a worktree local `main` goes stale and would pull already-merged
+  upstream work into the diff. `codex-review.sh` refreshes `origin/main` for you.
 - **Work is committed.** The loop reviews the committed branch diff and writes a
   marker against HEAD. Commit any in-progress work first, or the marker will not match
   what gets pushed.
@@ -57,7 +59,7 @@ first run.
 **1. Review pass.** Run the bundled reviewer over the branch diff:
 
 ```bash
-.claude/skills/codex-review-loop/scripts/codex-review.sh main /tmp/codex-findings.json
+.claude/skills/codex-review-loop/scripts/codex-review.sh origin/main /tmp/codex-findings.json
 ```
 
 It runs `codex exec` read-only and writes JSON: `{ "verdict": "...", "findings": [...] }`,
@@ -85,7 +87,7 @@ If red, revert the change responsible (`git checkout -- <file>`), record it unde
 "Reverted", and escalate that finding. Never leave the tree red.
 
 **6. Commit the pass.** The reviewer only sees committed code (it reviews
-`git diff main...HEAD`), so commit the fixes before re-reviewing. Stage ONLY the
+`git diff origin/main...HEAD`), so commit the fixes before re-reviewing. Stage ONLY the
 files the loop changed (never `git add -A` — unrelated work may be in the tree) and
 fold every pass into one commit: first pass `git commit -m "refactor: apply codex
 review pass"`, later passes `git commit --amend --no-edit`. See
