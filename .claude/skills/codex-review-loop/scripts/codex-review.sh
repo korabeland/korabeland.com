@@ -3,6 +3,7 @@
 # emit schema-conforming JSON ({ "verdict": ..., "findings": [...] }) to a file.
 #
 # Usage: codex-review.sh <base-branch> <output-json-path> [repo-dir]
+#        (base-branch defaults to origin/main — see the freshness note below)
 #
 # Why `codex exec` and not `codex review`: in codex 0.142.5 the review subcommand
 # ignores --output-schema (it returns prose) and under-reports simplifications.
@@ -12,7 +13,7 @@
 
 set -euo pipefail
 
-BASE="${1:-main}"
+BASE="${1:-origin/main}"
 OUT="${2:?output path required}"
 REPO="${3:-$(git rev-parse --show-toplevel)}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -21,6 +22,22 @@ SCHEMA="$SCRIPT_DIR/../references/review-schema.json"
 if ! command -v codex >/dev/null 2>&1; then
   echo "codex CLI not found on PATH — install it or check your shell profile" >&2
   exit 127
+fi
+
+# Keep the base ref current. In a linked worktree the LOCAL `main` ref does NOT
+# advance when origin does, so diffing against a bare `main` silently reviews
+# already-merged upstream commits as if they were this branch's (a real false
+# positive we hit). Default to the remote-tracking ref and refresh it first, so
+# the diff stays scoped to this branch's own changes — the same base CI's
+# verify-all and the PR-gate compare against. A failed fetch (offline, no remote)
+# is non-fatal: we fall back to the origin/main already on disk. Passing an
+# explicit base (a branch name or SHA) skips the fetch.
+if [[ "$BASE" == origin/* ]]; then
+  git -C "$REPO" fetch --quiet origin "${BASE#origin/}" 2>/dev/null || true
+fi
+if ! git -C "$REPO" rev-parse --verify --quiet "${BASE}^{commit}" >/dev/null; then
+  echo "base ref '$BASE' does not resolve in $REPO — fetch it, or pass an explicit base (e.g. codex-review.sh main $OUT)" >&2
+  exit 3
 fi
 
 # Feed the diff to codex directly (via stdin) instead of asking it to run git.
