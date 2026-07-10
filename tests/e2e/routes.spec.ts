@@ -1,4 +1,20 @@
 import { expect, test } from "@playwright/test";
+import { postRoutesSync, projectRoutesSync } from "../lib/collection-routes";
+
+// Every published project/post route, derived from the same content the site
+// reads — so a new case study or post gets at least generic coverage below
+// without a spec edit. lead-scoring, ai-sms-pilot, and hello-world keep their
+// route-specific assertions further down and are excluded from the generic
+// loops to avoid double-testing the same route. Sync (not the async
+// reader-based helper): Playwright transforms spec files to CJS, where a
+// top-level `await` throws at collect time.
+const allProjectRoutes = projectRoutesSync().map((entry) => entry.path);
+const allPostRoutes = postRoutesSync().map((entry) => entry.path);
+const SPOT_CHECKED_PROJECT_ROUTES = new Set([
+  "/work/lead-scoring",
+  "/work/ai-sms-pilot",
+]);
+const SPOT_CHECKED_POST_ROUTES = new Set(["/notes/hello-world"]);
 
 // /404 — unknown route serves OffTrail component with HTTP 404
 test("/nonexistent route returns 404 with OffTrail component", async ({
@@ -18,7 +34,10 @@ test("/ renders the operator's console home", async ({ page }) => {
   await expect(page.locator(".hero-eyebrow")).toContainText("korab eland");
   await expect(page.locator("h1#hero-heading")).toContainText("ship");
   await expect(page.locator("#ledger-heading")).toContainText("outcome ledger");
-  await expect(page.locator(".ledger-row")).not.toHaveCount(0);
+  // U8 curation: home features exactly three case studies; the full index
+  // stays one click away via the ledger's more-link.
+  await expect(page.locator(".ledger-row")).toHaveCount(3);
+  await expect(page.locator('a.section-more[href="/work"]')).toBeVisible();
   await expect(page.locator("#close-heading")).toContainText(
     "the short version",
   );
@@ -47,6 +66,11 @@ test("/work renders the case-study index", async ({ page }) => {
   );
   await expect(page.locator('a[href="/work/lead-scoring"]')).toBeVisible();
   await expect(page.locator('a[href="/work/ai-sms-pilot"]')).toBeVisible();
+  // /work stays the FULL index — every published case study gets a row
+  // (home curates to three; this page must not).
+  await expect(page.locator(".ledger-row")).toHaveCount(
+    allProjectRoutes.length,
+  );
 });
 
 // /work/lead-scoring — case-study detail renders title, fact strip, and body.
@@ -65,6 +89,19 @@ test("/work/ai-sms-pilot renders the case study detail", async ({ page }) => {
     "AI SMS engagement",
   );
 });
+
+// Generic coverage for every project route not already spot-checked above —
+// the floor every case study must clear: it renders, and the case-study
+// detail shell (title + at least one fact chip) is present.
+for (const route of allProjectRoutes) {
+  if (SPOT_CHECKED_PROJECT_ROUTES.has(route)) continue;
+  test(`${route} renders the case study detail`, async ({ page }) => {
+    const response = await page.goto(route);
+    expect(response?.status()).toBe(200);
+    await expect(page.locator("h1.head-title")).toBeVisible();
+    await expect(page.locator(".chip")).toBeVisible();
+  });
+}
 
 // /about — career narrative page.
 test("/about renders the about page", async ({ page }) => {
@@ -97,6 +134,17 @@ test("/notes/hello-world renders in the reading room", async ({ page }) => {
   );
   await expect(page.locator(".post-body")).toBeVisible();
 });
+
+// Generic coverage for every post route not already spot-checked above.
+for (const route of allPostRoutes) {
+  if (SPOT_CHECKED_POST_ROUTES.has(route)) continue;
+  test(`${route} renders in the reading room`, async ({ page }) => {
+    const response = await page.goto(route);
+    expect(response?.status()).toBe(200);
+    await expect(page.locator("article.reading-room h1.title")).toBeVisible();
+    await expect(page.locator(".post-body")).toBeVisible();
+  });
+}
 
 // /colophon — build log + tools.
 test("/colophon renders the colophon page", async ({ page }) => {

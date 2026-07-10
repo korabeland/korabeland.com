@@ -26,6 +26,34 @@ test("activating a metric marker opens and closes the provenance disclosure", as
   await expect(details).not.toHaveAttribute("open", "");
 });
 
+// U8 — the trigger self-describes for AT without an aria-label override:
+// the accessible name must still LEAD with the metric's own label/value
+// (an aria-label would replace it and make every row announce identically),
+// and end with the visually-hidden "how this was measured" affordance.
+test("provenance trigger accessible name keeps the metric and adds the affordance", async ({
+  page,
+}) => {
+  await page.goto("/work/lead-scoring");
+
+  const summaries = page.locator("summary.metric");
+  const count = await summaries.count();
+  expect(count).toBeGreaterThan(0);
+
+  const names = new Set<string>();
+  for (let i = 0; i < count; i++) {
+    const summary = summaries.nth(i);
+    const name = await summary.evaluate(
+      (el) => el.textContent?.replace(/\s+/g, " ").trim() ?? "",
+    );
+    expect(name.toLowerCase()).toContain("how this was measured");
+    // Each row's name must stay distinct — the metric's own label/value
+    // must survive in the computed name.
+    names.add(name);
+  }
+  expect(names.size).toBe(count);
+  await expect(summaries.first().locator("[aria-label]")).toHaveCount(0);
+});
+
 test("keyboard: focusing a marker and pressing Enter drives the same disclosure flow", async ({
   page,
 }) => {

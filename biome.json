@@ -25,7 +25,8 @@
       "!tests/visual/baselines",
       "!tests/visual/diffs",
       "!docs/design-references",
-      "!.claude/settings.local.json"
+      "!.claude/settings.local.json",
+      "!.claude/worktrees"
     ]
   },
   "overrides": [

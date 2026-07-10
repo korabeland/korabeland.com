@@ -66,3 +66,11 @@ src/content/shift-log/contributions.json
 
 # Stray local build log (accidentally committed via git add -A in 136e7ae)
 build-archive.log
+
+# Git worktrees checked out under the main repo (each has its own tree/branch;
+# committed here only via the worktree's own git dir, never the main checkout).
+.claude/worktrees/
+
+# Hero image variants: generated per-build/dev by scripts/gen-hero-variants.ts
+# from the originals Keystatic stores. Never committed — regenerated on demand.
+public/**/*.gen.*

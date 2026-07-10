@@ -93,7 +93,15 @@ const NAV_LINKS: readonly NavLink[] = [
          module is what Vitest exercises; this copy can't import it — an
          is:inline head script can't pull in a module graph and stay
          render-blocking). Any failure (storage blocked, private mode, etc.)
-         falls back to night. -->
+         falls back to night. The two copies are kept in lockstep by
+         tests/shift-parity.test.ts, the enforced drift guard — it reads this
+         file, evaluates the script body between the markers below in a
+         node:vm sandbox, and asserts it matches resolveShift() across the
+         full precedence truth table. -->
+    <!-- SHIFT-RESOLVE:START — extraction anchor for tests/shift-parity.test.ts,
+         which reads this file at test time and evaluates the script body
+         between these markers in a node:vm sandbox. Keep the markers
+         immediately wrapping the <script> tag if this block ever moves. -->
     <script is:inline>
       (function () {
         var SHIFT_KEY = "korab-shift";
@@ -154,6 +162,7 @@ const NAV_LINKS: readonly NavLink[] = [
         }
       })();
     </script>
+    <!-- SHIFT-RESOLVE:END -->
     <meta name="description" content={description} />
     {noindex && <meta name="robots" content="noindex" />}
     <link rel="canonical" href={canonicalUrl} />
@@ -187,6 +196,9 @@ const NAV_LINKS: readonly NavLink[] = [
     <meta name="twitter:description" content={description} />
     {ogImageUrl && <meta name="twitter:image" content={ogImageUrl} />}
     <slot name="jsonld" />
+    <!-- Per-page head extensions (e.g. the home page preloads its LCP
+         image). Keep after the meta block so pages can't shadow it. -->
+    <slot name="head" />
   </head>
   <body>
     <a class="skip-link" href="#main">skip to content</a>

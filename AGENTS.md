@@ -57,11 +57,11 @@ src/content/
 ## 2. Build & verify
 
 - `pnpm dev` — local dev server
-- `pnpm build` — production build (runs the prebuild hooks: `gen-trail-register.ts` + `gen-shift-log.ts`)
+- `pnpm build` — production build (prebuild hooks: `gen-trail-register.ts` + `gen-shift-log.ts` + `gen-hero-variants.ts`; the last also runs on `predev`)
 - `pnpm verify` — Biome + `tsc --noEmit` + `astro check` (`.astro` frontmatter)
 - `pnpm test` — Vitest (non-visual, non-E2E)
-- `pnpm test:visual` — Playwright visual + E2E
-- `pnpm audit` — Lighthouse CI + axe-core
+- `pnpm test:visual` — Playwright visual + E2E. Local pixelmatch baselines are **advisory**; the blocking visual gate is Chromatic in CI — see `docs/decisions/2026-07-10-visual-approval-policy.md`. Never delete/blind-reseed a baseline to go green.
+- `pnpm run audit` — Lighthouse CI, desktop (`.lighthouserc.json`) + mobile (`.lighthouserc.mobile.json`) profiles. Not to be confused with bare `pnpm audit --prod` (pnpm's built-in dependency security audit, a blocking CI step).
 - `pnpm verify:all` — chains all four; must pass before any PR is opened
 
 **Testing conventions (established 2026-07-05):**
@@ -143,3 +143,20 @@ Korab works this repo solo. `main`'s branch protection has no required-approving
 - `Devin Review` genuinely gates on completion (`pending` → `success`), not just a static badge — merge is blocked until it's actually run. It does **not** gate on severity: it goes green even when it flagged real bugs.
 - Before merging, read Devin's review comments. Fix genuine bugs and regressions — that's non-negotiable. Cosmetic/style suggestions can be deferred or explicitly declined.
 - Once `verify-all` and `Devin Review` are both green, merge normally: `gh pr merge --squash`. No `--admin` needed.
+
+---
+
+## 8. Change-trigger matrix
+
+When a change matches a trigger below, the "required work" column is not optional — the enforcement column is what catches you if you skip it. **The no-test-weakening rule is absolute:** fix the failure, never disable, loosen, or delete the check that caught it (that includes deleting a visual baseline to go green).
+
+| Change trigger | Required work | Enforcement |
+| --- | --- | --- |
+| `package.json` or `pnpm-lock.yaml` | Run `pnpm audit --prod --audit-level=high`; update compatible integrations together (Astro-6 line); full suite after upgrade | Blocking CI step "Dependency security audit" |
+| New entry in `src/content/projects/` or `src/content/posts/` | Route/SEO/axe/visual coverage derives automatically from the collections — verify enumeration picked it up; a hero-bearing post must appear in **both** Lighthouse configs | `tests/coverage-sync.test.ts` (enumeration parity + Lighthouse containment) |
+| New or replaced image asset | Responsive delivery via `scripts/gen-hero-variants.ts` conventions (never astro:assets/`<Image>` for `public/` assets — the Vercel imageService ignores width/format requests); explicit dimensions; alt text; ≤200 KB delivered variant (`docs/decisions/2026-07-10-image-delivery-budget.md`) | `tests/e2e/hero-delivery.spec.ts` network asserts + CI Lighthouse LCP/CLS |
+| Shared markup/state appearing in a second surface | Reuse the existing owner (`ProjectLedger`, `Portrait`, `StatusChip`, `src/lib/status.ts`, `src/lib/shift.ts`) or extract one; an unavoidable duplicate gets a parity test (`tests/shift-parity.test.ts` is the template) | Code-review criterion + existing sync/parity tests |
+| Runtime or onboarding doc (`.nvmrc`, `.tool-versions`, `engines`, README) | `.nvmrc` is canonical; update mirrors in the same commit | `tests/runtime-sync.test.ts` |
+| Visual output changes | Follow the approval policy: Chromatic is the blocking gate, approve deliberate diffs in its UI; local baselines reseed only after visual review of every diff | Required `verify-all` check (Chromatic step, fails closed) + `docs/decisions/2026-07-10-visual-approval-policy.md` |
+
+Commands referenced above are defined once in §2; single-source contracts in §6a.

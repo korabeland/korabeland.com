@@ -10,24 +10,16 @@ Korab's personal website — Astro 6 + Keystatic + shadcn/ui + Tailwind 4, deplo
 
 Install these once on your Mac:
 
+Runtime: Node 22 — declared in `.nvmrc`.
+
 **Node version manager** (pick one):
-- [nvm](https://github.com/nvm-sh/nvm): `curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash`
-- [mise](https://mise.jdx.dev): `brew install mise` (also manages pnpm)
+- [nvm](https://github.com/nvm-sh/nvm): `curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash` (then `nvm install && nvm use`)
+- [mise](https://mise.jdx.dev): `brew install mise` (also manages pnpm; reads the pinned version from `.tool-versions`)
 
 **pnpm** (Node package manager):
 ```sh
 corepack enable
 corepack prepare pnpm@10.33.0 --activate
-```
-
-**LM Studio** — download from [lmstudio.ai](https://lmstudio.ai). After install:
-1. Search for and download `Qwen3.6-35B-A3B-4bit` (MLX format, ~20 GB)
-2. Load the model and enable the Local Server (Settings → Local Server → Start)
-3. Verify the server badge shows port 1234 and runtime shows "MLX"
-
-**Ollama** (optional — secondary runtime for Gemma 4):
-```sh
-brew install ollama
 ```
 
 ---
@@ -41,11 +33,11 @@ cd korabeland.com
 
 # 2. Switch to the pinned Node version
 nvm install   # reads .nvmrc automatically
-nvm use       # activates 20.18.3
+nvm use       # activates Node 22
 # or with mise:
 mise install && mise use
 
-# 3. Run the start-day script — verifies env, opens LM Studio if needed
+# 3. Run the start-day script
 bash scripts/start-day.sh
 ```
 
@@ -57,44 +49,11 @@ Once the health check is green, you're ready to work.
 
 | Error | Fix |
 |---|---|
-| Node version mismatch | `nvm install 20.18.3 && nvm use` |
+| Node version mismatch | `nvm install && nvm use` (reads `.nvmrc`) |
 | pnpm version mismatch | `corepack enable && corepack prepare pnpm@10.33.0 --activate` |
 | LM Studio not responding | Open LM Studio → enable Local Server on port 1234 |
 | Qwen3 not loaded | In LM Studio, load `Qwen3.6-35B-A3B-4bit` and start the server |
 | Ollama not running | `ollama serve` (optional — won't block the build) |
-
----
-
-## If houtini-lm breaks
-
-`houtini-lm` is the MCP bridge between Claude Code and LM Studio. It is registered in `.mcp.json` and loads automatically on session start.
-
-**Verify it's working:**
-```sh
-claude mcp list
-# Should show: houtini-lm — node node_modules/@houtini/lm/dist/index.js
-```
-
-**Curl fallback** (bypasses MCP entirely):
-```sh
-echo "What is 2+2?" | bash scripts/local-llm.sh
-```
-
-**Canary test** (checks the full local model path):
-```sh
-bash scripts/local-llm-test.sh
-# ✓ Local LLM responding (pong)
-```
-
-**Re-register if `.mcp.json` gets corrupted:**
-```sh
-# Edit .mcp.json directly — add the entry under mcpServers:
-# "houtini-lm": {
-#   "command": "node",
-#   "args": ["node_modules/@houtini/lm/dist/index.js"],
-#   "env": { "LM_STUDIO_URL": "http://localhost:1234" }
-# }
-```
 
 ---
 
@@ -107,27 +66,42 @@ This is an AI-orchestrated build. You interact through:
 
 Every change produces a review page in the PR comment: preview URL, screenshots at 4 viewports, before/after diffs, and a plain-English summary of what changed.
 
-For the codebase layout (directory tree, stack, build commands, file-ownership rules), see [`AGENTS.md`](AGENTS.md) §1–2. See `setup prompts/00-master-plan-v2.md` for the full system design.
+For the codebase layout (directory tree, stack, build commands, file-ownership rules), see [`AGENTS.md`](AGENTS.md) §1–2. See [`docs/setup-prompts/00-master-plan-v2.md`](docs/setup-prompts/00-master-plan-v2.md) for the full system design.
+
+---
+
+## Verify & test
+
+- `pnpm verify` — Biome + `tsc --noEmit` + `astro check`
+- `pnpm test` — Vitest (non-visual, non-E2E)
+- `pnpm test:visual` — Playwright visual + E2E. Local pixelmatch baselines are advisory; the blocking visual gate is Chromatic in CI
+- `pnpm run audit` — Lighthouse CI, desktop + mobile profiles
+- `pnpm audit --prod --audit-level=high` — dependency security audit, blocking in CI
+- `pnpm build` — production build
+
+See [`AGENTS.md`](AGENTS.md) §2 for the full breakdown, including `pnpm verify:all` (chains verify + test + test:visual + audit).
+
+`package.json#engines` pins the Vercel build image to the Node 22 line declared in `.nvmrc` (Vercel was auto-selecting Node 24 before this was added) — verified via preview deployment on the next PR.
 
 ---
 
 ## Build Prompts
 
-The 14-prompt playbook lives in `setup prompts/`. Run them in order — each prompt depends on the previous.
+The 14-prompt playbook lives in `docs/setup-prompts/`. Run them in order — each prompt depends on the previous.
 
 | # | Prompt | Status |
 |---|---|---|
-| 01 | Environment pinning | ✅ done |
-| 02 | Orchestration rules and file ownership | — |
-| 03 | Application scaffold (Astro + Keystatic + shadcn + Tailwind) | — |
-| 04 | Verification stack (Biome, Vitest, Playwright, Lighthouse, axe) | — |
-| 05 | Local model delegation (houtini-lm + curl fallback) | ✅ done |
-| 06 | Cost controls and escalation pipeline | — |
-| 07 | Subagent roster | — |
-| 08 | Design direction | — |
-| 09 | Content architecture | — |
-| 10 | Component build-out | — |
-| 11 | Deployment and preview infrastructure | — |
-| 12 | SEO, performance, accessibility pass | — |
-| 13 | Launch checklist | — |
-| 14 | Ongoing operation mode | — |
+| 01 | [Environment pinning](docs/setup-prompts/01-environment-pinning.md) | ✅ done |
+| 02 | [Orchestration rules and file ownership](docs/setup-prompts/02-orchestration-rules.md) | — |
+| 03 | [Application scaffold (Astro + Keystatic + shadcn + Tailwind)](docs/setup-prompts/03-application-scaffold.md) | — |
+| 04 | [Verification stack (Biome, Vitest, Playwright, Lighthouse, axe)](docs/setup-prompts/04-verification-stack.md) | — |
+| 05 | [Local model delegation](docs/setup-prompts/05-local-model-delegation.md) | ✅ done |
+| 06 | [Cost controls and escalation pipeline](docs/setup-prompts/06-escalation-pipeline.md) | — |
+| 07 | [Subagent roster](docs/setup-prompts/07-subagent-roster.md) | — |
+| 08 | [Design direction](docs/setup-prompts/08-design-direction.md) | — |
+| 09 | [Content architecture](docs/setup-prompts/09-content-architecture.md) | — |
+| 10 | [Component build-out](docs/setup-prompts/10-component-buildout.md) | — |
+| 11 | [Deployment and preview infrastructure](docs/setup-prompts/11-deployment-preview.md) | — |
+| 12 | [SEO, performance, accessibility pass](docs/setup-prompts/12-polish-passes.md) | — |
+| 13 | [Launch checklist](docs/setup-prompts/13-launch-checklist.md) | — |
+| 14 | [Ongoing operation mode](docs/setup-prompts/14-ongoing-operation.md) | — |

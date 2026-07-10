@@ -2,6 +2,7 @@
 // ReadingRoom/index.astro — three-column blog reading layout.
 // 220px sidebar · 620px reading column · 260px margin-notes rail.
 
+import { loadHeroPicture } from "../../lib/hero-picture";
 import LeftSidebar from "./LeftSidebar.astro";
 import RightSidebar from "./RightSidebar.astro";
 
@@ -45,6 +46,14 @@ const {
   heroImage,
   heroImageAlt = "",
 } = Astro.props;
+
+// heroImage is the bare Keystatic filename; variants live in public/notes/
+// (this collection's fixed heroImage `directory`). Plumbing shared with
+// CaseStudy via src/lib/hero-picture.ts.
+const hero = heroImage
+  ? loadHeroPicture("public/notes", heroImage, "ReadingRoom")
+  : null;
+const HERO_SIZES = "(max-width: 680px) 100vw, 620px";
 ---
 
 <div class="return">
@@ -72,9 +81,21 @@ const {
 
     <div class="rule-soft rule-top"></div>
 
-    {heroImage && (
+    {hero && (
       <figure class="hero">
-        <img src={heroImage} alt={heroImageAlt} loading="eager" />
+        <picture>
+          <source type="image/avif" srcset={hero.avifSrcset} sizes={HERO_SIZES} />
+          <source type="image/webp" srcset={hero.webpSrcset} sizes={HERO_SIZES} />
+          <img
+            src={hero.fallbackSrc}
+            alt={heroImageAlt}
+            width={hero.width}
+            height={hero.height}
+            loading="eager"
+            fetchpriority="high"
+            sizes={HERO_SIZES}
+          />
+        </picture>
       </figure>
     )}
 

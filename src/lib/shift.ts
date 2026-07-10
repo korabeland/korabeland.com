@@ -4,7 +4,11 @@
 // `is:inline` and can't import this module at runtime (it must stay
 // render-blocking and dependency-free), so its small resolution logic is
 // duplicated inline there. This module is the source Vitest exercises for
-// every precedence/boundary scenario; keep the two in lockstep by hand.
+// every precedence/boundary scenario. The two copies are kept in lockstep by
+// tests/shift-parity.test.ts, which evaluates the inline script in a
+// node:vm sandbox and asserts it matches resolveShift() below across the
+// full precedence truth table — edit either copy without updating the other
+// and that test fails.
 //
 // Precedence, highest to lowest:
 //   1. `?shift=` query override (never persisted)
