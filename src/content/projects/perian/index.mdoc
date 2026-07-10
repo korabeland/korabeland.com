@@ -1,0 +1,44 @@
+---
+slug: perian
+title: 'Perian: trusting small local models to do the work'
+description: >-
+  Most agent work does not need a frontier model. Perian splits design-time
+  intelligence from run-time execution, so small local models do the daily
+  work at no marginal cost, with cross-family checks for trust.
+role: Solo design + build
+team: Solo project
+stack: Python · Ollama · local LLMs
+outcome: zero-cost local execution · cross-family trust
+startedAt: 2026-04-01
+shippedAt: 2026-07-05
+tags:
+  - ai
+  - agents
+  - local-first
+  - open-source
+outcomeMetrics:
+  - value: $0 / run
+    label: Marginal cost of daily execution
+    provenance: >-
+      Execution runs entirely on local models served through Ollama. The
+      frontier model is confined to design-time prompt work and evaluation, so
+      daily runs carry no per-call API cost.
+  - value: 14B over 32B
+    label: A smaller model won the reasoning battery
+    provenance: >-
+      Six-dimension capability evaluation across eight local models, March
+      2026. The 14B model scored highest on causal reasoning at lower memory
+      than the 32B, recorded in the framework's published eval tables.
+fieldLog: []
+reflection: ''
+nextProject: lead-scoring
+---
+Most of what an agent does day to day, extracting fields, scoring against criteria, classifying, ranking, does not need a frontier model. A small model running on your own machine handles it. The expensive intelligence belongs at design time, not run time.
+
+Perian is a local-first framework built on that split. A frontier model plans once: it designs the prompts, builds the evaluation, and judges the output. Small local models then execute, at no marginal cost, privately, on device. When quality needs to lift, a refine-on-demand loop lets a frontier model propose prompt changes offline, and a deterministic gate accepts them only when the measured numbers improve.
+
+The part I care about most is trust. A model never certifies its own work. The local crew builds; a different model family reviews. That is grounded in real findings: same-provider models share most of their errors, so a second opinion from the same family tells you little. Perian pairs a Qwen-family pipeline with a Gemma-family challenger that re-checks each score and cites the specific rule broken.
+
+The evaluation is deliberately self-critical. A six-level capability battery scores each model, and the write-up flags where its own tests are underpowered rather than hiding it. Models audition for roles instead of chasing one leaderboard, which is how a 14B model ends up owning causal reasoning over a larger one.
+
+The job-search reference implementation runs end to end on placeholder data, so the method is inspectable rather than just described. Code: [perian](https://github.com/korabeland/perian) and [perian-jobsearch](https://github.com/korabeland/perian-jobsearch).
