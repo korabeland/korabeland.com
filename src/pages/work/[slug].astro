@@ -8,6 +8,7 @@ import CaseStudy from "../../components/CaseStudy/index.astro";
 import { PostContent } from "../../components/PostContent";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import {
+  formatSpan,
   listProjects,
   mapMetrics,
   projectHref,
@@ -33,22 +34,6 @@ const content = await project.content();
 // /work: amber "in flight" while null, moss "shipped" once set.
 const status = project.shippedAt ? "shipped" : "in flight";
 
-// Duration string ("2026 · 4 months") when both dates are present.
-function formatSpan(startISO: string | null, shipISO: string | null): string {
-  if (!startISO) return "";
-  const s = new Date(startISO);
-  if (!shipISO) return String(s.getFullYear());
-  const e = new Date(shipISO);
-  const months = Math.max(
-    1,
-    (e.getFullYear() - s.getFullYear()) * 12 + (e.getMonth() - s.getMonth()),
-  );
-  const yearStr =
-    s.getFullYear() === e.getFullYear()
-      ? String(s.getFullYear())
-      : `${s.getFullYear()}–${e.getFullYear()}`;
-  return `${yearStr} · ${months} month${months === 1 ? "" : "s"}`;
-}
 const span = formatSpan(project.startedAt, project.shippedAt);
 
 // Fact strip: Role / Team / Stack / Span / Status.

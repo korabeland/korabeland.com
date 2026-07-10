@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { mapMetrics, type RawOutcomeMetric } from "@/lib/projects";
+import {
+  formatSpan,
+  mapMetrics,
+  projectHref,
+  type RawOutcomeMetric,
+} from "@/lib/projects";
 
 function metric(overrides: Partial<RawOutcomeMetric> = {}): RawOutcomeMetric {
   return {
@@ -66,5 +71,49 @@ describe("mapMetrics — error path (AE4 enforcement)", () => {
     expect(() => mapMetrics("ai-sms-pilot", raw)).toThrow(
       'Metric "Vendor cost difference" in project "ai-sms-pilot" is missing provenance (AE4: no metric ships without provenance).',
     );
+  });
+});
+
+describe("projectHref — category routing", () => {
+  it("routes work projects under /work", () => {
+    expect(projectHref({ slug: "lead-scoring", category: "work" })).toBe(
+      "/work/lead-scoring",
+    );
+  });
+
+  it("routes side projects under /lab", () => {
+    expect(projectHref({ slug: "perian", category: "side" })).toBe(
+      "/lab/perian",
+    );
+  });
+});
+
+describe("formatSpan — fact-strip duration", () => {
+  it("returns empty when there is no start date", () => {
+    expect(formatSpan(null, null)).toBe("");
+    expect(formatSpan(null, "2026-07-05")).toBe("");
+  });
+
+  it("returns the start year alone while unshipped", () => {
+    expect(formatSpan("2026-04-01", null)).toBe("2026");
+  });
+
+  it("counts whole months within one year", () => {
+    expect(formatSpan("2026-04-01", "2026-07-05")).toBe("2026 · 3 months");
+  });
+
+  it("floors at 1 month for a same-month ship", () => {
+    expect(formatSpan("2026-07-01", "2026-07-20")).toBe("2026 · 1 month");
+  });
+
+  it("renders a year range when the span crosses years", () => {
+    expect(formatSpan("2025-11-13", "2026-01-10")).toBe("2025–2026 · 2 months");
+  });
+
+  it("keeps boundary dates in their own year regardless of timezone", () => {
+    // A date-only string fed to `new Date()` is UTC midnight; local getters
+    // in a negative-offset zone would pull these into the prior day/year.
+    expect(formatSpan("2026-01-01", null)).toBe("2026");
+    expect(formatSpan("2025-12-15", "2026-01-01")).toBe("2025–2026 · 1 month");
   });
 });

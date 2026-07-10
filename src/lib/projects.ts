@@ -127,3 +127,24 @@ export function projectStatus(
 ): "shipped" | "in-flight" {
   return project.shippedAt ? "shipped" : "in-flight";
 }
+
+/**
+ * Duration string for a detail page's fact strip ("2026 · 4 months"), shared
+ * by the /work and /lab detail routes. Year(s) only until a ship date exists;
+ * the month count floors at 1 so a same-month ship never reads "0 months".
+ * Parses the YYYY-MM-DD components directly — `new Date()` would read a
+ * date-only string as UTC and local-time getters would then shift boundary
+ * dates (e.g. 2026-01-01) into the prior day in negative-offset timezones.
+ */
+export function formatSpan(
+  startISO: string | null,
+  shipISO: string | null,
+): string {
+  if (!startISO) return "";
+  const [sy, sm] = startISO.split("-").map(Number);
+  if (!shipISO) return String(sy);
+  const [ey, em] = shipISO.split("-").map(Number);
+  const months = Math.max(1, (ey - sy) * 12 + (em - sm));
+  const yearStr = sy === ey ? String(sy) : `${sy}–${ey}`;
+  return `${yearStr} · ${months} month${months === 1 ? "" : "s"}`;
+}
