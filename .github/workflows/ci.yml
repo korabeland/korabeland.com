@@ -22,6 +22,13 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # Dependency security gate. This is pnpm's BUILT-IN audit subcommand,
+      # not the repo's `pnpm run audit` script (that one is Lighthouse via
+      # `lhci autorun`) — the shared name is a known ambiguity, so keep this
+      # step's name explicit. Blocks the job on any high/critical finding in
+      # production dependencies; runs early to short-circuit cheaply.
+      - name: Dependency security audit
+        run: pnpm audit --prod --audit-level=high
       - name: Cache Playwright browsers
         uses: actions/cache@v4
         with:
