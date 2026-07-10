@@ -1,6 +1,21 @@
 import { expect, test } from "@playwright/test";
+import { postRoutesSync, projectRoutesSync } from "../lib/collection-routes";
 
-const routes = [
+interface SeoRouteCase {
+  path: string;
+  title: string;
+  descriptionFragment: string;
+  ogType: string;
+  hasOgImage: boolean;
+  noindex: boolean;
+  hasJsonLd?: boolean;
+}
+
+// Curated: non-collection pages (no reader to derive from) plus two
+// collection-backed pages (lead-scoring, hello-world) kept here deliberately
+// so their real, hand-verified copy stays pinned. Every other published
+// project/post gets a generic case below instead.
+const curatedRoutes: SeoRouteCase[] = [
   {
     path: "/",
     title: "korab eland · operator · builds with ai",
@@ -76,7 +91,57 @@ const routes = [
     noindex: true,
     hasJsonLd: false,
   },
-] as const;
+];
+
+const CURATED_PROJECT_SLUGS = new Set(["lead-scoring"]);
+const CURATED_POST_SLUGS = new Set(["hello-world"]);
+
+// Generic cases for every project/post not curated above — the title and
+// description convention mirrors src/pages/work/[slug].astro and
+// src/pages/notes/[slug].astro exactly (` · case study · korab eland` and
+// `: field notes`), so a new case study or post is covered the moment it
+// publishes, without a spec edit. Sync (not the async reader-based helper):
+// Playwright transforms spec files to CJS, where a top-level `await` throws
+// at collect time.
+const projects = projectRoutesSync();
+const posts = postRoutesSync();
+
+// Content descriptions are prose — a literal `?` or `.` must not act as a
+// regex operator when the fragment is compiled with `new RegExp` below.
+// Curated fragments above are hand-written and may use regex deliberately.
+const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const generatedProjectRoutes: SeoRouteCase[] = projects
+  .filter((p) => !CURATED_PROJECT_SLUGS.has(p.slug))
+  .map((p) => ({
+    path: p.path,
+    title: `${p.title} · case study · korab eland`,
+    descriptionFragment: escapeRegExp(
+      p.description || `Case study: ${p.title}`,
+    ),
+    ogType: "article",
+    hasOgImage: false,
+    noindex: false,
+  }));
+
+const generatedPostRoutes: SeoRouteCase[] = posts
+  .filter((p) => !CURATED_POST_SLUGS.has(p.slug))
+  .map((p) => ({
+    path: p.path,
+    title: `${p.title}: field notes`,
+    descriptionFragment: escapeRegExp(
+      p.description || `Field note: ${p.title}`,
+    ),
+    ogType: "article",
+    hasOgImage: false,
+    noindex: false,
+  }));
+
+const routes: SeoRouteCase[] = [
+  ...curatedRoutes,
+  ...generatedProjectRoutes,
+  ...generatedPostRoutes,
+];
 
 for (const route of routes) {
   const hasJsonLd = "hasJsonLd" in route ? route.hasJsonLd : true;
