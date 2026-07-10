@@ -2,7 +2,7 @@
 
 - **Date:** 2026-07-09 (pre-merge) → 2026-07-10 (post-merge convergence)
 - **Base:** main
-- **Outcome:** clean (converged)
+- **Outcome:** stopped on oscillation — all remaining findings verified as non-issues
 
 The branch was reviewed across two sessions: before syncing onto main, and again
 after merging the advanced main (audit PRs #16–18). Codex is non-deterministic
@@ -36,6 +36,19 @@ disproven** and not applied — codex's suggested fixes would have *introduced* 
   glow cluster centered on that column (546-597 / 631-682 / 870-887) — not stuck at
   the left edge.
 
+A later pass also raised a **listener-teardown** concern (`resize`/`mousemove`/
+`mouseleave` never removed → leak on Astro page transitions). Dismissed: the site
+uses **no view transitions** (`grep` for `ClientRouter`/`astro:before-swap` is
+empty), so every navigation is a full document unload that cleans up listeners, and
+**no component in the codebase uses teardown** (OutcomeMetrics, ShiftToggle add
+listeners without cleanup). An `AbortController` here would be dead code
+inconsistent with the established pattern; if view transitions are adopted later,
+teardown must be added systemically, not to this one script.
+
+The loop stopped on oscillation: codex alternated clean / not-clean across passes on
+unchanged code, repeatedly re-raising the torch-coordinate false positive. The code
+is verified correct by other means — 121 unit tests, the reduced-motion e2e gate,
+the empirical torch checks above, stable geometry, and a passing Lighthouse audit.
 Korab reviewed and approved proceeding.
 
 ## Reverted
