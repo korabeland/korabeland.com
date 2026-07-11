@@ -70,11 +70,14 @@ export interface PortraitEyes {
   irisRadius: number;
 }
 
+// Radii measured off the rendered eye (iris ≈ 0.017w, painted pupil ≈ 0.009w):
+// the overlay pupil sits just above the painted pupil so it covers it, and the
+// iris clip matches the painted iris so the disc can never reach the sclera.
 const EYES_SHARED: PortraitEyes = {
   left: { cx: 0.422, cy: 0.404 },
   right: { cx: 0.612, cy: 0.399 },
-  pupilRadius: 0.022,
-  irisRadius: 0.035,
+  pupilRadius: 0.012,
+  irisRadius: 0.018,
 };
 
 export const EYE_MANIFEST: Record<string, PortraitEyes> = {
@@ -85,8 +88,9 @@ export const EYE_MANIFEST: Record<string, PortraitEyes> = {
 // ── Engagement + movement constants ───────────────────────────────────────
 export const GAZE = {
   /** Max pupil travel at full attenuation, fraction of image width (day base;
-   *  night scales it down via temperament). Subtle by intent — tuned by feel. */
-  travelFraction: 0.011,
+   *  night scales it down via temperament). Subtle by intent — kept within
+   *  `irisRadius - pupilRadius` so the disc stays inside the painted iris. */
+  travelFraction: 0.005,
   /** Proximity band = portrait half-diagonal + this many px. Gaze engages
    *  inside the band and cuts off beyond it (R1). */
   bandPadding: 78,
