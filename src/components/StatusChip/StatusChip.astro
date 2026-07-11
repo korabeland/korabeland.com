@@ -4,11 +4,11 @@
 // about-page availability dot, and the outcome-ledger status chip.
 //
 // Semantic colours are locked (docs/plans/2026-07-03-console-mvp.md): signal =
-// active / in-flight / available, moss = shipped. The dot is decorative
+// active / in-flight, moss = shipped. The dot is decorative
 // (aria-hidden); the meaning always lives in the adjacent text. Motion is a
 // slow breathe, killed by the global reduced-motion guard in global.css.
 
-type Status = "available" | "in-flight" | "current" | "shipped";
+type Status = "in-flight" | "current" | "shipped";
 
 interface Props {
   status: Status;
@@ -24,13 +24,11 @@ interface Props {
 const { status, variant = "chip", label, class: className } = Astro.props;
 
 const TONE: Record<Status, "signal" | "moss"> = {
-  available: "signal",
   "in-flight": "signal",
   current: "signal",
   shipped: "moss",
 };
 const DEFAULT_LABEL: Record<Status, string> = {
-  available: "open to roles",
   "in-flight": "in flight",
   current: "current",
   shipped: "shipped",

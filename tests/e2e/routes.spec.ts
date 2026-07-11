@@ -38,7 +38,6 @@ test("/nonexistent route returns 404 with OffTrail component", async ({
 test("/ renders the operator's console home", async ({ page }) => {
   const response = await page.goto("/");
   expect(response?.status()).toBe(200);
-  await expect(page.locator(".hero-eyebrow")).toContainText("korab eland");
   await expect(page.locator("h1#hero-heading")).toContainText("ship");
   await expect(page.locator("#ledger-heading")).toContainText("outcome ledger");
   // U8 curation: home features exactly three case studies. Scoped to the work
@@ -262,18 +261,11 @@ test("/off-trail with an unknown from= value falls back to generic copy", async 
   await expect(page.locator(".dek")).toContainText("This page does not exist");
 });
 
-// Availability signal — status line in the homepage hero readout, quiet
-// echo in every footer. The header rail is identical on every page: the
-// shift toggle sits to the left of the wordmark (the old logo/badge was
-// removed), and the contact CTA anchors the right.
-test("home hero renders the availability status line and portrait", async ({
-  page,
-}) => {
+// The header rail is identical on every page: the shift toggle sits to the
+// left of the wordmark (the old logo/badge was removed), and the contact CTA
+// anchors the right. The hero shows the shift-aware portrait.
+test("home hero renders the portrait and header rail", async ({ page }) => {
   await page.goto("/");
-  await expect(page.locator(".hero-avail")).toContainText(
-    "open to ai · data · product roles",
-  );
-  await expect(page.locator(".hero-avail .statuschip-dot")).toBeVisible();
   // Portrait swaps with the shift: night (this test's pinned palette) shows
   // the orange variant; the blue day variant is present but hidden until day.
   await expect(page.locator(".hero-portrait .portrait-night")).toBeVisible();
@@ -283,11 +275,8 @@ test("home hero renders the availability status line and portrait", async ({
   await expect(page.locator(".chrome-left .shift-toggle")).toBeVisible();
 });
 
-test("footer carries the availability echo; header shows the contact CTA", async ({
-  page,
-}) => {
+test("header shows the contact CTA and shift toggle", async ({ page }) => {
   await page.goto("/work");
-  await expect(page.locator(".footer-avail")).toContainText("open to roles");
   const cta = page.locator(".chrome-cta");
   await expect(cta).toBeVisible();
   await expect(cta).toHaveAttribute("href", "mailto:korabeland@gmail.com");

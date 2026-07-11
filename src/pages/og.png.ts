@@ -44,45 +44,6 @@ export const GET: APIRoute = async () => {
         position: "relative",
       },
       children: [
-        // Status line — the availability signal
-        {
-          type: "div",
-          props: {
-            style: {
-              display: "flex",
-              alignItems: "center",
-              gap: "12px",
-              marginBottom: "44px",
-            },
-            children: [
-              {
-                type: "div",
-                props: {
-                  style: {
-                    width: "10px",
-                    height: "10px",
-                    borderRadius: "50%",
-                    background: "#d99a3c",
-                  },
-                },
-              },
-              {
-                type: "div",
-                props: {
-                  style: {
-                    fontFamily: "Schibsted Grotesk",
-                    fontSize: "18px",
-                    fontWeight: 400,
-                    color: "#d99a3c",
-                    letterSpacing: "0.14em",
-                    textTransform: "uppercase",
-                  },
-                  children: "open to ai · data · product roles",
-                },
-              },
-            ],
-          },
-        },
         // Wordmark
         {
           type: "div",
@@ -123,24 +84,12 @@ export const GET: APIRoute = async () => {
               left: "96px",
               right: "96px",
               display: "flex",
-              justifyContent: "space-between",
+              justifyContent: "flex-end",
               alignItems: "center",
               borderTop: "1px solid #2c3037",
               paddingTop: "20px",
             },
             children: [
-              {
-                type: "div",
-                props: {
-                  style: {
-                    fontFamily: "Schibsted Grotesk",
-                    fontSize: "15px",
-                    color: "#8a8d81",
-                    letterSpacing: "0.08em",
-                  },
-                  children: "operator · 13 yrs · builds with ai",
-                },
-              },
               {
                 type: "div",
                 props: {

@@ -3,8 +3,7 @@
 //
 // The Operator's Console (DESIGN.md 2026-07-03): the chrome is a clean
 // rail — wordmark + mono nav labels, plus a small portrait badge on
-// interior pages (the "logged-in operator"). The availability signal
-// lives in the homepage hero readout; every footer carries a quiet echo.
+// interior pages (the "logged-in operator").
 
 import ShiftToggle from "../components/ShiftToggle/ShiftToggle.astro";
 import "../styles/global.css";
@@ -251,7 +250,6 @@ const NAV_LINKS: readonly NavLink[] = [
         <div class="site-footer-inner">
           <span class="site-footer-brand">korab eland</span>
           <span class="t-mono site-footer-links">
-            <span class="footer-avail">● open to roles</span> ·{" "}
             <a href="mailto:korabeland@gmail.com">email</a> ·{" "}
             <a href="https://www.linkedin.com/in/korabeland" rel="me">linkedin</a> ·{" "}
             <a href="/colophon">colophon</a> · © {year}
@@ -443,11 +441,6 @@ const NAV_LINKS: readonly NavLink[] = [
   .site-footer a:focus-visible {
     color: var(--ink);
     border-bottom-color: var(--signal);
-  }
-
-  .footer-avail {
-    color: var(--signal);
-    letter-spacing: 0.06em;
   }
 
   @media (max-width: 640px) {

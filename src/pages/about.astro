@@ -6,7 +6,6 @@
 
 import Portrait from "../components/Portrait/index.astro";
 import SkillsSection from "../components/SkillsSection/SkillsSection.astro";
-import StatusChip from "../components/StatusChip/StatusChip.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { readSkills } from "../lib/skills";
 import { STATUS } from "../lib/status";
@@ -99,14 +98,10 @@ const jsonLd = {
 
     <section class="about-close" aria-labelledby="close">
       <h2 id="close" class="sr-only">Contact</h2>
-      <p class="t-mono about-status">
-        <StatusChip status="available" variant="pulse" label="currently exploring ai / data / product roles" />
-      </p>
       <p class="t-mono about-authorization">{STATUS.aboutLine}</p>
       <p class="t-mono about-links">
         <a href="mailto:korabeland@gmail.com">email</a> ·{" "}
-        <a href="https://www.linkedin.com/in/korabeland" rel="me">linkedin</a> ·{" "}
-        <a href="mailto:korabeland@gmail.com?subject=Resume%20request">resume available on request</a>
+        <a href="https://www.linkedin.com/in/korabeland" rel="me">linkedin</a>
       </p>
     </section>
   </article>
@@ -221,13 +216,6 @@ const jsonLd = {
     display: flex;
     flex-direction: column;
     gap: var(--s-3);
-  }
-
-  .about-status {
-    display: inline-flex;
-    align-items: center;
-    text-transform: none;
-    letter-spacing: 0.02em;
   }
 
   .about-authorization {
