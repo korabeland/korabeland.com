@@ -279,7 +279,7 @@ test("header shows the contact CTA and shift toggle", async ({ page }) => {
   await page.goto("/work");
   const cta = page.locator(".chrome-cta");
   await expect(cta).toBeVisible();
-  await expect(cta).toHaveAttribute("href", "mailto:korabeland@gmail.com");
+  await expect(cta).toHaveAttribute("href", "mailto:hello@korabeland.com");
   await expect(page.locator(".chrome-left .shift-toggle")).toBeVisible();
 });
 
