@@ -280,18 +280,43 @@ const eyeVar = (cx: number, cy: number) =>
           }
         };
 
+        const schedule = () => {
+          if (!frame) frame = requestAnimationFrame(paint);
+        };
+
         const onMove = (event: MouseEvent) => {
           cursor = { x: event.clientX, y: event.clientY };
-          if (!frame) frame = requestAnimationFrame(paint);
+          schedule();
           // R3: a still pointer inside the band returns to rest after the idle
           // window; fresh movement restarts the countdown.
           if (idle) window.clearTimeout(idle);
           idle = window.setTimeout(rest, GAZE.idleMs);
         };
 
+        // Scroll and resize move the portrait under a stationary cursor, so
+        // re-evaluate the band against the live rect — a scroll that carries the
+        // pointer out of the band resets the gaze (R1/R4) without waiting on a
+        // fresh mousemove.
+        const onReflow = () => {
+          if (cursor) schedule();
+        };
+
+        // R4: the pointer leaving the viewport (or the window losing focus) is
+        // leaving the engagement area — reset immediately rather than holding
+        // the last gaze until the idle timer fires.
+        const onLeave = () => {
+          cursor = null;
+          if (idle) window.clearTimeout(idle);
+          rest();
+        };
+
         // No teardown, matching the repo-wide convention while no view
         // transitions exist (ShiftLog torch does the same).
         window.addEventListener("mousemove", onMove, { passive: true });
+        window.addEventListener("scroll", onReflow, { passive: true });
+        window.addEventListener("resize", onReflow);
+        document.addEventListener("mouseleave", onLeave);
+        window.addEventListener("blur", onLeave);
       }
     </script>
   )
