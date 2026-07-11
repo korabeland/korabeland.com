@@ -92,6 +92,16 @@ jobs:
           name: chromatic-archives
           path: test-results/chromatic-archives
       - name: Publish Chromatic build
+        # Bound the step so a Chromatic Capture-Cloud stall fails fast instead
+        # of hanging until the 6h job default. This happened three times on
+        # 2026-07-10/11 (across commits, incl. one pre-existing) — each run sat
+        # in_progress 15–70 min with no build ever reported. A healthy
+        # publish+build is ~2–4 min, so 10 leaves generous headroom.
+        # (Follow-up worth considering now the App is installed: add
+        # `--exit-once-uploaded` so the CLI returns right after upload and the
+        # App posts "UI Tests" from the build independently — that removes the
+        # wait entirely rather than just bounding it.)
+        timeout-minutes: 10
         run: |
           if [ -z "$CHROMATIC_PROJECT_TOKEN" ]; then
             echo "CHROMATIC_PROJECT_TOKEN is unset — cannot publish a build; the App's 'UI Tests' check will never post. Failing closed."
