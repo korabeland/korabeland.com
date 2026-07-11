@@ -1,29 +1,36 @@
 # ADR: Visual approval policy — blocking Chromatic, advisory local baselines
 
-**Date:** 2026-07-10 · **Status:** accepted (amended 2026-07-11) · **Origin:** [site health remediation](../plans/2026-07-10-001-fix-site-health-remediation-plan.md) (owner-approved gate decision)
+**Date:** 2026-07-10 · **Status:** accepted (amended 2026-07-11 twice) · **Origin:** [site health remediation](../plans/2026-07-10-001-fix-site-health-remediation-plan.md) (owner-approved gate decision)
 
 ## Decision
 
-**Chromatic is the single authoritative visual approval mechanism.** CI runs
-`npx chromatic --playwright` with no `--exit-zero-on-changes`: an unapproved
-visual diff fails the required `chromatic` check and blocks the merge. A
-deliberate visual change is approved in the Chromatic web UI, which turns the
-check green on re-run. Chromatic renders in its own cloud, so the baseline is
-platform-independent by construction.
+**Chromatic is the single authoritative visual approval mechanism.** The
+**Chromatic GitHub App's `UI Tests` commit status is the required check**: an
+unapproved visual diff holds it red and blocks the merge; approving the diff
+in the Chromatic web UI flips it green with **no CI re-run**. Chromatic renders
+in its own cloud, so the baseline is platform-independent by construction.
 
-**Amendment 2026-07-11 — the gate is its own CI job.** Originally the
-Chromatic step ran inside `verify-all`, so every approval (and every
-Chromatic-side outage) cost a full ~9-minute suite re-run — a Capture Cloud
-incident on 2026-07-10 blocked a fully-approved PR this way. The gate now
-lives in a dedicated `chromatic` job that consumes the Playwright page
-archives via artifact from `verify-all`; approving a diff or riding out an
-outage re-runs only that ~2-minute job. Blocking semantics are unchanged.
-Planned next step (owner action required): install the Chromatic GitHub App
-so its own commit status can become the required check — approval in the UI
-then flips the check green with **no** re-run, at which point the CLI exit
-code stops being the gate and `--exit-zero-on-changes` becomes legitimate on
-the CLI step. Until the App is installed and its status is required,
-`--exit-zero-on-changes` stays forbidden — it would remove the only block.
+**Amendment 2026-07-11 (a) — the gate moved out of `verify-all` into its own
+CI job.** Originally the Chromatic step ran inside `verify-all`, so every
+approval (and every Chromatic-side outage) cost a full ~9-minute suite re-run
+— a Capture Cloud incident on 2026-07-10 blocked a fully-approved PR this way.
+The publish step moved to a dedicated `chromatic` job that consumes the
+Playwright page archives via artifact from `verify-all`, so an outage can't
+hold the rest of CI hostage.
+
+**Amendment 2026-07-11 (b) — the App's `UI Tests` status is the required
+check; the CLI runs `--exit-zero-on-changes`.** The Chromatic GitHub App was
+installed on the repo (verified 2026-07-11 — a `Chromatic.com` check-suite now
+registers on new commits, absent before install). Its `UI Tests` status is now
+the required branch-protection check in place of the CI `chromatic` job's exit
+code. The CI job therefore only *publishes* the build: its `npx chromatic
+--playwright` runs with `--exit-zero-on-changes` so visual diffs don't fail the
+job (the App holds the block), while a genuine publish failure still exits
+non-zero. This is what makes UI approval flip the gate green without any CI
+re-run — the goal that motivated amendment (a). `--exit-zero-on-changes` is now
+legitimate *because* a separate required status carries the block; it must not
+be added while the App's status is not required, as that would remove the only
+gate.
 
 The local pixelmatch harness (`tests/visual/screenshot.test.ts` +
 `tests/visual/baselines/`) is a **fast advisory signal for local development
@@ -34,9 +41,11 @@ only**. Its failure is useful information; it is not the release gate.
 1. **Never delete, suppress, or blind-reseed a baseline to make a failing
    check pass.** Reseeding requires visually reviewing every changed render
    first — a prior blind reseed baked a real regression in as truth.
-2. A missing `CHROMATIC_PROJECT_TOKEN` on a PR **fails the job** rather than
-   skipping the step. Known consequence: fork PRs (which never receive repo
-   secrets) cannot pass — accepted while the repo is solo-maintained.
+2. A missing `CHROMATIC_PROJECT_TOKEN` on a PR **fails the publish job**
+   rather than skipping it — no publish means the App never posts `UI Tests`,
+   so the required check stays red (fail-closed either way). Known
+   consequence: fork PRs (which never receive repo secrets) cannot pass —
+   accepted while the repo is solo-maintained.
 3. Local baselines are seeded on this platform (macOS) and carry known noise
    near the 0.5% pixelmatch threshold, plus environmental drift on content
    that tracks git state (the colophon build log changes with every commit).
