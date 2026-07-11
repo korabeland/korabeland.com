@@ -40,6 +40,13 @@ jobs:
       - run: pnpm run audit
       - name: Chromatic visual diff
         if: github.event_name == 'pull_request' && env.CHROMATIC_PROJECT_TOKEN != ''
-        run: npx chromatic --playwright --exit-zero-on-changes
+        # --exit-once-uploaded: don't block this required check on Chromatic's
+        # cloud build — their capture farm stalled mid-build (1/44 for >1h,
+        # twice) and wedged the merge. The project is GitHub-linked, so build
+        # results still land in the Chromatic app; with --exit-zero-on-changes
+        # this step never gated on visual diffs anyway, only on upload errors.
+        # timeout-minutes backstops the upload itself (normally seconds).
+        run: npx chromatic --playwright --exit-zero-on-changes --exit-once-uploaded
+        timeout-minutes: 10
         env:
           CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
