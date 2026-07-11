@@ -29,3 +29,5 @@ None.
 - Final `pnpm verify:all` legs: `verify` + `test` pass; `test:visual` and the
   rewired `pnpm run audit` run to green before the marker is written (the
   audit run doubles as the end-to-end smoke of the build-once change).
+
+<!-- chromatic integration probe 20260711T013305Z — delete this branch -->
