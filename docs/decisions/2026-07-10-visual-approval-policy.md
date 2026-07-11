@@ -1,15 +1,29 @@
 # ADR: Visual approval policy — blocking Chromatic, advisory local baselines
 
-**Date:** 2026-07-10 · **Status:** accepted · **Origin:** [site health remediation](../plans/2026-07-10-001-fix-site-health-remediation-plan.md) (owner-approved gate decision)
+**Date:** 2026-07-10 · **Status:** accepted (amended 2026-07-11) · **Origin:** [site health remediation](../plans/2026-07-10-001-fix-site-health-remediation-plan.md) (owner-approved gate decision)
 
 ## Decision
 
-**Chromatic is the single authoritative visual approval mechanism.** The CI
-step runs `npx chromatic --playwright` with no `--exit-zero-on-changes`: an
-unapproved visual diff fails the required `verify-all` check and blocks the
-merge. A deliberate visual change is approved in the Chromatic web UI, which
-turns the check green on re-run. Chromatic renders in its own cloud, so the
-baseline is platform-independent by construction.
+**Chromatic is the single authoritative visual approval mechanism.** CI runs
+`npx chromatic --playwright` with no `--exit-zero-on-changes`: an unapproved
+visual diff fails the required `chromatic` check and blocks the merge. A
+deliberate visual change is approved in the Chromatic web UI, which turns the
+check green on re-run. Chromatic renders in its own cloud, so the baseline is
+platform-independent by construction.
+
+**Amendment 2026-07-11 — the gate is its own CI job.** Originally the
+Chromatic step ran inside `verify-all`, so every approval (and every
+Chromatic-side outage) cost a full ~9-minute suite re-run — a Capture Cloud
+incident on 2026-07-10 blocked a fully-approved PR this way. The gate now
+lives in a dedicated `chromatic` job that consumes the Playwright page
+archives via artifact from `verify-all`; approving a diff or riding out an
+outage re-runs only that ~2-minute job. Blocking semantics are unchanged.
+Planned next step (owner action required): install the Chromatic GitHub App
+so its own commit status can become the required check — approval in the UI
+then flips the check green with **no** re-run, at which point the CLI exit
+code stops being the gate and `--exit-zero-on-changes` becomes legitimate on
+the CLI step. Until the App is installed and its status is required,
+`--exit-zero-on-changes` stays forbidden — it would remove the only block.
 
 The local pixelmatch harness (`tests/visual/screenshot.test.ts` +
 `tests/visual/baselines/`) is a **fast advisory signal for local development

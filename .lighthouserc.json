@@ -6,7 +6,7 @@
         "http://localhost:4321/colophon?shift=night",
         "http://localhost:4321/notes/system-designer-personal-os?shift=night"
       ],
-      "startServerCommand": "pnpm build && node scripts/static-preview.mjs",
+      "startServerCommand": "node scripts/static-preview.mjs",
       "startServerReadyPattern": "static-preview:",
       "settings": {
         "preset": "desktop"
