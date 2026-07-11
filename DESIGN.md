@@ -58,15 +58,20 @@ Contrast rules (WCAG AA, carried from the previous system): small mono text (≤
 - **Metrics block** — bordered rows of `metric label · mono value`, placed before or immediately after the first prose block.
 - Sharp radii (0 default), 1px hairlines, left-aligned everything, 680px prose measure, 960px shell.
 
-## 5. Motion budget — five moments
+## 5. Motion budget — six moments
 
 1. Ledger rows stagger in once on page load (~40ms/row, opacity+4px rise).
 2. The availability status dot breathes (re-tuned `breathe` keyframe, slow) — now the `StatusChip` pulse variant, one component across the site.
 3. Reading-progress meter on case-study pages.
 4. Hero headline rotates its subject on a slow fade (server-renders the default; JS-only).
 5. Metric readouts count up from zero when scrolled into view (case studies).
+6. The home hero portrait returns a glance: its pupils saccade toward the cursor while it moves through a proximity band around the image, settle to direct eye contact when the cursor crosses into the portrait, and rest when idle or when the cursor leaves the band.
+   - **Envelope.** Home hero only — no other render of the `Portrait` component engages. The engagement area is a proximity band around the image (portrait half-diagonal plus a margin), not the viewport; gaze travel attenuates with distance to a floor and cuts off outside the band.
+   - **Gates.** The repo's double gate: `pointer: fine` **and** not `prefers-reduced-motion`. Touch, reduced-motion, and no-JS visitors get the static portrait — the designed state, not a degradation. The rig mounts post-load and reveals its overlay only after the gate passes.
+   - **Easing register.** Saccadic, not pursuit: gaze holds a fixation and jumps to a new bearing (~80–120ms) only when the target strays past a threshold, with stillness between jumps. Temperament is data, keyed off the `data-time` shift: day is alert (quicker settle, full travel), night is drowsy (slower settle, reduced travel).
+   - **Resolved-state guarantee.** The overlay is additive: the shipped portrait asset and its `<picture>` markup are byte-identical, and the resting overlay covers the painted pupils so the visible resolved state is today's portrait. Nothing is added to the LCP path before load. Because the screenshotted path is reduced-motion, the rig never engages there — visual baselines and LCP are unchanged by construction.
 
-Nothing else animates beyond 150–200ms hover/focus transitions. Moments 1–3 respect the global CSS reduced-motion guard; 4–5 are JS enhancements that server-render their static end-state and self-disable under `matchMedia("(prefers-reduced-motion: reduce)")` (the CSS guard can't stop scripted mutation). Amended from three to five in the experience-ledger plan (2026-07-04).
+Nothing else animates beyond 150–200ms hover/focus transitions. Moments 1–3 respect the global CSS reduced-motion guard; 4–6 are JS enhancements that server-render their static end-state and self-disable under `matchMedia("(prefers-reduced-motion: reduce)")` (the CSS guard can't stop scripted mutation). Amended from three to five in the experience-ledger plan (2026-07-04), and to six for the portrait gaze rig (2026-07-11). (A plotted-portrait draw-in was explored alongside the gaze and parked — unbuilt, unretired — so this moment is worded for gaze only.)
 
 ## 6. Voice
 
