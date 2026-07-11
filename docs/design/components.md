@@ -7,11 +7,11 @@ truth:
 
 | Layer | Source of truth | This file's relationship |
 |---|---|---|
-| Design decisions (colour, type, motion, a11y) | `Personal_Brand/DESIGN.md` §1–7 (parent repo) | Cites it; never contradicts it |
+| Design decisions (colour, type, motion, a11y) | `DESIGN.md` §1–7 (repo root) | Cites it; never contradicts it |
 | Machine tokens | `src/styles/tokens.css` | Names the tokens components read |
 | **Components** (variants, props, states, a11y) | **this file** | The catalogue |
 
-Change design decisions in `../../DESIGN.md` → the parent `DESIGN.md` first, then
+Change design decisions in `../../DESIGN.md` (the repo-root spec) first, then
 regenerate `tokens.css`, then update the affected component and this doc. This
 doc is descriptive: it records what the components in `src/components/` actually
 do as of 2026-07-11. If code and doc disagree, the code is right and this file is
@@ -529,11 +529,11 @@ Remaining — not code bugs, worth a future tidy:
 
 | Gap | Where | Note |
 |---|---|---|
-| Motion budget stale | `DESIGN.md` §5 | Lists five moments; `ShiftLog` torch (R9) is a sixth. Reconcile in the parent spec. |
+| Motion budget stale | `DESIGN.md` §5 | Lists five moments; `ShiftLog` torch (R9) is a sixth. Reconcile in `DESIGN.md` §5. |
 | Status vocab split | `StatusChip` key `in-flight` vs display label "in flight" | Consistent but ad-hoc; the key-vs-label mapping is worth a single glossary. |
 
 ---
 
 *Generated 2026-07-11 from `src/components/` and `src/layouts/BaseLayout.astro`.
-Descriptive, not normative — design decisions live in `../../DESIGN.md` → parent
-`Personal_Brand/DESIGN.md`.*
+Descriptive, not normative — design decisions live in `../../DESIGN.md` (this
+repo's root spec).*

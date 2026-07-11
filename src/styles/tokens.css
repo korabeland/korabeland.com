@@ -1,8 +1,8 @@
 /* ──────────────────────────────────────────────────────────────────────────
    korabeland.com — design tokens
-   Source of truth: the "Operator's Console" spec (2026-07-03). The canonical
-   copy lives in the parent workspace at Personal_Brand/DESIGN.md; ../../DESIGN.md
-   in this repo is a pointer to it.
+   Source of truth: the "Operator's Console" spec (2026-07-03), documented in
+   this repo's DESIGN.md (../../DESIGN.md). Change tokens there first; this file
+   is regenerated to match.
 
    Hex values alongside each OKLCH are *lossy* best-effort fallbacks for
    legacy browsers without OKLCH support. OKLCH is authoritative; hex drift
