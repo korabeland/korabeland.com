@@ -35,8 +35,8 @@ export const STATUS = {
   heroReadout: `⌖ ${base.toLowerCase()} → ${targetConsole}`,
   /** About-page portrait caption: relocation target, console style. */
   targetReadout: `⌖ ${targetConsole}`,
-  /** About page: relocation + citizenship + work authorization, console style. */
-  aboutLine: `relocating ${base.toLowerCase()} → ${targetConsole} · ${citizenship.toLowerCase()} · ${authorization.toLowerCase()}`,
+  /** About page: relocation + citizenship, console style. */
+  aboutLine: `relocating ${base.toLowerCase()} → ${targetConsole} · ${citizenship.toLowerCase()}`,
   /** JSON-LD Person description. */
   personDescription: `Operator with 13 years across marketing, CX and operations. Turns ambiguous problems into systems that ship, now building with AI. Relocating to ${target}; ${citizenship}, ${authorization}.`,
 } as const;

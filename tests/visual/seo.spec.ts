@@ -18,7 +18,7 @@ interface SeoRouteCase {
 const curatedRoutes: SeoRouteCase[] = [
   {
     path: "/",
-    title: "korab eland · operator · builds with ai",
+    title: "korab eland",
     descriptionFragment: "ambiguous problems into systems",
     ogType: "website",
     hasOgImage: true,
