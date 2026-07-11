@@ -57,18 +57,19 @@ jobs:
           path: test-results/chromatic-archives
           retention-days: 1
 
-  # BLOCKING visual gate — the single authoritative visual approval mechanism
-  # (docs/decisions/2026-07-10-visual-approval-policy.md). Its own required
-  # check, deliberately OUTSIDE verify-all: a Chromatic outage or a pending
-  # approval then costs a re-run of this ~2-minute job, not the full
-  # ~9-minute suite (learned 2026-07-10, when a Capture Cloud incident
-  # blocked an already-approved PR through two verify-all re-runs).
-  # Unapproved visual diffs fail the check; deliberate changes are approved
-  # in the Chromatic UI, then this job alone re-runs green. A missing token
-  # on a PR fails loudly rather than silently skipping — a skipped gate is a
-  # bypassed gate. (Fork PRs never receive repo secrets by GitHub design;
-  # accepted for this solo-maintained repo — revisit before inviting
-  # external contributions.)
+  # Publishes the Chromatic build. It is NOT the gate anymore — the Chromatic
+  # GitHub App's own "UI Tests" commit status is the required check
+  # (docs/decisions/2026-07-10-visual-approval-policy.md). This job only
+  # uploads the archives so a build exists for the App to report on; approving
+  # a diff in the Chromatic UI flips "UI Tests" green with NO CI re-run. Hence
+  # `--exit-zero-on-changes`: visual diffs must not fail this job (the App
+  # holds the block), but a genuine publish failure (bad token, upload error)
+  # still exits non-zero and surfaces here. Runs OUTSIDE verify-all so a
+  # Chromatic outage can't hold the rest of CI hostage. A missing token fails
+  # loudly rather than silently skipping — a skipped upload means the App
+  # never posts "UI Tests", and that required check stays red (fail-closed).
+  # (Fork PRs never receive repo secrets by GitHub design; accepted for this
+  # solo-maintained repo — revisit before inviting external contributions.)
   chromatic:
     if: github.event_name == 'pull_request'
     needs: verify-all
@@ -90,12 +91,15 @@ jobs:
         with:
           name: chromatic-archives
           path: test-results/chromatic-archives
-      - name: Chromatic visual gate
+      - name: Publish Chromatic build
         run: |
           if [ -z "$CHROMATIC_PROJECT_TOKEN" ]; then
-            echo "CHROMATIC_PROJECT_TOKEN is unset — visual gate cannot run; failing closed."
+            echo "CHROMATIC_PROJECT_TOKEN is unset — cannot publish a build; the App's 'UI Tests' check will never post. Failing closed."
             exit 1
           fi
-          npx chromatic --playwright
+          # --exit-zero-on-changes: diffs don't fail this job; the Chromatic
+          # GitHub App's "UI Tests" required check is the gate. Publish/upload
+          # failures still exit non-zero.
+          npx chromatic --playwright --exit-zero-on-changes
         env:
           CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
