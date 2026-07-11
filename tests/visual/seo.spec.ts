@@ -113,16 +113,25 @@ const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const generatedProjectRoutes: SeoRouteCase[] = projects
   .filter((p) => !CURATED_PROJECT_SLUGS.has(p.slug))
-  .map((p) => ({
-    path: p.path,
-    title: `${p.title} · case study · korab eland`,
-    descriptionFragment: escapeRegExp(
-      p.description || `Case study: ${p.title}`,
-    ),
-    ogType: "article",
-    hasOgImage: false,
-    noindex: false,
-  }));
+  .map((p) => {
+    // Work and lab detail pages use different title/description conventions
+    // (src/pages/work/[slug].astro vs src/pages/lab/[slug].astro): ` · case
+    // study · ` vs ` · lab · `, and the description fallbacks differ too.
+    const isLab = p.category === "side";
+    return {
+      path: p.path,
+      title: isLab
+        ? `${p.title} · lab · korab eland`
+        : `${p.title} · case study · korab eland`,
+      descriptionFragment: escapeRegExp(
+        p.description ||
+          (isLab ? `AI code tinkering: ${p.title}` : `Case study: ${p.title}`),
+      ),
+      ogType: "article",
+      hasOgImage: false,
+      noindex: false,
+    };
+  });
 
 const generatedPostRoutes: SeoRouteCase[] = posts
   .filter((p) => !CURATED_POST_SLUGS.has(p.slug))

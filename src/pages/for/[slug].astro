@@ -9,7 +9,7 @@ import ExperienceLedger from "../../components/ExperienceLedger/ExperienceLedger
 import SkillsSection from "../../components/SkillsSection/SkillsSection.astro";
 import StatusChip from "../../components/StatusChip/StatusChip.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import { projectStatus } from "../../lib/projects";
+import { projectHref, projectStatus } from "../../lib/projects";
 import { listTailoredSlugs, readTailored } from "../../lib/tailored";
 
 export const getStaticPaths: GetStaticPaths = async () => {
@@ -57,7 +57,7 @@ const intro = page.intro
           <ol class="tailored-ledger">
             {page.projects.map((p) => (
               <li class="tailored-row">
-                <a class="tailored-link" href={`/work/${p.slug}`}>
+                <a class="tailored-link" href={projectHref(p)}>
                   <span class="tailored-name">{p.title}</span>
                   <span class="t-mono tailored-datum">{p.outcome}</span>
                   <StatusChip status={projectStatus(p)} variant="chip" />

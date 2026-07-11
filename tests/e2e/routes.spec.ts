@@ -9,6 +9,13 @@ import { postRoutesSync, projectRoutesSync } from "../lib/collection-routes";
 // reader-based helper): Playwright transforms spec files to CJS, where a
 // top-level `await` throws at collect time.
 const allProjectRoutes = projectRoutesSync().map((entry) => entry.path);
+// Work case studies (/work/<slug>) and lab tinkering (/lab/<slug>) are
+// separate indexes and never share a list — split the enumeration so each
+// index's row count is asserted against its own category.
+const workProjectRoutes = allProjectRoutes.filter((p) =>
+  p.startsWith("/work/"),
+);
+const labProjectRoutes = allProjectRoutes.filter((p) => p.startsWith("/lab/"));
 const allPostRoutes = postRoutesSync().map((entry) => entry.path);
 const SPOT_CHECKED_PROJECT_ROUTES = new Set([
   "/work/lead-scoring",
@@ -34,10 +41,19 @@ test("/ renders the operator's console home", async ({ page }) => {
   await expect(page.locator(".hero-eyebrow")).toContainText("korab eland");
   await expect(page.locator("h1#hero-heading")).toContainText("ship");
   await expect(page.locator("#ledger-heading")).toContainText("outcome ledger");
-  // U8 curation: home features exactly three case studies; the full index
-  // stays one click away via the ledger's more-link.
-  await expect(page.locator(".ledger-row")).toHaveCount(3);
+  // U8 curation: home features exactly three case studies. Scoped to the work
+  // ledger section — the separate lab band below renders its own .ledger-row
+  // items, so an unscoped count would include them.
+  await expect(
+    page.locator('section[aria-labelledby="ledger-heading"] .ledger-row'),
+  ).toHaveCount(3);
   await expect(page.locator('a.section-more[href="/work"]')).toBeVisible();
+  // Lab band: a separate section, one row per side project, its own more-link
+  // to /lab — never interleaved with the work ledger.
+  await expect(
+    page.locator('section[aria-labelledby="lab-heading"] .ledger-row'),
+  ).toHaveCount(labProjectRoutes.length);
+  await expect(page.locator('a.section-more[href="/lab"]')).toBeVisible();
   await expect(page.locator("#close-heading")).toContainText(
     "the short version",
   );
@@ -66,11 +82,31 @@ test("/work renders the case-study index", async ({ page }) => {
   );
   await expect(page.locator('a[href="/work/lead-scoring"]')).toBeVisible();
   await expect(page.locator('a[href="/work/ai-sms-pilot"]')).toBeVisible();
-  // /work stays the FULL index — every published case study gets a row
-  // (home curates to three; this page must not).
+  // /work stays the FULL work index — every published case study gets a row
+  // (home curates to three; this page must not). Work category only: side
+  // projects live at /lab and never appear here.
   await expect(page.locator(".ledger-row")).toHaveCount(
-    allProjectRoutes.length,
+    workProjectRoutes.length,
   );
+});
+
+// /lab — AI-tinkering index, a separate route so personal projects never
+// interleave with client case studies. Renders the same ledger grammar with
+// the side-category slice only.
+test("/lab renders the tinkering index, work case studies absent", async ({
+  page,
+}) => {
+  const response = await page.goto("/lab");
+  expect(response?.status()).toBe(200);
+  await expect(page.locator(".work-eyebrow")).toContainText(
+    "lab · AI code tinkering",
+  );
+  // Every side project gets a row; the count is the lab slice, not all projects.
+  await expect(page.locator(".ledger-row")).toHaveCount(
+    labProjectRoutes.length,
+  );
+  // Hard split: no work case study leaks onto /lab.
+  await expect(page.locator('a[href^="/work/"]')).toHaveCount(0);
 });
 
 // /work/lead-scoring — case-study detail renders title, fact strip, and body.
@@ -187,6 +223,21 @@ test("/projects/lead-scoring redirects to /work/lead-scoring", async ({
   expect(new URL(page.url()).pathname).toBe("/work/lead-scoring");
 });
 
+// The two projects reclassified as lab keep their old /work URLs alive via
+// 301s (astro.config.mjs) — a published link must not 404 after the split.
+const MOVED_TO_LAB = [
+  { from: "/work/perian", to: "/lab/perian" },
+  { from: "/work/personal-os", to: "/lab/personal-os" },
+] as const;
+
+for (const { from, to } of MOVED_TO_LAB) {
+  test(`${from} redirects to ${to}`, async ({ page }) => {
+    const response = await page.goto(from);
+    expect(response?.status()).toBe(200); // after following the redirect
+    expect(new URL(page.url()).pathname).toBe(to);
+  });
+}
+
 // /off-trail?from= label variants — only known destinations (`notes`,
 // `work`) render a subline; anything else falls back to the generic copy.
 const FROM_CASES = [
@@ -245,6 +296,7 @@ test("footer carries the availability echo; header shows the contact CTA", async
 
 const NAV_ACTIVE_CASES = [
   { path: "/work", href: "/work" },
+  { path: "/lab", href: "/lab" },
   { path: "/notes", href: "/notes" },
   { path: "/about", href: "/about" },
   { path: "/colophon", href: "/colophon" },

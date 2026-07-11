@@ -17,7 +17,14 @@ interface Props {
   title: string;
   description?: string;
   /** Which nav item, if any, is "active" — controls the amber underline. */
-  active?: "home" | "notes" | "projects" | "work" | "about" | "colophon";
+  active?:
+    | "home"
+    | "notes"
+    | "projects"
+    | "work"
+    | "lab"
+    | "about"
+    | "colophon";
   /** Absolute path to the OG image (e.g. "/og.png"). */
   ogImage?: string;
   /** og:type value — defaults to "website". */
@@ -63,6 +70,7 @@ interface NavLink {
 
 const NAV_LINKS: readonly NavLink[] = [
   { key: "work", href: "/work", label: "work" },
+  { key: "lab", href: "/lab", label: "lab" },
   {
     key: "notes",
     href: "/notes",

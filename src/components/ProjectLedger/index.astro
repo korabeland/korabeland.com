@@ -14,6 +14,11 @@ export interface LedgerItem {
   title: string;
   outcome: string;
   status: "shipped" | "in-flight";
+  /** Destination — category-aware (`/work/<slug>` or `/lab/<slug>`); the
+   *  caller derives it via projectHref so this component stays route-agnostic
+   *  and the same ledger serves the work index, the /lab index, and both
+   *  homepage bands. */
+  href: string;
 }
 
 interface Props {
@@ -61,7 +66,7 @@ const {
             style={stagger ? `--row: ${i}` : undefined}
             data-stagger={stagger ? "" : undefined}
           >
-            <a class="ledger-link" href={`/work/${item.slug}`}>
+            <a class="ledger-link" href={item.href}>
               <span class="ledger-name">{item.title}</span>
               <span class="t-mono ledger-datum">{item.outcome}</span>
               <StatusChip status={item.status} variant="chip" />

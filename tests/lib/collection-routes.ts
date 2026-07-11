@@ -5,7 +5,7 @@ import { resolve } from "node:path";
 // Playwright specs (which have no such config), so relative paths keep
 // resolution identical in both runners.
 import { listPosts } from "../../src/lib/posts";
-import { listProjects } from "../../src/lib/projects";
+import { listProjects, projectHref } from "../../src/lib/projects";
 
 /**
  * Shared route enumeration for Playwright specs and Vitest guards. Two paths
@@ -29,7 +29,10 @@ const POSTS_DIR = resolve(CONTENT_ROOT, "posts");
 
 export async function projectRoutes(): Promise<string[]> {
   const projects = await listProjects();
-  return projects.map((p) => `/work/${p.slug}`);
+  // Category-aware: work projects route under /work, side projects under
+  // /lab (the hard work/lab split). projectHref is the single derivation the
+  // site itself uses — keep this in lockstep with it.
+  return projects.map((p) => projectHref(p));
 }
 
 export async function postRoutes(): Promise<string[]> {
@@ -42,6 +45,10 @@ export interface SyncRouteEntry {
   path: string;
   title: string;
   description: string;
+  /** Present for projects only (posts leave it undefined): "work" → /work,
+   *  "side" → /lab. Lets category-sensitive specs (seo.spec) pick the right
+   *  title convention without re-parsing frontmatter. */
+  category?: "work" | "side";
 }
 
 /**
@@ -94,11 +101,15 @@ export function projectRoutesSync(): SyncRouteEntry[] {
   return listDirs(PROJECTS_DIR).map((slug) => {
     const raw = readFileSync(resolve(PROJECTS_DIR, slug, "index.mdoc"), "utf8");
     const fm = parseFrontmatter(raw);
+    // Anything not explicitly "side" routes as work — mirrors both the
+    // Keystatic defaultValue and projectHref's own fallback.
+    const category = fm.category === "side" ? "side" : "work";
     return {
       slug,
-      path: `/work/${slug}`,
+      path: projectHref({ slug, category }),
       title: fm.title ?? "",
       description: fm.description ?? "",
+      category,
     };
   });
 }
@@ -128,6 +139,7 @@ export function postRoutesSync(): SyncRouteEntry[] {
 export const staticRoutes = [
   "/",
   "/work",
+  "/lab",
   "/about",
   "/notes",
   "/colophon",

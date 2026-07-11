@@ -1,18 +1,20 @@
 ---
 // /work — case-study index. Renders the shared ProjectLedger (also used by
-// the homepage outcome ledger): title / mono outcome datum / status chip.
-// See docs/plans/2026-07-03-console-mvp.md.
+// the homepage outcome ledger and the /lab index): title / mono outcome
+// datum / status chip. Work-category slice only; /lab renders the side
+// projects through the same component. See docs/plans/2026-07-03-console-mvp.md.
 
 import ProjectLedger from "../../components/ProjectLedger/index.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import { listProjects, projectStatus } from "../../lib/projects";
+import { listProjects, projectHref, projectStatus } from "../../lib/projects";
 
-const projects = await listProjects();
+const projects = (await listProjects()).filter((p) => p.category === "work");
 const ledgerItems = projects.map((p) => ({
   slug: p.slug,
   title: p.title,
   outcome: p.outcome,
   status: projectStatus(p),
+  href: projectHref(p),
 }));
 
 const jsonLd = {

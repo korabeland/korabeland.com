@@ -36,9 +36,10 @@ interface Props {
   fieldLog?: LogEntry[];
   outcomeMetrics?: Metric[];
   reflection?: string;
-  nextProject?: { slug: string; title: string };
+  nextProject?: { href: string; title: string };
   backHref?: string;
   backLabel?: string;
+  eyebrowLabel?: string;
 }
 
 const {
@@ -54,6 +55,7 @@ const {
   nextProject,
   backHref = "/work",
   backLabel = "← all case studies",
+  eyebrowLabel = "case study",
 } = Astro.props;
 
 const statusKind = status === "shipped" ? "shipped" : "active";
@@ -80,7 +82,7 @@ const HERO_SIZES = "(max-width: 1040px) 100vw, 1000px";
 {/* HEADER */}
 <section class="head">
   <div class="head-meta">
-    <span class="t-label">case study</span>
+    <span class="t-label">{eyebrowLabel}</span>
     {status && (
       <span class={`chip chip--${statusKind}`}>{status}</span>
     )}
@@ -140,8 +142,8 @@ const HERO_SIZES = "(max-width: 1040px) 100vw, 1000px";
   <div class="rule-soft rule-next"></div>
   {nextProject && (
     <div class="next-row">
-      <span class="t-mono">next case study</span>
-      <a class="next-link" href={`/work/${nextProject.slug}`}>{nextProject.title}</a>
+      <span class="t-mono">next {eyebrowLabel}</span>
+      <a class="next-link" href={nextProject.href}>{nextProject.title}</a>
     </div>
   )}
 </section>

@@ -24,9 +24,13 @@ export default defineConfig({
   build: { inlineStylesheets: "always" },
   trailingSlash: "never",
   // /projects moved to /work in the console redesign (2026-07-03).
+  // The two side projects moved to /lab in the work/lab split (2026-07-11);
+  // their old /work URLs were live and indexed, so they redirect permanently.
   redirects: {
     "/projects": "/work",
     "/projects/[slug]": "/work/[slug]",
+    "/work/perian": "/lab/perian",
+    "/work/personal-os": "/lab/personal-os",
   },
   integrations: [
     react(),

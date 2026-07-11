@@ -13,18 +13,30 @@ import StatusChip from "../components/StatusChip/StatusChip.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { listExperience } from "../lib/experience";
 import { listPosts } from "../lib/posts";
-import { listProjects, projectStatus } from "../lib/projects";
+import { listProjects, projectHref, projectStatus } from "../lib/projects";
 import type { ContributionData } from "../lib/shift-log";
 import { STATUS } from "../lib/status";
 
 const projects = await listProjects();
-// Home features the top three case studies (ship-date order from the
-// reader); the full set lives at /work via the ledger's more-link.
-const ledgerItems = projects.slice(0, 3).map((p) => ({
+// Work case studies and personal AI tinkering render as separate bands and
+// never interleave (the site's hard work/lab split). Home features the top
+// three case studies (ship-date order from the reader); the full set lives
+// at /work via the ledger's more-link, the lab set at /lab.
+const workProjects = projects.filter((p) => p.category === "work");
+const labProjects = projects.filter((p) => p.category === "side");
+const ledgerItems = workProjects.slice(0, 3).map((p) => ({
   slug: p.slug,
   title: p.title,
   outcome: p.outcome,
   status: projectStatus(p),
+  href: projectHref(p),
+}));
+const labItems = labProjects.map((p) => ({
+  slug: p.slug,
+  title: p.title,
+  outcome: p.outcome,
+  status: projectStatus(p),
+  href: projectHref(p),
 }));
 const experience = await listExperience();
 const posts = (await listPosts()).slice(0, 3);
@@ -219,6 +231,19 @@ const MAIL_ICON =
           </div>
           <ShiftLog data={contributions} />
         </section>
+      )
+    }
+
+    <!-- ─── Lab ── AI code tinkering, kept apart from the work ledger ───── -->
+    {
+      labItems.length > 0 && (
+        <ProjectLedger
+          items={labItems}
+          headingId="lab-heading"
+          headingText="lab · AI code tinkering"
+          moreLink={{ href: "/lab", label: "all tinkering →" }}
+          emptyMessage="first tinkering project being written up."
+        />
       )
     }
 

@@ -1,0 +1,101 @@
+---
+// /lab/[slug] — AI code tinkering detail. Same CaseStudy layout as /work,
+// re-skinned via eyebrowLabel/backHref so it never reads as a client case
+// study. See docs/plans/2026-07-03-console-mvp.md.
+
+import type { GetStaticPaths } from "astro";
+import CaseStudy from "../../components/CaseStudy/index.astro";
+import { PostContent } from "../../components/PostContent";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import {
+  formatSpan,
+  listProjects,
+  mapMetrics,
+  projectHref,
+  readProject,
+} from "../../lib/projects";
+
+export const getStaticPaths: GetStaticPaths = async () => {
+  const projects = await listProjects();
+  return projects
+    .filter((p) => p.category === "side")
+    .map((p) => ({ params: { slug: p.slug } }));
+};
+
+const { slug } = Astro.params;
+if (!slug) throw new Error("Missing slug");
+
+const project = await readProject(slug);
+if (!project) throw new Error(`Project not found: ${slug}`);
+
+const content = await project.content();
+
+// Status derives from shippedAt — same rule as the ledger chips on /lab.
+const status = project.shippedAt ? "shipped" : "in flight";
+
+const span = formatSpan(project.startedAt, project.shippedAt);
+
+// Fact strip: Role / Team / Stack / Span / Status.
+const facts = [
+  { label: "role", value: project.role || "—" },
+  { label: "team", value: project.team || "—" },
+  { label: "stack", value: project.stack || "—" },
+  { label: "span", value: span || "—" },
+  { label: "status", value: status },
+];
+
+const outcomeMetrics = mapMetrics(slug, project.outcomeMetrics);
+const fieldLog = project.fieldLog.map((f) => ({
+  week: f.week,
+  title: f.title,
+  body: f.body,
+}));
+
+let nextProject: { href: string; title: string } | undefined;
+if (project.nextProject) {
+  const next = await readProject(project.nextProject);
+  if (next) {
+    nextProject = {
+      href: projectHref({ slug: project.nextProject, category: next.category }),
+      title: next.title,
+    };
+  }
+}
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  headline: project.title,
+  description: project.description,
+  url: `https://korabeland.com/lab/${slug}`,
+  author: { "@id": "https://korabeland.com/#person" },
+  ...(project.startedAt ? { dateCreated: project.startedAt } : {}),
+  ...(project.shippedAt ? { datePublished: project.shippedAt } : {}),
+};
+---
+
+<BaseLayout
+  title={`${project.title} · lab · korab eland`}
+  description={project.description || `AI code tinkering: ${project.title}`}
+  active="lab"
+  ogType="article"
+>
+  <script type="application/ld+json" slot="jsonld" set:html={JSON.stringify(jsonLd)} />
+  <CaseStudy
+    title={project.title}
+    subtitle={project.description}
+    status={status}
+    facts={facts}
+    heroImage={project.heroImage ?? undefined}
+    heroImageAlt={`${project.title} hero`}
+    outcomeMetrics={outcomeMetrics}
+    fieldLog={fieldLog}
+    reflection={project.reflection}
+    nextProject={nextProject}
+    backHref="/lab"
+    backLabel="← all tinkering"
+    eyebrowLabel="project"
+  >
+    <PostContent document={content} />
+  </CaseStudy>
+</BaseLayout>

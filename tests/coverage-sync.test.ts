@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { listPosts } from "../src/lib/posts";
-import { listProjects } from "../src/lib/projects";
+import { listProjects, projectHref } from "../src/lib/projects";
 import {
   postRoutes,
   postRoutesSync,
@@ -129,8 +129,10 @@ describe("collection coverage floor", () => {
 
 describe("collection coverage sync — reader vs fs", () => {
   it("project routes match every entry on disk (projects have no draft gate)", async () => {
+    // Routes are category-aware now (/work/<slug> or /lab/<slug>) — strip
+    // either prefix to recover the bare slug for the fs comparison.
     const readerSlugs = (await projectRoutes()).map((route) =>
-      route.replace("/work/", ""),
+      route.replace(/^\/(?:work|lab)\//, ""),
     );
     const result = compareCoverage(
       readerSlugs,
@@ -174,7 +176,14 @@ describe("sync fs enumeration matches the async reader enumeration", () => {
     for (const entry of syncEntries) {
       const reader = readerBySlug.get(entry.slug);
       expect(reader, entry.slug).toBeTruthy();
-      expect(entry.path).toBe(`/work/${entry.slug}`);
+      // Category-aware parity: the fs-parsed category must match the reader's,
+      // and the sync path must equal the reader-derived route (work → /work,
+      // side → /lab). A drift in either fails before a Playwright spec tests
+      // the wrong route.
+      expect(entry.category, entry.slug).toBe(reader?.category);
+      expect(entry.path).toBe(
+        projectHref({ slug: entry.slug, category: reader?.category ?? "work" }),
+      );
       expect(entry.title).toBe(reader?.title);
       expect(entry.description).toBe(reader?.description);
     }
