@@ -40,7 +40,7 @@ test("hero social row links to X, LinkedIn, GitHub, and email with aria-labels",
     ["https://x.com/korabeland", /X$/],
     ["https://www.linkedin.com/in/korabeland", /LinkedIn$/],
     ["https://github.com/korabeland", /GitHub$/],
-    ["mailto:korabeland@gmail.com", /Email/],
+    ["mailto:hello@korabeland.com", /Email/],
   ];
   for (const [href, label] of expected) {
     const link = page.locator(`.hero-social-link[href="${href}"]`);
