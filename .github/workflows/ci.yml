@@ -22,6 +22,13 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # Dependency security gate. This is pnpm's BUILT-IN audit subcommand,
+      # not the repo's `pnpm run audit` script (that one is Lighthouse via
+      # `lhci autorun`) — the shared name is a known ambiguity, so keep this
+      # step's name explicit. Blocks the job on any high/critical finding in
+      # production dependencies; runs early to short-circuit cheaply.
+      - name: Dependency security audit
+        run: pnpm audit --prod --audit-level=high
       - name: Cache Playwright browsers
         uses: actions/cache@v4
         with:
@@ -38,15 +45,57 @@ jobs:
       # Chromatic (below) is the real cross-environment visual gate.
       - run: pnpm test:visual
       - run: pnpm run audit
-      - name: Chromatic visual diff
-        if: github.event_name == 'pull_request' && env.CHROMATIC_PROJECT_TOKEN != ''
-        # --exit-once-uploaded: don't block this required check on Chromatic's
-        # cloud build — their capture farm stalled mid-build (1/44 for >1h,
-        # twice) and wedged the merge. The project is GitHub-linked, so build
-        # results still land in the Chromatic app; with --exit-zero-on-changes
-        # this step never gated on visual diffs anyway, only on upload errors.
-        # timeout-minutes backstops the upload itself (normally seconds).
-        run: npx chromatic --playwright --exit-zero-on-changes --exit-once-uploaded
-        timeout-minutes: 10
+      # Hand the Playwright-generated page archives to the `chromatic` job
+      # below. test:visual produced them via @chromatic-com/playwright's
+      # fixture teardown; `npx chromatic --playwright` only packages and
+      # uploads them, so the gate itself doesn't need this job's build.
+      - name: Upload Chromatic archives
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: chromatic-archives
+          path: test-results/chromatic-archives
+          retention-days: 1
+
+  # BLOCKING visual gate — the single authoritative visual approval mechanism
+  # (docs/decisions/2026-07-10-visual-approval-policy.md). Its own required
+  # check, deliberately OUTSIDE verify-all: a Chromatic outage or a pending
+  # approval then costs a re-run of this ~2-minute job, not the full
+  # ~9-minute suite (learned 2026-07-10, when a Capture Cloud incident
+  # blocked an already-approved PR through two verify-all re-runs).
+  # Unapproved visual diffs fail the check; deliberate changes are approved
+  # in the Chromatic UI, then this job alone re-runs green. A missing token
+  # on a PR fails loudly rather than silently skipping — a skipped gate is a
+  # bypassed gate. (Fork PRs never receive repo secrets by GitHub design;
+  # accepted for this solo-maintained repo — revisit before inviting
+  # external contributions.)
+  chromatic:
+    if: github.event_name == 'pull_request'
+    needs: verify-all
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Full history so Chromatic can locate a baseline commit, same as
+          # verify-all's checkout.
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Download Chromatic archives
+        uses: actions/download-artifact@v4
+        with:
+          name: chromatic-archives
+          path: test-results/chromatic-archives
+      - name: Chromatic visual gate
+        run: |
+          if [ -z "$CHROMATIC_PROJECT_TOKEN" ]; then
+            echo "CHROMATIC_PROJECT_TOKEN is unset — visual gate cannot run; failing closed."
+            exit 1
+          fi
+          npx chromatic --playwright
         env:
           CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}

@@ -3,12 +3,11 @@
 // case studies from the projects collection), recent notes, and a quiet
 // contact line. See docs/plans/2026-07-03-console-mvp.md.
 
-import { Image } from "astro:assets";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import portrait from "../assets/portrait-illustrated.jpg";
-import portraitDay from "../assets/portrait-illustrated-day.jpg";
 import ExperienceLedger from "../components/ExperienceLedger/ExperienceLedger.astro";
+import Portrait from "../components/Portrait/index.astro";
+import ProjectLedger from "../components/ProjectLedger/index.astro";
 import ShiftLog from "../components/ShiftLog/ShiftLog.astro";
 import StatusChip from "../components/StatusChip/StatusChip.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
@@ -18,9 +17,27 @@ import { listProjects, projectHref, projectStatus } from "../lib/projects";
 import type { ContributionData } from "../lib/shift-log";
 import { STATUS } from "../lib/status";
 
-const allProjects = await listProjects();
-const projects = allProjects.filter((p) => p.category === "work");
-const labProjects = allProjects.filter((p) => p.category === "side");
+const projects = await listProjects();
+// Work case studies and personal AI tinkering render as separate bands and
+// never interleave (the site's hard work/lab split). Home features the top
+// three case studies (ship-date order from the reader); the full set lives
+// at /work via the ledger's more-link, the lab set at /lab.
+const workProjects = projects.filter((p) => p.category === "work");
+const labProjects = projects.filter((p) => p.category === "side");
+const ledgerItems = workProjects.slice(0, 3).map((p) => ({
+  slug: p.slug,
+  title: p.title,
+  outcome: p.outcome,
+  status: projectStatus(p),
+  href: projectHref(p),
+}));
+const labItems = labProjects.map((p) => ({
+  slug: p.slug,
+  title: p.title,
+  outcome: p.outcome,
+  status: projectStatus(p),
+  href: projectHref(p),
+}));
 const experience = await listExperience();
 const posts = (await listPosts()).slice(0, 3);
 
@@ -122,6 +139,20 @@ const MAIL_ICON =
   ogImage="/og.png"
 >
   <script type="application/ld+json" slot="jsonld" set:html={JSON.stringify(jsonLd)} />
+  {/* Preload the night portrait (the home LCP element on mobile) so the
+      fetch starts at head-parse instead of when the parser reaches the
+      hero <picture> (~700ms later on slow-4G). Mirrors the AVIF srcset
+      Portrait renders — tests/e2e/hero-delivery.spec.ts guards the two
+      against drift. Night only: it's the no-JS/default variant. */}
+  <link
+    slot="head"
+    rel="preload"
+    as="image"
+    type="image/avif"
+    imagesrcset="/portrait/portrait-illustrated.gen.360.avif 360w, /portrait/portrait-illustrated.gen.720.avif 720w, /portrait/portrait-illustrated.gen.1040.avif 1040w"
+    imagesizes="(max-width: 680px) 240px, 340px"
+    fetchpriority="high"
+  />
 
   <div class="home">
     <!-- ─── Hero: the readout ─────────────────────────────────────────── -->
@@ -142,23 +173,7 @@ const MAIL_ICON =
       </div>
       <div class="hero-aside">
         <figure class="hero-portrait">
-          <Image
-            class="portrait-night"
-            src={portrait}
-            alt="Illustrated portrait of Korab Eland"
-            widths={[360, 720]}
-            sizes="(max-width: 680px) 240px, 340px"
-            loading="eager"
-            fetchpriority="high"
-          />
-          <Image
-            class="portrait-day"
-            src={portraitDay}
-            alt="Illustrated portrait of Korab Eland"
-            widths={[360, 720]}
-            sizes="(max-width: 680px) 240px, 340px"
-            loading="eager"
-          />
+          <Portrait sizes="(max-width: 680px) 240px, 340px" />
           <figcaption class="t-mono hero-portrait-cap">
             <span>korab eland</span>
             <span class="hero-social">
@@ -196,33 +211,13 @@ const MAIL_ICON =
     </section>
 
     <!-- ─── Outcome ledger ────────────────────────────────────────────── -->
-    <section class="ledger-section" aria-labelledby="ledger-heading">
-      <div class="section-head">
-        <h2 id="ledger-heading" class="t-label">work · outcome ledger</h2>
-        <a class="t-mono section-more" href="/work">all case studies →</a>
-      </div>
-
-      {
-        projects.length > 0 ? (
-          <ol class="ledger">
-            {projects.map((p, i) => {
-              const status = projectStatus(p);
-              return (
-                <li class="ledger-row" style={`--row: ${i}`}>
-                  <a class="ledger-link" href={projectHref(p)}>
-                    <span class="ledger-name">{p.title}</span>
-                    <span class="t-mono ledger-datum">{p.outcome}</span>
-                    <StatusChip status={status} variant="chip" />
-                  </a>
-                </li>
-              );
-            })}
-          </ol>
-        ) : (
-          <p class="t-mono ledger-empty">first case studies being written up · check back shortly</p>
-        )
-      }
-    </section>
+    <ProjectLedger
+      items={ledgerItems}
+      headingText="work · outcome ledger"
+      moreLink={{ href: "/work", label: "all case studies →" }}
+      emptyMessage="first case studies being written up · check back shortly"
+      stagger
+    />
 
     <!-- ─── Shift log ── a year of building, straight from GitHub ───────── -->
     {
@@ -241,26 +236,14 @@ const MAIL_ICON =
 
     <!-- ─── Lab ── AI code tinkering, kept apart from the work ledger ───── -->
     {
-      labProjects.length > 0 && (
-        <section class="ledger-section" aria-labelledby="lab-heading">
-          <div class="section-head">
-            <h2 id="lab-heading" class="t-label">lab · AI code tinkering</h2>
-            <a class="t-mono section-more" href="/lab">
-              all tinkering →
-            </a>
-          </div>
-          <ol class="ledger">
-            {labProjects.map((p, i) => (
-              <li class="ledger-row" style={`--row: ${i}`}>
-                <a class="ledger-link" href={projectHref(p)}>
-                  <span class="ledger-name">{p.title}</span>
-                  <span class="t-mono ledger-datum">{p.outcome}</span>
-                  <StatusChip status={projectStatus(p)} variant="chip" />
-                </a>
-              </li>
-            ))}
-          </ol>
-        </section>
+      labItems.length > 0 && (
+        <ProjectLedger
+          items={labItems}
+          headingId="lab-heading"
+          headingText="lab · AI code tinkering"
+          moreLink={{ href: "/lab", label: "all tinkering →" }}
+          emptyMessage="first tinkering project being written up."
+        />
       )
     }
 
@@ -420,25 +403,6 @@ const MAIL_ICON =
     border: 1px solid var(--rule);
   }
 
-  .hero-portrait img {
-    display: block;
-    width: 100%;
-    height: auto;
-  }
-
-  /* Portrait tracks the shift: orange field by night (the no-JS default),
-     blue by day. The day variant stays hidden until the head script sets
-     data-time=day, mirroring the ShiftToggle idiom. */
-  .hero-portrait .portrait-day {
-    display: none;
-  }
-  :global(html[data-time="day"]) .hero-portrait .portrait-night {
-    display: none;
-  }
-  :global(html[data-time="day"]) .hero-portrait .portrait-day {
-    display: block;
-  }
-
   .hero-portrait-cap {
     display: flex;
     justify-content: space-between;
@@ -507,55 +471,6 @@ const MAIL_ICON =
 
   .shift-section :global(.shiftlog) {
     margin-top: var(--s-4);
-  }
-
-  /* ─── Outcome ledger — motion moment 1 of 3: rows stagger in once ──── */
-
-  .ledger {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-
-  .ledger-row {
-    border-bottom: 1px solid var(--rule);
-    animation: reveal 0.45s ease both;
-    animation-delay: calc(var(--row) * 60ms);
-  }
-
-  .ledger-link {
-    display: grid;
-    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto;
-    align-items: baseline;
-    gap: var(--s-5);
-    padding: var(--s-4) var(--s-2);
-    text-decoration: none;
-    transition: background 150ms ease;
-  }
-
-  @media (hover: hover) {
-    .ledger-link:hover {
-      background: var(--paper-2);
-    }
-  }
-
-  .ledger-name {
-    font-family: var(--font-display);
-    font-weight: 500;
-    font-size: 17px;
-    color: var(--ink);
-    line-height: 1.35;
-  }
-
-  .ledger-datum {
-    text-transform: none;
-    letter-spacing: 0.02em;
-    color: var(--ink-soft);
-  }
-
-  .ledger-empty {
-    padding: var(--s-5) var(--s-2);
-    margin: 0;
   }
 
   /* ─── Recent notes ─────────────────────────────────────────────────── */
@@ -655,13 +570,6 @@ const MAIL_ICON =
     .hero-aside {
       max-width: 240px;
       justify-self: start;
-    }
-    .ledger-link {
-      grid-template-columns: 1fr auto;
-    }
-    .ledger-datum {
-      grid-column: 1 / -1;
-      order: 3;
     }
   }
 </style>

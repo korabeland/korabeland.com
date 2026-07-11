@@ -11,7 +11,14 @@ echo ""
 
 # ---- Node version ----
 REQUIRED_NODE="$(cat .nvmrc | tr -d '[:space:]')"
-ACTUAL_NODE="$(node --version 2>/dev/null | tr -d 'v' || echo "not-installed")"
+# Compare majors: .nvmrc pins the line (e.g. "22"), not a patch release.
+# `command -v` first: a missing node would otherwise yield an empty string
+# (the pipeline exits via cut's status, so the || fallback never fires).
+if command -v node >/dev/null 2>&1; then
+  ACTUAL_NODE="$(node --version | tr -d 'v' | cut -d. -f1)"
+else
+  ACTUAL_NODE="not-installed"
+fi
 
 echo "Node:  required=${REQUIRED_NODE}  actual=${ACTUAL_NODE}"
 if [ "${ACTUAL_NODE}" != "${REQUIRED_NODE}" ]; then

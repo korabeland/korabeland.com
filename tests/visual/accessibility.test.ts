@@ -1,18 +1,17 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import {
+  postRoutesSync,
+  projectRoutesSync,
+  staticRoutes,
+} from "../lib/collection-routes";
 
+// Sync (not the async reader-based helper): Playwright transforms spec files
+// to CJS, where a top-level `await` throws at collect time.
 const ROUTES = [
-  "/",
-  "/work",
-  "/work/lead-scoring",
-  "/work/ai-sms-pilot",
-  "/lab",
-  "/lab/perian",
-  "/about",
-  "/notes",
-  "/notes/hello-world",
-  "/colophon",
-  "/off-trail",
+  ...staticRoutes,
+  ...projectRoutesSync().map((entry) => entry.path),
+  ...postRoutesSync().map((entry) => entry.path),
   // Dev-only previews — the only place the experience and skills sections
   // render until real content lands, so axe checks their markup and contrast.
   "/dev/experience-preview",

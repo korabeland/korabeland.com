@@ -1,14 +1,21 @@
 ---
-// /lab — AI code tinkering index. Copy + the side slice of the projects
-// collection; ProjectLedger renders the shared ledger grammar, kept as a
-// fully separate route so personal projects never interleave with
-// professional case studies.
+// /lab — AI code tinkering index. The side-category slice of the projects
+// collection, rendered through the shared ProjectLedger (also used by /work
+// and the homepage bands). A fully separate route so personal projects never
+// interleave with professional case studies. See docs/plans/2026-07-03-console-mvp.md.
 
-import ProjectLedger from "../../components/ProjectLedger/ProjectLedger.astro";
+import ProjectLedger from "../../components/ProjectLedger/index.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import { listProjects } from "../../lib/projects";
+import { listProjects, projectHref, projectStatus } from "../../lib/projects";
 
 const projects = (await listProjects()).filter((p) => p.category === "side");
+const ledgerItems = projects.map((p) => ({
+  slug: p.slug,
+  title: p.title,
+  outcome: p.outcome,
+  status: projectStatus(p),
+  href: projectHref(p),
+}));
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -29,11 +36,49 @@ const jsonLd = {
 >
   <script type="application/ld+json" slot="jsonld" set:html={JSON.stringify(jsonLd)} />
 
-  <ProjectLedger
-    eyebrow="lab · AI code tinkering"
-    intro="Personal projects, not client work. Built on my own time to learn how these systems behave, broken and rebuilt along the way."
-    heading="all tinkering"
-    emptyText="first tinkering project being written up."
-    projects={projects}
-  />
+  <div class="work">
+    <section class="work-head">
+      <p class="t-label work-eyebrow">lab · AI code tinkering</p>
+      <p class="work-intro">
+        Personal projects, not client work. Built on my own time to learn how these
+        systems behave, broken and rebuilt along the way.
+      </p>
+    </section>
+
+    <ProjectLedger
+      items={ledgerItems}
+      headingText="all tinkering"
+      emptyMessage="first tinkering project being written up."
+    />
+  </div>
 </BaseLayout>
+
+<style>
+  .work {
+    max-width: 960px;
+    margin-inline: auto;
+    padding: var(--s-7) var(--s-4) var(--s-8);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-7);
+  }
+
+  .work-head {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-4);
+  }
+
+  .work-eyebrow {
+    margin: 0;
+  }
+
+  .work-intro {
+    font-size: 17px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    max-width: 60ch;
+    margin: 0;
+  }
+
+</style>

@@ -1,0 +1,117 @@
+---
+// Portrait — the day/night illustrated-portrait <picture> pair, toggled
+// purely by CSS off the shift's `data-time` attribute on <html> (mirrors the
+// ShiftToggle idiom). Previously astro:assets <Image>; `imageService: true`
+// (Vercel's native optimizer, see astro.config.mjs) ignores requested
+// widths/formats for astro:assets sources exactly like it does `public/`
+// paths — the mobile-LCP audit caught the portrait shipping at full 1200w
+// via `/_vercel/image` regardless of the `widths` prop that used to live
+// here. Static AVIF/WebP/JPEG variants generated ahead of build by
+// scripts/gen-hero-variants.ts's portrait pass stand in instead, the same
+// pattern the hero images already use. Both callers keep their exact
+// per-surface `sizes` via props; the image pair, alt text, loading strategy,
+// and toggle CSS are the shared, single-owner part.
+
+import { existsSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
+
+interface Props {
+  sizes: string;
+  alt?: string;
+}
+
+const { sizes, alt = "Illustrated portrait of Korab Eland" } = Astro.props;
+
+interface PortraitMeta {
+  width: number;
+  height: number;
+  widths: number[];
+}
+
+interface PortraitPicture {
+  avifSrcset: string;
+  webpSrcset: string;
+  fallbackSrc: string;
+  width: number;
+  height: number;
+}
+
+// Variants live in public/portrait/ (fixed output dir, see
+// scripts/gen-hero-variants.ts's PORTRAIT_OUT_DIR) — absolute paths, not the
+// relative-URL trick the Keystatic hero components use, since this
+// component renders at multiple, differently-nested routes (/ and /about).
+function loadPortraitPicture(basename: string): PortraitPicture {
+  const metaPath = resolve(
+    process.cwd(),
+    "public/portrait",
+    `${basename}.gen.meta.json`,
+  );
+  if (!existsSync(metaPath)) {
+    throw new Error(
+      `Portrait: missing variants for "${basename}" (expected ${metaPath}). Run \`pnpm exec tsx scripts/gen-hero-variants.ts\` — see scripts/gen-hero-variants.ts.`,
+    );
+  }
+  const meta: PortraitMeta = JSON.parse(readFileSync(metaPath, "utf8"));
+  return {
+    avifSrcset: meta.widths
+      .map((w) => `/portrait/${basename}.gen.${w}.avif ${w}w`)
+      .join(", "),
+    webpSrcset: meta.widths
+      .map((w) => `/portrait/${basename}.gen.${w}.webp ${w}w`)
+      .join(", "),
+    fallbackSrc: `/portrait/${basename}.gen.720.jpg`,
+    width: meta.width,
+    height: meta.height,
+  };
+}
+
+const night = loadPortraitPicture("portrait-illustrated");
+const day = loadPortraitPicture("portrait-illustrated-day");
+---
+
+<picture class="portrait-night">
+  <source type="image/avif" srcset={night.avifSrcset} sizes={sizes} />
+  <source type="image/webp" srcset={night.webpSrcset} sizes={sizes} />
+  <img
+    src={night.fallbackSrc}
+    alt={alt}
+    width={night.width}
+    height={night.height}
+    loading="eager"
+    fetchpriority="high"
+    sizes={sizes}
+  />
+</picture>
+<picture class="portrait-day">
+  <source type="image/avif" srcset={day.avifSrcset} sizes={sizes} />
+  <source type="image/webp" srcset={day.webpSrcset} sizes={sizes} />
+  <img
+    src={day.fallbackSrc}
+    alt={alt}
+    width={day.width}
+    height={day.height}
+    loading="eager"
+    sizes={sizes}
+  />
+</picture>
+
+<style>
+  img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  /* Portrait tracks the shift: orange field by night (the no-JS default),
+     blue by day. The day variant stays hidden until the head script sets
+     data-time=day, mirroring the ShiftToggle idiom. */
+  .portrait-day {
+    display: none;
+  }
+  :global(html[data-time="day"]) .portrait-night {
+    display: none;
+  }
+  :global(html[data-time="day"]) .portrait-day {
+    display: block;
+  }
+</style>

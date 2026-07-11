@@ -3,19 +3,23 @@
   "version": "0.0.0",
   "private": true,
   "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=22.12 <23"
+  },
   "scripts": {
-    "predev": "pnpm gen:trail-register",
+    "predev": "pnpm gen:trail-register && pnpm gen:hero-variants",
     "dev": "astro dev",
-    "prebuild": "pnpm gen:trail-register && pnpm gen:shift-log",
+    "prebuild": "pnpm gen:trail-register && pnpm gen:shift-log && pnpm gen:hero-variants",
     "build": "astro build",
     "preview": "astro preview",
     "sync": "astro sync",
     "gen:trail-register": "tsx scripts/gen-trail-register.ts",
     "gen:shift-log": "tsx scripts/gen-shift-log.ts",
+    "gen:hero-variants": "tsx scripts/gen-hero-variants.ts",
     "verify": "biome check . && tsc --noEmit && astro check",
     "test": "vitest run",
     "test:visual": "playwright test",
-    "audit": "lhci autorun",
+    "audit": "pnpm build && lhci autorun && lhci autorun --config=.lighthouserc.mobile.json",
     "verify:all": "pnpm verify && pnpm test && pnpm test:visual && pnpm run audit"
   },
   "pnpm": {
@@ -25,10 +29,10 @@
     ]
   },
   "dependencies": {
-    "@astrojs/mdx": "^5.0.3",
-    "@astrojs/react": "^5.0.3",
+    "@astrojs/mdx": "^5.0.6",
+    "@astrojs/react": "^5.0.7",
     "@astrojs/sitemap": "^3.7.2",
-    "@astrojs/vercel": "^10.0.4",
+    "@astrojs/vercel": "^10.0.8",
     "@fontsource/jetbrains-mono": "^5.2.8",
     "@fontsource/schibsted-grotesk": "^5.2.8",
     "@keystatic/astro": "^5.0.6",
@@ -36,7 +40,7 @@
     "@markdoc/markdoc": "^0.5.7",
     "@resvg/resvg-js": "^2.6.2",
     "@tailwindcss/vite": "^4.2.2",
-    "astro": "^6.1.7",
+    "astro": "^6.4.8",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "satori": "^0.26.0",

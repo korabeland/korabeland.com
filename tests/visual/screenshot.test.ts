@@ -3,6 +3,11 @@ import { join } from "node:path";
 import { test } from "@chromatic-com/playwright";
 import pixelmatch from "pixelmatch";
 import { PNG } from "pngjs";
+import {
+  postRoutesSync,
+  projectRoutesSync,
+  staticRoutes,
+} from "../lib/collection-routes";
 
 const BASELINE_DIR = join(process.cwd(), "tests/visual/baselines");
 const DIFF_DIR = join(process.cwd(), "tests/visual/diffs");
@@ -14,18 +19,16 @@ function ensureDirs() {
   }
 }
 
+// Newly enumerated project/post routes with no baseline yet auto-seed on
+// first local run (see the !existsSync(baselinePath) branch below); CI skips
+// the pixelmatch diff entirely (see the process.env.CI branch) and relies on
+// Chromatic instead, so a missing baseline there is a non-issue. Sync (not
+// the async reader-based helper): Playwright transforms spec files to CJS,
+// where a top-level `await` throws at collect time.
 const ROUTES = [
-  "/",
-  "/work",
-  "/work/lead-scoring",
-  "/work/ai-sms-pilot",
-  "/lab",
-  "/lab/perian",
-  "/about",
-  "/notes",
-  "/notes/hello-world",
-  "/colophon",
-  "/off-trail",
+  ...staticRoutes,
+  ...projectRoutesSync().map((entry) => entry.path),
+  ...postRoutesSync().map((entry) => entry.path),
 ];
 
 for (const route of ROUTES) {
