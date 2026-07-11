@@ -6,6 +6,7 @@
 // by @supports + prefers-reduced-motion. See DESIGN.md §4-5.
 
 import { loadHeroPicture } from "../../lib/hero-picture";
+import StatusChip from "../StatusChip/StatusChip.astro";
 import FactStrip from "./FactStrip.astro";
 import FieldLog from "./FieldLog.astro";
 import OutcomeMetrics from "./OutcomeMetrics.astro";
@@ -58,8 +59,6 @@ const {
   eyebrowLabel = "case study",
 } = Astro.props;
 
-const statusKind = status === "shipped" ? "shipped" : "active";
-
 // heroImage is the bare Keystatic filename; variants live in public/work/
 // (this collection's fixed heroImage `directory`). Plumbing shared with
 // ReadingRoom via src/lib/hero-picture.ts.
@@ -84,7 +83,11 @@ const HERO_SIZES = "(max-width: 1040px) 100vw, 1000px";
   <div class="head-meta">
     <span class="t-label">{eyebrowLabel}</span>
     {status && (
-      <span class={`chip chip--${statusKind}`}>{status}</span>
+      <StatusChip
+        status={status === "shipped" ? "shipped" : "in-flight"}
+        variant="chip"
+        label={status}
+      />
     )}
   </div>
 
@@ -217,24 +220,6 @@ const HERO_SIZES = "(max-width: 1040px) 100vw, 1000px";
     align-items: center;
     gap: var(--s-3);
     margin-bottom: var(--s-4);
-  }
-
-  .chip {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    padding: 3px 8px;
-    border: 1px solid;
-    white-space: nowrap;
-  }
-  .chip--active {
-    color: var(--signal);
-    border-color: var(--signal);
-  }
-  .chip--shipped {
-    color: var(--moss);
-    border-color: var(--moss);
   }
 
   .head-title {

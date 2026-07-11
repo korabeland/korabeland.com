@@ -17,6 +17,7 @@ console spec supersedes it entirely.
 |---|---|---|
 | Human-readable design spec | `../DESIGN.md` (parent `Personal_Brand/`) | Source of truth — edit here first |
 | Machine-readable tokens | `src/styles/tokens.css` | Regenerated to match the spec; the in-repo design surface every component reads |
+| Component reference | `docs/design/components.md` | The component layer — every component's props, variants, states, a11y. Descriptive; cites this spec |
 | This file | `korabeland.com/DESIGN.md` | Pointer + provenance note only |
 
 ## Section map (for the `DESIGN.md §N` references in code comments)

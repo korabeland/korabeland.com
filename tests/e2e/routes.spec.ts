@@ -114,7 +114,7 @@ test("/work/lead-scoring renders the case study detail", async ({ page }) => {
   const response = await page.goto("/work/lead-scoring");
   expect(response?.status()).toBe(200);
   await expect(page.locator("h1.head-title")).toContainText("Lead scoring");
-  await expect(page.locator(".chip")).toBeVisible();
+  await expect(page.locator(".statuschip")).toBeVisible();
 });
 
 // /work/ai-sms-pilot — second case study, same layout.
@@ -135,7 +135,7 @@ for (const route of allProjectRoutes) {
     const response = await page.goto(route);
     expect(response?.status()).toBe(200);
     await expect(page.locator("h1.head-title")).toBeVisible();
-    await expect(page.locator(".chip")).toBeVisible();
+    await expect(page.locator(".statuschip")).toBeVisible();
   });
 }
 
