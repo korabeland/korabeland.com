@@ -86,7 +86,7 @@
      complement of the portrait's orange field — the same hue already living in
      the glasses and eyes — so day mode reads as its own character, not a washed
      night. Blues also clear WCAG AA with headroom (5.93:1 on day paper) where
-     amber could only scrape 4.5:1 muddy. Sync to DESIGN.md §2 (parent repo). */
+     amber could only scrape 4.5:1 muddy. Sync to DESIGN.md §2 (repo root). */
   --signal: oklch(0.48 0.15 268); /* day: indigo/periwinkle #3a55b1 */
   --moss: oklch(0.48 0.06 145); /* #4a6f4d */
   --moss-soft: oklch(0.78 0.04 145); /* #b7ccb9 */
