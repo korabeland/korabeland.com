@@ -7,10 +7,15 @@ import {
   EYE_MANIFEST,
   eyeCenters,
   GAZE,
+  GAZE_TEMPERAMENT,
+  type GazeEvent,
+  type GazeMachine,
   gazeOffset,
+  gazeReduce,
   halfDiagonal,
   inBand,
   inEllipse,
+  initGaze,
   isInside,
   PORTRAIT_VARIANTS,
   type Rect,
@@ -332,4 +337,270 @@ describe("RIG_MANIFEST rig geometry (U2 — R15/R8/R4/R13)", () => {
       });
     });
   }
+});
+
+describe("gaze fixation state machine (U5 — R6/R7/R8/R9/R11)", () => {
+  const day = GAZE_TEMPERAMENT.day;
+  const night = GAZE_TEMPERAMENT.night;
+
+  // Reach ENGAGED at rest: gate passes → LOADING → decoded → CONTACT.
+  const engaged = (): GazeMachine =>
+    gazeReduce(initGaze(true), { type: "decoded" }, day);
+
+  const ptr = (
+    x: number,
+    y: number,
+    t: number,
+    o: Partial<
+      Pick<
+        Extract<GazeEvent, { type: "pointer" }>,
+        "inBand" | "inZoneEnter" | "inZoneExit"
+      >
+    > = {},
+  ): GazeEvent => ({
+    type: "pointer",
+    x,
+    y,
+    t,
+    inBand: o.inBand ?? true,
+    inZoneEnter: o.inZoneEnter ?? false,
+    inZoneExit: o.inZoneExit ?? false,
+  });
+
+  const run = (m: GazeMachine, events: GazeEvent[], temp = day): GazeMachine =>
+    events.reduce((s, e) => gazeReduce(s, e, temp), m);
+
+  // Feed still samples at `spot` at `step` intervals until the window is full.
+  const holdStill = (
+    from: number,
+    spot: [number, number],
+    steps: number,
+    step = 60,
+    o = {},
+  ): GazeEvent[] =>
+    Array.from({ length: steps }, (_, i) =>
+      ptr(spot[0], spot[1], from + i * step, o),
+    );
+
+  describe("lifecycle + gate (R11)", () => {
+    it("a failed gate is terminal GATED_OFF and fetches nothing (AE5)", () => {
+      const m = initGaze(false);
+      expect(m.state).toBe("GATED_OFF");
+      // terminal: no event revives it
+      expect(gazeReduce(m, { type: "decoded" }, day).state).toBe("GATED_OFF");
+      expect(run(m, [ptr(400, 100, 0), ptr(600, 100, 20)]).state).toBe(
+        "GATED_OFF",
+      );
+    });
+
+    it("passes gate → LOADING, reveals at rest on decode (CONTACT)", () => {
+      const loading = initGaze(true);
+      expect(loading.state).toBe("LOADING");
+      const m = gazeReduce(loading, { type: "decoded" }, day);
+      expect(m.state).toBe("CONTACT");
+      expect(m.target).toBeNull();
+      expect(m.snap).toBe(false); // reveal is a settle at rest, not a snap
+    });
+
+    it("any decode failure is atomic, permanent DORMANT (AE8)", () => {
+      const m = gazeReduce(initGaze(true), { type: "decodeFailed" }, day);
+      expect(m.state).toBe("DORMANT");
+      // terminal
+      expect(run(m, [ptr(400, 100, 0), ptr(600, 100, 20)]).state).toBe(
+        "DORMANT",
+      );
+    });
+
+    it("ignores pointers before the reveal (still LOADING)", () => {
+      const m = run(initGaze(true), [ptr(400, 100, 0), ptr(600, 100, 20)]);
+      expect(m.state).toBe("LOADING");
+    });
+  });
+
+  describe("tracking + contact (R6/R7 — AE1/AE2)", () => {
+    it("a moving cursor outside the face zone → TRACKING toward the cursor (AE1)", () => {
+      const m = run(engaged(), [ptr(100, 100, 0), ptr(500, 100, 20)]);
+      expect(m.state).toBe("TRACKING");
+      expect(m.target).toEqual({ x: 500, y: 100 });
+    });
+
+    it("a classified fixation (still window) → CONTACT, no idle timer (AE2)", () => {
+      // move to tracking, then hold still long enough for the move samples to
+      // age out of the window and the dispersion to read a pause.
+      const start = run(engaged(), [ptr(100, 100, 0), ptr(500, 100, 20)]);
+      expect(start.state).toBe("TRACKING");
+      const paused = run(start, holdStill(80, [500, 100], 10, 60)); // 80..620ms
+      expect(paused.state).toBe("CONTACT");
+      expect(paused.target).toBeNull();
+    });
+
+    it("the fixation window is the ONLY pause mechanism — a short still spell does not settle", () => {
+      const start = run(engaged(), [ptr(100, 100, 0), ptr(500, 100, 20)]);
+      // hold still for less than the window (day window 350ms): 20..200ms
+      const brief = run(start, holdStill(60, [500, 100], 3, 60)); // 60,120,180
+      expect(brief.state).toBe("TRACKING");
+    });
+  });
+
+  describe("face zone (R8 — AE3)", () => {
+    it("committed face-zone entry (dwell satisfied) → CONTACT", () => {
+      const start = run(engaged(), [ptr(100, 100, 0), ptr(500, 100, 20)]);
+      expect(start.state).toBe("TRACKING");
+      // inside the enter-boundary, held past the day dwell (120ms) while moving
+      // enough that dispersion never classifies — proves it's the zone, not a pause.
+      const m = run(start, [
+        ptr(300, 200, 60, { inZoneEnter: true, inZoneExit: true }),
+        ptr(305, 205, 140, { inZoneEnter: true, inZoneExit: true }),
+        ptr(300, 200, 200, { inZoneEnter: true, inZoneExit: true }),
+      ]);
+      expect(m.state).toBe("CONTACT");
+    });
+
+    it("grazing the enter-boundary (oscillation faster than dwell) commits nothing", () => {
+      let m = run(engaged(), [ptr(100, 100, 0), ptr(500, 100, 20)]);
+      // flip in/out of the enter-boundary every 40ms (< 120ms dwell)
+      for (let i = 0; i < 8; i++) {
+        m = gazeReduce(
+          m,
+          ptr(300 + i, 200, 60 + i * 40, {
+            inZoneEnter: i % 2 === 0,
+            inZoneExit: true,
+          }),
+          day,
+        );
+      }
+      expect(m.state).toBe("TRACKING"); // never dwelled long enough to commit
+    });
+
+    it("holds CONTACT while inside the exit-boundary even on fast motion (hysteresis)", () => {
+      // reach contact via the zone, then move fast but stay within the outer
+      // boundary — must NOT pop back to tracking until the cursor clears it.
+      const contact = run(engaged(), [
+        ptr(100, 100, 0),
+        ptr(500, 100, 20),
+        ...[60, 140, 220].map((t) =>
+          ptr(300, 200, t, { inZoneEnter: true, inZoneExit: true }),
+        ),
+      ]);
+      expect(contact.state).toBe("CONTACT");
+      const stillContact = gazeReduce(
+        contact,
+        ptr(360, 260, 260, { inZoneEnter: false, inZoneExit: true }),
+        day,
+      );
+      expect(stillContact.state).toBe("CONTACT");
+      // clears the outer boundary while moving fast → tracking
+      const tracking = run(stillContact, [
+        ptr(700, 400, 280, { inZoneExit: false }),
+        ptr(760, 440, 296, { inZoneExit: false }),
+      ]);
+      expect(tracking.state).toBe("TRACKING");
+    });
+  });
+
+  describe("resets (R9/R12) — rest-saccade vs snap", () => {
+    it("pointer-leave launches a rest saccade (not a snap)", () => {
+      const tracking = run(engaged(), [ptr(100, 100, 0), ptr(500, 100, 20)]);
+      const m = gazeReduce(tracking, { type: "leave" }, day);
+      expect(m.state).toBe("CONTACT");
+      expect(m.target).toBeNull();
+      expect(m.snap).toBe(false);
+      expect(m.samples).toHaveLength(0);
+    });
+
+    it("band-exit (pointer outside the band) rests via saccade", () => {
+      const tracking = run(engaged(), [ptr(100, 100, 0), ptr(500, 100, 20)]);
+      const m = gazeReduce(
+        tracking,
+        ptr(9999, 9999, 40, { inBand: false }),
+        day,
+      );
+      expect(m.state).toBe("CONTACT");
+      expect(m.snap).toBe(false);
+    });
+
+    it("blur / tab hidden / shift toggle snap instantly", () => {
+      const tracking = run(engaged(), [ptr(100, 100, 0), ptr(500, 100, 20)]);
+      const m = gazeReduce(tracking, { type: "interrupt" }, day);
+      expect(m.state).toBe("CONTACT");
+      expect(m.snap).toBe(true);
+    });
+
+    it("a reduced-motion flip is terminal GATED_OFF from any engaged state", () => {
+      const tracking = run(engaged(), [ptr(100, 100, 0), ptr(500, 100, 20)]);
+      const off = gazeReduce(tracking, { type: "reducedMotion" }, day);
+      expect(off.state).toBe("GATED_OFF");
+      // does not re-arm on further pointers (disarm-only, terminal)
+      expect(run(off, [ptr(100, 100, 100), ptr(500, 100, 120)]).state).toBe(
+        "GATED_OFF",
+      );
+    });
+
+    it("re-entering right after a leave restarts cleanly", () => {
+      const left = gazeReduce(
+        run(engaged(), [ptr(100, 100, 0), ptr(500, 100, 20)]),
+        { type: "leave" },
+        day,
+      );
+      const back = run(left, [ptr(100, 100, 100), ptr(500, 100, 120)]);
+      expect(back.state).toBe("TRACKING");
+      expect(back.target).toEqual({ x: 500, y: 100 });
+    });
+  });
+
+  describe("edge cases", () => {
+    it("drag–pause–drag ping-pongs at most once per genuine pause", () => {
+      let m = run(engaged(), [ptr(100, 100, 0), ptr(500, 100, 20)]);
+      expect(m.state).toBe("TRACKING");
+      m = run(m, holdStill(80, [500, 100], 10, 60)); // pause → CONTACT
+      expect(m.state).toBe("CONTACT");
+      // resume dragging → back to TRACKING exactly once
+      m = run(m, [ptr(520, 100, 700), ptr(900, 100, 720)]);
+      expect(m.state).toBe("TRACKING");
+    });
+
+    it("a stationary cursor during scroll still classifies a fixation (viewport frame)", () => {
+      // The component re-dispatches pointers with the same viewport x,y as the
+      // portrait scrolls under the cursor; dispersion (viewport) reads a pause.
+      const start = run(engaged(), [ptr(100, 100, 0), ptr(500, 100, 20)]);
+      const scrolled = run(start, holdStill(80, [500, 100], 10, 60));
+      expect(scrolled.state).toBe("CONTACT");
+    });
+
+    it("tolerates a window that isn't fillable yet (fast sparse entry)", () => {
+      // first sample already deep inside, then one big fast move: legal
+      // rest→large-saccade without a false fixation from sparse samples.
+      const m = run(engaged(), [ptr(500, 300, 0), ptr(120, 90, 12)]);
+      expect(m.state).toBe("TRACKING");
+      expect(m.target).toEqual({ x: 120, y: 90 });
+    });
+  });
+
+  describe("temperament is data, not code paths (R8)", () => {
+    it("night reaches the same states as day, just on a longer window", () => {
+      const trace: GazeEvent[] = [ptr(100, 100, 0), ptr(500, 100, 20)];
+      expect(run(engaged(), trace, night).state).toBe("TRACKING");
+      // a pause that settles under day's 350ms window is still tracking under
+      // night's 650ms window — same graph, different timing.
+      const dayPause = run(
+        run(engaged(), trace, day),
+        holdStill(60, [500, 100], 7, 60),
+        day,
+      );
+      const nightPause = run(
+        run(engaged(), trace, night),
+        holdStill(60, [500, 100], 7, 60),
+        night,
+      );
+      expect(dayPause.state).toBe("CONTACT");
+      expect(nightPause.state).toBe("TRACKING");
+      // ...but night settles too once its longer window fills.
+      const nightSettled = run(
+        run(engaged(), trace, night),
+        holdStill(60, [500, 100], 16, 60),
+        night,
+      );
+      expect(nightSettled.state).toBe("CONTACT");
+    });
+  });
 });

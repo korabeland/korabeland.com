@@ -346,3 +346,309 @@ export function shouldSaccade(
 ): boolean {
   return Math.hypot(desired.x - current.x, desired.y - current.y) > threshold;
 }
+
+// ══════════════════════════════════════════════════════════════════════════
+// v2 fixation state machine (U5). A pure reducer over cursor + lifecycle
+// events with injected timestamps — no DOM, no rAF — so Vitest exercises every
+// transition with synthetic cursor traces (the same testability rationale that
+// shaped v1, now covering classifier windows and reset flavours). The Portrait
+// script (U7) owns geometry (band/face-zone membership against the live rect)
+// and side effects (fetch, reveal, hide); it passes the reducer pre-computed
+// booleans and reads back `state` + `target`. The v1 GAZE.idleMs / inside-equals
+// -rest API is superseded here and removed when U7 retires the v1 component.
+// ══════════════════════════════════════════════════════════════════════════
+
+export type GazeState =
+  | "GATED_OFF" // gate failed at load, or reduced-motion flipped on (terminal)
+  | "LOADING" // gate passed, layers fetching/decoding
+  | "DORMANT" // a fetch/decode failed (atomic, permanent for the session)
+  | "CONTACT" // direct eye contact — eyes on the viewer (rest)
+  | "TRACKING"; // eyes following the cursor
+
+export interface GazeSample {
+  x: number;
+  y: number;
+  t: number;
+}
+
+// v2 temperament: day alert (quick to notice a pause, snappier saccades), night
+// drowsy (longer fixation window, slower saccades). Two parameter sets, not two
+// code paths. Fixation fields drive U5; the main-sequence fields drive U6. All
+// values are starting points judged by Korab at real render scale (deferred).
+export interface GazeTemperament {
+  /** Multiplier on RIG.travelCeiling (day full, night reduced). */
+  travelScale: number;
+  /** I-DT dispersion window: cursor still within `dispersionPx` over this long → contact. */
+  fixationWindowMs: number;
+  /** Dispersion (Δx+Δy span) below this over a full window classifies a fixation. */
+  dispersionPx: number;
+  /** Velocity above this (px/ms) exits contact back to tracking (a separate
+   *  threshold from entry so drag–pause–drag can't ping-pong). */
+  velocityPxPerMs: number;
+  /** Minimum dwell inside the face-zone enter-boundary before contact commits. */
+  faceZoneDwellMs: number;
+  /** Main sequence (U6): saccade duration = floor + slope × amplitude(px). */
+  saccadeFloorMs: number;
+  saccadeSlopeMsPerPx: number;
+  /** Overshoot fraction on large saccades, and the corrective settle time. */
+  overshoot: number;
+  settleMs: number;
+  /** Sub-pixel micro-drift in held contact (amplitude px, rate Hz). */
+  microDriftPx: number;
+  microDriftHz: number;
+}
+
+export const GAZE_TEMPERAMENT: Record<Shift, GazeTemperament> = {
+  day: {
+    travelScale: 1.0,
+    fixationWindowMs: 350,
+    dispersionPx: 6,
+    velocityPxPerMs: 0.5,
+    faceZoneDwellMs: 120,
+    saccadeFloorMs: 30,
+    saccadeSlopeMsPerPx: 2.2,
+    overshoot: 0.15,
+    settleMs: 60,
+    microDriftPx: 0.3,
+    microDriftHz: 0.8,
+  },
+  night: {
+    travelScale: 0.65,
+    fixationWindowMs: 650,
+    dispersionPx: 6,
+    velocityPxPerMs: 0.5,
+    faceZoneDwellMs: 160,
+    saccadeFloorMs: 50,
+    saccadeSlopeMsPerPx: 3.5,
+    overshoot: 0.12,
+    settleMs: 90,
+    microDriftPx: 0.3,
+    microDriftHz: 0.6,
+  },
+};
+
+export function gazeTemperamentFor(shift: Shift): GazeTemperament {
+  return GAZE_TEMPERAMENT[shift];
+}
+
+// Events. The component computes geometry against the live portrait rect and
+// hands the reducer booleans; fixation itself is classified over the raw
+// viewport coordinates (a cursor held still during scroll reads as a pause).
+export type GazeEvent =
+  | { type: "decoded" } // all layers decoded → reveal at rest
+  | { type: "decodeFailed" } // any fetch/decode failure → dormant
+  | {
+      type: "pointer";
+      x: number;
+      y: number;
+      t: number;
+      /** Inside the proximity band (else the gaze rests — band demoted to this). */
+      inBand: boolean;
+      /** Inside the face-zone enter-boundary (radii × (1 − hysteresis)). */
+      inZoneEnter: boolean;
+      /** Inside the face-zone exit-boundary (radii × (1 + hysteresis)). */
+      inZoneExit: boolean;
+    }
+  | { type: "leave" } // pointer-leave / visible band-exit → rest saccade
+  | { type: "interrupt" } // window blur / tab hidden / shift toggle → snap to rest
+  | { type: "reducedMotion" }; // reduced-motion flipped on → snap, hide (terminal)
+
+export interface GazeMachine {
+  state: GazeState;
+  /** Rolling recent cursor samples (viewport) for the dispersion classifier. */
+  samples: GazeSample[];
+  /** Where the eyes look: null = contact/rest (the viewer); else a viewport point. */
+  target: Point | null;
+  /** True when the last rest transition should snap instantly (no saccade). */
+  snap: boolean;
+  /** When the cursor first crossed the face-zone enter-boundary (dwell clock). */
+  zoneEnterAt: number | null;
+}
+
+const MAX_SAMPLES = 48;
+
+/** Initial machine. The component evaluates the double gate once at load and
+ *  passes the result: a failed gate is terminal GATED_OFF (no assets fetched). */
+export function initGaze(gatePassed: boolean): GazeMachine {
+  return {
+    state: gatePassed ? "LOADING" : "GATED_OFF",
+    samples: [],
+    target: null,
+    snap: true,
+    zoneEnterAt: null,
+  };
+}
+
+function pushSample(
+  samples: readonly GazeSample[],
+  s: GazeSample,
+  windowMs: number,
+): GazeSample[] {
+  const keep = samples.filter(
+    (p) => s.t - p.t <= windowMs * 1.5 && s.t - p.t >= 0,
+  );
+  keep.push(s);
+  return keep.length > MAX_SAMPLES ? keep.slice(-MAX_SAMPLES) : keep;
+}
+
+/** I-DT dispersion over the samples within [now − windowMs, now]. `full` is true
+ *  only when the window is actually covered, so a not-yet-fillable window (fast
+ *  entry, sparse samples) cannot false-trigger a fixation. */
+function dispersionOf(
+  samples: readonly GazeSample[],
+  now: number,
+  windowMs: number,
+): { full: boolean; disp: number } {
+  const win = samples.filter((s) => now - s.t <= windowMs);
+  if (win.length < 2) return { full: false, disp: Number.POSITIVE_INFINITY };
+  let minX = Number.POSITIVE_INFINITY;
+  let maxX = Number.NEGATIVE_INFINITY;
+  let minY = Number.POSITIVE_INFINITY;
+  let maxY = Number.NEGATIVE_INFINITY;
+  for (const s of win) {
+    minX = Math.min(minX, s.x);
+    maxX = Math.max(maxX, s.x);
+    minY = Math.min(minY, s.y);
+    maxY = Math.max(maxY, s.y);
+  }
+  // `full` means we have continuous observation spanning the whole window (the
+  // buffer's oldest sample predates it), so a fixation requires a genuine
+  // windowMs-long pause — earlier move samples must age out of the window first.
+  const full = now - samples[0].t >= windowMs;
+  return { full, disp: maxX - minX + (maxY - minY) };
+}
+
+/** Instantaneous speed (px/ms) from the last two samples. */
+function speedOf(samples: readonly GazeSample[]): number {
+  if (samples.length < 2) return 0;
+  const a = samples[samples.length - 2];
+  const b = samples[samples.length - 1];
+  const dt = b.t - a.t;
+  if (dt <= 0) return 0;
+  return Math.hypot(b.x - a.x, b.y - a.y) / dt;
+}
+
+function restTo(m: GazeMachine, snap: boolean): GazeMachine {
+  return {
+    ...m,
+    state: "CONTACT",
+    target: null,
+    snap,
+    samples: [],
+    zoneEnterAt: null,
+  };
+}
+
+/** The v2 reducer: `(machine, event, temperament) → machine`, pure. */
+export function gazeReduce(
+  m: GazeMachine,
+  e: GazeEvent,
+  temp: GazeTemperament,
+): GazeMachine {
+  // Terminal states swallow everything.
+  if (m.state === "GATED_OFF" || m.state === "DORMANT") return m;
+
+  switch (e.type) {
+    case "reducedMotion":
+      // Disarm-only: GATED_OFF is terminal for the session (assets stay cached).
+      return {
+        ...m,
+        state: "GATED_OFF",
+        target: null,
+        snap: true,
+        samples: [],
+        zoneEnterAt: null,
+      };
+    case "decodeFailed":
+      return m.state === "LOADING" ? { ...m, state: "DORMANT" } : m;
+    case "decoded":
+      // Reveal at rest — rest parity is what makes the reveal imperceptible.
+      return m.state === "LOADING" ? restTo(m, false) : m;
+    case "interrupt":
+      // blur / tab hidden / shift toggle: snap to rest in the same frame.
+      return m.state === "CONTACT" || m.state === "TRACKING"
+        ? restTo(m, true)
+        : m;
+    case "leave":
+      // pointer-leave / visible band-exit: launch a rest saccade.
+      return m.state === "CONTACT" || m.state === "TRACKING"
+        ? restTo(m, false)
+        : m;
+    case "pointer": {
+      if (m.state !== "CONTACT" && m.state !== "TRACKING") return m; // pre-reveal
+      const samples = pushSample(
+        m.samples,
+        { x: e.x, y: e.y, t: e.t },
+        temp.fixationWindowMs,
+      );
+      // Outside the band → rest (the band's only remaining behavioural role).
+      if (!e.inBand) {
+        return {
+          ...m,
+          state: "CONTACT",
+          target: null,
+          snap: false,
+          samples: [],
+          zoneEnterAt: null,
+        };
+      }
+      // Face-zone dwell clock (hysteresis: enter-boundary + minimum dwell).
+      let zoneEnterAt = m.zoneEnterAt;
+      if (e.inZoneEnter) {
+        if (zoneEnterAt === null) zoneEnterAt = e.t;
+      } else {
+        zoneEnterAt = null;
+      }
+      const zoneCommitted =
+        zoneEnterAt !== null && e.t - zoneEnterAt >= temp.faceZoneDwellMs;
+
+      if (m.state === "TRACKING") {
+        const { full, disp } = dispersionOf(
+          samples,
+          e.t,
+          temp.fixationWindowMs,
+        );
+        // → CONTACT on a classified fixation or a committed face-zone entry.
+        if (zoneCommitted || (full && disp <= temp.dispersionPx)) {
+          return {
+            ...m,
+            state: "CONTACT",
+            target: null,
+            snap: false,
+            samples,
+            zoneEnterAt,
+          };
+        }
+        return {
+          ...m,
+          state: "TRACKING",
+          target: { x: e.x, y: e.y },
+          snap: false,
+          samples,
+          zoneEnterAt,
+        };
+      }
+      // CONTACT → TRACKING only outside the exit-boundary and moving fast enough.
+      if (!e.inZoneExit && speedOf(samples) > temp.velocityPxPerMs) {
+        return {
+          ...m,
+          state: "TRACKING",
+          target: { x: e.x, y: e.y },
+          snap: false,
+          samples,
+          zoneEnterAt,
+        };
+      }
+      return {
+        ...m,
+        state: "CONTACT",
+        target: null,
+        snap: false,
+        samples,
+        zoneEnterAt,
+      };
+    }
+    default:
+      return m;
+  }
+}
