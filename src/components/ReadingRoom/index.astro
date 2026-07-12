@@ -30,7 +30,7 @@ interface Props {
 }
 
 const {
-  eyebrow = "§ field notes",
+  eyebrow = "§ · field notes",
   title,
   titleEm,
   subtitle,
@@ -112,12 +112,12 @@ const HERO_SIZES = "(max-width: 680px) 100vw, 620px";
     padding: var(--s-5) var(--s-6) 0;
   }
   .return .t-mono {
-    color: var(--ink-mute);
+    color: var(--ink-soft);
     text-decoration: none;
   }
   .return .t-mono:hover,
   .return .t-mono:focus-visible {
-    color: var(--ink);
+    color: var(--signal);
   }
 
   .reading-room {
@@ -187,6 +187,16 @@ const HERO_SIZES = "(max-width: 680px) 100vw, 620px";
     margin: var(--s-6) 0 var(--s-3);
     color: var(--ink);
   }
+  .post-body :global(a) {
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+  }
+  .post-body :global(a:hover),
+  .post-body :global(a:focus-visible) {
+    color: var(--signal);
+  }
   .post-body :global(blockquote) {
     font-family: var(--font-display);
     font-weight: 500;
@@ -204,7 +214,7 @@ const HERO_SIZES = "(max-width: 680px) 100vw, 620px";
     font-family: var(--font-mono);
     font-size: 11px;
     letter-spacing: 0.08em;
-    color: var(--ink-mute);
+    color: var(--ink-soft);
     margin-top: var(--s-2);
   }
   .post-body :global(ul),

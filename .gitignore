@@ -74,3 +74,4 @@ build-archive.log
 # Hero image variants: generated per-build/dev by scripts/gen-hero-variants.ts
 # from the originals Keystatic stores. Never committed — regenerated on demand.
 public/**/*.gen.*
+.gstack/

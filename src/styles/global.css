@@ -124,11 +124,19 @@ body {
   color: var(--ink);
 }
 
+/* Ink, not moss — DESIGN.md §2 reserves moss for semantic shipped/positive
+   states; links are interaction, so they take the site idiom of ink with
+   signal on hover/focus. */
 .prose a {
-  color: var(--moss);
+  color: var(--ink);
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 3px;
+}
+
+.prose a:hover,
+.prose a:focus-visible {
+  color: var(--signal);
 }
 
 .prose code {
@@ -325,7 +333,7 @@ body {
   justify-content: center;
   font-family: var(--font-mono);
   font-size: 10.5px;
-  color: var(--ink-mute);
+  color: var(--ink-soft);
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -350,7 +358,7 @@ body {
   font-family: var(--font-mono);
   font-size: 11px;
   line-height: 1.55;
-  color: var(--ink-mute);
+  color: var(--ink-soft);
   letter-spacing: 0.01em;
   text-transform: none;
 }
@@ -378,4 +386,48 @@ body {
   height: 1px;
   background: var(--rule);
   border: 0;
+}
+
+/* ─── Expanded hit areas ─────────────────────────────────────────────── */
+
+/* DESIGN.md §7 promises 44px touch targets, but the chrome controls are
+   small mono text (11px nav links, 15px social icons, 24px toggle). An
+   invisible ::after pads each control's tap area to 44px height, and 44px
+   width where neighbours allow, without moving a pixel visually. */
+.chrome-nav a,
+.chrome-cta,
+.shift-toggle,
+.site-footer a,
+.section-more,
+.return .t-mono,
+.hero-social-link {
+  position: relative;
+}
+
+.chrome-nav a::after,
+.chrome-cta::after,
+.shift-toggle::after,
+.site-footer a::after,
+.section-more::after,
+.return .t-mono::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: max(100%, 44px);
+  height: max(100%, 44px);
+}
+
+/* Social icons sit on a 27px pitch (15px icon + 12px gap); a full 44px-wide
+   pad would overlap the neighbouring icon's target, so width stays
+   pitch-bound while height takes the full 44px. */
+.hero-social-link::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: max(100%, 26px);
+  height: max(100%, 44px);
 }

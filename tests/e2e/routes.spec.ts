@@ -30,7 +30,12 @@ test("/nonexistent route returns 404 with OffTrail component", async ({
   const response = await page.goto("/this-path-does-not-exist-xyz");
   expect(response?.status()).toBe(404);
   await expect(page.locator(".off-trail")).toBeVisible();
-  await expect(page.locator("#off-trail-title")).toHaveText("no signal");
+  // The section's accessible name is the h1 dek; the "no signal" eyebrow is
+  // decorative (id moved to the heading in the 2026-07 design review).
+  await expect(page.locator("h1#off-trail-title")).toHaveText(
+    "This page does not exist.",
+  );
+  await expect(page.locator(".off-trail .eyebrow")).toHaveText("no signal");
 });
 
 // / — home console renders the hero, outcome ledger, shift-log band, recent

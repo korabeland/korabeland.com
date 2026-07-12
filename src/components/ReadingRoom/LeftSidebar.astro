@@ -17,11 +17,18 @@ const {
   date,
   readTime,
   wordCount,
-  depthFilled = 4,
   depthTotal = 6,
   tags = [],
   contents = [],
 } = Astro.props;
+
+/* Reading depth derives from the real word count (~300 words per cell,
+   floor 1, capped at the bar) — DESIGN.md §1: every number real. */
+const depthFilled =
+  Astro.props.depthFilled ??
+  (wordCount
+    ? Math.min(depthTotal, Math.max(1, Math.ceil(wordCount / 300)))
+    : 0);
 
 const depthCells = Array.from(
   { length: depthTotal },
@@ -83,7 +90,7 @@ const depthCells = Array.from(
     margin-bottom: var(--s-5);
   }
   .meta {
-    color: var(--ink-mute);
+    color: var(--ink-soft);
     line-height: 1.5;
   }
   .meta-date {
@@ -124,7 +131,7 @@ const depthCells = Array.from(
     color: var(--ink-soft);
   }
   .toc-num {
-    color: var(--ink-mute);
+    color: var(--ink-soft);
   }
   .toc-label--active {
     color: var(--ink);

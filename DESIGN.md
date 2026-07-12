@@ -20,7 +20,7 @@ Token source of truth. `src/styles/tokens.css` is regenerated to match this file
 2. **Every number real.** No fabricated stats, ever. Numbers derive from content collections or approved case-study facts.
 3. **One signal accent.** `--signal` marks what matters (status, active, focus) — amber by night, indigo/periwinkle by day (a cool complement drawn from the portrait). Green appears only as a semantic "shipped/positive" state. Nothing else competes.
 4. **Scanned, not read.** Status rail, ledgers, fact strips. Prose earns its place after the data.
-5. **Understated confidence.** No banner, no hype, no exclamation marks. The availability line is one mono strip: `● open to ai / data / product roles`.
+5. **Understated confidence.** No banner, no hype, no exclamation marks. (The old availability strip is gone — visible open-to-work copy was removed wholesale in PR #30; job-seeking context stays LLM-facing only.)
 
 ## 2. Colour — dark-first, two shifts
 
@@ -52,21 +52,22 @@ Contrast rules (WCAG AA, carried from the previous system): small mono text (≤
 
 ## 4. Layout grammar
 
-- **Status rail** — the site chrome is a readout: wordmark · nav (mono labels) · availability line. Active nav = signal underline + dot.
+- **Status rail** — the site chrome is a readout: wordmark · shift toggle · nav (mono labels) · contact CTA. Active nav = signal underline.
 - **Outcome ledger** — homepage work index: rows of `name · datum · status chip`, hairline-separated, tabular numerals. Status chips: signal = in flight, moss = shipped.
 - **Fact strip** — top of every case study: Role / Scope / Span / Status in a bordered mono grid.
 - **Metrics block** — bordered rows of `metric label · mono value`, placed before or immediately after the first prose block.
 - Sharp radii (0 default), 1px hairlines, left-aligned everything, 680px prose measure, 960px shell.
 
-## 5. Motion budget — five moments
+## 5. Motion budget — six moments
 
 1. Ledger rows stagger in once on page load (~40ms/row, opacity+4px rise).
 2. The availability status dot breathes (re-tuned `breathe` keyframe, slow) — now the `StatusChip` pulse variant, one component across the site.
 3. Reading-progress meter on case-study pages.
 4. Hero headline rotates its subject on a slow fade (server-renders the default; JS-only).
 5. Metric readouts count up from zero when scrolled into view (case studies).
+6. Shift-log cells brighten under the cursor — the instrument torch, busy cells only (shipped 2026-07, deliberate exception documented in `ShiftLog.astro`).
 
-Nothing else animates beyond 150–200ms hover/focus transitions. Moments 1–3 respect the global CSS reduced-motion guard; 4–5 are JS enhancements that server-render their static end-state and self-disable under `matchMedia("(prefers-reduced-motion: reduce)")` (the CSS guard can't stop scripted mutation). Amended from three to five in the experience-ledger plan (2026-07-04).
+Nothing else animates beyond 150–200ms hover/focus transitions. Moments 1–3 respect the global CSS reduced-motion guard; 4–6 are JS enhancements that server-render their static end-state and self-disable under `matchMedia("(prefers-reduced-motion: reduce)")` (the CSS guard can't stop scripted mutation). Amended from three to five in the experience-ledger plan (2026-07-04).
 
 ## 6. Voice
 
