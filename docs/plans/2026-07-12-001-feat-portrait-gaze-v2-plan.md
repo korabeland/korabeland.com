@@ -24,7 +24,9 @@ Plan-specific framing: **v1 is not yet on main.** PR #33 is open on branch `clau
 
 ## Assumptions
 
-*This plan was authored without synchronous user confirmation. The items below are agent inferences that fill gaps in the input — un-validated bets that should be reviewed before implementation proceeds.*
+*This plan was authored without synchronous user confirmation. The items below were agent inferences that fill gaps in the input.*
+
+*Reviewed and confirmed by Korab on 2026-07-12: all 11 approved as written. The first (PR #33 sequencing) was resolved by events — #33 merged as `d396fdc` and this branch sits on top of it. Failure-mode atomicity (whole rig dormant) and the one-way reduced-motion disarm were confirmed as explicit product decisions, not just defaults.*
 
 - **PR #33 lands before implementation starts.** This plan assumes v1 merges to main first and v2 branches from main. If #33 stalls, the fallback is branching v2 off `claude/portrait-gaze-requirements-752aa3`, accepting rebase churn (that branch is based at #31 and its colophon baselines already trail main).
 - **Asset-failure atomicity (resolves flow gap on R16/R11):** any fetch or decode failure across *either* variant's layer set leaves the entire rig permanently dormant for the session. No live-on-night-then-dormant-on-toggle half state.
