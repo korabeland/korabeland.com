@@ -177,6 +177,9 @@ export const RIG_MANIFEST: Record<string, PortraitRig> = {
 export const RIG = {
   travelCeiling: 0.007,
   vergenceMargin: 0.004,
+  /** Max inter-eye convergence angle (radians) before the vergence cap binds —
+   *  keeps a near target from going comically cross-eyed (U6, tunable). */
+  maxVergenceRad: 0.3,
 } as const;
 
 /** True when a point (width-fractions, relative to the image box) is inside an
@@ -651,4 +654,157 @@ export function gazeReduce(
     default:
       return m;
   }
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// v2 main-sequence motion model + vergence (U6). Every frame's pose comes from
+// a pure poseAt(t) sampler so motion is unit-testable without a browser: the
+// component builds a Saccade descriptor when the target changes and samples it
+// each rAF frame. Amplitude sets duration (Bahill/Clark/Stark main sequence),
+// large jumps overshoot and settle, a mid-flight retarget relaunches from the
+// current sampled pose (no teleport), and held contact carries sub-pixel drift.
+// ══════════════════════════════════════════════════════════════════════════
+
+export interface Saccade {
+  /** Origin offset px (per-eye, relative to the eye centre). */
+  from: Point;
+  /** Target offset px. */
+  to: Point;
+  /** Launch timestamp (same clock as poseAt's `now`). */
+  t0: number;
+  /** Main-phase duration ms (floor + slope × amplitude). */
+  dur: number;
+  /** Overshoot fraction (0 for small saccades). */
+  overshoot: number;
+  /** Corrective settle duration ms after the main phase (0 when no overshoot). */
+  settle: number;
+}
+
+/** Build a saccade descriptor. `refPx` is the full (unattenuated) travel in px
+ *  at the current render size; overshoot engages only for saccades past 40% of
+ *  it, so small corrections stay crisp while large jumps get the ballistic
+ *  overshoot + settle (the plan's "small no overshoot, large overshoot"). */
+export function launchSaccade(
+  from: Point,
+  to: Point,
+  t0: number,
+  temp: GazeTemperament,
+  refPx: number,
+): Saccade {
+  const amp = Math.hypot(to.x - from.x, to.y - from.y);
+  const dur = Math.max(1, temp.saccadeFloorMs + temp.saccadeSlopeMsPerPx * amp);
+  const large = refPx > 0 && amp >= 0.4 * refPx;
+  return {
+    from,
+    to,
+    t0,
+    dur,
+    overshoot: large ? temp.overshoot : 0,
+    settle: large ? temp.settleMs : 0,
+  };
+}
+
+/** Sample the saccade pose at `now`. Front-loaded ballistic ease to (1 +
+ *  overshoot), then a smoothstep settle back to the target. Clamped at both
+ *  ends, so a huge `now` (resumed background tab) lands exactly on the target,
+ *  never past it. */
+export function poseAt(s: Saccade, now: number): Point {
+  if (now <= s.t0) return { ...s.from };
+  const total = s.dur + s.settle;
+  if (now >= s.t0 + total) return { ...s.to };
+  const dx = s.to.x - s.from.x;
+  const dy = s.to.y - s.from.y;
+  let p: number;
+  const tau = (now - s.t0) / s.dur;
+  if (tau <= 1) {
+    const e = 1 - (1 - tau) ** 3; // easeOutCubic: fast start, decelerating
+    p = (1 + s.overshoot) * e;
+  } else {
+    const sp = (now - (s.t0 + s.dur)) / s.settle;
+    const e = sp * sp * (3 - 2 * sp); // smoothstep
+    p = 1 + s.overshoot * (1 - e);
+  }
+  return { x: s.from.x + dx * p, y: s.from.y + dy * p };
+}
+
+/** Deterministic sub-pixel micro-drift for held contact — a slow Lissajous
+ *  wander bounded by `microDriftPx`. Zeroed when `frozen` (pinned/compared
+ *  poses) so drift never appears in a mechanically-compared render. */
+export function microDrift(
+  t: number,
+  temp: GazeTemperament,
+  frozen: boolean,
+): Point {
+  if (frozen) return { x: 0, y: 0 };
+  const w = 2 * Math.PI * temp.microDriftHz * (t / 1000);
+  return {
+    x: Math.sin(w) * temp.microDriftPx,
+    y: Math.sin(w * 0.7 + 1.3) * temp.microDriftPx,
+  };
+}
+
+/** Clamp a per-frame time delta so a throttled/resumed rAF can't advance an
+ *  accumulated animation clock by a giant step. */
+export function clampDt(dt: number, maxDt = 64): number {
+  return Math.min(Math.max(dt, 0), maxDt);
+}
+
+function circularMean(a: number, b: number): number {
+  return Math.atan2(
+    (Math.sin(a) + Math.sin(b)) / 2,
+    (Math.cos(a) + Math.cos(b)) / 2,
+  );
+}
+
+/** Per-eye gaze offsets toward a shared target with a convergence cap. Each eye
+ *  bears on the target from its own centre (v1 gazeOffset), so convergence on
+ *  near targets emerges naturally; if the inter-eye angle exceeds
+ *  `maxConvergeRad` the pair is pulled back toward parallel so it never crosses
+ *  comically. Targets at effective infinity produce parallel gaze. */
+export function vergedOffsets(
+  leftEye: Point,
+  rightEye: Point,
+  target: Point,
+  travelPx: number,
+  maxConvergeRad: number = RIG.maxVergenceRad,
+): { left: Point; right: Point } {
+  const l = gazeOffset(leftEye, target, travelPx);
+  const r = gazeOffset(rightEye, target, travelPx);
+  const angL = Math.atan2(target.y - leftEye.y, target.x - leftEye.x);
+  const angR = Math.atan2(target.y - rightEye.y, target.x - rightEye.x);
+  let verg = angL - angR;
+  while (verg > Math.PI) verg -= 2 * Math.PI;
+  while (verg < -Math.PI) verg += 2 * Math.PI;
+  if (Math.abs(verg) <= maxConvergeRad) return { left: l, right: r };
+  // Cap: keep each eye's magnitude, but limit the angle between the pair.
+  const mean = circularMean(angL, angR);
+  const half = (maxConvergeRad / 2) * Math.sign(verg);
+  const magL = Math.hypot(l.x, l.y);
+  const magR = Math.hypot(r.x, r.y);
+  const aL = mean + half;
+  const aR = mean - half;
+  return {
+    left: { x: Math.cos(aL) * magL, y: Math.sin(aL) * magL },
+    right: { x: Math.cos(aR) * magR, y: Math.sin(aR) * magR },
+  };
+}
+
+/** Worst-case sprite offset as a fraction of image width, over both
+ *  temperaments: full travel inflated by chained overshoot (an overshoot
+ *  launched from an already-overshot pose — Assumption C1's worst reachable
+ *  pose). The containment invariant is asserted over this envelope. */
+export function reachEnvelopeFraction(): number {
+  const maxScale = Math.max(
+    GAZE_TEMPERAMENT.day.travelScale,
+    GAZE_TEMPERAMENT.night.travelScale,
+  );
+  const maxOver = Math.max(
+    GAZE_TEMPERAMENT.day.overshoot,
+    GAZE_TEMPERAMENT.night.overshoot,
+  );
+  // travel → overshoot past target (×(1+over)); then a reversal launched from
+  // that overshot pose overshoots again: amplitude up to travel×(2+over),
+  // landing travel×(1 + over×(2+over)) from centre.
+  const chain = 1 + maxOver * (2 + maxOver);
+  return RIG.travelCeiling * maxScale * chain;
 }

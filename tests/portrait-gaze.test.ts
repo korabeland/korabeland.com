@@ -3,6 +3,7 @@ import {
   attenuation,
   bandOuterRadius,
   centerDistance,
+  clampDt,
   type Ellipse,
   EYE_MANIFEST,
   eyeCenters,
@@ -17,15 +18,21 @@ import {
   inEllipse,
   initGaze,
   isInside,
+  launchSaccade,
+  microDrift,
   PORTRAIT_VARIANTS,
+  poseAt,
   type Rect,
   RIG,
   RIG_MANIFEST,
+  reachEnvelopeFraction,
   rectCenter,
+  type Saccade,
   shouldSaccade,
   TEMPERAMENT,
   temperamentFor,
   travelPx,
+  vergedOffsets,
 } from "@/lib/portrait-gaze";
 
 // A 340×340 portrait box at (200, 120) — the home hero's rough desktop size.
@@ -602,5 +609,207 @@ describe("gaze fixation state machine (U5 — R6/R7/R8/R9/R11)", () => {
       );
       expect(nightSettled.state).toBe("CONTACT");
     });
+  });
+});
+
+describe("main-sequence motion + vergence (U6 — R10/R12/R13/R17)", () => {
+  const day = GAZE_TEMPERAMENT.day;
+  const REF = 10; // full-travel reference px for overshoot gating
+
+  describe("saccade profile (R12)", () => {
+    it("duration grows monotonically with amplitude", () => {
+      const durs = [1, 4, 8, 16].map(
+        (amp) =>
+          launchSaccade({ x: 0, y: 0 }, { x: amp, y: 0 }, 0, day, REF).dur,
+      );
+      for (let i = 1; i < durs.length; i++) {
+        expect(durs[i]).toBeGreaterThan(durs[i - 1]);
+      }
+    });
+
+    it("small saccades have no overshoot and never pass the target", () => {
+      const s = launchSaccade({ x: 0, y: 0 }, { x: 2, y: 0 }, 0, day, REF); // 2 < 0.4×10
+      expect(s.overshoot).toBe(0);
+      expect(s.settle).toBe(0);
+      const mid = poseAt(s, s.t0 + s.dur / 2);
+      expect(mid.x).toBeGreaterThan(0);
+      expect(mid.x).toBeLessThanOrEqual(2);
+      expect(poseAt(s, s.t0 + s.dur).x).toBeCloseTo(2, 6);
+    });
+
+    it("large saccades overshoot then settle to the exact target", () => {
+      const s = launchSaccade({ x: 0, y: 0 }, { x: 10, y: 0 }, 0, day, REF);
+      expect(s.overshoot).toBeGreaterThan(0);
+      // at the end of the main phase the pose is past the target (overshoot)
+      expect(poseAt(s, s.t0 + s.dur).x).toBeGreaterThan(10);
+      // still settling back mid-settle, then lands exactly on target
+      expect(poseAt(s, s.t0 + s.dur + s.settle / 2).x).toBeGreaterThan(10);
+      expect(poseAt(s, s.t0 + s.dur + s.settle)).toEqual({ x: 10, y: 0 });
+      expect(poseAt(s, s.t0 + s.dur + s.settle + 999)).toEqual({ x: 10, y: 0 });
+    });
+
+    it("holds the origin before launch", () => {
+      const s = launchSaccade({ x: 1, y: 2 }, { x: 9, y: 0 }, 100, day, REF);
+      expect(poseAt(s, 50)).toEqual({ x: 1, y: 2 });
+    });
+  });
+
+  describe("retarget-on-interrupt (R12 / Assumption C1)", () => {
+    it("is continuous through a mid-flight retarget and lands on the new target", () => {
+      const s1 = launchSaccade({ x: 0, y: 0 }, { x: 10, y: 0 }, 0, day, REF);
+      const now = 20;
+      const current = poseAt(s1, now);
+      const s2 = launchSaccade(current, { x: 0, y: 10 }, now, day, REF);
+      // no teleport: the relaunched saccade starts exactly where we were
+      expect(poseAt(s2, now)).toEqual(current);
+      // and it converges on the new target
+      expect(poseAt(s2, now + s2.dur + s2.settle + 1)).toEqual({ x: 0, y: 10 });
+    });
+
+    it("chained per-frame retargets stay bounded and converge once input stops", () => {
+      const bound = REF * (1 + day.overshoot * (2 + day.overshoot)) + 1e-6;
+      let s: Saccade = launchSaccade(
+        { x: 0, y: 0 },
+        { x: 10, y: 0 },
+        0,
+        day,
+        REF,
+      );
+      let t = 0;
+      // pathological: retarget every frame to an alternating extreme
+      for (let i = 0; i < 40; i++) {
+        t += 16;
+        const cur = poseAt(s, t);
+        expect(Math.hypot(cur.x, cur.y)).toBeLessThanOrEqual(bound);
+        const tgt = i % 2 === 0 ? { x: -10, y: 0 } : { x: 10, y: 0 };
+        s = launchSaccade(cur, tgt, t, day, REF);
+      }
+      // input stops → converges on the final target
+      const settled = poseAt(s, t + s.dur + s.settle + 1000);
+      expect(settled.x).toBeCloseTo(s.to.x, 6);
+      expect(settled.y).toBeCloseTo(s.to.y, 6);
+    });
+  });
+
+  describe("micro-drift (R12) + Δt clamp", () => {
+    it("stays within its sub-pixel bound at every sampled t", () => {
+      for (let t = 0; t < 5000; t += 37) {
+        const d = microDrift(t, day, false);
+        expect(Math.abs(d.x)).toBeLessThanOrEqual(day.microDriftPx + 1e-9);
+        expect(Math.abs(d.y)).toBeLessThanOrEqual(day.microDriftPx + 1e-9);
+      }
+    });
+
+    it("is exactly zero when frozen (pinned/compared poses)", () => {
+      for (let t = 0; t < 1000; t += 53) {
+        expect(microDrift(t, day, true)).toEqual({ x: 0, y: 0 });
+      }
+    });
+
+    it("clamps a giant frame gap to the ceiling, never a teleport past target", () => {
+      expect(clampDt(5000, 64)).toBe(64);
+      expect(clampDt(-10)).toBe(0);
+      expect(clampDt(16)).toBe(16);
+      // and poseAt itself never overshoots the settled target on a huge now
+      const s = launchSaccade({ x: 0, y: 0 }, { x: 10, y: 0 }, 0, day, REF);
+      expect(poseAt(s, 5_000_000)).toEqual({ x: 10, y: 0 });
+    });
+  });
+
+  describe("vergence (R10)", () => {
+    const left = { x: 100, y: 200 };
+    const right = { x: 200, y: 200 };
+    const travel = 5;
+
+    it("converges on a near target between the eyes", () => {
+      const { left: l, right: r } = vergedOffsets(
+        left,
+        right,
+        { x: 150, y: 260 },
+        travel,
+      );
+      // left eye bears right (+x toward centre), right eye bears left (−x)
+      expect(l.x).toBeGreaterThan(0);
+      expect(r.x).toBeLessThan(0);
+    });
+
+    it("produces near-parallel gaze for a distant target", () => {
+      const { left: l, right: r } = vergedOffsets(
+        left,
+        right,
+        { x: 20000, y: 200 },
+        travel,
+      );
+      // both point essentially the same way → offsets nearly equal
+      expect(Math.abs(l.x - r.x)).toBeLessThan(0.05);
+      expect(Math.abs(l.y - r.y)).toBeLessThan(0.05);
+    });
+
+    it("caps the convergence angle before it goes comically cross-eyed", () => {
+      // a target right between and very close would over-converge; the cap holds
+      const cap = 0.3;
+      const { left: l, right: r } = vergedOffsets(
+        left,
+        right,
+        { x: 150, y: 205 },
+        travel,
+        cap,
+      );
+      const angBetween = Math.abs(Math.atan2(l.y, l.x) - Math.atan2(r.y, r.x));
+      expect(angBetween).toBeLessThanOrEqual(cap + 1e-6);
+    });
+  });
+
+  describe("R17 containment sweep (AE4)", () => {
+    // The occluder intentionally clips the iris top/bottom (aperture ry < irisR),
+    // so "disc inside aperture" can't apply to a lid-clipped painted eye; the
+    // invariant that matters is that the iris CENTRE (hence the pupil) never
+    // leaves the visible opening across the whole reachable envelope — max
+    // travel × temperament × chained overshoot (the worst pose under retarget
+    // chaining). Vergence never inflates magnitude (each eye offset ≤ travel and
+    // the cap only rotates), so the envelope bounds it too.
+    const env = reachEnvelopeFraction();
+    const DIRS = [
+      [1, 0],
+      [-1, 0],
+      [0, 1],
+      [0, -1],
+      [0.7071, 0.7071],
+      [-0.7071, 0.7071],
+      [0.7071, -0.7071],
+      [-0.7071, -0.7071],
+    ] as const;
+
+    it("the reachable envelope is a small fraction of image width", () => {
+      expect(env).toBeGreaterThan(RIG.travelCeiling); // overshoot inflates travel
+      expect(env).toBeLessThan(0.015);
+    });
+
+    for (const variant of PORTRAIT_VARIANTS) {
+      const rig = RIG_MANIFEST[variant.basename];
+      for (const [name, eye] of [
+        ["left", rig.left],
+        ["right", rig.right],
+      ] as const) {
+        it(`${variant.basename} ${name}: iris centre + envelope stays inside the aperture (10% margin)`, () => {
+          // aperture shrunk 10% for a genuine safety margin (also swallows the
+          // sub-pixel micro-drift, which is far smaller than 10% of the axes).
+          const margined: Ellipse = {
+            cx: eye.aperture.cx,
+            cy: eye.aperture.cy,
+            rx: eye.aperture.rx * 0.9,
+            ry: eye.aperture.ry * 0.9,
+          };
+          for (const [dx, dy] of DIRS) {
+            const px = eye.cx + dx * env;
+            const py = eye.cy + dy * env;
+            expect(
+              inEllipse(px, py, margined),
+              `${name} dir (${dx},${dy})`,
+            ).toBe(true);
+          }
+        });
+      }
+    }
   });
 });
