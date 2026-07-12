@@ -301,6 +301,13 @@ const rigVariants: RigVariant[] = gaze
           let raf = 0;
           let paused = false;
           let last = 0;
+          // A held-still cursor emits no pointer events, so the dispersion
+          // window and the face-zone dwell clock can only complete if the loop
+          // re-classifies from the last position on a timer — otherwise a pause
+          // never settles to eye contact (AE2). Throttled so samples advance in
+          // real time; reeval() stamps this, so a real move resets the timer.
+          let lastClassify = 0;
+          const CLASSIFY_TICK_MS = 60;
 
           const liveRect = (): Rect => {
             const b = stack!.getBoundingClientRect();
@@ -364,6 +371,16 @@ const rigVariants: RigVariant[] = gaze
             // Δt is clamped so a resumed background tab can't jolt the drift phase.
             last = last === 0 ? now : last + clampDt(now - last);
             const temp = gazeTemperamentFor(currentShift());
+            // Drive fixation classification for a stationary cursor: while
+            // tracking, re-evaluate from the last position so the window/dwell
+            // can complete and settle to contact without a fresh pointer event.
+            if (
+              cursor &&
+              machine.state === "TRACKING" &&
+              now - lastClassify >= CLASSIFY_TICK_MS
+            ) {
+              reeval(now);
+            }
             for (const side of ["left", "right"] as const) {
               const off = poseAt(sac[side], now);
               let x = off.x;
@@ -395,6 +412,7 @@ const rigVariants: RigVariant[] = gaze
           // rect) and step the machine; used by pointermove, scroll and resize.
           const reeval = (now: number) => {
             if (!cursor) return;
+            lastClassify = now;
             const r = liveRect();
             const dc = centerDistance(cursor, r);
             const band = inBand(dc, bandOuterRadius(r));
