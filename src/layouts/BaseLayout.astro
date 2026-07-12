@@ -458,6 +458,12 @@ const NAV_LINKS: readonly NavLink[] = [
     .chrome-nav {
       flex: 1 1 100%;
       overflow-x: auto;
+      /* overflow-x forces overflow-y to auto, which would clip the 44px
+         hit-area pads (global.css) at the scroll box. Padding gives the
+         pads room inside the clip box; the negative margin cancels the
+         layout shift, so nothing moves visually. */
+      padding-block: 14px;
+      margin-block: -14px;
     }
     .chrome-nav ul {
       justify-content: flex-start;

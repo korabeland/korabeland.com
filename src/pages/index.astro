@@ -111,6 +111,8 @@ const jsonLd = {
   ],
 };
 
+// Month-level on purpose — the homepage list is a teaser ("jul 2026"), not a
+// dated record; full YYYY.MM.DD stamps live on /notes via formatNoteDate().
 function formatDate(iso: string | null): string {
   if (!iso) return "";
   return new Date(iso)

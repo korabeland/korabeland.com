@@ -22,8 +22,11 @@ export function formatNoteDate(iso: string | null): string {
   if (!iso) return "—";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "—";
+  // Date-only frontmatter ("2026-07-11") parses as UTC midnight, so format
+  // with UTC getters too — local getters would render the previous calendar
+  // day anywhere west of Greenwich (hello, Washington DC).
   const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}.${pad(d.getMonth() + 1)}.${pad(d.getDate())}`;
+  return `${d.getUTCFullYear()}.${pad(d.getUTCMonth() + 1)}.${pad(d.getUTCDate())}`;
 }
 
 export function estimateReadTime(text: string): string {
