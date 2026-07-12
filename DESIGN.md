@@ -56,7 +56,10 @@ Contrast rules (WCAG AA, carried from the previous system): small mono text (≤
 - **Outcome ledger** — homepage work index: rows of `name · datum · status chip`, hairline-separated, tabular numerals. Status chips: signal = in flight, moss = shipped.
 - **Fact strip** — top of every case study: Role / Scope / Span / Status in a bordered mono grid.
 - **Metrics block** — bordered rows of `metric label · mono value`, placed before or immediately after the first prose block.
-- Sharp radii (0 default), 1px hairlines, left-aligned everything, 680px prose measure, 960px shell.
+- **Section head** — the recurring section grammar: mono t-label heading over a 1px `--ink` underline, optional mono more-link on the right. One component (`src/components/SectionHead.astro`), never re-implemented per page.
+- Sharp radii (0 default), 1px hairlines, left-aligned everything.
+- **Three content widths, tokenised** (`--w-prose` 680px · `--w-shell` 960px · `--w-page` 1280px in `src/styles/tokens.css`). Prose pages and case-study body copy sit on `--w-prose`; index shells (home, /work, /lab, /notes) and the case-study header/fact strip on `--w-shell`; outer chrome (header, page-main, footer, reading room) on `--w-page`. No other container max-widths — `ch`-based caps on individual text blocks are fine. (Consolidated 2026-07-12 from eight ad-hoc widths: 620/680/760/820/960/1000/1280/1320.)
+- **One mobile stacking breakpoint: 680px**, matching the prose measure (CSS custom properties cannot reach `@media`, so the value is repeated literally — it is documented here and in `tokens.css`). Sidebar collapses (reading room, 1200px) are a different job. Deliberate exception: the fact strip's 5→2 column collapse at 800px is a grid-density call — five mono facts don't fit between 680 and 800.
 
 ## 5. Motion budget — six moments
 

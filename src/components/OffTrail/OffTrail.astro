@@ -34,7 +34,7 @@ const subline = destinationLabel
   <p class="t-label eyebrow">no signal</p>
   <h1 class="dek" id="off-trail-title">This page does not exist.</h1>
   {hasSubline && <p class="t-mono subline">{subline}</p>}
-  <a class="btn" href="/">back to the console</a>
+  <a class="btn return-btn" href="/">back to the console</a>
 </section>
 
 <style>
@@ -67,24 +67,10 @@ const subline = destinationLabel
     margin: 0;
   }
 
-  .btn {
+  /* Chrome comes from the global .btn (global.css) — only the spacing and
+     the anchor's underline reset are local. */
+  .return-btn {
     margin-top: var(--s-4);
-    font-family: var(--font-mono);
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    color: var(--ink);
-    border: 1px solid var(--ink);
-    padding: 10px 16px;
     text-decoration: none;
-    transition:
-      background 200ms ease,
-      color 200ms ease;
-  }
-
-  .btn:hover,
-  .btn:focus-visible {
-    background: var(--ink);
-    color: var(--paper);
   }
 </style>

@@ -177,7 +177,7 @@ const tools: { label: string; note: string }[] = [
 
 <style>
   .colophon {
-    max-width: 620px;
+    max-width: var(--w-prose);
     margin-inline: auto;
     padding-block: var(--s-5) var(--s-8);
   }
@@ -280,7 +280,7 @@ const tools: { label: string; note: string }[] = [
     white-space: nowrap;
   }
 
-  @media (max-width: 640px) {
+  @media (max-width: 680px) {
     .build-log .commit {
       grid-template-columns: 68px 1fr;
     }

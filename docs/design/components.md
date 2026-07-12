@@ -59,6 +59,11 @@ semantic state, not decoration); small mono text (≤13px) sits on `--ink-soft`,
 never `--ink-mute`.
 
 **Spacing** — 4px base, Tailwind-aligned: `--s-1` 4px → `--s-10` 128px.
+**Widths** — three container measures, nothing else (`DESIGN.md` §4): `--w-prose`
+680px (reading), `--w-shell` 960px (index shells, case-study head), `--w-page`
+1280px (outer chrome). Mobile stacking breakpoint: 680px, literal in every
+`@media` (custom properties can't reach media queries); `FactStrip`'s 800px
+column collapse is the one documented exception.
 **Radii** — sharp by default: `--r-0` 0 (cards/buttons), `--r-1` 2px, `--r-2` 4px,
 `--r-pill` 9999px (dots only).
 **Type** — Schibsted Grotesk (display + body), JetBrains Mono (every number,
@@ -90,8 +95,9 @@ Utility classes from `src/styles/global.css`. No import; use directly in markup.
 
 | Class | What it is | States / notes |
 |---|---|---|
-| `.btn` | Inline mono button, 1px `--ink` border | `:hover` inverts (ink fill, paper text) |
-| `.btn.ghost` | Recessive button, `--rule` border, `--ink-soft` text | `:hover` promotes border/text to `--ink` |
+| `.btn` | Inline mono button, 1px `--ink` border | `:hover`/`:focus-visible` inverts (ink fill, paper text) |
+| `.btn.ghost` | Recessive button, `--rule` border, `--ink-soft` text | `:hover`/`:focus-visible` promotes border/text to `--ink` |
+| `.sr-only` | Visually hidden, announced to AT | The one site-wide definition — never redeclare per component |
 | `.tag` | Mono 10px pill, `--rule` border, `--ink-soft` | Static; the neutral cousin of `StatusChip --chip` |
 | `.fig` | Diagonal-hatch figure placeholder | Content stand-in |
 | `.pullquote` | Display italic 24px, `--moss` left border | In-article pull quote |
@@ -198,6 +204,35 @@ Storage/attribute contract is locked across units — see `src/lib/shift.ts` and
 |---|---|
 | Rely on `BaseLayout` to place it | Drop a second toggle on a page |
 | Change shift logic in `src/lib/shift.ts` | Fork the resolution rules — parity test enforces lockstep |
+
+---
+
+### SectionHead
+
+`components/SectionHead.astro` — the section-head grammar (`DESIGN.md` §4): a
+`t-label` `<h2>` over a 1px `--ink` underline, with an optional mono more-link
+on the right. Consumers: `index.astro` (shift log, recent notes, close),
+`ProjectLedger`, `ExperienceLedger`, `for/[slug]` (selected work), `CaseStudy`
+(outcome / field log / reflection). Previously re-implemented near-verbatim at
+each of those sites.
+
+**Use when** opening any content section with the underlined mono heading.
+Don't hand-roll the pattern again; different heading treatments (e.g. the
+tailored CTA's top-rule head) are different patterns, not variants of this one.
+
+**Props**
+
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `id` | `string` | — (required) | Heading id — target for the owning section's `aria-labelledby` |
+| `text` | `string` | — (required) | Heading copy (rendered as `t-label`) |
+| `more` | `{ href, label, rel? }` | — | Optional mono more-link, right-aligned (`all notes →`) |
+
+**Spacing/width contract** — the component ships margin `0` and no width cap.
+Callers tune both via inherited custom properties set on any ancestor (scoped
+styles can't reach a child component's root): `--section-head-margin` (e.g.
+`0 0 var(--s-5)`) and `--section-head-max-width` (e.g. `var(--w-prose)` in
+case-study bodies).
 
 ---
 
@@ -519,17 +554,21 @@ the source, not the call site.
 
 ## Coverage & gaps
 
-16 component files (11 top-level + 5 sub-components) + shell documented.
+17 component files (12 top-level + 5 sub-components) + shell documented.
 
-**Resolved in this pass:** the duplicate status chip in `CaseStudy/index.astro`
-was folded into `StatusChip` (styling was already byte-identical), and the dead
-`docs/design/tokens.css` (retired trail-map era, imported nowhere) was deleted.
+**Resolved:** the duplicate status chip in `CaseStudy/index.astro` was folded
+into `StatusChip` (styling was already byte-identical); the dead
+`docs/design/tokens.css` (retired trail-map era, imported nowhere) was deleted;
+the section-head pattern (six near-verbatim copies) was extracted into
+`SectionHead`, `.sr-only` (three copies, two implementations) into a global
+utility, and the eight ad-hoc container widths + split 640/680px stacking
+breakpoint consolidated onto `--w-prose`/`--w-shell`/`--w-page` + a single
+680px breakpoint (2026-07-12). `DESIGN.md` §5 now lists all six motion moments.
 
 Remaining — not code bugs, worth a future tidy:
 
 | Gap | Where | Note |
 |---|---|---|
-| Motion budget stale | `DESIGN.md` §5 | Lists five moments; `ShiftLog` torch (R9) is a sixth. Reconcile in `DESIGN.md` §5. |
 | Status vocab split | `StatusChip` key `in-flight` vs display label "in flight" | Consistent but ad-hoc; the key-vs-label mapping is worth a single glossary. |
 
 ---

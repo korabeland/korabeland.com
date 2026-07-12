@@ -7,6 +7,7 @@
 // (differs per page — preserved verbatim), and the home-only per-row
 // stagger-in reveal.
 
+import SectionHead from "../SectionHead.astro";
 import StatusChip from "../StatusChip/StatusChip.astro";
 
 export interface LedgerItem {
@@ -48,14 +49,7 @@ const {
 ---
 
 <section class="ledger-section" aria-labelledby={headingId}>
-  <div class="section-head">
-    <h2 id={headingId} class="t-label">{headingText}</h2>
-    {moreLink && (
-      <a class="t-mono section-more" href={moreLink.href}>
-        {moreLink.label}
-      </a>
-    )}
-  </div>
+  <SectionHead id={headingId} text={headingText} more={moreLink} />
 
   {
     items.length > 0 ? (
@@ -81,32 +75,6 @@ const {
 </section>
 
 <style>
-  .section-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: var(--s-4);
-    border-bottom: 1px solid var(--ink);
-    padding-bottom: var(--s-2);
-  }
-
-  .section-head h2 {
-    margin: 0;
-    color: var(--ink-soft);
-  }
-
-  .section-more {
-    text-transform: none;
-    letter-spacing: 0.04em;
-    color: var(--ink-soft);
-    text-decoration: none;
-  }
-
-  .section-more:hover,
-  .section-more:focus-visible {
-    color: var(--signal);
-  }
-
   .ledger {
     list-style: none;
     margin: 0;

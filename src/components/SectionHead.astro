@@ -1,0 +1,64 @@
+---
+// SectionHead.astro — the section-head grammar from DESIGN.md §4: a mono
+// t-label heading over a 1px --ink underline, with an optional mono
+// more-link on the right. Previously re-implemented near-verbatim on the
+// homepage, ProjectLedger, ExperienceLedger, /for pages and case studies.
+//
+// Spacing and width are the caller's call, made through inherited custom
+// properties set on any ancestor (scoped styles can't reach a child
+// component's root):
+//   --section-head-margin      outer margin (default 0)
+//   --section-head-max-width   cap for prose-width contexts (default none)
+
+interface Props {
+  /** Heading id — target for the owning section's aria-labelledby. */
+  id: string;
+  /** Heading copy (t-label). */
+  text: string;
+  /** Optional mono more-link on the right. */
+  more?: { href: string; label: string; rel?: string };
+}
+
+const { id, text, more } = Astro.props;
+---
+
+<div class="section-head">
+  <h2 id={id} class="t-label">{text}</h2>
+  {
+    more && (
+      <a class="t-mono section-more" href={more.href} rel={more.rel}>
+        {more.label}
+      </a>
+    )
+  }
+</div>
+
+<style>
+  .section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--s-4);
+    border-bottom: 1px solid var(--ink);
+    padding-bottom: var(--s-2);
+    margin: var(--section-head-margin, 0);
+    max-width: var(--section-head-max-width, none);
+  }
+
+  .section-head h2 {
+    margin: 0;
+    color: var(--ink-soft);
+  }
+
+  .section-more {
+    text-transform: none;
+    letter-spacing: 0.04em;
+    color: var(--ink-soft);
+    text-decoration: none;
+  }
+
+  .section-more:hover,
+  .section-more:focus-visible {
+    color: var(--signal);
+  }
+</style>

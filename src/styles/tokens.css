@@ -67,6 +67,18 @@
   --s-9: 96px;
   --s-10: 128px;
 
+  /* Content widths — the only three container measures on the site.
+     See DESIGN.md §4. ch-based caps on individual text blocks are fine;
+     any other px max-width on a container is drift. */
+  --w-prose: 680px; /* reading measure — about, colophon, case-study body */
+  --w-shell: 960px; /* index shells — home, /work, /lab, /notes, case-study head */
+  --w-page: 1280px; /* outer chrome — header, page-main, footer, reading room */
+
+  /* Mobile stacking breakpoint: 680px (= --w-prose). Custom properties can't
+     be used inside @media, so the value is repeated literally at each stacking
+     query — keep them in lockstep with this note and DESIGN.md §4. The fact
+     strip's 800px 5→2 column collapse is a documented density exception. */
+
   /* Radii — the system is intentionally sharp. 0 is the default. */
   --r-0: 0px; /* hairline boxes, cards, buttons — default */
   --r-1: 2px; /* input corners, subtle softening */

@@ -297,7 +297,7 @@ const NAV_LINKS: readonly NavLink[] = [
   }
 
   .chrome-inner {
-    max-width: 1280px;
+    max-width: var(--w-page);
     margin-inline: auto;
     padding: var(--s-4) var(--s-6);
     display: grid;
@@ -393,7 +393,7 @@ const NAV_LINKS: readonly NavLink[] = [
   .page-main {
     flex: 1;
     width: 100%;
-    max-width: 1280px;
+    max-width: var(--w-page);
     margin-inline: auto;
     padding: var(--s-6) var(--s-4);
   }
@@ -414,7 +414,7 @@ const NAV_LINKS: readonly NavLink[] = [
   }
 
   .site-footer-inner {
-    max-width: 1280px;
+    max-width: var(--w-page);
     margin-inline: auto;
     display: flex;
     justify-content: space-between;
@@ -443,7 +443,7 @@ const NAV_LINKS: readonly NavLink[] = [
     border-bottom-color: var(--signal);
   }
 
-  @media (max-width: 640px) {
+  @media (max-width: 680px) {
     .chrome-inner {
       grid-template-columns: 1fr;
       row-gap: var(--s-3);

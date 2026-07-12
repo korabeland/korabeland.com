@@ -53,7 +53,7 @@ const {
 const hero = heroImage
   ? loadHeroPicture("public/notes", heroImage, "ReadingRoom")
   : null;
-const HERO_SIZES = "(max-width: 680px) 100vw, 620px";
+const HERO_SIZES = "(max-width: 680px) 100vw, 680px";
 ---
 
 <div class="return">
@@ -125,12 +125,12 @@ const HERO_SIZES = "(max-width: 680px) 100vw, 620px";
     grid-template-columns: 220px 1fr 260px;
     gap: var(--s-7);
     padding: var(--s-8) var(--s-6) var(--s-9);
-    max-width: 1320px;
+    max-width: var(--w-page);
     margin: 0 auto;
   }
 
   .column {
-    max-width: 620px;
+    max-width: var(--w-prose);
   }
 
   .eyebrow {
