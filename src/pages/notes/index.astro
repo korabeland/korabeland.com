@@ -1,15 +1,8 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import { listPosts } from "../../lib/posts";
+import { formatNoteDate, listPosts } from "../../lib/posts";
 
 const posts = await listPosts();
-
-function formatDate(iso: string | null): string {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${pad(d.getMonth() + 1)}.${pad(d.getDate())}.${String(d.getFullYear()).slice(-2)}`;
-}
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -51,7 +44,7 @@ const jsonLd = {
       <ul>
         {posts.map((p) => (
           <li class="row">
-            <div class="row-meta t-mono">{formatDate(p.publishedAt)} · {p.readTime}</div>
+            <div class="row-meta t-mono">{formatNoteDate(p.publishedAt)} · {p.readTime}</div>
             <a class="row-main" href={`/notes/${p.slug}`}>
               <h2 class="row-title">{p.title}</h2>
               {p.description && <p class="row-desc">{p.description}</p>}
