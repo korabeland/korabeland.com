@@ -34,10 +34,10 @@ legitimate *because* a separate required status carries the block; it must not
 be added while the App's status is not required, as that would remove the only
 gate.
 
-**Amendment 2026-07-12 (c) — the human `UI Tests` gate is abandoned; the AI agent is the visual reviewer.** The branch-protection switch amendment (b) describes (making the App's `UI Tests` the required check) was attempted on `ci/chromatic-app-required-check` and never landed — that run was cancelled, so main still requires the CI `chromatic` **publish** job, not `UI Tests`. Combined with `--exit-zero-on-changes`, that left no enforced visual gate at all (exactly what (b) warned against). Rather than finish the human gate, the owner does not perform routine visual reviews, so the policy is inverted deliberately:
+**Amendment 2026-07-12 (c) — the human `UI Tests` gate is abandoned; the AI agent is the visual reviewer, and `chromatic` is no longer a required check.** The branch-protection switch amendment (b) describes (making the App's `UI Tests` the required check) was attempted on `ci/chromatic-app-required-check` and never landed — that run was cancelled, so main still required the CI `chromatic` **publish** job, not `UI Tests`. Combined with `--exit-zero-on-changes`, that left no enforced visual gate at all (exactly what (b) warned against). The owner does not perform routine visual reviews, so rather than finish the human gate, the policy is inverted deliberately:
 
 - **Chromatic is a published visual record, reviewed by the AI agent — not a human gate.** On any change that can alter a rendered page, the agent reviews the diff (from the Chromatic build or a local capture) and flags only genuine regressions to the owner. No `UI Tests` status is required; the App may stay installed but does not gate merges.
-- **The required `chromatic` CI check asserts only that a build published** — that a visual record exists to review — not that any change was approved. `--exit-zero-on-changes` is therefore correct here (it was *not* under (b)'s model): visual diffs never block; publish/token failures still do (fail-closed on "no record to review").
+- **`chromatic` runs on every PR as part of the pipeline but is NOT a required check** (dropped from branch protection 2026-07-12). It publishes the visual record for the agent to review; a Chromatic outage or publish failure can therefore never block a merge — it surfaces as a failed *non-blocking* job the agent notices as "no record this time." `--exit-zero-on-changes` is retained (visual diffs never fail the job either). Required checks are now `verify-all` + `Devin Review`.
 - Rule 1 below (never blind-reseed a baseline) still binds the agent's review: a diff is understood before any baseline moves.
 
 The local pixelmatch harness (`tests/visual/screenshot.test.ts` +
@@ -51,9 +51,9 @@ only**. Its failure is useful information; it is not the release gate.
    first — a prior blind reseed baked a real regression in as truth.
 2. A missing `CHROMATIC_PROJECT_TOKEN` on a PR **fails the publish job**
    rather than skipping it — no publish means no visual record for the agent
-   to review, so the required `chromatic` check stays red (fail-closed). Known
-   consequence: fork PRs (which never receive repo secrets) cannot pass —
-   accepted while the repo is solo-maintained.
+   to review, so the (non-required) `chromatic` job goes red as a visible flag,
+   without blocking the merge. Known consequence: fork PRs (which never receive
+   repo secrets) show this red job — accepted while the repo is solo-maintained.
 3. Local baselines are seeded on this platform (macOS) and carry known noise
    near the 0.5% pixelmatch threshold, plus environmental drift on content
    that tracks git state (the colophon build log changes with every commit).

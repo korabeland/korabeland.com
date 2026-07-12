@@ -63,11 +63,13 @@ jobs:
   # (docs/decisions/2026-07-10-visual-approval-policy.md, amended 2026-07-12 (c)).
   # `--exit-zero-on-changes` is deliberate — visual diffs must not fail this
   # job — but a genuine publish failure (bad token, upload error) still exits
-  # non-zero. This `chromatic` job is the required check ONLY to assert that a
-  # build published, so a visual record always exists to review; it does not
-  # assert visual approval. Runs OUTSIDE verify-all so a Chromatic outage can't
-  # hold the rest of CI hostage. A missing token fails loudly rather than
-  # silently skipping — no build means nothing to review (fail-closed).
+  # non-zero. This `chromatic` job runs on every PR as part of the pipeline but
+  # is NOT a required check (dropped from branch protection 2026-07-12), so a
+  # Chromatic outage or publish failure can never block a merge — it just
+  # surfaces as a failed non-blocking job the agent notices. Runs OUTSIDE
+  # verify-all so it can't slow the rest of CI. A missing token fails this job
+  # loudly rather than skipping silently — a red job flags "no record to
+  # review" without gating the merge.
   # (Fork PRs never receive repo secrets by GitHub design; accepted for this
   # solo-maintained repo — revisit before inviting external contributions.)
   chromatic:
