@@ -19,7 +19,6 @@
 // near the pupil and lets the fine sparkle ride with the sprite. Both are
 // emitted so the proof can toggle; U3 finalises to the chosen one afterwards.
 
-import { createHash } from "node:crypto";
 import {
   existsSync,
   mkdirSync,
@@ -35,20 +34,23 @@ import {
   RIG,
   RIG_MANIFEST,
 } from "../src/lib/portrait-gaze";
+import {
+  RIG_BOX as BOX,
+  RIG_LAYERS as LAYERS,
+  rigGeometryHash,
+} from "./rig-manifest-hash";
 
 const repoRoot = resolve(process.cwd());
 const OUT_DIR = resolve(repoRoot, "public/portrait/rig");
-const BOX = 0.12; // eye-box size, fraction of image width (HALF 0.06 each side)
 const MAX_LAYER_BYTES = 24 * 1024; // per-layer hard ceiling (mirrors gen-hero)
 
-const LAYERS = [
-  "underlay",
-  "occluder",
-  "sprite-all",
-  "sprite-main",
-  "highlight-all",
-  "highlight-main",
-] as const;
+// Highlight strategy is settled: Korab picked "main catchlight only" live at the
+// U4 proof (2026-07-12) — only the primary catchlight near the pupil is fixed on
+// the highlight layer; the finer iris sparkle rides with the moving sprite.
+// (Layer names live in ./rig-manifest-hash so the tests share them.)
+/** Radius around the iris centre inside which specular counts as the "main"
+ *  catchlight (fixed); brighter pixels outside it stay on the sprite. */
+const MAIN_CATCHLIGHT_R = 0.55;
 
 function smoothstep(a: number, b: number, x: number): number {
   const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
@@ -105,10 +107,8 @@ function diffusionInpaint(
 interface Layers {
   underlay: Buffer; // RGBA box
   occluder: Buffer;
-  spriteAll: Buffer;
-  spriteMain: Buffer;
-  highlightAll: Buffer;
-  highlightMain: Buffer;
+  sprite: Buffer;
+  highlight: Buffer;
   restParity: number; // mean |Δ| per channel at rest, 0-255
 }
 
@@ -158,9 +158,10 @@ async function cutEye(
     }
   }
   const meanLum = lumSum / lumN;
-  const catchAll = new Float32Array(N);
-  const catchMain = new Float32Array(N);
-  const mainR = irisPx * 0.55; // "main" catchlight radius around the iris centre
+  // catch = only the primary catchlight near the iris centre (the "main"
+  // strategy); the finer sparkle outside `mainR` is left on the sprite.
+  const catch_ = new Float32Array(N);
+  const mainR = irisPx * MAIN_CATCHLIGHT_R;
   for (let y = 0; y < box; y++) {
     for (let x = 0; x < box; x++) {
       const i = y * box + x;
@@ -169,24 +170,19 @@ async function cutEye(
       if (d < irisPx + 1) irisFill[i] = 1;
       const ed = Math.hypot((x - apx) / apRx, (y - apy) / apRy);
       apAlpha[i] = 1 - smoothstep(0.92, 1.02, ed);
-      if (d < irisPx - 1) {
+      if (d < mainR) {
         const l = lum(base[i * 3], base[i * 3 + 1], base[i * 3 + 2]);
-        const a = smoothstep(meanLum + 55, meanLum + 95, l);
-        catchAll[i] = a;
-        if (d < mainR) catchMain[i] = a;
+        catch_[i] = smoothstep(meanLum + 55, meanLum + 95, l);
       }
     }
   }
 
   const underlayRGB = diffusionInpaint(base, box, box, irisFill, 220);
-  const fillAll = new Uint8Array(N);
-  const fillMain = new Uint8Array(N);
-  for (let i = 0; i < N; i++) {
-    if (catchAll[i] > 0.25) fillAll[i] = 1;
-    if (catchMain[i] > 0.25) fillMain[i] = 1;
-  }
-  const spriteAllRGB = diffusionInpaint(base, box, box, fillAll, 60);
-  const spriteMainRGB = diffusionInpaint(base, box, box, fillMain, 60);
+  const fill = new Uint8Array(N);
+  for (let i = 0; i < N; i++) if (catch_[i] > 0.25) fill[i] = 1;
+  // sprite RGB = iris with the main catchlight inpainted out (so it doesn't
+  // double with the fixed highlight layer); fine sparkle stays put.
+  const spriteRGB = diffusionInpaint(base, box, box, fill, 60);
 
   // assemble RGBA layer buffers
   const mk = (fn: (i: number) => [number, number, number, number]): Buffer => {
@@ -212,29 +208,17 @@ async function cutEye(
     base[i * 3 + 2],
     Math.round((1 - apAlpha[i]) * 255),
   ]);
-  const spriteAll = mk((i) => [
-    spriteAllRGB[i * 3],
-    spriteAllRGB[i * 3 + 1],
-    spriteAllRGB[i * 3 + 2],
+  const sprite = mk((i) => [
+    spriteRGB[i * 3],
+    spriteRGB[i * 3 + 1],
+    spriteRGB[i * 3 + 2],
     Math.round(irisAlpha[i] * 255),
   ]);
-  const spriteMain = mk((i) => [
-    spriteMainRGB[i * 3],
-    spriteMainRGB[i * 3 + 1],
-    spriteMainRGB[i * 3 + 2],
-    Math.round(irisAlpha[i] * 255),
-  ]);
-  const highlightAll = mk((i) => [
+  const highlight = mk((i) => [
     base[i * 3],
     base[i * 3 + 1],
     base[i * 3 + 2],
-    Math.round(catchAll[i] * 255),
-  ]);
-  const highlightMain = mk((i) => [
-    base[i * 3],
-    base[i * 3 + 1],
-    base[i * 3 + 2],
-    Math.round(catchMain[i] * 255),
+    Math.round(catch_[i] * 255),
   ]);
 
   // rest-parity: composite the stack at rest over base, diff vs base.
@@ -244,10 +228,10 @@ async function cutEye(
       g = underlay[i * 4 + 1],
       bl = underlay[i * 4 + 2];
     const sa = irisAlpha[i];
-    r = r * (1 - sa) + spriteAllRGB[i * 3] * sa;
-    g = g * (1 - sa) + spriteAllRGB[i * 3 + 1] * sa;
-    bl = bl * (1 - sa) + spriteAllRGB[i * 3 + 2] * sa;
-    const ca = catchAll[i];
+    r = r * (1 - sa) + spriteRGB[i * 3] * sa;
+    g = g * (1 - sa) + spriteRGB[i * 3 + 1] * sa;
+    bl = bl * (1 - sa) + spriteRGB[i * 3 + 2] * sa;
+    const ca = catch_[i];
     r = r * (1 - ca) + base[i * 3] * ca;
     g = g * (1 - ca) + base[i * 3 + 1] * ca;
     bl = bl * (1 - ca) + base[i * 3 + 2] * ca;
@@ -265,15 +249,7 @@ async function cutEye(
     box,
     ox,
     oy,
-    layers: {
-      underlay,
-      occluder,
-      spriteAll,
-      spriteMain,
-      highlightAll,
-      highlightMain,
-      restParity: sum / N,
-    },
+    layers: { underlay, occluder, sprite, highlight, restParity: sum / N },
   };
 }
 
@@ -296,11 +272,6 @@ async function writeWebp(
   return buf.length;
 }
 
-function geometryHash(basename: string): string {
-  const payload = JSON.stringify({ rig: RIG_MANIFEST[basename], RIG, BOX });
-  return createHash("sha256").update(payload).digest("hex").slice(0, 16);
-}
-
 function isFresh(src: string, outs: string[]): boolean {
   if (!outs.every(existsSync)) return false;
   const srcM = statSync(src).mtimeMs;
@@ -319,7 +290,7 @@ async function processVariant(basename: string): Promise<number> {
   const eyeFiles = (eye: string) =>
     LAYERS.map((l) => resolve(OUT_DIR, `${basename}.${eye}.${l}.gen.webp`));
   const allOuts = [...eyeFiles("left"), ...eyeFiles("right"), metaPath];
-  const hash = geometryHash(basename);
+  const hash = rigGeometryHash(basename);
   if (isFresh(src, allOuts) && existsSync(metaPath)) {
     const prev = JSON.parse(readFileSync(metaPath, "utf8"));
     if (prev.geometryHash === hash) {
@@ -340,10 +311,8 @@ async function processVariant(basename: string): Promise<number> {
     const bufs: Record<(typeof LAYERS)[number], Buffer> = {
       underlay: layers.underlay,
       occluder: layers.occluder,
-      "sprite-all": layers.spriteAll,
-      "sprite-main": layers.spriteMain,
-      "highlight-all": layers.highlightAll,
-      "highlight-main": layers.highlightMain,
+      sprite: layers.sprite,
+      highlight: layers.highlight,
     };
     for (const l of LAYERS) {
       const name = `${basename}.${eye}.${l}.gen.webp`;

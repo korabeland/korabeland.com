@@ -170,12 +170,13 @@ export const RIG_MANIFEST: Record<string, PortraitRig> = {
 };
 
 // ── v2 movement envelope (U2/U4) ──────────────────────────────────────────
-// Travel ceiling tuned by Korab at the one-eye proof (2026-07-12): 0.007w of
-// iris travel at full day attenuation ≈ 2.3px on the 340px desktop hero. Night
-// scales this down via temperament. `vergenceMargin` is the extra reach the
-// containment sizing budgets for converging per-eye bearings (U6).
+// Travel ceiling tuned by Korab live at the proof (2026-07-12): 0.004w of iris
+// travel at full day attenuation ≈ 1.4px on the 340px desktop hero — a
+// deliberately restrained glance. Night scales this down via temperament.
+// `vergenceMargin` is the extra reach the containment sizing budgets for
+// converging per-eye bearings (U6).
 export const RIG = {
-  travelCeiling: 0.007,
+  travelCeiling: 0.004,
   vergenceMargin: 0.004,
   /** Max inter-eye convergence angle (radians) before the vergence cap binds —
    *  keeps a near target from going comically cross-eyed (U6, tunable). */
