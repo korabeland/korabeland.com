@@ -92,6 +92,23 @@ const legendLevels = [0, 1, 2, 3, 4] as const;
     "(prefers-reduced-motion: reduce)",
   ).matches;
 
+  // Scroll cue: when the grid overflows its scroll box (narrow viewports),
+  // fade the clipped edge so it reads as "more this way" instead of "the year
+  // ends in January". Runs for every pointer type — touch users are exactly
+  // who scrolls this — and updates on scroll/resize.
+  const panel = document.querySelector<HTMLElement>(".shiftlog-panel");
+  const scroller = document.querySelector<HTMLElement>(".shiftlog-scroll");
+  if (panel && scroller) {
+    const updateCue = () => {
+      const remaining =
+        scroller.scrollWidth - scroller.clientWidth - scroller.scrollLeft;
+      panel.dataset.overflow = remaining > 4 ? "right" : "";
+    };
+    updateCue();
+    scroller.addEventListener("scroll", updateCue, { passive: true });
+    window.addEventListener("resize", updateCue);
+  }
+
   if (grid && finePointer && !reduceMotion) {
     // Visually tuned in both palettes. Peak mix is held below the swatch-4 fill
     // (100% signal) so a hot day at the cursor never out-glows its own cell —
@@ -202,6 +219,35 @@ const legendLevels = [0, 1, 2, 3, 4] as const;
     border: 1px solid var(--rule);
     border-radius: var(--r-2);
     padding: var(--s-3);
+    position: relative;
+  }
+
+  /* Scroll cue — a paper-2 fade over the clipped edge while the grid can
+     still scroll right (data-overflow set by the script). pointer-events
+     none so it never eats the drag it invites. */
+  .shiftlog-panel::after {
+    content: "";
+    position: absolute;
+    /* Cover only the scroll area: panel padding on top; padding + legend row
+       (11px cells/text + its --s-3 top margin) on the bottom, so the LESS/MORE
+       legend never sits under the fade. */
+    top: var(--s-3);
+    bottom: calc(var(--s-3) + 11px + var(--s-3));
+    right: 1px;
+    width: 32px;
+    border-radius: 0 var(--r-2) var(--r-2) 0;
+    background: linear-gradient(
+      to right,
+      transparent,
+      color-mix(in oklab, var(--paper-2) 92%, transparent)
+    );
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 150ms ease;
+  }
+
+  .shiftlog-panel[data-overflow="right"]::after {
+    opacity: 1;
   }
 
   .shiftlog-scroll {
