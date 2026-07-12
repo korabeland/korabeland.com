@@ -367,7 +367,7 @@ body {
   font-size: 24px;
   line-height: 1.3;
   color: var(--ink);
-  border-left: 1px solid var(--moss);
+  border-left: 1px solid var(--signal);
   padding-left: var(--s-5);
   margin: var(--s-7) 0;
 }
@@ -384,7 +384,7 @@ body {
 }
 
 .mnote sup {
-  color: var(--moss);
+  color: var(--signal);
   font-weight: 600;
   margin-right: 4px;
 }
@@ -392,7 +392,7 @@ body {
 /* ─── Footnote anchor ────────────────────────────────────────────────── */
 
 .fn {
-  color: var(--moss);
+  color: var(--signal);
   font-family: var(--font-mono);
   font-size: 0.75em;
   vertical-align: super;
