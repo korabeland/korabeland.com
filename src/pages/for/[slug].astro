@@ -6,6 +6,7 @@
 
 import type { GetStaticPaths } from "astro";
 import ExperienceLedger from "../../components/ExperienceLedger/ExperienceLedger.astro";
+import SectionHead from "../../components/SectionHead.astro";
 import SkillsSection from "../../components/SkillsSection/SkillsSection.astro";
 import StatusChip from "../../components/StatusChip/StatusChip.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
@@ -38,7 +39,7 @@ const intro = page.intro
 >
   <div class="tailored">
     <header class="tailored-head">
-      <p class="t-label tailored-eyebrow">prepared for {page.displayName}</p>
+      <h1 class="t-label tailored-eyebrow">prepared for {page.displayName}</h1>
       <div class="tailored-intro">
         {intro.map((para) => <p>{para}</p>)}
       </div>
@@ -49,11 +50,7 @@ const intro = page.intro
     {
       page.projects.length > 0 && (
         <section class="tailored-work" aria-labelledby="tailored-work-heading">
-          <div class="tailored-section-head">
-            <h2 id="tailored-work-heading" class="t-label">
-              selected work
-            </h2>
-          </div>
+          <SectionHead id="tailored-work-heading" text="selected work" />
           <ol class="tailored-ledger">
             {page.projects.map((p) => (
               <li class="tailored-row">
@@ -93,7 +90,7 @@ const intro = page.intro
 
 <style>
   .tailored {
-    max-width: 760px;
+    max-width: var(--w-prose);
     margin-inline: auto;
     padding: var(--s-7) var(--s-4) var(--s-8);
     display: flex;
@@ -119,14 +116,8 @@ const intro = page.intro
     margin: 0;
   }
 
-  .tailored-section-head {
-    border-bottom: 1px solid var(--ink);
-    padding-bottom: var(--s-2);
-    margin-bottom: var(--s-4);
-  }
-  .tailored-section-head h2 {
-    margin: 0;
-    color: var(--ink-soft);
+  .tailored-work {
+    --section-head-margin: 0 0 var(--s-4);
   }
 
   .tailored-ledger {

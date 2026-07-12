@@ -20,7 +20,7 @@ Token source of truth. `src/styles/tokens.css` is regenerated to match this file
 2. **Every number real.** No fabricated stats, ever. Numbers derive from content collections or approved case-study facts.
 3. **One signal accent.** `--signal` marks what matters (status, active, focus) — amber by night, indigo/periwinkle by day (a cool complement drawn from the portrait). Green appears only as a semantic "shipped/positive" state. Nothing else competes.
 4. **Scanned, not read.** Status rail, ledgers, fact strips. Prose earns its place after the data.
-5. **Understated confidence.** No banner, no hype, no exclamation marks. The availability line is one mono strip: `● open to ai / data / product roles`.
+5. **Understated confidence.** No banner, no hype, no exclamation marks. (The old availability strip is gone — visible open-to-work copy was removed wholesale in PR #30; job-seeking context stays LLM-facing only.)
 
 ## 2. Colour — dark-first, two shifts
 
@@ -52,26 +52,30 @@ Contrast rules (WCAG AA, carried from the previous system): small mono text (≤
 
 ## 4. Layout grammar
 
-- **Status rail** — the site chrome is a readout: wordmark · nav (mono labels) · availability line. Active nav = signal underline + dot.
+- **Status rail** — the site chrome is a readout: wordmark · shift toggle · nav (mono labels) · contact CTA. Active nav = signal underline.
 - **Outcome ledger** — homepage work index: rows of `name · datum · status chip`, hairline-separated, tabular numerals. Status chips: signal = in flight, moss = shipped.
 - **Fact strip** — top of every case study: Role / Scope / Span / Status in a bordered mono grid.
 - **Metrics block** — bordered rows of `metric label · mono value`, placed before or immediately after the first prose block.
-- Sharp radii (0 default), 1px hairlines, left-aligned everything, 680px prose measure, 960px shell.
+- **Section head** — the recurring section grammar: mono t-label heading over a 1px `--ink` underline, optional mono more-link on the right. One component (`src/components/SectionHead.astro`), never re-implemented per page.
+- Sharp radii (0 default), 1px hairlines, left-aligned everything.
+- **Three content widths, tokenised** (`--w-prose` 680px · `--w-shell` 960px · `--w-page` 1280px in `src/styles/tokens.css`). Prose pages and case-study body copy sit on `--w-prose`; index shells (home, /work, /lab, /notes) and the case-study header/fact strip on `--w-shell`; outer chrome (header, page-main, footer, reading room) on `--w-page`. No other container max-widths — `ch`-based caps on individual text blocks are fine. (Consolidated 2026-07-12 from eight ad-hoc widths: 620/680/760/820/960/1000/1280/1320.)
+- **One mobile stacking breakpoint: 680px**, matching the prose measure (CSS custom properties cannot reach `@media`, so the value is repeated literally — it is documented here and in `tokens.css`). Sidebar collapses (reading room, 1200px) are a different job. Deliberate exception: the fact strip's 5→2 column collapse at 800px is a grid-density call — five mono facts don't fit between 680 and 800.
 
-## 5. Motion budget — six moments
+## 5. Motion budget — seven moments
 
 1. Ledger rows stagger in once on page load (~40ms/row, opacity+4px rise).
 2. The availability status dot breathes (re-tuned `breathe` keyframe, slow) — now the `StatusChip` pulse variant, one component across the site.
 3. Reading-progress meter on case-study pages.
 4. Hero headline rotates its subject on a slow fade (server-renders the default; JS-only).
 5. Metric readouts count up from zero when scrolled into view (case studies).
-6. The home hero portrait returns a glance: its pupils saccade toward the cursor while it moves through a proximity band around the image, settle to direct eye contact when the cursor crosses into the portrait, and rest when idle or when the cursor leaves the band.
+6. Shift-log cells brighten under the cursor — the instrument torch, busy cells only (shipped 2026-07, deliberate exception documented in `ShiftLog.astro`).
+7. The home hero portrait returns a glance: its pupils saccade toward the cursor while it moves through a proximity band around the image, settle to direct eye contact when the cursor crosses into the portrait, and rest when idle or when the cursor leaves the band.
    - **Envelope.** Home hero only — no other render of the `Portrait` component engages. The engagement area is a proximity band around the image (portrait half-diagonal plus a margin), not the viewport; gaze travel attenuates with distance to a floor and cuts off outside the band.
    - **Gates.** The repo's double gate: `pointer: fine` **and** not `prefers-reduced-motion`. Touch, reduced-motion, and no-JS visitors get the static portrait — the designed state, not a degradation. The rig mounts post-load and reveals its overlay only after the gate passes.
    - **Easing register.** Saccadic, not pursuit: gaze holds a fixation and jumps to a new bearing (~80–120ms) only when the target strays past a threshold, with stillness between jumps. Temperament is data, keyed off the `data-time` shift: day is alert (quicker settle, full travel), night is drowsy (slower settle, reduced travel).
    - **Resolved-state guarantee.** The overlay is additive: the shipped portrait asset and its `<picture>` markup are byte-identical, and the resting overlay covers the painted pupils so the visible resolved state is today's portrait. Nothing is added to the LCP path before load. Because the screenshotted path is reduced-motion, the rig never engages there — visual baselines and LCP are unchanged by construction.
 
-Nothing else animates beyond 150–200ms hover/focus transitions. Moments 1–3 respect the global CSS reduced-motion guard; 4–6 are JS enhancements that server-render their static end-state and self-disable under `matchMedia("(prefers-reduced-motion: reduce)")` (the CSS guard can't stop scripted mutation). Amended from three to five in the experience-ledger plan (2026-07-04), and to six for the portrait gaze rig (2026-07-11). (A plotted-portrait draw-in was explored alongside the gaze and parked — unbuilt, unretired — so this moment is worded for gaze only.)
+Nothing else animates beyond 150–200ms hover/focus transitions. Moments 1–3 respect the global CSS reduced-motion guard; 4–7 are JS enhancements that server-render their static end-state and self-disable under `matchMedia("(prefers-reduced-motion: reduce)")` (the CSS guard can't stop scripted mutation). Amended from three to five in the experience-ledger plan (2026-07-04), to six for the shift-log torch, and to seven for the portrait gaze rig (2026-07-11). (A plotted-portrait draw-in was explored alongside the gaze and parked — unbuilt, unretired — so this moment is worded for gaze only.)
 
 ## 6. Voice
 

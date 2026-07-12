@@ -1,15 +1,8 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import { listPosts } from "../../lib/posts";
+import { formatNoteDate, listPosts } from "../../lib/posts";
 
 const posts = await listPosts();
-
-function formatDate(iso: string | null): string {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${pad(d.getMonth() + 1)}.${pad(d.getDate())}.${String(d.getFullYear()).slice(-2)}`;
-}
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -36,7 +29,7 @@ const jsonLd = {
 >
   <script type="application/ld+json" slot="jsonld" set:html={JSON.stringify(jsonLd)} />
   <section class="notes-head">
-    <p class="t-label eyebrow">§ field notes</p>
+    <p class="t-label eyebrow">§ · field notes</p>
     <h1 class="t-display title">Field notes.</h1>
     <p class="lede">
       A log of what I am thinking through: systems, tools, and the small
@@ -51,7 +44,7 @@ const jsonLd = {
       <ul>
         {posts.map((p) => (
           <li class="row">
-            <div class="row-meta t-mono">{formatDate(p.publishedAt)} · {p.readTime}</div>
+            <div class="row-meta t-mono">{formatNoteDate(p.publishedAt)} · {p.readTime}</div>
             <a class="row-main" href={`/notes/${p.slug}`}>
               <h2 class="row-title">{p.title}</h2>
               {p.description && <p class="row-desc">{p.description}</p>}
@@ -65,7 +58,7 @@ const jsonLd = {
 
 <style>
   .notes-head {
-    max-width: 820px;
+    max-width: var(--w-shell);
     margin: var(--s-7) auto var(--s-6);
   }
   .eyebrow {
@@ -86,7 +79,7 @@ const jsonLd = {
   }
 
   .notes-list {
-    max-width: 820px;
+    max-width: var(--w-shell);
     margin: var(--s-6) auto var(--s-9);
   }
   .notes-list ul {
@@ -103,7 +96,7 @@ const jsonLd = {
     align-items: baseline;
   }
   .row-meta {
-    color: var(--ink-mute);
+    color: var(--ink-soft);
   }
   .row-main {
     color: inherit;
@@ -128,9 +121,9 @@ const jsonLd = {
     display: inline;
   }
   .empty {
-    color: var(--ink-mute);
+    color: var(--ink-soft);
   }
-  @media (max-width: 640px) {
+  @media (max-width: 680px) {
     .row {
       grid-template-columns: 1fr;
       gap: var(--s-2);

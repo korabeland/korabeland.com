@@ -106,7 +106,7 @@ const tools: { label: string; note: string }[] = [
   <script type="application/ld+json" slot="jsonld" set:html={JSON.stringify(jsonLd)} />
   <article class="prose colophon">
     <header>
-      <p class="t-mono">§ · colophon</p>
+      <p class="t-label">§ · colophon</p>
       <h1>Colophon</h1>
       <p class="lede">
         A record of how this site was built. For who built it, see
@@ -184,7 +184,7 @@ const tools: { label: string; note: string }[] = [
 
 <style>
   .colophon {
-    max-width: 620px;
+    max-width: var(--w-prose);
     margin-inline: auto;
     padding-block: var(--s-5) var(--s-8);
   }
@@ -292,12 +292,12 @@ const tools: { label: string; note: string }[] = [
 
   .build-log .commit-date {
     margin: 0;
-    color: var(--ink-mute);
+    color: var(--ink-soft);
     font-size: 12px;
     white-space: nowrap;
   }
 
-  @media (max-width: 640px) {
+  @media (max-width: 680px) {
     .build-log .commit {
       grid-template-columns: 68px 1fr;
     }

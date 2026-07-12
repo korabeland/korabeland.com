@@ -31,7 +31,7 @@ const { facts } = Astro.props;
     background: var(--paper-2);
   }
   .strip-inner {
-    max-width: 1000px;
+    max-width: var(--w-shell);
     margin: 0 auto;
     padding: var(--s-5) var(--s-4);
     display: grid;
@@ -55,6 +55,9 @@ const { facts } = Astro.props;
     color: var(--ink);
     font-size: 12.5px;
   }
+  /* 800px, not the site's 680px stacking breakpoint: five mono facts
+     don't fit between 680 and 800 — a grid-density call, documented as
+     the one exception in DESIGN.md §4. */
   @media (max-width: 800px) {
     .strip-inner {
       grid-template-columns: repeat(2, 1fr);
