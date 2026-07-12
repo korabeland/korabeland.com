@@ -32,7 +32,7 @@ const { entries } = Astro.props;
     display: flex;
     flex-direction: column;
     gap: var(--s-5);
-    max-width: 680px;
+    max-width: var(--w-prose);
   }
   .entry {
     display: grid;
@@ -58,7 +58,7 @@ const { entries } = Astro.props;
     color: var(--ink-soft);
     line-height: 1.6;
   }
-  @media (max-width: 640px) {
+  @media (max-width: 680px) {
     .entry {
       grid-template-columns: 1fr;
       gap: var(--s-2);

@@ -8,6 +8,7 @@ import { resolve } from "node:path";
 import ExperienceLedger from "../components/ExperienceLedger/ExperienceLedger.astro";
 import Portrait from "../components/Portrait/index.astro";
 import ProjectLedger from "../components/ProjectLedger/index.astro";
+import SectionHead from "../components/SectionHead.astro";
 import ShiftLog from "../components/ShiftLog/ShiftLog.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { listExperience } from "../lib/experience";
@@ -220,12 +221,15 @@ const MAIL_ICON =
     {
       contributions && (
         <section class="shift-section" aria-labelledby="shift-heading">
-          <div class="section-head">
-            <h2 id="shift-heading" class="t-label">shift log · a year of building</h2>
-            <a class="t-mono section-more" href="https://github.com/korabeland" rel="me">
-              on github →
-            </a>
-          </div>
+          <SectionHead
+            id="shift-heading"
+            text="shift log · a year of building"
+            more={{
+              href: "https://github.com/korabeland",
+              label: "on github →",
+              rel: "me",
+            }}
+          />
           <ShiftLog data={contributions} />
         </section>
       )
@@ -251,12 +255,11 @@ const MAIL_ICON =
     {
       posts.length > 0 && (
         <section class="notes-section" aria-labelledby="notes-heading">
-          <div class="section-head">
-            <h2 id="notes-heading" class="t-label">recent notes</h2>
-            <a class="t-mono section-more" href="/notes">
-              all notes →
-            </a>
-          </div>
+          <SectionHead
+            id="notes-heading"
+            text="recent notes"
+            more={{ href: "/notes", label: "all notes →" }}
+          />
           <ul class="notes-list">
             {posts.map((post) => (
               <li class="notes-row">
@@ -275,7 +278,7 @@ const MAIL_ICON =
 
     <!-- ─── About teaser + contact ────────────────────────────────────── -->
     <section class="close-section" aria-labelledby="close-heading">
-      <h2 id="close-heading" class="t-label">the short version</h2>
+      <SectionHead id="close-heading" text="the short version" />
       <p class="close-body">
         Media buyer, then marketer, then CX manager, now building AI systems inside a real
         business. I lead with evidence, design pilots for handoff, and document everything.
@@ -314,7 +317,7 @@ const MAIL_ICON =
 
 <style>
   .home {
-    max-width: 960px;
+    max-width: var(--w-shell);
     margin-inline: auto;
     padding: var(--s-7) var(--s-4) var(--s-8);
     display: flex;
@@ -342,20 +345,9 @@ const MAIL_ICON =
     color: var(--signal);
   }
 
-  /* The accessible name stays "…systems that ship." — the sr-only word is the
-     stable label; the visible word rotates and is hidden from assistive tech. */
-  .sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
-  }
-
+  /* The accessible name stays "…systems that ship." — the sr-only word
+     (global utility) is the stable label; the visible word rotates and is
+     hidden from assistive tech. */
   .hero-ship-word {
     transition: opacity 220ms ease;
   }
@@ -421,34 +413,6 @@ const MAIL_ICON =
     height: 15px;
   }
 
-  /* ─── Section chrome ───────────────────────────────────────────────── */
-
-  .section-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: var(--s-4);
-    border-bottom: 1px solid var(--ink);
-    padding-bottom: var(--s-2);
-  }
-
-  .section-head h2 {
-    margin: 0;
-    color: var(--ink-soft);
-  }
-
-  .section-more {
-    text-transform: none;
-    letter-spacing: 0.04em;
-    color: var(--ink-soft);
-    text-decoration: none;
-  }
-
-  .section-more:hover,
-  .section-more:focus-visible {
-    color: var(--signal);
-  }
-
   /* ─── Shift log band — the contribution grid brings its own styles; the
      section only needs to space it below the section head ──────────────── */
 
@@ -498,13 +462,6 @@ const MAIL_ICON =
   }
 
   /* ─── Close ────────────────────────────────────────────────────────── */
-
-  .close-section .t-label {
-    display: block;
-    border-bottom: 1px solid var(--ink);
-    padding-bottom: var(--s-2);
-    color: var(--ink-soft);
-  }
 
   .close-body {
     font-size: 16px;

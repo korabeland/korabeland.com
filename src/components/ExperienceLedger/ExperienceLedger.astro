@@ -8,6 +8,7 @@ import {
   type ExperienceSummary,
   formatExperiencePeriod,
 } from "../../lib/experience";
+import SectionHead from "../SectionHead.astro";
 import StatusChip from "../StatusChip/StatusChip.astro";
 
 interface Props {
@@ -18,9 +19,7 @@ const { roles } = Astro.props;
 ---
 
 <section class="experience-section" aria-labelledby="experience-heading">
-  <div class="experience-section-head">
-    <h2 id="experience-heading" class="t-label">experience</h2>
-  </div>
+  <SectionHead id="experience-heading" text="experience" />
 
   <ol class="experience-list">
     {
@@ -73,15 +72,8 @@ const { roles } = Astro.props;
 </section>
 
 <style>
-  .experience-section-head {
-    border-bottom: 1px solid var(--ink);
-    padding-bottom: var(--s-2);
-    margin-bottom: var(--s-5);
-  }
-
-  .experience-section-head h2 {
-    margin: 0;
-    color: var(--ink-soft);
+  .experience-section {
+    --section-head-margin: 0 0 var(--s-5);
   }
 
   .experience-list {

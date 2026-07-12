@@ -6,6 +6,7 @@
 // by @supports + prefers-reduced-motion. See DESIGN.md §4-5.
 
 import { loadHeroPicture } from "../../lib/hero-picture";
+import SectionHead from "../SectionHead.astro";
 import StatusChip from "../StatusChip/StatusChip.astro";
 import FactStrip from "./FactStrip.astro";
 import FieldLog from "./FieldLog.astro";
@@ -65,9 +66,9 @@ const {
 const hero = heroImage
   ? loadHeroPicture("public/work", heroImage, "CaseStudy")
   : null;
-// Keyed to .head's own 1000px max-width (see below) — deliberately not
-// shared with ReadingRoom's 620px reading-column sizes value.
-const HERO_SIZES = "(max-width: 1040px) 100vw, 1000px";
+// Keyed to .head's own max-width — the --w-shell token, 960px (see below) —
+// deliberately not shared with ReadingRoom's --w-prose reading-column value.
+const HERO_SIZES = "(max-width: 960px) 100vw, 960px";
 ---
 
 <div class="progress-track" aria-hidden="true">
@@ -123,21 +124,21 @@ const HERO_SIZES = "(max-width: 1040px) 100vw, 1000px";
 
   {outcomeMetrics.length > 0 && (
     <section class="outcome" aria-labelledby="outcome-heading">
-      <h2 id="outcome-heading" class="t-label outcome-heading">outcome</h2>
+      <SectionHead id="outcome-heading" text="outcome" />
       <OutcomeMetrics metrics={outcomeMetrics} />
     </section>
   )}
 
   {fieldLog.length > 0 && (
     <section class="field-log" aria-labelledby="log-heading">
-      <h2 id="log-heading" class="t-label log-heading">field log</h2>
+      <SectionHead id="log-heading" text="field log" />
       <FieldLog entries={fieldLog} />
     </section>
   )}
 
   {reflection && (
     <section class="reflection" aria-labelledby="reflection-heading">
-      <h2 id="reflection-heading" class="t-label reflection-heading">reflection</h2>
+      <SectionHead id="reflection-heading" text="reflection" />
       <p class="reflection-body">{reflection}</p>
     </section>
   )}
@@ -196,7 +197,7 @@ const HERO_SIZES = "(max-width: 1040px) 100vw, 1000px";
   }
 
   .return {
-    max-width: 1000px;
+    max-width: var(--w-shell);
     margin: 0 auto;
     padding: var(--s-5) var(--s-4) 0;
   }
@@ -210,7 +211,7 @@ const HERO_SIZES = "(max-width: 1040px) 100vw, 1000px";
   }
 
   .head {
-    max-width: 1000px;
+    max-width: var(--w-shell);
     margin: 0 auto;
     padding: var(--s-6) var(--s-4) var(--s-6);
   }
@@ -245,13 +246,13 @@ const HERO_SIZES = "(max-width: 1040px) 100vw, 1000px";
   }
 
   .body {
-    max-width: 1000px;
+    max-width: var(--w-shell);
     margin: 0 auto;
     padding: var(--s-7) var(--s-4) var(--s-8);
   }
 
   .prose {
-    max-width: 680px;
+    max-width: var(--w-prose);
   }
 
   .prose :global(p) {
@@ -294,27 +295,24 @@ const HERO_SIZES = "(max-width: 1040px) 100vw, 1000px";
     color: var(--ink-soft);
   }
 
-  .outcome-heading,
-  .log-heading,
-  .reflection-heading {
-    display: block;
-    border-bottom: 1px solid var(--ink);
-    padding-bottom: var(--s-2);
-    margin: var(--s-8) 0 var(--s-5);
-    max-width: 680px;
+  .outcome,
+  .field-log,
+  .reflection {
+    --section-head-margin: var(--s-8) 0 var(--s-5);
+    --section-head-max-width: var(--w-prose);
   }
 
   .reflection-body {
     font-size: 17px;
     line-height: 1.7;
     color: var(--ink-soft);
-    max-width: 680px;
+    max-width: var(--w-prose);
     margin: 0;
   }
 
   .rule-next {
     margin: var(--s-8) 0 var(--s-5);
-    max-width: 680px;
+    max-width: var(--w-prose);
   }
 
   .next-row {
@@ -322,7 +320,7 @@ const HERO_SIZES = "(max-width: 1040px) 100vw, 1000px";
     justify-content: space-between;
     align-items: baseline;
     gap: var(--s-4);
-    max-width: 680px;
+    max-width: var(--w-prose);
   }
 
   .next-link {
