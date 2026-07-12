@@ -124,11 +124,19 @@ body {
   color: var(--ink);
 }
 
+/* Ink, not moss — DESIGN.md §2 reserves moss for semantic shipped/positive
+   states; links are interaction, so they take the site idiom of ink with
+   signal on hover/focus. */
 .prose a {
-  color: var(--moss);
+  color: var(--ink);
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 3px;
+}
+
+.prose a:hover,
+.prose a:focus-visible {
+  color: var(--signal);
 }
 
 .prose code {
