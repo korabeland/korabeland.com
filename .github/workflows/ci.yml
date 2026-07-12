@@ -57,17 +57,19 @@ jobs:
           path: test-results/chromatic-archives
           retention-days: 1
 
-  # Publishes the Chromatic build. It is NOT the gate anymore — the Chromatic
-  # GitHub App's own "UI Tests" commit status is the required check
-  # (docs/decisions/2026-07-10-visual-approval-policy.md). This job only
-  # uploads the archives so a build exists for the App to report on; approving
-  # a diff in the Chromatic UI flips "UI Tests" green with NO CI re-run. Hence
-  # `--exit-zero-on-changes`: visual diffs must not fail this job (the App
-  # holds the block), but a genuine publish failure (bad token, upload error)
-  # still exits non-zero and surfaces here. Runs OUTSIDE verify-all so a
-  # Chromatic outage can't hold the rest of CI hostage. A missing token fails
-  # loudly rather than silently skipping — a skipped upload means the App
-  # never posts "UI Tests", and that required check stays red (fail-closed).
+  # Publishes the Chromatic build as a reviewable visual record. There is NO
+  # human visual-approval gate: the AI agent reviews visual changes (from the
+  # published build or a local capture) and flags only genuine regressions
+  # (docs/decisions/2026-07-10-visual-approval-policy.md, amended 2026-07-12 (c)).
+  # `--exit-zero-on-changes` is deliberate — visual diffs must not fail this
+  # job — but a genuine publish failure (bad token, upload error) still exits
+  # non-zero. This `chromatic` job runs on every PR as part of the pipeline but
+  # is NOT a required check (dropped from branch protection 2026-07-12), so a
+  # Chromatic outage or publish failure can never block a merge — it just
+  # surfaces as a failed non-blocking job the agent notices. Runs OUTSIDE
+  # verify-all so it can't slow the rest of CI. A missing token fails this job
+  # loudly rather than skipping silently — a red job flags "no record to
+  # review" without gating the merge.
   # (Fork PRs never receive repo secrets by GitHub design; accepted for this
   # solo-maintained repo — revisit before inviting external contributions.)
   chromatic:
@@ -97,19 +99,19 @@ jobs:
         # 2026-07-10/11 (across commits, incl. one pre-existing) — each run sat
         # in_progress 15–70 min with no build ever reported. A healthy
         # publish+build is ~2–4 min, so 10 leaves generous headroom.
-        # (Follow-up worth considering now the App is installed: add
-        # `--exit-once-uploaded` so the CLI returns right after upload and the
-        # App posts "UI Tests" from the build independently — that removes the
-        # wait entirely rather than just bounding it.)
+        # (Follow-up: `--exit-once-uploaded` would return right after upload
+        # instead of waiting for the capture/build to finish, removing the wait
+        # entirely rather than just bounding it — the build stays reviewable in
+        # Chromatic either way.)
         timeout-minutes: 10
         run: |
           if [ -z "$CHROMATIC_PROJECT_TOKEN" ]; then
-            echo "CHROMATIC_PROJECT_TOKEN is unset — cannot publish a build; the App's 'UI Tests' check will never post. Failing closed."
+            echo "CHROMATIC_PROJECT_TOKEN is unset — cannot publish a build; no visual record to review. Failing closed."
             exit 1
           fi
-          # --exit-zero-on-changes: diffs don't fail this job; the Chromatic
-          # GitHub App's "UI Tests" required check is the gate. Publish/upload
-          # failures still exit non-zero.
+          # --exit-zero-on-changes: visual diffs don't fail this job; the AI
+          # agent reviews the published build (no human approval gate, see ADR
+          # amendment (c)). Publish/upload failures still exit non-zero.
           npx chromatic --playwright --exit-zero-on-changes
         env:
           CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
