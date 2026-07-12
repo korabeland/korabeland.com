@@ -187,6 +187,16 @@ const HERO_SIZES = "(max-width: 680px) 100vw, 620px";
     margin: var(--s-6) 0 var(--s-3);
     color: var(--ink);
   }
+  .post-body :global(a) {
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+  }
+  .post-body :global(a:hover),
+  .post-body :global(a:focus-visible) {
+    color: var(--signal);
+  }
   .post-body :global(blockquote) {
     font-family: var(--font-display);
     font-weight: 500;
