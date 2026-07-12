@@ -85,6 +85,17 @@ export default defineConfig({
       testMatch: "**/e2e/*.spec.ts",
       use: { viewport: { width: 1280, height: 800 } },
     },
+    {
+      // Pinned-pose visual record for the gaze v2 rig (U8). Its own project so
+      // the spec runs at all — the screenshot projects match **/screenshot.test.ts
+      // exactly, so this sibling would otherwise silently never execute. One
+      // desktop viewport: the /dev/gaze-v2-poses harness is fixed-width per cell,
+      // so more viewports add no coverage. The @chromatic-com/playwright fixture
+      // archives each shift to Chromatic (the blocking visual gate).
+      name: "gaze-poses",
+      testMatch: "**/visual/gaze-poses.spec.ts",
+      use: { viewport: { width: 1280, height: 900 } },
+    },
   ],
   // Always a real dev server, in CI too: /off-trail, /404, and the
   // /projects redirects are SSR-only (live query-string reads, live
