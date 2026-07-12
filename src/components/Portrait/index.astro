@@ -11,16 +11,34 @@
 // pattern the hero images already use. Both callers keep their exact
 // per-surface `sizes` via props; the image pair, alt text, loading strategy,
 // and toggle CSS are the shared, single-owner part.
+//
+// Gaze rig (opt-in via `gaze`, home hero only — R5). When enabled, an
+// additive, aria-hidden overlay of two clipped pupil discs is rendered over
+// the pictures. It is `display:none` until the client script passes the double
+// gate (pointer:fine AND not reduced-motion) and reveals it, so touch,
+// reduced-motion, and no-JS visitors — and every Playwright/Chromatic
+// screenshot, which runs reduced-motion — get the untouched painted portrait
+// (R11/R12). The <picture> markup is byte-identical whether or not the rig is
+// on; the overlay and its wrapper are purely additive (R9). Geometry comes
+// from the shared eye manifest in src/lib/portrait-gaze.ts, which the rig
+// script also reads, so markup and math never drift (R10).
 
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { EYE_MANIFEST } from "../../lib/portrait-gaze";
 
 interface Props {
   sizes: string;
   alt?: string;
+  /** Mount the cursor-tracking gaze overlay. Home hero only (R5). */
+  gaze?: boolean;
 }
 
-const { sizes, alt = "Illustrated portrait of Korab Eland" } = Astro.props;
+const {
+  sizes,
+  alt = "Illustrated portrait of Korab Eland",
+  gaze = false,
+} = Astro.props;
 
 interface PortraitMeta {
   width: number;
@@ -67,35 +85,253 @@ function loadPortraitPicture(basename: string): PortraitPicture {
 
 const night = loadPortraitPicture("portrait-illustrated");
 const day = loadPortraitPicture("portrait-illustrated-day");
+
+// Eye geometry for the overlay. The night/day re-colours share coordinates
+// (see EYE_MANIFEST), so one overlay serves whichever picture is showing.
+// Sizes are fractions of image width → percentages of the square stack box.
+const eyes = EYE_MANIFEST["portrait-illustrated"];
+const irisD = `${(eyes.irisRadius * 2 * 100).toFixed(3)}%`;
+const pupilD = `${((eyes.pupilRadius / eyes.irisRadius) * 100).toFixed(3)}%`;
+const eyeVar = (cx: number, cy: number) =>
+  `--eye-x:${(cx * 100).toFixed(3)}%;--eye-y:${(cy * 100).toFixed(3)}%`;
 ---
 
-<picture class="portrait-night">
-  <source type="image/avif" srcset={night.avifSrcset} sizes={sizes} />
-  <source type="image/webp" srcset={night.webpSrcset} sizes={sizes} />
-  <img
-    src={night.fallbackSrc}
-    alt={alt}
-    width={night.width}
-    height={night.height}
-    loading="eager"
-    fetchpriority="high"
-    sizes={sizes}
-  />
-</picture>
-<picture class="portrait-day">
-  <source type="image/avif" srcset={day.avifSrcset} sizes={sizes} />
-  <source type="image/webp" srcset={day.webpSrcset} sizes={sizes} />
-  <img
-    src={day.fallbackSrc}
-    alt={alt}
-    width={day.width}
-    height={day.height}
-    loading="eager"
-    sizes={sizes}
-  />
-</picture>
+<div class="portrait-stack">
+  <picture class="portrait-night">
+    <source type="image/avif" srcset={night.avifSrcset} sizes={sizes} />
+    <source type="image/webp" srcset={night.webpSrcset} sizes={sizes} />
+    <img
+      src={night.fallbackSrc}
+      alt={alt}
+      width={night.width}
+      height={night.height}
+      loading="eager"
+      fetchpriority="high"
+      sizes={sizes}
+    />
+  </picture>
+  <picture class="portrait-day">
+    <source type="image/avif" srcset={day.avifSrcset} sizes={sizes} />
+    <source type="image/webp" srcset={day.webpSrcset} sizes={sizes} />
+    <img
+      src={day.fallbackSrc}
+      alt={alt}
+      width={day.width}
+      height={day.height}
+      loading="eager"
+      sizes={sizes}
+    />
+  </picture>
+  {
+    gaze && (
+      <div
+        class="portrait-gaze"
+        data-portrait-gaze
+        aria-hidden="true"
+        style={`--iris-d:${irisD};--pupil-d:${pupilD}`}
+      >
+        <span class="gaze-eye gaze-eye--left" style={eyeVar(eyes.left.cx, eyes.left.cy)}>
+          <span class="gaze-pupil" />
+        </span>
+        <span class="gaze-eye gaze-eye--right" style={eyeVar(eyes.right.cx, eyes.right.cy)}>
+          <span class="gaze-pupil" />
+        </span>
+      </div>
+    )
+  }
+</div>
+
+{
+  gaze && (
+    <script>
+      import {
+        attenuation,
+        bandOuterRadius,
+        centerDistance,
+        EYE_MANIFEST,
+        eyeCenters,
+        GAZE,
+        gazeOffset,
+        halfDiagonal,
+        inBand,
+        isInside,
+        type Point,
+        type Rect,
+        shouldSaccade,
+        temperamentFor,
+        travelPx,
+      } from "../../lib/portrait-gaze";
+      import { isValidShift, type Shift } from "../../lib/shift";
+
+      // Double gate first (the repo's ShiftLog-torch convention): only a fine
+      // pointer with motion allowed mounts the rig. Touch, reduced-motion, and
+      // no-JS keep the static painted portrait — and so does every reduced-
+      // motion screenshot, which is why visual baselines never see the overlay
+      // (R11/R12/AE3).
+      const rig = document.querySelector<HTMLElement>("[data-portrait-gaze]");
+      const finePointer = window.matchMedia("(pointer: fine)").matches;
+      const reduceMotion = window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      ).matches;
+
+      const stack = rig?.closest<HTMLElement>(".portrait-stack") ?? null;
+      const leftPupil = rig?.querySelector<HTMLElement>(
+        ".gaze-eye--left .gaze-pupil",
+      );
+      const rightPupil = rig?.querySelector<HTMLElement>(
+        ".gaze-eye--right .gaze-pupil",
+      );
+
+      if (rig && stack && leftPupil && rightPupil && finePointer && !reduceMotion) {
+        // Coordinates are shared across the night/day re-colours.
+        const eyes = EYE_MANIFEST["portrait-illustrated"];
+
+        // Reveal the overlay only now that the gate has passed (R11). Its
+        // resting state covers the painted pupils, so this is imperceptible.
+        rig.classList.add("is-live");
+
+        const currentShift = (): Shift => {
+          const t = document.documentElement.dataset.time;
+          return isValidShift(t) ? t : "night";
+        };
+
+        // Committed fixation per eye — px offset from the eye centre. The pupil
+        // only moves when a new fixation is set (a saccade), and the CSS
+        // transition performs the fast jump; between jumps it holds still (R6).
+        const fixation = {
+          left: { x: 0, y: 0 } as Point,
+          right: { x: 0, y: 0 } as Point,
+        };
+        let cursor: Point | null = null;
+        let frame = 0;
+        let idle = 0;
+
+        const commit = (pupil: HTMLElement, off: Point, jumpMs: number) => {
+          pupil.style.setProperty("--jump-ms", `${jumpMs}ms`);
+          pupil.style.setProperty("--gaze-dx", `${off.x.toFixed(2)}px`);
+          pupil.style.setProperty("--gaze-dy", `${off.y.toFixed(2)}px`);
+        };
+
+        // Return both eyes to the resting (direct) gaze (R2/R3/R4). Idempotent:
+        // skips the write when already at rest so a still cursor inside the
+        // image doesn't thrash the DOM.
+        const rest = () => {
+          if (
+            fixation.left.x === 0 &&
+            fixation.left.y === 0 &&
+            fixation.right.x === 0 &&
+            fixation.right.y === 0
+          ) {
+            return;
+          }
+          const jumpMs = temperamentFor(currentShift()).jumpMs;
+          fixation.left = { x: 0, y: 0 };
+          fixation.right = { x: 0, y: 0 };
+          commit(leftPupil, fixation.left, jumpMs);
+          commit(rightPupil, fixation.right, jumpMs);
+        };
+
+        const paint = () => {
+          frame = 0;
+          if (!cursor) return;
+          // Live rect each frame absorbs both resize and scroll (stronger than
+          // the torch's resize-only cache — the portrait sits near the top of
+          // the page, so its viewport rect shifts as the page scrolls).
+          const box = stack.getBoundingClientRect();
+          const rect: Rect = {
+            left: box.left,
+            top: box.top,
+            width: box.width,
+            height: box.height,
+          };
+
+          // R2: inside the image itself → settle to direct eye contact.
+          if (isInside(cursor, rect)) {
+            rest();
+            return;
+          }
+          const dc = centerDistance(cursor, rect);
+          // R1 cutoff / R4 reset: outside the proximity band → full rest.
+          const bandOuter = bandOuterRadius(rect);
+          if (!inBand(dc, bandOuter)) {
+            rest();
+            return;
+          }
+
+          const temperament = temperamentFor(currentShift());
+          const maxReach = travelPx(rect.width, temperament);
+          const reach =
+            maxReach * attenuation(dc, halfDiagonal(rect), bandOuter);
+          const threshold = temperament.saccadeThresholdRatio * maxReach;
+          const centres = eyeCenters(eyes, rect);
+          const desiredLeft = gazeOffset(centres.left, cursor, reach);
+          const desiredRight = gazeOffset(centres.right, cursor, reach);
+
+          // Saccade only when either eye's target has strayed past the
+          // threshold; otherwise hold the current fixation (R6).
+          if (
+            shouldSaccade(fixation.left, desiredLeft, threshold) ||
+            shouldSaccade(fixation.right, desiredRight, threshold)
+          ) {
+            fixation.left = desiredLeft;
+            fixation.right = desiredRight;
+            commit(leftPupil, desiredLeft, temperament.jumpMs);
+            commit(rightPupil, desiredRight, temperament.jumpMs);
+          }
+        };
+
+        const schedule = () => {
+          if (!frame) frame = requestAnimationFrame(paint);
+        };
+
+        const onMove = (event: MouseEvent) => {
+          cursor = { x: event.clientX, y: event.clientY };
+          schedule();
+          // R3: a still pointer inside the band returns to rest after the idle
+          // window; fresh movement restarts the countdown.
+          if (idle) window.clearTimeout(idle);
+          idle = window.setTimeout(rest, GAZE.idleMs);
+        };
+
+        // Scroll and resize move the portrait under a stationary cursor, so
+        // re-evaluate the band against the live rect — a scroll that carries the
+        // pointer out of the band resets the gaze (R1/R4) without waiting on a
+        // fresh mousemove.
+        const onReflow = () => {
+          if (cursor) schedule();
+        };
+
+        // R4: the pointer leaving the viewport (or the window losing focus) is
+        // leaving the engagement area — reset immediately rather than holding
+        // the last gaze until the idle timer fires.
+        const onLeave = () => {
+          cursor = null;
+          if (idle) window.clearTimeout(idle);
+          rest();
+        };
+
+        // No teardown, matching the repo-wide convention while no view
+        // transitions exist (ShiftLog torch does the same).
+        window.addEventListener("mousemove", onMove, { passive: true });
+        window.addEventListener("scroll", onReflow, { passive: true });
+        window.addEventListener("resize", onReflow);
+        document.addEventListener("mouseleave", onLeave);
+        window.addEventListener("blur", onLeave);
+      }
+    </script>
+  )
+}
 
 <style>
+  .portrait-stack {
+    /* Positioning context for the gaze overlay; layout-neutral (a full-width
+       block wrapping the block <img>), so the picture renders identically
+       whether or not the rig is mounted. */
+    position: relative;
+    display: block;
+    line-height: 0;
+  }
+
   img {
     display: block;
     width: 100%;
@@ -113,5 +349,76 @@ const day = loadPortraitPicture("portrait-illustrated-day");
   }
   :global(html[data-time="day"]) .portrait-day {
     display: block;
+  }
+
+  /* ─── Gaze overlay (R9/R11) ─────────────────────────────────────────────
+     Additive, decorative, and never interactive: hidden until the client
+     script passes the double gate and adds .is-live, so reduced-motion / touch
+     / no-JS visitors (and every screenshot) never see it. */
+  .portrait-gaze {
+    position: absolute;
+    inset: 0;
+    display: none;
+    pointer-events: none;
+    /* Pupil-disc colours, tuned to the painted eyes. The dark core matches the
+       painted pupil; the halo is the iris's darker inner ring (real irises
+       deepen toward the pupil), which both reads naturally and masks the
+       trailing painted-pupil edge as the disc moves. */
+    --gaze-core: oklch(0.25 0.035 255);
+    --gaze-halo: oklch(0.44 0.09 250);
+    --gaze-catch: oklch(0.95 0.02 250);
+  }
+  :global(html[data-time="day"]) .portrait-gaze {
+    --gaze-core: oklch(0.23 0.04 258);
+    --gaze-halo: oklch(0.42 0.1 260);
+    --gaze-catch: oklch(0.94 0.02 250);
+  }
+  .portrait-gaze.is-live {
+    display: block;
+  }
+
+  /* Each eye is a circular clip the size of the painted iris, centred on the
+     measured pupil. `overflow:hidden` guarantees the pupil disc can never
+     spill onto the painted sclera, whatever the travel (R9). */
+  .gaze-eye {
+    position: absolute;
+    left: var(--eye-x);
+    top: var(--eye-y);
+    width: var(--iris-d);
+    aspect-ratio: 1;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    overflow: hidden;
+  }
+
+  /* The pupil disc: a dark core fading through a matched iris halo to a soft
+     transparent edge, so it covers the painted pupil at rest and blends into
+     the painted iris as it moves. The catchlight rides along, keeping the eye
+     glossy. Only the transform is animated, on a per-shift-tuned jump with
+     stillness between (R6). */
+  .gaze-pupil {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: var(--pupil-d);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    transform: translate(-50%, -50%)
+      translate(var(--gaze-dx, 0px), var(--gaze-dy, 0px));
+    transition: transform var(--jump-ms, 110ms) cubic-bezier(0.22, 0.61, 0.36, 1);
+    will-change: transform;
+    background:
+      radial-gradient(
+        circle at 38% 32%,
+        var(--gaze-catch) 0 11%,
+        transparent 20%
+      ),
+      radial-gradient(
+        circle,
+        var(--gaze-core) 0 40%,
+        var(--gaze-core) 50%,
+        var(--gaze-halo) 82%,
+        transparent 100%
+      );
   }
 </style>
