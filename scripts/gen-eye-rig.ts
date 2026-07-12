@@ -43,6 +43,14 @@ import {
 const repoRoot = resolve(process.cwd());
 const OUT_DIR = resolve(repoRoot, "public/portrait/rig");
 const MAX_LAYER_BYTES = 24 * 1024; // per-layer hard ceiling (mirrors gen-hero)
+// Generator-side rest-parity ceiling (mean |Δ| per channel, 0-255, at rest). The
+// reveal is only imperceptible if the composited-at-rest stack matches the
+// original pixels; a botched inpaint/retouch or a geometry nudge inflates this.
+// Observed 0.10-0.17. This hard-fail is the first line of defence, in the same
+// spirit as MAX_LAYER_BYTES; tests/gen-eye-rig.test.ts asserts the same 0.3
+// tolerance over the emitted meta so a regression fails whether or not the
+// generator ran (AE6/R3).
+const MAX_REST_PARITY = 0.3;
 
 // Highlight strategy is settled: Korab picked "main catchlight only" live at the
 // U4 proof (2026-07-12) — only the primary catchlight near the pupil is fixed on
@@ -334,6 +342,11 @@ async function processVariant(basename: string): Promise<number> {
     console.log(
       `gen-eye-rig: ${basename} ${eye} rest-parity mean|Δ|=${layers.restParity.toFixed(2)}`,
     );
+    if (layers.restParity > MAX_REST_PARITY) {
+      throw new Error(
+        `gen-eye-rig: ${basename} ${eye} rest-parity mean|Δ|=${layers.restParity.toFixed(3)} exceeds the ${MAX_REST_PARITY} ceiling — the reveal would not be imperceptible. Re-check the inpaint/retouch or the eye geometry in RIG_MANIFEST.`,
+      );
+    }
   }
 
   writeFileSync(
