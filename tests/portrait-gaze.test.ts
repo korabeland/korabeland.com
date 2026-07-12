@@ -3,15 +3,19 @@ import {
   attenuation,
   bandOuterRadius,
   centerDistance,
+  type Ellipse,
   EYE_MANIFEST,
   eyeCenters,
   GAZE,
   gazeOffset,
   halfDiagonal,
   inBand,
+  inEllipse,
   isInside,
   PORTRAIT_VARIANTS,
   type Rect,
+  RIG,
+  RIG_MANIFEST,
   rectCenter,
   shouldSaccade,
   TEMPERAMENT,
@@ -223,6 +227,107 @@ describe("EYE_MANIFEST coverage + bounds (R10 / AE6)", () => {
       it("keeps the pupil inside its clip at full travel (no sclera spill)", () => {
         expect(eyes.pupilRadius + GAZE.travelFraction).toBeLessThanOrEqual(
           eyes.irisRadius,
+        );
+      });
+    });
+  }
+});
+
+describe("RIG_MANIFEST rig geometry (U2 — R15/R8/R4/R13)", () => {
+  // Worst-case reach the geometry must accommodate: the day travel ceiling
+  // (full attenuation, travelScale 1) plus the vergence margin. Both eyes at
+  // this reach must stay inside the face zone (the M1 invariant), so a
+  // too-tight zone cannot reintroduce the degenerate-bearing case.
+  const maxReach = RIG.travelCeiling + RIG.vergenceMargin;
+
+  it("has a rig entry for every shipped portrait variant", () => {
+    for (const variant of PORTRAIT_VARIANTS) {
+      expect(RIG_MANIFEST[variant.basename], variant.basename).toBeDefined();
+    }
+  });
+
+  it("has no rig entries for unshipped variants", () => {
+    const shipped = new Set(PORTRAIT_VARIANTS.map((v) => v.basename));
+    for (const basename of Object.keys(RIG_MANIFEST)) {
+      expect(shipped.has(basename), basename).toBe(true);
+    }
+  });
+
+  it("travel ceiling is the Korab-tuned value and positive", () => {
+    // A guard against an accidental edit dropping travel to zero (rig frozen)
+    // or ballooning it past the painted iris.
+    expect(RIG.travelCeiling).toBeGreaterThan(0);
+    expect(RIG.travelCeiling).toBeLessThan(0.02);
+  });
+
+  for (const variant of PORTRAIT_VARIANTS) {
+    describe(variant.basename, () => {
+      const rig = RIG_MANIFEST[variant.basename];
+      const eyes = [rig.left, rig.right] as const;
+
+      it("places both iris discs inside the image box", () => {
+        for (const eye of eyes) {
+          expect(eye.cx).toBeGreaterThan(0);
+          expect(eye.cx).toBeLessThan(1);
+          expect(eye.cy).toBeGreaterThan(0);
+          expect(eye.cy).toBeLessThan(1);
+          expect(eye.irisR).toBeGreaterThan(0);
+        }
+      });
+
+      it("orders the left iris left of the right iris", () => {
+        expect(rig.left.cx).toBeLessThan(rig.right.cx);
+      });
+
+      it("seats each iris centre inside its own lid aperture", () => {
+        for (const eye of eyes) {
+          expect(inEllipse(eye.cx, eye.cy, eye.aperture)).toBe(true);
+        }
+      });
+
+      it("contains both iris centres + the full travel/vergence envelope in the face zone (M1)", () => {
+        // Every reachable pose of both eyes (centre pushed by maxReach in any
+        // direction) stays inside the face zone — the invariant that keeps the
+        // zone from being traced too tight.
+        for (const eye of eyes) {
+          for (const [sx, sy] of [
+            [1, 0],
+            [-1, 0],
+            [0, 1],
+            [0, -1],
+            [0.71, 0.71],
+            [-0.71, 0.71],
+            [0.71, -0.71],
+            [-0.71, -0.71],
+          ] as const) {
+            const px = eye.cx + sx * maxReach;
+            const py = eye.cy + sy * maxReach;
+            expect(
+              inEllipse(px, py, rig.faceZone),
+              `${variant.basename} reach (${sx},${sy})`,
+            ).toBe(true);
+          }
+        }
+      });
+
+      it("nests the hysteresis enter-boundary strictly inside the exit-boundary", () => {
+        const h = rig.faceZoneHysteresis;
+        expect(h).toBeGreaterThan(0);
+        expect(h).toBeLessThan(1);
+        const scale = (e: Ellipse, k: number): Ellipse => ({
+          cx: e.cx,
+          cy: e.cy,
+          rx: e.rx * k,
+          ry: e.ry * k,
+        });
+        const inner = scale(rig.faceZone, 1 - h);
+        const outer = scale(rig.faceZone, 1 + h);
+        // A point exactly on the inner boundary's x-extreme is inside the outer.
+        const p = inner.cx + inner.rx;
+        expect(inEllipse(p, inner.cy, outer)).toBe(true);
+        // ...and a point just past the outer boundary is outside it.
+        expect(inEllipse(outer.cx + outer.rx + 1e-6, outer.cy, outer)).toBe(
+          false,
         );
       });
     });

@@ -85,6 +85,109 @@ export const EYE_MANIFEST: Record<string, PortraitEyes> = {
   "portrait-illustrated-day": EYES_SHARED,
 };
 
+// ── v2 rig geometry SSOT (U2) ─────────────────────────────────────────────
+// Measured at real render scale on 2026-07-12 (canvas dark-centroid + marker
+// grid at deviceScaleFactor 3; scratch scripts in .gaze-measure/, not shipped).
+// The two sources differ in resolution (night 1254², day 1040²) so each is
+// measured on its own pixels, but the normalised fractions are near-shared.
+// Everything is a fraction of image WIDTH (the box ships square). This is the
+// single source the eye-rig generator (`scripts/gen-eye-rig.ts`), the pinned-
+// pose harness, and the Portrait rig all read; a coverage test fails CI when a
+// PORTRAIT_VARIANTS entry has no rig geometry (AE7).
+//
+// v1's EYE_MANIFEST above stays until U7 retires the gradient-disc overlay; its
+// pupil-centroid centres and the iris centres here can differ by a pixel or two
+// (the painted pupil sits slightly off the iris centre for gaze direction — the
+// sprite pivots on the iris centre so the whole painted iris moves as one disc).
+export interface Ellipse {
+  /** Centre x, fraction of image width. */
+  cx: number;
+  /** Centre y, fraction of image width (box is square). */
+  cy: number;
+  /** Semi-axis x, fraction of image width. */
+  rx: number;
+  /** Semi-axis y, fraction of image width. */
+  ry: number;
+}
+
+export interface EyeRig {
+  /** Iris disc centre — the moving sprite's pivot, fraction of image width. */
+  cx: number;
+  cy: number;
+  /** Iris disc radius (the sprite), fraction of image width. Sized to carry the
+   *  whole painted iris + limbus so it moves as one rigid disc. */
+  irisR: number;
+  /** Lid aperture the sprite is visible within; the occluder punches this hole
+   *  and clips the iris top/bottom the way the real lids do. */
+  aperture: Ellipse;
+}
+
+export interface PortraitRig {
+  left: EyeRig;
+  right: EyeRig;
+  /** Face zone (R8): cursor inside → direct eye contact. Sized to contain both
+   *  iris centres plus the full travel + vergence envelope (asserted). */
+  faceZone: Ellipse;
+  /** Spatial hysteresis on the face-zone boundary (R8): the enter-boundary is
+   *  radii × (1 − this), the exit-boundary radii × (1 + this). Keeps a cursor
+   *  grazing the edge from flip-flopping (paired with a dwell in U5). */
+  faceZoneHysteresis: number;
+}
+
+export const RIG_MANIFEST: Record<string, PortraitRig> = {
+  "portrait-illustrated": {
+    left: {
+      cx: 0.425,
+      cy: 0.4027,
+      irisR: 0.023,
+      aperture: { cx: 0.4266, cy: 0.4027, rx: 0.0351, ry: 0.016 },
+    },
+    right: {
+      cx: 0.6053,
+      cy: 0.3963,
+      irisR: 0.0255,
+      aperture: { cx: 0.6045, cy: 0.3963, rx: 0.0303, ry: 0.02 },
+    },
+    faceZone: { cx: 0.515, cy: 0.4, rx: 0.17, ry: 0.1 },
+    faceZoneHysteresis: 0.08,
+  },
+  "portrait-illustrated-day": {
+    left: {
+      cx: 0.425,
+      cy: 0.4029,
+      irisR: 0.024,
+      aperture: { cx: 0.426, cy: 0.4029, rx: 0.0385, ry: 0.0173 },
+    },
+    right: {
+      cx: 0.6077,
+      cy: 0.3981,
+      irisR: 0.0255,
+      aperture: { cx: 0.6096, cy: 0.4, rx: 0.0327, ry: 0.0192 },
+    },
+    faceZone: { cx: 0.516, cy: 0.4, rx: 0.17, ry: 0.1 },
+    faceZoneHysteresis: 0.08,
+  },
+};
+
+// ── v2 movement envelope (U2/U4) ──────────────────────────────────────────
+// Travel ceiling tuned by Korab at the one-eye proof (2026-07-12): 0.007w of
+// iris travel at full day attenuation ≈ 2.3px on the 340px desktop hero. Night
+// scales this down via temperament. `vergenceMargin` is the extra reach the
+// containment sizing budgets for converging per-eye bearings (U6).
+export const RIG = {
+  travelCeiling: 0.007,
+  vergenceMargin: 0.004,
+} as const;
+
+/** True when a point (width-fractions, relative to the image box) is inside an
+ *  ellipse — normalised radius ≤ 1. Shared by the face-zone check and the
+ *  geometry invariants. */
+export function inEllipse(px: number, py: number, e: Ellipse): boolean {
+  const nx = (px - e.cx) / e.rx;
+  const ny = (py - e.cy) / e.ry;
+  return nx * nx + ny * ny <= 1;
+}
+
 // ── Engagement + movement constants ───────────────────────────────────────
 export const GAZE = {
   /** Max pupil travel at full attenuation, fraction of image width (day base;

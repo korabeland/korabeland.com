@@ -1,0 +1,262 @@
+---
+export const prerender = false;
+
+// Dev-only U4 proof harness for the portrait gaze v2 rig. Renders the per-eye
+// layer sandwich (underlay → sprite → highlight → occluder) over the real
+// portrait so brushwork match, seam cleanliness, and motion perceptibility can
+// be judged live in a headed browser (the in-app preview throttles rAF, so
+// drive this in a real browser). Returns 404 in production; robots.txt
+// disallows /dev/ and the sitemap filter excludes it. This route is a scratch
+// proof and will be absorbed/replaced by U8's pinned-pose route.
+
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { PORTRAIT_VARIANTS, RIG, RIG_MANIFEST } from "../../lib/portrait-gaze";
+
+if (import.meta.env.PROD) {
+  return new Response("Not found", { status: 404 });
+}
+
+// Build the client geometry from the SSOT + the generated rig meta.
+function metaFor(basename: string) {
+  const p = resolve(
+    process.cwd(),
+    "public/portrait/rig",
+    `${basename}.rig.gen.meta.json`,
+  );
+  return JSON.parse(readFileSync(p, "utf8")) as {
+    box: number;
+    eyes: Record<
+      string,
+      { boxLeft: number; boxTop: number; boxSize: number; restParity: number }
+    >;
+  };
+}
+
+const GEO = Object.fromEntries(
+  PORTRAIT_VARIANTS.map((v) => {
+    const meta = metaFor(v.basename);
+    const rig = RIG_MANIFEST[v.basename];
+    const eye = (name: "left" | "right") => ({
+      boxLeft: meta.eyes[name].boxLeft,
+      boxTop: meta.eyes[name].boxTop,
+      boxSize: meta.eyes[name].boxSize,
+      cx: rig[name].cx,
+      cy: rig[name].cy,
+      restParity: meta.eyes[name].restParity,
+    });
+    return [
+      v.shift,
+      {
+        basename: v.basename,
+        base: `/portrait/${v.basename}.gen.1040.webp`,
+        left: eye("left"),
+        right: eye("right"),
+        faceZone: rig.faceZone,
+      },
+    ];
+  }),
+);
+
+const restParitySummary = PORTRAIT_VARIANTS.map((v) => {
+  const m = metaFor(v.basename);
+  return `${v.shift} L${m.eyes.left.restParity} R${m.eyes.right.restParity}`;
+}).join("  ·  ");
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>gaze v2 proof</title>
+  </head>
+  <body>
+    <main>
+      <header class="bar">
+        <strong>gaze v2 — one-eye proof</strong>
+        <label>travel <input id="travel" type="range" min="0" max="0.014" step="0.0005" value={RIG.travelCeiling} /> <output id="travelOut"></output></label>
+        <label>highlights
+          <select id="strategy">
+            <option value="all">fix all sparkles</option>
+            <option value="main">fix main catchlight only</option>
+          </select>
+        </label>
+        <label>shift
+          <select id="variant">
+            <option value="night">night</option>
+            <option value="day">day</option>
+          </select>
+        </label>
+        <label>size
+          <select id="size">
+            <option value="240">240 (mobile)</option>
+            <option value="340" selected>340 (real desktop)</option>
+            <option value="520">520</option>
+            <option value="800">800 (zoom)</option>
+          </select>
+        </label>
+        <label><input id="overlay" type="checkbox" /> geometry</label>
+        <label><input id="contact" type="checkbox" checked /> face-zone contact</label>
+        <button id="compare" type="button">hold to compare original (C)</button>
+      </header>
+
+      <p class="hint">
+        Move the cursor near the portrait — the painted eyes track it; move over the
+        face zone (or hold nothing) to get direct eye contact. Hold <kbd>C</kbd> or the
+        button to flip to the untouched portrait for seam judgment. Rest-parity mean|Δ|/255:
+        <code>{restParitySummary}</code>
+      </p>
+
+      <div id="stage" class="stage" style="--w:340px">
+        <div class="portrait">
+          <img id="base" class="base" alt="" />
+          <div class="rig-eye" data-eye="left">
+            <img class="layer underlay" data-layer="underlay" alt="" />
+            <img class="layer sprite" data-layer="sprite" alt="" />
+            <img class="layer highlight" data-layer="highlight" alt="" />
+            <img class="layer occluder" data-layer="occluder" alt="" />
+          </div>
+          <div class="rig-eye" data-eye="right">
+            <img class="layer underlay" data-layer="underlay" alt="" />
+            <img class="layer sprite" data-layer="sprite" alt="" />
+            <img class="layer highlight" data-layer="highlight" alt="" />
+            <img class="layer occluder" data-layer="occluder" alt="" />
+          </div>
+          <svg id="geo" class="geo" viewBox="0 0 1 1" preserveAspectRatio="none"></svg>
+        </div>
+      </div>
+    </main>
+
+    <script define:vars={{ GEO }}>
+      const stage = document.getElementById("stage");
+      const portrait = stage.querySelector(".portrait");
+      const baseImg = document.getElementById("base");
+      const eyes = {
+        left: portrait.querySelector('[data-eye="left"]'),
+        right: portrait.querySelector('[data-eye="right"]'),
+      };
+      const geoSvg = document.getElementById("geo");
+      const state = {
+        travel: Number(document.getElementById("travel").value),
+        strategy: document.getElementById("strategy").value,
+        variant: document.getElementById("variant").value,
+        contact: document.getElementById("contact").checked,
+        compare: false,
+      };
+
+      function layerSrc(basename, eye, layer) {
+        if (layer === "sprite") return `/portrait/rig/${basename}.${eye}.sprite-${state.strategy}.gen.webp`;
+        if (layer === "highlight") return `/portrait/rig/${basename}.${eye}.highlight-${state.strategy}.gen.webp`;
+        return `/portrait/rig/${basename}.${eye}.${layer}.gen.webp`;
+      }
+
+      function apply() {
+        const g = GEO[state.variant];
+        baseImg.src = g.base;
+        for (const name of ["left", "right"]) {
+          const box = eyes[name];
+          const e = g[name];
+          box.style.left = `${e.boxLeft * 100}%`;
+          box.style.top = `${e.boxTop * 100}%`;
+          box.style.width = `${e.boxSize * 100}%`;
+          for (const img of box.querySelectorAll(".layer")) {
+            img.src = layerSrc(g.basename, name, img.dataset.layer);
+          }
+        }
+        // geometry overlay
+        const fz = g.faceZone;
+        geoSvg.innerHTML =
+          `<ellipse cx="${fz.cx}" cy="${fz.cy}" rx="${fz.rx}" ry="${fz.ry}" fill="none" stroke="#0f8" stroke-width="0.003"/>` +
+          ["left", "right"].map((n) => `<circle cx="${g[n].cx}" cy="${g[n].cy}" r="0.004" fill="#f0f"/>`).join("");
+      }
+
+      function rest() {
+        for (const name of ["left", "right"]) {
+          eyes[name].querySelector(".sprite").style.transform = "translate(0,0)";
+        }
+      }
+
+      function track(cx, cy) {
+        if (state.compare) return;
+        const g = GEO[state.variant];
+        const rect = portrait.getBoundingClientRect();
+        const W = rect.width;
+        // face-zone contact: cursor over the face → direct eye contact (rest)
+        if (state.contact) {
+          const nx = (cx - rect.left) / W;
+          const ny = (cy - rect.top) / W;
+          const fz = g.faceZone;
+          const inZone = ((nx - fz.cx) / fz.rx) ** 2 + ((ny - fz.cy) / fz.ry) ** 2 <= 1;
+          if (inZone) { rest(); return; }
+        }
+        const travelPx = state.travel * W;
+        for (const name of ["left", "right"]) {
+          const e = g[name];
+          const ex = rect.left + e.cx * W;
+          const ey = rect.top + e.cy * W;
+          const dx = cx - ex, dy = cy - ey;
+          const len = Math.hypot(dx, dy) || 1;
+          const m = Math.min(travelPx, len);
+          eyes[name].querySelector(".sprite").style.transform =
+            `translate(${((dx / len) * m).toFixed(2)}px, ${((dy / len) * m).toFixed(2)}px)`;
+        }
+      }
+
+      // controls
+      document.getElementById("travel").addEventListener("input", (e) => {
+        state.travel = Number(e.target.value);
+        document.getElementById("travelOut").textContent =
+          `${state.travel.toFixed(4)}w ≈ ${(state.travel * portrait.getBoundingClientRect().width).toFixed(1)}px`;
+      });
+      document.getElementById("strategy").addEventListener("change", (e) => { state.strategy = e.target.value; apply(); });
+      document.getElementById("variant").addEventListener("change", (e) => { state.variant = e.target.value; apply(); });
+      document.getElementById("contact").addEventListener("change", (e) => { state.contact = e.target.checked; });
+      document.getElementById("size").addEventListener("change", (e) => { stage.style.setProperty("--w", `${e.target.value}px`); });
+      document.getElementById("overlay").addEventListener("change", (e) => { geoSvg.classList.toggle("show", e.target.checked); });
+      const cmp = document.getElementById("compare");
+      const setCompare = (on) => {
+        state.compare = on;
+        portrait.classList.toggle("compare", on);
+        if (on) rest();
+      };
+      cmp.addEventListener("pointerdown", () => setCompare(true));
+      window.addEventListener("pointerup", () => setCompare(false));
+      window.addEventListener("keydown", (e) => { if (e.key === "c" || e.key === "C") setCompare(true); });
+      window.addEventListener("keyup", (e) => { if (e.key === "c" || e.key === "C") setCompare(false); });
+
+      window.addEventListener("pointermove", (e) => track(e.clientX, e.clientY), { passive: true });
+      document.addEventListener("mouseleave", rest);
+      window.addEventListener("blur", rest);
+
+      apply();
+      document.getElementById("travelOut").textContent =
+        `${state.travel.toFixed(4)}w ≈ ${(state.travel * 340).toFixed(1)}px`;
+    </script>
+
+    <style>
+      :global(body) { margin: 0; font-family: ui-monospace, monospace; background: #1a1410; color: #eee; }
+      main { padding: 12px 16px 40px; }
+      .bar { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; margin-bottom: 8px; }
+      .bar label { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; }
+      .hint { font-size: 12px; color: #bbb; max-width: 70ch; line-height: 1.5; }
+      .hint code { color: #7fd; }
+      button { font: inherit; padding: 4px 10px; cursor: pointer; }
+      .stage { margin-top: 16px; }
+      .portrait {
+        position: relative;
+        width: var(--w, 340px);
+        aspect-ratio: 1;
+        border: 1px solid #444;
+      }
+      .base { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+      .rig-eye { position: absolute; aspect-ratio: 1; }
+      .layer { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+      .sprite { transition: transform 120ms cubic-bezier(0.22, 0.61, 0.36, 1); will-change: transform; }
+      /* compare mode: hide the whole rig, revealing the untouched base */
+      .portrait.compare .rig-eye { visibility: hidden; }
+      .geo { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; display: none; }
+      .geo.show { display: block; }
+    </style>
+  </body>
+</html>
