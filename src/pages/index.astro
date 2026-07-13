@@ -123,7 +123,7 @@ function formatDate(iso: string | null): string {
 
 // Social marks for the portrait caption — filled brand glyphs, inlined so they
 // inherit currentColor (they track --ink-soft/--signal on hover). Same
-// icon-const idiom as ShiftToggle. Order: X, LinkedIn, GitHub, email.
+// icon-const idiom as ShiftToggle. Order: email, LinkedIn, GitHub, X.
 const X_ICON =
   '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>';
 const LINKEDIN_ICON =
@@ -173,34 +173,42 @@ const MAIL_ICON =
         <figure class="hero-portrait">
           <Portrait sizes="(max-width: 680px) 240px, 340px" gaze />
           <figcaption class="t-mono hero-portrait-cap">
-            <span>korab eland</span>
+            <span>/korabeland</span>
             <span class="hero-social">
               <a
                 class="hero-social-link"
-                href="https://x.com/korabeland"
-                rel="me"
-                aria-label="Korab Eland on X"
-                set:html={X_ICON}
+                href="mailto:hello@korabeland.com"
+                target="_blank"
+                aria-label="Email Korab Eland"
+                data-gaze-target
+                set:html={MAIL_ICON}
               />
               <a
                 class="hero-social-link"
                 href="https://www.linkedin.com/in/korabeland"
-                rel="me"
+                target="_blank"
+                rel="me noopener noreferrer"
                 aria-label="Korab Eland on LinkedIn"
+                data-gaze-target
                 set:html={LINKEDIN_ICON}
               />
               <a
                 class="hero-social-link"
                 href="https://github.com/korabeland"
-                rel="me"
+                target="_blank"
+                rel="me noopener noreferrer"
                 aria-label="Korab Eland on GitHub"
+                data-gaze-target
                 set:html={GITHUB_ICON}
               />
               <a
                 class="hero-social-link"
-                href="mailto:hello@korabeland.com"
-                aria-label="Email Korab Eland"
-                set:html={MAIL_ICON}
+                href="https://x.com/korabeland"
+                target="_blank"
+                rel="me noopener noreferrer"
+                aria-label="Korab Eland on X"
+                data-gaze-target
+                set:html={X_ICON}
               />
             </span>
           </figcaption>
