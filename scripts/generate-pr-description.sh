@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Generates .pr-description.md with 6-element review page.
-# Called by .husky/pre-push and /open-pr command.
+# Called by the /open-pr command.
 # Usage: bash scripts/generate-pr-description.sh [--skip-review-page]
 set -euo pipefail
 

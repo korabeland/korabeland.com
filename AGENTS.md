@@ -32,8 +32,8 @@ src/
                    og.png.ts, work/, notes/, for/[slug], dev/*-preview (dev-only)
   styles/        — global.css (Tailwind entry) + tokens.css (design tokens,
                    regenerated to match the DESIGN.md source of truth)
-scripts/         — build hooks (gen-trail-register.ts, gen-shift-log.ts) and
-                   local-LLM / session tooling
+scripts/         — build/CI/hook scripts (gen-trail-register.ts, gen-shift-log.ts,
+                   …); agent-workflow tooling under scripts/workflow/
 keystatic.config.ts   — Keystatic collection/schema definitions
 astro.config.mjs      — framework + integrations (react, mdx, keystatic[dev-only], sitemap, vercel)
 
@@ -159,6 +159,6 @@ When a change matches a trigger below, the "required work" column is not optiona
 | New or replaced image asset | Responsive delivery via `scripts/gen-hero-variants.ts` conventions (never astro:assets/`<Image>` for `public/` assets — the Vercel imageService ignores width/format requests); explicit dimensions; alt text; ≤200 KB delivered variant (`docs/decisions/2026-07-10-image-delivery-budget.md`) | `tests/e2e/hero-delivery.spec.ts` network asserts + CI Lighthouse LCP/CLS |
 | Shared markup/state appearing in a second surface | Reuse the existing owner — component catalogue in `docs/design/components.md` (`ProjectLedger`, `Portrait`, `StatusChip`, `src/lib/status.ts`, `src/lib/shift.ts`) — or extract one; an unavoidable duplicate gets a parity test (`tests/shift-parity.test.ts` is the template) | Code-review criterion + existing sync/parity tests |
 | Runtime or onboarding doc (`.nvmrc`, `.tool-versions`, `engines`, README) | `.nvmrc` is canonical; update mirrors in the same commit | `tests/runtime-sync.test.ts` |
-| Visual output changes | Follow the approval policy: the Chromatic GitHub App's `UI Tests` status is the blocking gate, approve deliberate diffs in its UI (flips green with no CI re-run); local baselines reseed only after visual review of every diff — use `pnpm reseed:visual` → review → `--promote`, never hand-delete | Required `UI Tests` status (Chromatic App) + the `chromatic` publish job + `docs/decisions/2026-07-10-visual-approval-policy.md` |
+| Visual output changes | Follow the approval policy: Chromatic is a **non-blocking published visual record reviewed by the AI agent** — the human `UI Tests` gate was never wired and is abandoned (ADR amendment c). On any change that can alter a rendered page, review the diff (Chromatic build or a local capture) and flag only genuine regressions; local baselines reseed only after visual review of every diff — use `pnpm reseed:visual` → review → `--promote`, never hand-delete | Required checks are `verify-all` + `Devin Review`; the `chromatic` job publishes the record but does not gate; `docs/decisions/2026-07-10-visual-approval-policy.md` |
 
 Commands referenced above are defined once in §2; single-source contracts in §6a.
