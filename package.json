@@ -17,7 +17,7 @@
     "gen:shift-log": "tsx scripts/gen-shift-log.ts",
     "gen:hero-variants": "tsx scripts/gen-hero-variants.ts",
     "gen:eye-rig": "tsx scripts/gen-eye-rig.ts",
-    "verify": "biome check . && tsc --noEmit && astro check",
+    "verify": "biome check . && astro sync && tsc --noEmit && astro check",
     "pretest": "pnpm gen:eye-rig",
     "test": "vitest run",
     "test:visual": "playwright test",
