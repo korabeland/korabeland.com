@@ -3,7 +3,7 @@
 # Enforces: max 3 retries, 1s sleep between, clean exit on repeated failures.
 #
 # Usage:
-#   source scripts/rate-limit-guard.sh
+#   source scripts/workflow/rate-limit-guard.sh
 #   printf '%s' "$prompt" | claude_guarded -p --model sonnet --output-format text
 #
 # Overridable env vars:

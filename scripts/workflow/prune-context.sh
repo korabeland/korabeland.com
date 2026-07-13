@@ -2,7 +2,7 @@
 # Prunes raw error context (Playwright traces, DOM dumps, stack traces) to
 # ≤500 tokens via Haiku. Preserves actionable info, strips noise.
 #
-# Usage: cat error-output.txt | bash scripts/prune-context.sh
+# Usage: cat error-output.txt | bash scripts/workflow/prune-context.sh
 # Output: pruned summary on stdout; progress/errors on stderr.
 #
 # Timeout: 30s per attempt (macOS-compatible background-kill approach).

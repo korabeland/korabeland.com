@@ -38,7 +38,7 @@ nvm use       # activates Node 22
 mise install && mise use
 
 # 3. Run the start-day script
-bash scripts/start-day.sh
+bash scripts/workflow/start-day.sh
 ```
 
 Once the health check is green, you're ready to work.
