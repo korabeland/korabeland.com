@@ -40,9 +40,67 @@ deny() {
   exit 2
 }
 
-[ -f "$MARKER" ] || deny "No review marker found at $MARKER."
+# Docs-only fail-closed short-circuit (Finding 4b). Prints the changed-file list
+# and returns 0 ONLY when the diff is non-empty and EVERY changed file matches
+# the safe-path allowlist. Any failure — offline fetch, missing ref, empty
+# merge-base, diff error, or one unsafe/unknown path — returns 1, so the caller
+# denies and the full review runs. The skip requires a positive classification;
+# nothing falls open.
+docs_only_classify() {
+  git -C "$REPO" fetch --quiet origin main 2>/dev/null || return 1
+  local base files f
+  base="$(git -C "$REPO" merge-base origin/main HEAD 2>/dev/null)" || return 1
+  [ -n "$base" ] || return 1
+  files="$(git -C "$REPO" diff --name-only "$base" HEAD 2>/dev/null)" || return 1
+  [ -n "$files" ] || return 1   # empty diff is not a docs-only skip
+  while IFS= read -r f; do
+    [ -n "$f" ] || continue
+    case "$f" in
+      docs/*.md) ;;                        # docs/**/*.md (case '*' spans '/')
+      *.md)                                # root-level *.md only …
+        case "$f" in */*) return 1 ;; esac # … a nested */*.md is not safe
+        ;;
+      *) return 1 ;;                       # anything else → full review
+    esac
+  done <<EOF
+$files
+EOF
+  printf '%s\n' "$files"
+}
 
-MARKED_HEAD="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("head",""))' "$MARKER" 2>/dev/null || echo "")"
-[ "$MARKED_HEAD" = "$HEAD" ] || deny "Marker records $MARKED_HEAD but HEAD is $HEAD — code changed since the last review."
+# Write a marker so the gate passes without the full loop, recording the skip
+# and the classified file list (the audit trail the plan requires).
+write_skip_marker() {
+  local files="$1" branch ts
+  branch="$(git -C "$REPO" rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)"
+  ts="$(date -u +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || echo unknown)"
+  python3 -c '
+import json, sys
+marker, branch, head, ts, files = sys.argv[1:6]
+flist = [l for l in files.splitlines() if l.strip()]
+with open(marker, "w") as fh:
+    json.dump({
+        "branch": branch, "head": head, "verdict": "docs-only-skip",
+        "escalations": 0, "timestamp": ts,
+        "skipped_reason": "docs-only: every changed file matched the safe-path allowlist (docs/**/*.md, root *.md)",
+        "classified_files": flist,
+    }, fh, indent=2)
+    fh.write("\n")
+' "$MARKER" "$branch" "$HEAD" "$ts" "$files"
+}
 
-exit 0
+# A fresh, matching marker (from the codex loop OR a prior docs-only skip) passes.
+if [ -f "$MARKER" ]; then
+  MARKED_HEAD="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("head",""))' "$MARKER" 2>/dev/null || echo "")"
+  [ "$MARKED_HEAD" = "$HEAD" ] && exit 0
+fi
+
+# No valid marker. Allow a docs-only branch through (fail-closed) and record it;
+# otherwise demand the full review loop.
+if CLASSIFIED="$(docs_only_classify)"; then
+  write_skip_marker "$CLASSIFIED"
+  echo "codex-review-loop: docs-only branch — full review auto-skipped; audit marker at $MARKER" >&2
+  exit 0
+fi
+
+deny "No fresh review marker at $MARKER matches HEAD $HEAD, and the branch is not docs-only."
