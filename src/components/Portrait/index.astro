@@ -305,9 +305,12 @@ const rigVariants: RigVariant[] = gaze
             right: rest(),
           };
           let cursor: Point | null = null;
-          // A hovered social control (below the proximity band) the eyes glance
-          // at directly — wins over cursor tracking while set (2026-07-13).
-          let lookTarget: Point | null = null;
+          // The hovered social control (below the proximity band) the eyes glance
+          // at directly — wins over cursor tracking while set (2026-07-13). We
+          // track the element, not a captured point, so a scroll or resize held
+          // over the control can't freeze the glance at its former viewport
+          // position: sync() reads its live centre each time it runs.
+          let lookEl: HTMLElement | null = null;
           let raf = 0;
           let paused = false;
           let last = 0;
@@ -324,21 +327,31 @@ const rigVariants: RigVariant[] = gaze
             return { left: b.left, top: b.top, width: b.width, height: b.height };
           };
 
+          const centerOf = (el: HTMLElement): Point => {
+            const b = el.getBoundingClientRect();
+            return { x: b.left + b.width / 2, y: b.top + b.height / 2 };
+          };
+
           // Per-eye desired offset px for the current target (or rest),
           // relaunched from the current sampled pose so motion is continuous. A
-          // hovered social control (lookTarget) wins over cursor tracking and is
+          // hovered social control (lookEl) wins over cursor tracking and is
           // glanced at with full travel — it sits below the proximity band,
           // where the distance attenuation would otherwise zero the reach.
           const sync = (now: number) => {
             const r = liveRect();
             const refPx = RIG.travelCeiling * r.width * temperament.travelScale;
-            const target =
-              lookTarget ??
-              (machine.state === "TRACKING" ? machine.target : null);
+            // Read the hovered control's centre live: a held hover across a scroll
+            // or resize moves the control in the viewport without firing another
+            // mouseenter, so a captured point would go stale.
+            const target = lookEl
+              ? centerOf(lookEl)
+              : machine.state === "TRACKING"
+                ? machine.target
+                : null;
             let dl: Point = { x: 0, y: 0 };
             let dr: Point = { x: 0, y: 0 };
             if (target) {
-              const reach = lookTarget
+              const reach = lookEl
                 ? refPx * RIG.hoverDepthScale
                 : refPx *
                   attenuation(
@@ -374,7 +387,7 @@ const rigVariants: RigVariant[] = gaze
               return;
             if (machine.snap) {
               sac[side] = { from: to, to, t0: now, dur: 1, overshoot: 0, settle: 0 };
-            } else if (lookTarget) {
+            } else if (lookEl) {
               // Deliberate glance toward a hovered control: a normal reflexive
               // saccade, whatever the cursor-driven machine state happens to be.
               sac[side] = launchSaccade(poseAt(s, now), to, now, temperament, refPx);
@@ -406,7 +419,7 @@ const rigVariants: RigVariant[] = gaze
               const off = poseAt(sac[side], now);
               let x = off.x;
               let y = off.y;
-              if (machine.state === "CONTACT" && !lookTarget) {
+              if (machine.state === "CONTACT" && !lookEl) {
                 const d = microDrift(last, temperament, false);
                 x += d.x;
                 y += d.y;
@@ -517,18 +530,19 @@ const rigVariants: RigVariant[] = gaze
 
           // Social-row glances (2026-07-13): hovering a tagged control — the
           // four links under the portrait, all below the proximity band — pulls
-          // the gaze onto it, and leaving relaxes back to rest. The centre is
-          // read live on each enter so scroll/resize between hovers can't stale it.
+          // the gaze onto it, and leaving relaxes back to rest. We record the
+          // element and let sync() read its centre live, so a scroll or resize
+          // held over the control re-aims the eyes rather than freezing on its
+          // former viewport position.
           for (const el of document.querySelectorAll<HTMLElement>(
             "[data-gaze-target]",
           )) {
             el.addEventListener("mouseenter", () => {
-              const b = el.getBoundingClientRect();
-              lookTarget = { x: b.left + b.width / 2, y: b.top + b.height / 2 };
+              lookEl = el;
               sync(performance.now());
             });
             el.addEventListener("mouseleave", () => {
-              lookTarget = null;
+              lookEl = null;
               sync(performance.now());
             });
           }
