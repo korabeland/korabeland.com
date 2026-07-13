@@ -13,11 +13,12 @@ import {
   type GazeMachine,
   gazeOffset,
   gazeReduce,
-  halfDiagonal,
+  halfWidth,
   inBand,
   inEllipse,
   initGaze,
   isInside,
+  launchRest,
   launchSaccade,
   microDrift,
   PORTRAIT_VARIANTS,
@@ -37,20 +38,20 @@ import {
 
 // A 340×340 portrait box at (200, 120) — the home hero's rough desktop size.
 const RECT: Rect = { left: 200, top: 120, width: 340, height: 340 };
-const HALF_DIAG = Math.hypot(340, 340) / 2; // ≈ 240.4
+const HALF_W = 340 / 2; // 170 — inscribed-circle radius the band/attenuation key off
 
 describe("rect helpers", () => {
   it("rectCenter is the box midpoint", () => {
     expect(rectCenter(RECT)).toEqual({ x: 370, y: 290 });
   });
 
-  it("halfDiagonal is half the box diagonal", () => {
-    expect(halfDiagonal(RECT)).toBeCloseTo(HALF_DIAG, 4);
+  it("halfWidth is half the box width (inscribed-circle radius)", () => {
+    expect(halfWidth(RECT)).toBeCloseTo(HALF_W, 4);
   });
 
-  it("bandOuterRadius adds the padding to the half-diagonal", () => {
-    expect(bandOuterRadius(RECT)).toBeCloseTo(HALF_DIAG + GAZE.bandPadding, 4);
-    expect(bandOuterRadius(RECT, 10)).toBeCloseTo(HALF_DIAG + 10, 4);
+  it("bandOuterRadius adds the halo to the half-width", () => {
+    expect(bandOuterRadius(RECT)).toBeCloseTo(HALF_W + GAZE.bandHalo, 4);
+    expect(bandOuterRadius(RECT, 10)).toBeCloseTo(HALF_W + 10, 4);
   });
 
   it("centerDistance measures from the box centre", () => {
@@ -87,31 +88,29 @@ describe("attenuation (R1 distance falloff)", () => {
   const outer = bandOuterRadius(RECT);
 
   it("is full strength at or inside the portrait boundary", () => {
-    expect(attenuation(0, HALF_DIAG, outer)).toBe(1);
-    expect(attenuation(HALF_DIAG, HALF_DIAG, outer)).toBeCloseTo(1, 6);
-    expect(attenuation(HALF_DIAG - 50, HALF_DIAG, outer)).toBe(1);
+    expect(attenuation(0, HALF_W, outer)).toBe(1);
+    expect(attenuation(HALF_W, HALF_W, outer)).toBeCloseTo(1, 6);
+    expect(attenuation(HALF_W - 50, HALF_W, outer)).toBe(1);
   });
 
   it("eases linearly from 1 toward the floor across the band", () => {
-    const mid = (HALF_DIAG + outer) / 2;
-    expect(attenuation(mid, HALF_DIAG, outer)).toBeCloseTo(
+    const mid = (HALF_W + outer) / 2;
+    expect(attenuation(mid, HALF_W, outer)).toBeCloseTo(
       (1 + GAZE.attenuationFloor) / 2,
       6,
     );
   });
 
   it("never drops below the floor, even at the band edge", () => {
-    expect(attenuation(outer, HALF_DIAG, outer)).toBeCloseTo(
+    expect(attenuation(outer, HALF_W, outer)).toBeCloseTo(
       GAZE.attenuationFloor,
       6,
     );
-    expect(attenuation(outer + 100, HALF_DIAG, outer)).toBe(
-      GAZE.attenuationFloor,
-    );
+    expect(attenuation(outer + 100, HALF_W, outer)).toBe(GAZE.attenuationFloor);
   });
 
   it("respects a custom floor", () => {
-    expect(attenuation(outer, HALF_DIAG, outer, 0.4)).toBeCloseTo(0.4, 6);
+    expect(attenuation(outer, HALF_W, outer, 0.4)).toBeCloseTo(0.4, 6);
   });
 });
 
@@ -651,6 +650,31 @@ describe("main-sequence motion + vergence (U6 — R10/R12/R13/R17)", () => {
     it("holds the origin before launch", () => {
       const s = launchSaccade({ x: 1, y: 2 }, { x: 9, y: 0 }, 100, day, REF);
       expect(poseAt(s, 50)).toEqual({ x: 1, y: 2 });
+    });
+  });
+
+  describe("return-to-rest easing (gentle disengage, 2026-07-13)", () => {
+    it("eases from the current pose to rest over restReturnMs, no overshoot", () => {
+      const from = { x: 6, y: -4 };
+      const s = launchRest(from, 100, day.restReturnMs);
+      expect(s.dur).toBe(day.restReturnMs);
+      expect(s.overshoot).toBe(0);
+      expect(s.settle).toBe(0);
+      expect(poseAt(s, 100)).toEqual(from); // holds the origin at launch
+      expect(poseAt(s, 100 + day.restReturnMs)).toEqual({ x: 0, y: 0 }); // lands on rest
+    });
+
+    it("is slower than a reflexive saccade of the same amplitude", () => {
+      const from = { x: 1.4, y: 0 }; // ~max travel on the 340px hero
+      const reflexive = launchSaccade(from, { x: 0, y: 0 }, 0, day, REF).dur;
+      const gentle = launchRest(from, 0, day.restReturnMs).dur;
+      expect(gentle).toBeGreaterThan(reflexive);
+    });
+
+    it("night returns more slowly than day (drowsier temperament)", () => {
+      expect(GAZE_TEMPERAMENT.night.restReturnMs).toBeGreaterThan(
+        GAZE_TEMPERAMENT.day.restReturnMs,
+      );
     });
   });
 
