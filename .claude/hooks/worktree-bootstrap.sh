@@ -54,16 +54,17 @@ trap 'rmdir "$LOCK" 2>/dev/null || true' EXIT
 
 # --- Bounded install ------------------------------------------------------
 echo "worktree-bootstrap: installing dependencies (pnpm install --frozen-lockfile)…" >&2
-# `timeout` may be absent on a minimal PATH; fall back to an unbounded install
-# rather than skipping the feature entirely (Homebrew provides timeout/gtimeout).
+# `timeout` bounds the install so a stall can never hang session start. If it is
+# absent (a minimal PATH), honour the bounded contract by SKIPPING rather than
+# running unbounded — fail soft, let the human install. Homebrew provides
+# timeout/gtimeout on this machine, so this path is an edge case.
 TIMEOUT_BIN="$(command -v timeout || command -v gtimeout || true)"
-if [ -n "$TIMEOUT_BIN" ]; then
-  "$TIMEOUT_BIN" 180 pnpm install --frozen-lockfile --prefer-offline >"$LOG" 2>&1
-  rc=$?
-else
-  pnpm install --frozen-lockfile --prefer-offline >"$LOG" 2>&1
-  rc=$?
+if [ -z "$TIMEOUT_BIN" ]; then
+  echo "WORKTREE BOOTSTRAP SKIPPED — no 'timeout' binary to bound the install; run 'pnpm install --frozen-lockfile' manually (brew install coreutils provides timeout)."
+  exit 0
 fi
+"$TIMEOUT_BIN" 180 pnpm install --frozen-lockfile --prefer-offline >"$LOG" 2>&1
+rc=$?
 
 if [ "$rc" -eq 0 ]; then
   echo "worktree-bootstrap: dependencies ready." >&2

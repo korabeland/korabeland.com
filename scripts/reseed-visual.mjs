@@ -74,9 +74,11 @@ if (PROMOTE) {
         "  The renders may be stale. Re-run `pnpm reseed:visual`, or pass --force to promote anyway.",
     );
   }
-  // Rename each approved PNG into the committed baselines. Rename overwrites in
-  // place; it never `rm`s a committed file, so `git checkout -- tests/visual/baselines`
-  // restores any prior state.
+  // Promote each approved PNG into the committed baselines. Each rename is a
+  // per-file atomic overwrite (never an rm); the set is not transactional, but
+  // the baselines are git-tracked, so an interrupted promote leaves at worst a
+  // partially-updated set that `git checkout -- tests/visual/baselines` fully
+  // restores — nothing is lost.
   let promoted = 0;
   for (const name of staged) {
     renameSync(join(PENDING_DIR, name), join(BASELINE_DIR, name));
@@ -157,18 +159,28 @@ for (const name of pngsIn(PENDING_DIR)) {
     threshold: PIXELMATCH_THRESHOLD,
   });
   const ratio = mismatch / (a.width * a.height);
-  if (ratio > DIFF_THRESHOLD) {
-    writeFileSync(join(PENDING_DIFF_DIR, `diff_${name}`), PNG.sync.write(diff));
-    rows.push({ name, status: "changed", ratio });
-  } else {
-    rows.push({ name, status: "unchanged", ratio });
+  if (mismatch === 0) {
+    rows.push({ name, status: "identical", ratio });
+    continue;
   }
+  // Any nonzero difference gets an overlay so a reviewer can inspect it before
+  // promoting — promote overwrites every render, so "sub-threshold" must not mean
+  // "unreviewable". `changed` clears the test's regression threshold; `noise` is
+  // below it (macOS pixel jitter) but is still shown, not silently accepted.
+  writeFileSync(join(PENDING_DIFF_DIR, `diff_${name}`), PNG.sync.write(diff));
+  rows.push({
+    name,
+    status: ratio > DIFF_THRESHOLD ? "changed" : "noise",
+    ratio,
+  });
 }
 
 rows.sort((x, y) => y.ratio - x.ratio);
 const changed = rows.filter((r) => r.status === "changed");
+const noise = rows.filter((r) => r.status === "noise");
 const resized = rows.filter((r) => r.status === "resized");
 const added = rows.filter((r) => r.status === "new");
+const identical = rows.filter((r) => r.status === "identical");
 
 console.log(
   "\n── Reseed diff report ─────────────────────────────────────────",
@@ -181,11 +193,14 @@ for (const r of rows) {
 }
 console.log("───────────────────────────────────────────────────────────────");
 console.log(
-  `  ${rows.length} render(s): ${changed.length} changed, ${resized.length} resized, ` +
-    `${added.length} new, ${rows.length - changed.length - resized.length - added.length} unchanged.`,
+  `  ${rows.length} render(s): ${changed.length} changed, ${noise.length} noise ` +
+    `(sub-${DIFF_THRESHOLD * 100}%), ${resized.length} resized, ${added.length} new, ` +
+    `${identical.length} identical.`,
 );
-if (changed.length > 0) {
-  console.log(`  Diff overlays for changed renders: ${PENDING_DIFF_DIR}`);
+if (changed.length + noise.length > 0) {
+  console.log(
+    `  Diff overlays for every render that differs at all: ${PENDING_DIFF_DIR}`,
+  );
 }
 
 writeFileSync(
@@ -196,6 +211,7 @@ writeFileSync(
       generatedAt: new Date().toISOString(),
       total: rows.length,
       changed: changed.map((r) => r.name),
+      noise: noise.map((r) => r.name),
       resized: resized.map((r) => r.name),
       new: added.map((r) => r.name),
     },
@@ -205,7 +221,9 @@ writeFileSync(
 );
 
 console.log(
-  "\n  Review every changed/resized/new render above (side-by-side: the committed\n" +
-    "  baseline in tests/visual/baselines/ vs the staged PNG in tests/visual/.reseed-pending/).\n" +
+  "\n  Review every render that differs at all — changed, noise, resized, new —\n" +
+    "  using the overlays above and the side-by-side (committed baseline in\n" +
+    "  tests/visual/baselines/ vs the staged PNG in tests/visual/.reseed-pending/).\n" +
+    "  --promote overwrites every render, so a diff you don't inspect ships unreviewed.\n" +
     "  When they are all intended, promote with:  pnpm reseed:visual --promote\n",
 );

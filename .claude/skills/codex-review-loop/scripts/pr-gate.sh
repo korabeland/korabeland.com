@@ -49,7 +49,10 @@ deny() {
 docs_only_classify() {
   git -C "$REPO" fetch --quiet origin main 2>/dev/null || return 1
   local base files f
-  base="$(git -C "$REPO" merge-base origin/main HEAD 2>/dev/null)" || return 1
+  # Compare against the just-fetched tip via FETCH_HEAD — `git fetch origin main`
+  # updates FETCH_HEAD reliably but does not always advance refs/remotes/origin/main,
+  # and a stale ref would weaken the fail-closed guarantee.
+  base="$(git -C "$REPO" merge-base FETCH_HEAD HEAD 2>/dev/null)" || return 1
   [ -n "$base" ] || return 1
   files="$(git -C "$REPO" diff --name-only "$base" HEAD 2>/dev/null)" || return 1
   [ -n "$files" ] || return 1   # empty diff is not a docs-only skip
