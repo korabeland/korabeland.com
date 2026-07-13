@@ -281,6 +281,12 @@ const rigVariants: RigVariant[] = gaze
           // Reveal at rest — rest parity makes this imperceptible (R3/R11).
           rig?.classList.add("is-live");
 
+          // Temperament is pinned to night globally (2026-07-13): the eye
+          // behaviour no longer tracks the day/night palette. Only the eye
+          // GEOMETRY still follows the visible portrait (RIG_MANIFEST via
+          // currentShift below), so the pupils stay aligned on either variant.
+          const temperament = gazeTemperamentFor("night");
+
           const rest = (): Saccade => ({
             from: { x: 0, y: 0 },
             to: { x: 0, y: 0 },
@@ -292,13 +298,16 @@ const rigVariants: RigVariant[] = gaze
           let machine: GazeMachine = gazeReduce(
             initGaze(true),
             { type: "decoded" },
-            gazeTemperamentFor(currentShift()),
+            temperament,
           );
           const sac: Record<"left" | "right", Saccade> = {
             left: rest(),
             right: rest(),
           };
           let cursor: Point | null = null;
+          // A hovered social control (below the proximity band) the eyes glance
+          // at directly — wins over cursor tracking while set (2026-07-13).
+          let lookTarget: Point | null = null;
           let raf = 0;
           let paused = false;
           let last = 0;
@@ -315,18 +324,28 @@ const rigVariants: RigVariant[] = gaze
             return { left: b.left, top: b.top, width: b.width, height: b.height };
           };
 
-          // Per-eye desired offset px for the machine's current target (or rest),
-          // relaunched from the current sampled pose so motion is continuous.
+          // Per-eye desired offset px for the current target (or rest),
+          // relaunched from the current sampled pose so motion is continuous. A
+          // hovered social control (lookTarget) wins over cursor tracking and is
+          // glanced at with full travel — it sits below the proximity band,
+          // where the distance attenuation would otherwise zero the reach.
           const sync = (now: number) => {
-            const temp = gazeTemperamentFor(currentShift());
             const r = liveRect();
-            const refPx = RIG.travelCeiling * r.width * temp.travelScale;
+            const refPx = RIG.travelCeiling * r.width * temperament.travelScale;
+            const target =
+              lookTarget ??
+              (machine.state === "TRACKING" ? machine.target : null);
             let dl: Point = { x: 0, y: 0 };
             let dr: Point = { x: 0, y: 0 };
-            if (machine.state === "TRACKING" && machine.target) {
-              const dc = centerDistance(machine.target, r);
-              const reach =
-                refPx * attenuation(dc, halfWidth(r), bandOuterRadius(r));
+            if (target) {
+              const reach = lookTarget
+                ? refPx * RIG.hoverDepthScale
+                : refPx *
+                  attenuation(
+                    centerDistance(target, r),
+                    halfWidth(r),
+                    bandOuterRadius(r),
+                  );
               const geo = RIG_MANIFEST[shiftBasename[currentShift()]];
               const lc: Point = {
                 x: r.left + geo.left.cx * r.width,
@@ -336,7 +355,7 @@ const rigVariants: RigVariant[] = gaze
                 x: r.left + geo.right.cx * r.width,
                 y: r.top + geo.right.cy * r.width,
               };
-              const v = vergedOffsets(lc, rc, machine.target, reach);
+              const v = vergedOffsets(lc, rc, target, reach);
               dl = v.left;
               dr = v.right;
             }
@@ -355,24 +374,17 @@ const rigVariants: RigVariant[] = gaze
               return;
             if (machine.snap) {
               sac[side] = { from: to, to, t0: now, dur: 1, overshoot: 0, settle: 0 };
+            } else if (lookTarget) {
+              // Deliberate glance toward a hovered control: a normal reflexive
+              // saccade, whatever the cursor-driven machine state happens to be.
+              sac[side] = launchSaccade(poseAt(s, now), to, now, temperament, refPx);
             } else if (machine.state === "CONTACT") {
               // Returning to eye contact (cursor settled or left the band): ease
               // back over restReturnMs — slower than a reflexive saccade, so the
               // eyes relax to rest rather than snap (2026-07-13).
-              sac[side] = launchRest(
-                poseAt(s, now),
-                now,
-                gazeTemperamentFor(currentShift()).restReturnMs,
-              );
+              sac[side] = launchRest(poseAt(s, now), now, temperament.restReturnMs);
             } else {
-              const cur = poseAt(s, now);
-              sac[side] = launchSaccade(
-                cur,
-                to,
-                now,
-                gazeTemperamentFor(currentShift()),
-                refPx,
-              );
+              sac[side] = launchSaccade(poseAt(s, now), to, now, temperament, refPx);
             }
           };
 
@@ -380,7 +392,6 @@ const rigVariants: RigVariant[] = gaze
             raf = 0;
             // Δt is clamped so a resumed background tab can't jolt the drift phase.
             last = last === 0 ? now : last + clampDt(now - last);
-            const temp = gazeTemperamentFor(currentShift());
             // Drive fixation classification for a stationary cursor: while
             // tracking, re-evaluate from the last position so the window/dwell
             // can complete and settle to contact without a fresh pointer event.
@@ -395,8 +406,8 @@ const rigVariants: RigVariant[] = gaze
               const off = poseAt(sac[side], now);
               let x = off.x;
               let y = off.y;
-              if (machine.state === "CONTACT") {
-                const d = microDrift(last, temp, false);
+              if (machine.state === "CONTACT" && !lookTarget) {
+                const d = microDrift(last, temperament, false);
                 x += d.x;
                 y += d.y;
               }
@@ -410,7 +421,7 @@ const rigVariants: RigVariant[] = gaze
           };
 
           const dispatch = (e: GazeEvent) => {
-            machine = gazeReduce(machine, e, gazeTemperamentFor(currentShift()));
+            machine = gazeReduce(machine, e, temperament);
           };
 
           const onMove = (ev: MouseEvent) => {
@@ -503,6 +514,24 @@ const rigVariants: RigVariant[] = gaze
           reduceMotion.addEventListener("change", (e) => {
             if (e.matches) disarm();
           });
+
+          // Social-row glances (2026-07-13): hovering a tagged control — the
+          // four links under the portrait, all below the proximity band — pulls
+          // the gaze onto it, and leaving relaxes back to rest. The centre is
+          // read live on each enter so scroll/resize between hovers can't stale it.
+          for (const el of document.querySelectorAll<HTMLElement>(
+            "[data-gaze-target]",
+          )) {
+            el.addEventListener("mouseenter", () => {
+              const b = el.getBoundingClientRect();
+              lookTarget = { x: b.left + b.width / 2, y: b.top + b.height / 2 };
+              sync(performance.now());
+            });
+            el.addEventListener("mouseleave", () => {
+              lookTarget = null;
+              sync(performance.now());
+            });
+          }
 
           runLoop();
         }

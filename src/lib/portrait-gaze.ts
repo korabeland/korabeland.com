@@ -181,6 +181,12 @@ export const RIG = {
   /** Max inter-eye convergence angle (radians) before the vergence cap binds —
    *  keeps a near target from going comically cross-eyed (U6, tunable). */
   maxVergenceRad: 0.3,
+  /** Extra depth on a deliberate social-link glance (hover): the reach is
+   *  scaled by this above the cursor-tracking travel, so hovering a control
+   *  reads as a slightly more committed look (2026-07-13, tunable). Kept
+   *  ≤ 1/night-travelScale (≈1.54) so the night hover stays inside the
+   *  day-scale envelope the apertures are already sized to contain. */
+  hoverDepthScale: 1.4,
 } as const;
 
 /** True when a point (width-fractions, relative to the image box) is inside an
