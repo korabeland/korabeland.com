@@ -2,7 +2,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(dirname "${SCRIPT_DIR}")"
+ROOT_DIR="$(git -C "${SCRIPT_DIR}" rev-parse --show-toplevel)"
 
 cd "${ROOT_DIR}"
 
@@ -18,7 +18,7 @@ if ! curl -s --max-time 3 http://localhost:1234/v1/models > /dev/null 2>&1; then
   echo "     1. Load the model: Qwen3.6-35B-A3B-4bit (MLX runtime)"
   echo "     2. Enable the Local Server on port 1234"
   echo "     3. Re-run this script once the server is ready:"
-  echo "        bash scripts/start-day.sh"
+  echo "        bash scripts/workflow/start-day.sh"
   echo ""
   echo "     Ollama is optional — start manually if needed: ollama serve"
   exit 0

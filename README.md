@@ -38,7 +38,7 @@ nvm use       # activates Node 22
 mise install && mise use
 
 # 3. Run the start-day script
-bash scripts/start-day.sh
+bash scripts/workflow/start-day.sh
 ```
 
 Once the health check is green, you're ready to work.
@@ -75,11 +75,11 @@ For the codebase layout (directory tree, stack, build commands, file-ownership r
 - `pnpm verify` — Biome + `tsc --noEmit` + `astro check`
 - `pnpm test` — Vitest (non-visual, non-E2E)
 - `pnpm test:visual` — Playwright visual + E2E. Local pixelmatch baselines are advisory; the blocking visual gate is Chromatic in CI
-- `pnpm run audit` — Lighthouse CI, desktop + mobile profiles
+- `pnpm run lighthouse` — Lighthouse CI, desktop + mobile profiles
 - `pnpm audit --prod --audit-level=high` — dependency security audit, blocking in CI
 - `pnpm build` — production build
 
-See [`AGENTS.md`](AGENTS.md) §2 for the full breakdown, including `pnpm verify:all` (chains verify + test + test:visual + audit).
+See [`AGENTS.md`](AGENTS.md) §2 for the full breakdown, including `pnpm verify:all` (chains verify + test + test:visual + lighthouse).
 
 `package.json#engines` pins the Vercel build image to the Node 22 line declared in `.nvmrc` (Vercel was auto-selecting Node 24 before this was added) — verified via preview deployment on the next PR.
 

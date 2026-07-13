@@ -2,7 +2,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(dirname "${SCRIPT_DIR}")"
+ROOT_DIR="$(git -C "${SCRIPT_DIR}" rev-parse --show-toplevel)"
 
 cd "${ROOT_DIR}"
 

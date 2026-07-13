@@ -1,5 +1,5 @@
 {
-  "_comment": "The literal 4321 URLs are intentional and CI-only. `pnpm run audit` runs this against static-preview.mjs on a fresh runner with its own server, so no collision with a concurrent dev worktree is possible. Do NOT swap these for the DEV_PORT contract (tests/helpers/port.ts) — that exists for the Playwright suite where concurrent worktrees collide; here it would only add moving parts. See docs/plans/2026-07-13-workflow-optimization-plan.md (Finding 2, Out of scope).",
+  "_comment": "The literal 4321 URLs are intentional and CI-only. `pnpm run lighthouse` runs this against static-preview.mjs on a fresh runner with its own server, so no collision with a concurrent dev worktree is possible. Do NOT swap these for the DEV_PORT contract (tests/helpers/port.ts) — that exists for the Playwright suite where concurrent worktrees collide; here it would only add moving parts. See docs/plans/2026-07-13-workflow-optimization-plan.md (Finding 2, Out of scope).",
   "ci": {
     "collect": {
       "url": [

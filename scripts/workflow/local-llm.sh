@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Fallback: pipe a prompt to LM Studio and print the response text.
-# Usage: echo "What is 2+2?" | bash scripts/local-llm.sh
+# Usage: echo "What is 2+2?" | bash scripts/workflow/local-llm.sh
 set -euo pipefail
 
 PROMPT=$(cat)
