@@ -1,1 +1,2 @@
-pnpm verify
+# Stale-base guard runs first: a block means `pnpm verify` never starts.
+bash scripts/check-base-freshness.sh && pnpm verify
