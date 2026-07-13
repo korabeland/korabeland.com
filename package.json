@@ -21,6 +21,7 @@
     "pretest": "pnpm gen:eye-rig",
     "test": "vitest run",
     "test:visual": "playwright test",
+    "reseed:visual": "node scripts/reseed-visual.mjs",
     "audit": "pnpm build && lhci autorun && lhci autorun --config=.lighthouserc.mobile.json",
     "verify:all": "pnpm verify && pnpm test && pnpm test:visual && pnpm run audit"
   },
