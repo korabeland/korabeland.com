@@ -45,4 +45,21 @@ deny() {
 MARKED_HEAD="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("head",""))' "$MARKER" 2>/dev/null || echo "")"
 [ "$MARKED_HEAD" = "$HEAD" ] || deny "Marker records $MARKED_HEAD but HEAD is $HEAD — code changed since the last review."
 
+# Codex-authored branches (a commit carries the codex-build trailer) can't be primarily
+# reviewed by codex — that's grading its own homework. Such a branch must be reviewed by
+# Claude (code-review-and-quality), which writes the marker with "reviewer":"claude".
+# Detection is trailer-parsed (not `--grep`, which matches prose mentions of the trailer)
+# and case-insensitive (the repo uses mixed Co-Authored-By / Co-authored-by casing).
+# Refresh origin/main first; a stale base ref makes the range wrong. Offline is non-fatal:
+# fall back to the origin/main on disk. The trailer contract is defined canonically in
+# ~/.claude/skills/codex-build/SKILL.md — this is a copy of the detection line.
+git -C "$REPO" fetch --quiet origin main 2>/dev/null || true
+CODEX_AUTHORED="$(git -C "$REPO" log origin/main..HEAD \
+  --format='%(trailers:key=Co-authored-by,valueonly)' 2>/dev/null \
+  | grep -qi 'codex@openai.com' && echo yes || echo no)"
+if [ "$CODEX_AUTHORED" = "yes" ]; then
+  REVIEWER="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("reviewer",""))' "$MARKER" 2>/dev/null || echo "")"
+  [ "$REVIEWER" = "claude" ] || deny "This branch has Codex-authored commits, so Codex cannot be the primary reviewer (marker reviewer='${REVIEWER:-<none>}'). Run the code-review-and-quality (Claude) review, which writes the marker with reviewer=claude, then retry."
+fi
+
 exit 0
