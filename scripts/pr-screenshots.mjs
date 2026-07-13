@@ -18,7 +18,11 @@ const VIEWPORTS = [
   { width: 1920, height: 1080, name: "1920" },
 ];
 
-const BASE_URL = process.env.BASE_URL || "http://localhost:4321";
+// Honour the DEV_PORT contract (then legacy PORT, then 4321) so a standalone
+// run targets the same dev server the rest of the tooling uses; an explicit
+// BASE_URL still wins.
+const PORT = process.env.DEV_PORT ?? process.env.PORT ?? 4321;
+const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
 const OUTPUT_DIR = process.argv[2] || "public/pr-previews/screenshots";
 
 mkdirSync(OUTPUT_DIR, { recursive: true });
