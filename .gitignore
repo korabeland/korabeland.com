@@ -51,6 +51,10 @@ public/pr-previews/
 # Visual test diffs (baselines are committed, diffs are ephemeral)
 tests/visual/diffs/
 
+# Visual reseed staging — `pnpm reseed:visual` regenerates baselines here for
+# review before an explicit `--promote` into tests/visual/baselines/ (Finding 5).
+tests/visual/.reseed-pending/
+
 # Generated PR description (local, used by /open-pr command)
 .pr-description.md
 

@@ -155,6 +155,14 @@ blocks `gh pr create` unless a fresh marker matches the current HEAD. So if this
 is skipped, or HEAD moved after it ran, PR creation is refused with a message telling
 you to run this skill. Deliberate override: `CODEX_GATE_OFF=1`.
 
+**Docs-only auto-pass.** The gate short-circuits for a branch whose entire diff
+versus `origin/main` matches the safe-path allowlist (`docs/**/*.md`, `README.md`,
+root-level `*.md`) — it writes the marker itself (recording the classified file
+list) and lets the PR through without running this loop. The classification is
+**fail-closed**: any code file, any non-allowlisted path, an unresolved diff base,
+or an offline fetch forces the full review. So you never need to run the loop for a
+pure docs branch, and you can't accidentally skip it for a code change.
+
 ## Files
 
 - `scripts/codex-review.sh` — one read-only codex review pass → findings JSON.

@@ -1,9 +1,13 @@
 import { defineConfig } from "@playwright/test";
+// Single DEV_PORT contract — one place decides the dev-server port so a second
+// worktree can run the suite on a non-colliding port (DEV_PORT=4399 …). See
+// docs/plans/2026-07-13-workflow-optimization-plan.md (Finding 2).
+import { ORIGIN, PORT } from "./tests/helpers/port";
 
 export default defineConfig({
   testDir: "./tests",
   use: {
-    baseURL: "http://localhost:4321",
+    baseURL: ORIGIN,
     // Emulate prefers-reduced-motion for every project so animation-driven
     // surfaces (breathing status dots, hero-headline rotation, metric
     // count-up) render their static end-state. This keeps screenshots
@@ -20,7 +24,7 @@ export default defineConfig({
       cookies: [],
       origins: [
         {
-          origin: "http://localhost:4321",
+          origin: ORIGIN,
           localStorage: [{ name: "korab-shift", value: "night" }],
         },
       ],
@@ -65,7 +69,7 @@ export default defineConfig({
           cookies: [],
           origins: [
             {
-              origin: "http://localhost:4321",
+              origin: ORIGIN,
               localStorage: [{ name: "korab-shift", value: "day" }],
             },
           ],
@@ -103,8 +107,12 @@ export default defineConfig({
   // used by Lighthouse (see .lighthouserc.json, a separate config) can't
   // serve them — it 404s routes that work fine under real SSR.
   webServer: {
-    command: "pnpm dev",
-    url: "http://localhost:4321",
+    // Pass the port through to `astro dev` (whose own default is 4321) so the
+    // whole suite honours DEV_PORT — the dev server, baseURL, and storage
+    // origins all resolve to the same PORT/ORIGIN, letting a second worktree
+    // run on a non-colliding port.
+    command: `pnpm dev --port ${PORT}`,
+    url: ORIGIN,
     reuseExistingServer: !process.env.CI,
     timeout: 120000,
   },

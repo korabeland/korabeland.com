@@ -20,7 +20,9 @@ import { gzipSync } from "node:zlib";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const ROOT = resolve(__dirname, "..", "dist", "client");
-const PORT = Number(process.env.PORT ?? 4321);
+// DEV_PORT is the single-port contract shared with the Playwright suite; PORT
+// stays supported as the older override, 4321 as the default.
+const PORT = Number(process.env.DEV_PORT ?? process.env.PORT ?? 4321);
 
 const MIME = {
   ".html": "text/html; charset=utf-8",

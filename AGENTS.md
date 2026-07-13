@@ -60,7 +60,8 @@ src/content/
 - `pnpm build` — production build (prebuild hooks: `gen-trail-register.ts` + `gen-shift-log.ts` + `gen-hero-variants.ts`; the last also runs on `predev`)
 - `pnpm verify` — Biome + `tsc --noEmit` + `astro check` (`.astro` frontmatter)
 - `pnpm test` — Vitest (non-visual, non-E2E)
-- `pnpm test:visual` — Playwright visual + E2E. Local pixelmatch baselines are **advisory**; the blocking visual gate is Chromatic in CI — see `docs/decisions/2026-07-10-visual-approval-policy.md`. Never delete/blind-reseed a baseline to go green.
+- `pnpm test:visual` — Playwright visual + E2E. Local pixelmatch baselines are **advisory**; the blocking visual gate is Chromatic in CI — see `docs/decisions/2026-07-10-visual-approval-policy.md`. Never delete/blind-reseed a baseline to go green. The suite honours `DEV_PORT` (default 4321) so a second worktree can run it on a non-colliding port: `DEV_PORT=4399 pnpm test:visual`.
+- `pnpm reseed:visual` — staged baseline reseed. Regenerates every local baseline into a gitignored staging dir for review (the committed baselines are untouched); after reviewing each diff, `pnpm reseed:visual --promote` moves the approved renders in atomically by rename. Use this instead of hand-deleting baselines.
 - `pnpm run audit` — Lighthouse CI, desktop (`.lighthouserc.json`) + mobile (`.lighthouserc.mobile.json`) profiles. Not to be confused with bare `pnpm audit --prod` (pnpm's built-in dependency security audit, a blocking CI step).
 - `pnpm verify:all` — chains all four; must pass before any PR is opened
 
@@ -143,6 +144,7 @@ Korab works this repo solo. `main`'s branch protection has no required-approving
 - `Devin Review` genuinely gates on completion (`pending` → `success`), not just a static badge — merge is blocked until it's actually run. It does **not** gate on severity: it goes green even when it flagged real bugs.
 - Before merging, read Devin's review comments. Fix genuine bugs and regressions — that's non-negotiable. Cosmetic/style suggestions can be deferred or explicitly declined.
 - Once `verify-all` and `Devin Review` are both green, merge normally: `gh pr merge --squash`. No `--admin` needed.
+- **After pushing, watch CI without polling.** Run `gh pr checks --watch` as a background task — it blocks until every check settles, then exits, so you never sleep-then-poll in a loop (`sleep N; gh pr checks` retries are the anti-pattern). Repo auto-merge is intentionally left disabled (2026-07-13 decision): merge deliberately once checks are green rather than `gh pr merge --auto`.
 
 ---
 
@@ -157,6 +159,6 @@ When a change matches a trigger below, the "required work" column is not optiona
 | New or replaced image asset | Responsive delivery via `scripts/gen-hero-variants.ts` conventions (never astro:assets/`<Image>` for `public/` assets — the Vercel imageService ignores width/format requests); explicit dimensions; alt text; ≤200 KB delivered variant (`docs/decisions/2026-07-10-image-delivery-budget.md`) | `tests/e2e/hero-delivery.spec.ts` network asserts + CI Lighthouse LCP/CLS |
 | Shared markup/state appearing in a second surface | Reuse the existing owner — component catalogue in `docs/design/components.md` (`ProjectLedger`, `Portrait`, `StatusChip`, `src/lib/status.ts`, `src/lib/shift.ts`) — or extract one; an unavoidable duplicate gets a parity test (`tests/shift-parity.test.ts` is the template) | Code-review criterion + existing sync/parity tests |
 | Runtime or onboarding doc (`.nvmrc`, `.tool-versions`, `engines`, README) | `.nvmrc` is canonical; update mirrors in the same commit | `tests/runtime-sync.test.ts` |
-| Visual output changes | Follow the approval policy: the Chromatic GitHub App's `UI Tests` status is the blocking gate, approve deliberate diffs in its UI (flips green with no CI re-run); local baselines reseed only after visual review of every diff | Required `UI Tests` status (Chromatic App) + the `chromatic` publish job + `docs/decisions/2026-07-10-visual-approval-policy.md` |
+| Visual output changes | Follow the approval policy: the Chromatic GitHub App's `UI Tests` status is the blocking gate, approve deliberate diffs in its UI (flips green with no CI re-run); local baselines reseed only after visual review of every diff — use `pnpm reseed:visual` → review → `--promote`, never hand-delete | Required `UI Tests` status (Chromatic App) + the `chromatic` publish job + `docs/decisions/2026-07-10-visual-approval-policy.md` |
 
 Commands referenced above are defined once in §2; single-source contracts in §6a.
