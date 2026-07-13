@@ -199,10 +199,11 @@ const rigVariants: RigVariant[] = gaze
         clampDt,
         gazeReduce,
         gazeTemperamentFor,
-        halfDiagonal,
+        halfWidth,
         inBand,
         inEllipse,
         initGaze,
+        launchRest,
         launchSaccade,
         microDrift,
         poseAt,
@@ -325,7 +326,7 @@ const rigVariants: RigVariant[] = gaze
             if (machine.state === "TRACKING" && machine.target) {
               const dc = centerDistance(machine.target, r);
               const reach =
-                refPx * attenuation(dc, halfDiagonal(r), bandOuterRadius(r));
+                refPx * attenuation(dc, halfWidth(r), bandOuterRadius(r));
               const geo = RIG_MANIFEST[shiftBasename[currentShift()]];
               const lc: Point = {
                 x: r.left + geo.left.cx * r.width,
@@ -354,6 +355,15 @@ const rigVariants: RigVariant[] = gaze
               return;
             if (machine.snap) {
               sac[side] = { from: to, to, t0: now, dur: 1, overshoot: 0, settle: 0 };
+            } else if (machine.state === "CONTACT") {
+              // Returning to eye contact (cursor settled or left the band): ease
+              // back over restReturnMs — slower than a reflexive saccade, so the
+              // eyes relax to rest rather than snap (2026-07-13).
+              sac[side] = launchRest(
+                poseAt(s, now),
+                now,
+                gazeTemperamentFor(currentShift()).restReturnMs,
+              );
             } else {
               const cur = poseAt(s, now);
               sac[side] = launchSaccade(

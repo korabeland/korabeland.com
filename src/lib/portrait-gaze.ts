@@ -198,9 +198,12 @@ export const GAZE = {
    *  night scales it down via temperament). Subtle by intent — kept within
    *  `irisRadius - pupilRadius` so the disc stays inside the painted iris. */
   travelFraction: 0.005,
-  /** Proximity band = portrait half-diagonal + this many px. Gaze engages
-   *  inside the band and cuts off beyond it (R1). */
-  bandPadding: 78,
+  /** Trigger-band halo (px): gaze engages within the portrait's inscribed circle
+   *  (radius = half-width) plus this margin, and rests beyond it (R1). Brought in
+   *  2026-07-13 from a half-diagonal + 78px band: that circle reached ~148px past
+   *  each edge; keying off the half-width with a small halo hugs the picture
+   *  (~40px past each edge) so the eyes only react when the cursor is near it. */
+  bandHalo: 40,
   /** Gaze returns to rest after this long without pointer movement (R3). */
   idleMs: 3000,
   /** Attenuation never drops below this inside the band (R1). */
@@ -237,17 +240,17 @@ export function rectCenter(r: Rect): Point {
   return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
 }
 
-/** Half the diagonal of the rect — the base radius of the proximity band. */
-export function halfDiagonal(r: Rect): number {
-  return Math.hypot(r.width, r.height) / 2;
+/** Half the portrait box's width — its inscribed-circle radius (centre to the
+ *  middle of each edge). The box ships square, so this reads the same
+ *  vertically; it is the base the trigger band and the attenuation ramp key off. */
+export function halfWidth(r: Rect): number {
+  return r.width / 2;
 }
 
-/** Outer radius of the proximity band, measured from the portrait centre. */
-export function bandOuterRadius(
-  r: Rect,
-  padding: number = GAZE.bandPadding,
-): number {
-  return halfDiagonal(r) + padding;
+/** Outer radius of the trigger band from the portrait centre: the inscribed
+ *  circle plus a small halo. Gaze engages inside it and rests beyond (R1). */
+export function bandOuterRadius(r: Rect, halo: number = GAZE.bandHalo): number {
+  return halfWidth(r) + halo;
 }
 
 /** True when the point is within the portrait image box (R2 eye-contact). */
@@ -273,17 +276,17 @@ export function inBand(centerDist: number, bandOuter: number): boolean {
 
 /**
  * Distance-attenuated gaze strength (R1): 1 at the portrait boundary
- * (centre distance <= half-diagonal), easing linearly down to `floor` at the
+ * (centre distance <= `innerRadius`), easing linearly down to `floor` at the
  * band's outer edge, and clamped to [floor, 1] throughout. Callers treat a
  * centre distance beyond `bandOuter` as disengaged (see `inBand`).
  */
 export function attenuation(
   centerDist: number,
-  halfDiag: number,
+  innerRadius: number,
   bandOuter: number,
   floor: number = GAZE.attenuationFloor,
 ): number {
-  const span = bandOuter - halfDiag;
+  const span = bandOuter - innerRadius;
   if (span <= 0) return 1;
   // 1 at the portrait boundary, 0 at the band's outer edge; interpolate that
   // across [floor, 1] so strength eases to exactly `floor` at the edge.
@@ -397,6 +400,10 @@ export interface GazeTemperament {
   /** Overshoot fraction on large saccades, and the corrective settle time. */
   overshoot: number;
   settleMs: number;
+  /** Gentle return-to-rest duration (ms): the eyes ease back to eye contact over
+   *  this — slower than a reflexive saccade — when the cursor settles or leaves,
+   *  so disengaging relaxes rather than snaps (2026-07-13, tunable). */
+  restReturnMs: number;
   /** Sub-pixel micro-drift in held contact (amplitude px, rate Hz). */
   microDriftPx: number;
   microDriftHz: number;
@@ -413,6 +420,7 @@ export const GAZE_TEMPERAMENT: Record<Shift, GazeTemperament> = {
     saccadeSlopeMsPerPx: 2.2,
     overshoot: 0.15,
     settleMs: 60,
+    restReturnMs: 220,
     microDriftPx: 0.3,
     microDriftHz: 0.8,
   },
@@ -426,6 +434,7 @@ export const GAZE_TEMPERAMENT: Record<Shift, GazeTemperament> = {
     saccadeSlopeMsPerPx: 3.5,
     overshoot: 0.12,
     settleMs: 90,
+    restReturnMs: 300,
     microDriftPx: 0.3,
     microDriftHz: 0.6,
   },
@@ -702,6 +711,22 @@ export function launchSaccade(
     dur,
     overshoot: large ? temp.overshoot : 0,
     settle: large ? temp.settleMs : 0,
+  };
+}
+
+/** A gentle return-to-rest saccade: eases from `from` back to rest (0,0) over
+ *  `restMs`, with no overshoot or settle, so disengaging to eye contact relaxes
+ *  rather than snaps. Sampled by the same `poseAt` (easeOutCubic) as any saccade;
+ *  `restMs` is the temperament's `restReturnMs`, deliberately slower than a
+ *  reflexive `launchSaccade` jump of the same amplitude (2026-07-13). */
+export function launchRest(from: Point, t0: number, restMs: number): Saccade {
+  return {
+    from,
+    to: { x: 0, y: 0 },
+    t0,
+    dur: Math.max(1, restMs),
+    overshoot: 0,
+    settle: 0,
   };
 }
 
