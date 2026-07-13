@@ -62,7 +62,7 @@ src/content/
 - `pnpm test` — Vitest (non-visual, non-E2E)
 - `pnpm test:visual` — Playwright visual + E2E. Local pixelmatch baselines are **advisory**; the blocking visual gate is Chromatic in CI — see `docs/decisions/2026-07-10-visual-approval-policy.md`. Never delete/blind-reseed a baseline to go green. The suite honours `DEV_PORT` (default 4321) so a second worktree can run it on a non-colliding port: `DEV_PORT=4399 pnpm test:visual`.
 - `pnpm reseed:visual` — staged baseline reseed. Regenerates every local baseline into a gitignored staging dir for review (the committed baselines are untouched); after reviewing each diff, `pnpm reseed:visual --promote` moves the approved renders in atomically by rename. Use this instead of hand-deleting baselines.
-- `pnpm run audit` — Lighthouse CI, desktop (`.lighthouserc.json`) + mobile (`.lighthouserc.mobile.json`) profiles. Not to be confused with bare `pnpm audit --prod` (pnpm's built-in dependency security audit, a blocking CI step).
+- `pnpm run lighthouse` — Lighthouse CI, desktop (`.lighthouserc.json`) + mobile (`.lighthouserc.mobile.json`) profiles. Distinct from bare `pnpm audit --prod` (pnpm's built-in dependency security audit, a blocking CI step) — the two were once both spelled `audit`; the Lighthouse script was renamed to end that collision.
 - `pnpm verify:all` — chains all four; must pass before any PR is opened
 
 **Testing conventions (established 2026-07-05):**

@@ -92,7 +92,7 @@ CHROMATIC_BUILD_URL="https://www.chromatic.com/builds?appId=chpt_c027017076d4f90
 
 # ── 9. Lighthouse ─────────────────────────────────────────────────────────
 echo "▶ Running Lighthouse..."
-pnpm run audit 2>/dev/null || true
+pnpm run lighthouse 2>/dev/null || true
 LHCI_REPORT=$(ls .lighthouseci/lhr-*.json 2>/dev/null | sort | tail -1 || true)
 PERF="—"; A11Y="—"; LCP="—"; CLS="—"
 if [ -n "$LHCI_REPORT" ]; then
