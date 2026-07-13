@@ -22,6 +22,13 @@ export default defineConfig({
   // path (BaseLayout.css + page CSS) before first paint. Inlining trades a
   // slightly larger HTML payload for zero extra round trips.
   build: { inlineStylesheets: "always" },
+  // Dev/preview port. Honour the PORT env var so Claude Code's launch.json
+  // `autoPort` — which communicates its chosen free port ONLY via PORT — makes
+  // `astro dev` actually bind that port. Astro ignores PORT on its own and would
+  // otherwise collide on 4321 between concurrent worktrees. The Playwright suite
+  // passes `--port` explicitly (a CLI flag overrides this); a bare `pnpm dev`
+  // with no PORT still defaults to 4321. See the DEV_PORT contract (Finding 2).
+  server: { port: Number(process.env.PORT) || 4321 },
   trailingSlash: "never",
   // /projects moved to /work in the console redesign (2026-07-03).
   // The two side projects moved to /lab in the work/lab split (2026-07-11);
