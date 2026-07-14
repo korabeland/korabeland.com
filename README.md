@@ -74,6 +74,6 @@ Common tasks:
 | `pnpm test` | Vitest (unit / logic) |
 | `pnpm test:visual` | Playwright visual + E2E + axe |
 | `pnpm run lighthouse` | Lighthouse CI (desktop + mobile) |
-| `pnpm verify:all` | All of the above, chained — the pre-PR gate |
+| `pnpm verify:all` | Chains verify + test + test:visual + lighthouse — the pre-PR gate |
 
 See [`AGENTS.md`](AGENTS.md) §2 for the full command reference and testing conventions. The system's original design notes are in [`docs/setup-prompts/`](docs/setup-prompts/).
