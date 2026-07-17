@@ -23,3 +23,4 @@ None.
 ## Verify
 
 - Final `pnpm verify:all`: pass (Biome + tsc + astro check, 186 Vitest tests, Playwright visual, Lighthouse 3×/3 URLs).
+- Branch was behind `origin/main` at PR time; merged `origin/main` in (conflicts in `AGENTS.md` §7 and `.gitignore`, both additive — resolved keeping all changes), re-ran codex (clean) and `verify:all` (green) on the merged tree.
