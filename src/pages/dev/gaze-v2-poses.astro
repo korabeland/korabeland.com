@@ -1,0 +1,253 @@
+---
+export const prerender = false;
+
+// Dev-only pinned-pose harness for the portrait gaze v2 rig (U8). Renders the
+// per-eye layer sandwich (underlay → sprite → highlight → occluder) forced
+// visible and drift-frozen at a fixed set of gaze poses, per variant, so
+// Chromatic archives a visual record of the composited eye at the envelope
+// extremes — the production hero never shows the rig on the screenshot path
+// (reduced-motion), so this route is the ONLY visual coverage of the brushwork.
+//
+// Deterministic by construction: the poses are computed server-side from the
+// SSOT (RIG + RIG_MANIFEST + the U6 vergence/overshoot math) and baked into
+// inline sprite transforms. No client gate, no JS, no live motion — what the
+// screenshot sees is a static render, identical run to run.
+//
+// Returns 404 in production; robots.txt disallows /dev/ and the sitemap filter
+// excludes it. Night by default; `?shift=day` pins the day variant (the same
+// query override the rest of the site honours).
+
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import {
+  GAZE_TEMPERAMENT,
+  PORTRAIT_VARIANTS,
+  type Point,
+  RIG,
+  RIG_MANIFEST,
+  vergedOffsets,
+} from "../../lib/portrait-gaze";
+import { isValidShift, type Shift } from "../../lib/shift";
+
+if (import.meta.env.PROD) {
+  return new Response("Not found", { status: 404 });
+}
+
+const RIG_LAYERS = ["underlay", "sprite", "highlight", "occluder"] as const;
+// Fixed render width for the harness — close to the real desktop hero (340px)
+// so the record reflects appearance at true scale. The whole page is this wide
+// per cell regardless of viewport, so the capture is viewport-independent.
+const W = 360;
+
+const qShift = Astro.url.searchParams.get("shift");
+const shift: Shift = isValidShift(qShift) ? qShift : "night";
+const variant =
+  PORTRAIT_VARIANTS.find((v) => v.shift === shift) ?? PORTRAIT_VARIANTS[0];
+const basename = variant.basename;
+
+interface RigEyeMeta {
+  boxLeft: number;
+  boxTop: number;
+  boxSize: number;
+  restParity: number;
+}
+const meta: { eyes: Record<string, RigEyeMeta> } = JSON.parse(
+  readFileSync(
+    resolve(
+      process.cwd(),
+      "public/portrait/rig",
+      `${basename}.rig.gen.meta.json`,
+    ),
+    "utf8",
+  ),
+);
+
+const rig = RIG_MANIFEST[basename];
+const temp = GAZE_TEMPERAMENT[shift];
+// Per-eye max reach at the eye (attenuation ≈ 1 there), in px at width W.
+const refPx = RIG.travelCeiling * W * temp.travelScale;
+const eyeCentrePx = (name: "left" | "right"): Point => ({
+  x: rig[name].cx * W,
+  y: rig[name].cy * W,
+});
+
+interface Pose {
+  name: string;
+  left: Point;
+  right: Point;
+}
+const both = (p: Point): { left: Point; right: Point } => ({
+  left: p,
+  right: p,
+});
+// converged-near: a near target just below the brow between the eyes pulls both
+// eyes inward through the real vergence path (with its convergence cap).
+const converged = vergedOffsets(
+  eyeCentrePx("left"),
+  eyeCentrePx("right"),
+  { x: 0.5 * W, y: 0.6 * W },
+  refPx,
+);
+// overshoot-extreme: the transient peak a rightward saccade reaches past its
+// target (main-sequence overshoot) — the worst-case the occluder must contain.
+const over = refPx * (1 + temp.overshoot);
+const POSES: Pose[] = [
+  { name: "rest", ...both({ x: 0, y: 0 }) },
+  { name: "max-left", ...both({ x: -refPx, y: 0 }) },
+  { name: "max-right", ...both({ x: refPx, y: 0 }) },
+  { name: "max-up", ...both({ x: 0, y: -refPx }) },
+  { name: "max-down", ...both({ x: 0, y: refPx }) },
+  { name: "converged-near", left: converged.left, right: converged.right },
+  { name: "overshoot-extreme", ...both({ x: over, y: 0 }) },
+];
+
+const base = `/portrait/${basename}.gen.720.jpg`;
+const layerUrl = (eye: string, layer: string) =>
+  `/portrait/rig/${basename}.${eye}.${layer}.gen.webp`;
+const eyes = ["left", "right"] as const;
+const pct = (n: number) => `${(n * 100).toFixed(3)}%`;
+const restParityLine = eyes
+  .map((e) => `${e} ${meta.eyes[e].restParity}`)
+  .join("  ·  ");
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>gaze v2 — pinned poses ({shift})</title>
+  </head>
+  <body data-poses-ready="false">
+    <main>
+      <header>
+        <strong>gaze v2 — pinned poses</strong>
+        <span class="tag">shift: {shift}</span>
+        <span class="tag">width: {W}px</span>
+        <span class="tag">refPx: {refPx.toFixed(2)}</span>
+        <span class="tag">rest-parity mean|Δ|/255: {restParityLine}</span>
+        <nav>
+          <a href="/dev/gaze-v2-poses">night</a> ·
+          <a href="/dev/gaze-v2-poses?shift=day">day</a>
+        </nav>
+      </header>
+
+      <div class="grid" data-pose-grid>
+        {
+          POSES.map((pose) => (
+            <figure class="cell">
+              <div class="portrait" style={`width:${W}px;height:${W}px`}>
+                <img class="base" src={base} width={W} height={W} alt="" />
+                {eyes.map((eye) => {
+                  const m = meta.eyes[eye];
+                  const off = pose[eye];
+                  return (
+                    <div
+                      class="rig-eye"
+                      style={`left:${pct(m.boxLeft)};top:${pct(m.boxTop)};width:${pct(m.boxSize)}`}
+                    >
+                      {RIG_LAYERS.map((layer) => (
+                        <img
+                          class={`layer ${layer}`}
+                          src={layerUrl(eye, layer)}
+                          alt=""
+                          style={
+                            layer === "sprite"
+                              ? `transform:translate(${off.x.toFixed(2)}px, ${off.y.toFixed(2)}px)`
+                              : undefined
+                          }
+                        />
+                      ))}
+                    </div>
+                  );
+                })}
+              </div>
+              <figcaption>{pose.name}</figcaption>
+            </figure>
+          ))
+        }
+      </div>
+    </main>
+
+    <script>
+      // Flip a page-level flag once every layer image has decoded, so the visual
+      // spec can wait on a deterministic readiness signal (no motion, no gate).
+      const imgs = Array.from(document.querySelectorAll<HTMLImageElement>("img"));
+      Promise.all(
+        imgs.map((img) =>
+          img.complete && img.naturalWidth > 0
+            ? Promise.resolve()
+            : img
+                .decode()
+                .catch(() => new Promise((r) => img.addEventListener("load", r, { once: true }))),
+        ),
+      ).then(() => {
+        document.body.dataset.posesReady = "true";
+      });
+    </script>
+
+    <style>
+      /* Dev-only: keep the injected Astro toolbar out of the archived capture. */
+      :global(astro-dev-toolbar) {
+        display: none;
+      }
+      body {
+        margin: 0;
+        padding: 1.25rem;
+        background: #14110d;
+        color: #e9e2d6;
+        font-family: ui-monospace, "JetBrains Mono", monospace;
+      }
+      header {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem 1rem;
+        align-items: baseline;
+        margin-bottom: 1.25rem;
+        font-size: 0.8rem;
+      }
+      .tag {
+        opacity: 0.7;
+      }
+      nav a {
+        color: inherit;
+      }
+      .grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+      }
+      .cell {
+        margin: 0;
+      }
+      .portrait {
+        position: relative;
+        line-height: 0;
+        border-radius: 4px;
+        overflow: hidden;
+      }
+      .base {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+      .rig-eye {
+        position: absolute;
+        aspect-ratio: 1;
+      }
+      .layer {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+      figcaption {
+        margin-top: 0.4rem;
+        font-size: 0.75rem;
+        opacity: 0.8;
+        text-align: center;
+      }
+    </style>
+  </body>
+</html>

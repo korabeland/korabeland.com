@@ -36,7 +36,8 @@ const curatedRoutes: SeoRouteCase[] = [
     path: "/work/lead-scoring",
     title:
       "Lead scoring: fixed tiers to a decile model · case study · korab eland",
-    descriptionFragment: "Stopping hundreds of low-value calls",
+    descriptionFragment:
+      "decile model that scores each lead on its own probability",
     ogType: "article",
     hasOgImage: false,
     noindex: false,

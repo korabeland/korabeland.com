@@ -19,6 +19,7 @@ import { dirname, extname, resolve } from "node:path";
 import { createReader } from "@keystatic/core/reader";
 import sharp, { type Sharp } from "sharp";
 import keystaticConfig from "../keystatic.config";
+import { PORTRAIT_VARIANTS } from "../src/lib/portrait-gaze";
 
 const repoRoot = resolve(process.cwd());
 
@@ -318,24 +319,20 @@ interface PortraitSource {
   label: string;
 }
 
-// The two illustrated-portrait sources (src/assets/, imported by
+// The illustrated-portrait sources (src/assets/, imported by
 // Portrait/index.astro's predecessor via astro:assets — dropped in favour of
 // these static variants because imageService: true ignores requested
 // widths/formats for astro:assets sources exactly like it does public/
 // paths). Not Keystatic-managed, so there's no collection to enumerate these
-// from — hardcoded, same as the favicon regeneration note in BaseLayout.astro.
-const PORTRAIT_SOURCES: PortraitSource[] = [
-  {
-    srcFile: resolve(repoRoot, "src/assets/portrait-illustrated.jpg"),
-    basename: "portrait-illustrated",
-    label: "portrait:night",
-  },
-  {
-    srcFile: resolve(repoRoot, "src/assets/portrait-illustrated-day.jpg"),
-    basename: "portrait-illustrated-day",
-    label: "portrait:day",
-  },
-];
+// from; the list lives in src/lib/portrait-gaze.ts (PORTRAIT_VARIANTS) as the
+// single source of truth shared with the gaze rig's eye manifest and its
+// coverage test — add a variant there and both the render pass below and the
+// manifest test pick it up (AE6).
+const PORTRAIT_SOURCES: PortraitSource[] = PORTRAIT_VARIANTS.map((variant) => ({
+  srcFile: resolve(repoRoot, "src/assets", `${variant.basename}.jpg`),
+  basename: variant.basename,
+  label: `portrait:${variant.shift}`,
+}));
 
 async function processPortraitSources(): Promise<void> {
   const outDir = resolve(repoRoot, PORTRAIT_OUT_DIR);

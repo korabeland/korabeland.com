@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { ORIGIN } from "../helpers/port";
 
 // R7 — the night/day shift toggle. This spec manages its own storage state
 // per test rather than relying on inherited pinning: U3 pins `data-time` to
@@ -139,7 +140,7 @@ test.describe("shift toggle — stored night, query override", () => {
       cookies: [],
       origins: [
         {
-          origin: "http://localhost:4321",
+          origin: ORIGIN,
           localStorage: [{ name: "korab-shift", value: "night" }],
         },
       ],

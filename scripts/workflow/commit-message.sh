@@ -2,9 +2,9 @@
 # Generates a conventional commit message for staged changes using Haiku.
 #
 # Usage:
-#   bash scripts/commit-message.sh           — prints message to stdout
-#   git commit -F <(bash scripts/commit-message.sh)
-#   git commit -m "$(bash scripts/commit-message.sh)"
+#   bash scripts/workflow/commit-message.sh           — prints message to stdout
+#   git commit -F <(bash scripts/workflow/commit-message.sh)
+#   git commit -m "$(bash scripts/workflow/commit-message.sh)"
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

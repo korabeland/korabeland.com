@@ -143,6 +143,13 @@ const tools: { label: string; note: string }[] = [
             ))}
           </ol>
         )}
+
+        {/* R14: the one visible confirmation that the portrait's glance is
+            deliberate, for a visitor who noticed it. No hype, no em dash. */}
+        <p class="t-mono small build-log-note">
+          the hero portrait's gaze follows your cursor on purpose: a measured,
+          test-covered rig that rests for reduced-motion and touch.
+        </p>
       </section>
     )}
 
@@ -195,6 +202,16 @@ const tools: { label: string; note: string }[] = [
   .build-log-lede {
     margin: 0 0 var(--s-4);
     color: var(--ink-soft);
+  }
+
+  /* Quiet provenance line closing the build log — recedes to meta weight. */
+  .build-log-note {
+    margin: var(--s-4) 0 0;
+    color: var(--ink-soft);
+    max-width: 62ch;
+    line-height: 1.5;
+    text-transform: none;
+    letter-spacing: 0.01em;
   }
 
   /* Featured latest commit — the most recent ship, enlarged and accent-marked

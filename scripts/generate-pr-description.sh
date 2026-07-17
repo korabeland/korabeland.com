@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Generates .pr-description.md with 6-element review page.
-# Called by .husky/pre-push and /open-pr command.
+# Called by the /open-pr command.
 # Usage: bash scripts/generate-pr-description.sh [--skip-review-page]
 set -euo pipefail
 
@@ -46,12 +46,15 @@ pnpm build 2>&1 | tail -5
 
 # ── 4. Start preview server ───────────────────────────────────────────────
 echo "▶ Starting preview server..."
-PORT=4321 node scripts/static-preview.mjs &
+# Honour the DEV_PORT contract (default 4321) so this shares the single port
+# with the Playwright suite; static-preview.mjs and pr-screenshots.mjs read it.
+PORT="${DEV_PORT:-4321}"
+PORT="$PORT" node scripts/static-preview.mjs &
 SERVER_PID=$!
 # Poll until ready (up to 30s)
 READY=0
 for i in $(seq 1 30); do
-  if curl -sf http://localhost:4321 >/dev/null 2>&1; then
+  if curl -sf "http://localhost:${PORT}" >/dev/null 2>&1; then
     READY=1
     break
   fi
@@ -64,7 +67,7 @@ fi
 # ── 5. Screenshots ────────────────────────────────────────────────────────
 if [ "$READY" -eq 1 ]; then
   echo "▶ Taking screenshots (3 routes × 4 viewports)..."
-  node scripts/pr-screenshots.mjs "$OUTPUT_DIR" 2>&1 || echo "  ⚠ Screenshots failed — continuing"
+  BASE_URL="http://localhost:${PORT}" node scripts/pr-screenshots.mjs "$OUTPUT_DIR" 2>&1 || echo "  ⚠ Screenshots failed — continuing"
 fi
 
 # ── 6. Kill preview server ────────────────────────────────────────────────
@@ -89,7 +92,7 @@ CHROMATIC_BUILD_URL="https://www.chromatic.com/builds?appId=chpt_c027017076d4f90
 
 # ── 9. Lighthouse ─────────────────────────────────────────────────────────
 echo "▶ Running Lighthouse..."
-pnpm run audit 2>/dev/null || true
+pnpm run lighthouse 2>/dev/null || true
 LHCI_REPORT=$(ls .lighthouseci/lhr-*.json 2>/dev/null | sort | tail -1 || true)
 PERF="—"; A11Y="—"; LCP="—"; CLS="—"
 if [ -n "$LHCI_REPORT" ]; then

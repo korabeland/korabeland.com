@@ -51,6 +51,10 @@ public/pr-previews/
 # Visual test diffs (baselines are committed, diffs are ephemeral)
 tests/visual/diffs/
 
+# Visual reseed staging — `pnpm reseed:visual` regenerates baselines here for
+# review before an explicit `--promote` into tests/visual/baselines/ (Finding 5).
+tests/visual/.reseed-pending/
+
 # Generated PR description (local, used by /open-pr command)
 .pr-description.md
 
@@ -79,3 +83,7 @@ public/**/*.gen.*
 # Local agent/codex tooling config (per-machine, not repo content).
 .agents/
 .codex/
+
+# Portrait gaze v2 measurement scratch (U2): throwaway centroid/retouch/proof
+# scripts and their PNG outputs. Not shipped — the SSOT is src/lib/portrait-gaze.ts.
+.gaze-measure/

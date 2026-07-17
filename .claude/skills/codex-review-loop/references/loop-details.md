@@ -108,6 +108,7 @@ pointer), and the marker belongs in the per-worktree gitdir that
   "branch": "<current branch>",
   "head": "<git rev-parse HEAD>",
   "verdict": "clean" | "stopped",
+  "reviewer": "codex" | "claude",
   "escalations": <count>,
   "timestamp": "<ISO-8601>"
 }
@@ -117,3 +118,16 @@ The marker's `head` must equal the commit that will be pushed. Because the loop'
 fix commit changes HEAD, write the marker AFTER that commit. If HEAD later moves
 (you add another commit), the marker goes stale and the hook correctly forces
 another loop before a PR can open.
+
+**`reviewer` field (Codex-authored branches).** This loop writes `"reviewer":
+"codex"`, but ONLY when it is the *primary* reviewer — i.e. the branch is not
+Codex-authored. On a Codex-authored branch (a commit carries the `codex-build`
+trailer), Codex reviewing its own code is grading its own homework, so the primary
+review is Claude's `code-review-and-quality` skill, which writes the SAME marker shape
+with `"reviewer": "claude"`. In that situation this loop may still run as an advisory
+secondary opinion, but it **MUST NOT write the marker at all** — otherwise its
+`"reviewer": "codex"` write would clobber the legitimate Claude marker and the PR gate
+would deny a properly-reviewed branch (the exact dead-end that trains
+`CODEX_GATE_OFF=1`). The gate (`pr-gate.sh`) fails closed: a Codex-authored branch
+whose marker is `"reviewer": "codex"` or has no `reviewer` field (a legacy marker) is
+denied; only `"reviewer": "claude"` passes.

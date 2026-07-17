@@ -14,7 +14,10 @@ description: >-
   Do NOT use it for a one-off codex question or `codex challenge` (that is the
   `codex` skill), simplifying a single function inline (use `simplify`), reviewing
   a plan or requirements doc, debugging, running verify:all alone, or
-  merging/commenting on an already-open PR.
+  merging/commenting on an already-open PR. Do NOT use it as the PRIMARY review on a
+  Codex-authored branch (any commit carrying the `codex-build` trailer) — that is
+  grading its own homework; use `code-review-and-quality` (Claude) as primary there,
+  with this loop at most an advisory secondary.
 ---
 
 # Codex Review Loop
@@ -29,9 +32,12 @@ fresh reviewer would accept.
 
 Two properties make this safe to run headless:
 
-- **Codex never edits code.** It runs read-only and only reports findings. Claude is
-  the sole author of changes, so the reviewer stays genuinely independent (it does
-  not grade its own work).
+- **Codex never edits code *in this loop*.** It runs read-only and only reports
+  findings. Claude is the sole author of changes, so the reviewer stays genuinely
+  independent (it does not grade its own work). The one way this breaks is a branch
+  whose code Codex *authored* via the separate `codex-build` skill — there Codex
+  reviewing its own work is exactly grading its own homework, so this loop refuses the
+  primary-reviewer role on such branches (see the codex-authored prerequisite below).
 - **`verify` gates every change.** Nothing converges or opens a PR on a red suite.
 
 This layer is local and pre-PR. It complements, and does not replace, `verify:all`
@@ -49,6 +55,25 @@ and the remote Devin Review gate that still runs on the PR.
   what gets pushed.
 - **Codex is authenticated**: `codex login status` reports logged in. If not, ask
   Korab to run `codex login` (do not attempt it headless).
+- **The branch is not Codex-authored.** If any commit in the diff carries the
+  `codex-build` trailer, Codex cannot be the *primary* reviewer (it would be grading
+  its own work). Detect it (case-insensitive, trailer-parsed — never `--grep`, which
+  matches prose mentions), refreshing `origin/main` first:
+
+  ```bash
+  git -C "$REPO" fetch --quiet origin main 2>/dev/null || true
+  git -C "$REPO" log origin/main..HEAD --format='%(trailers:key=Co-authored-by,valueonly)' \
+    | grep -qi 'codex@openai.com' && echo CODEX_AUTHORED
+  ```
+
+  When `CODEX_AUTHORED`, the primary review must be **Claude** via the
+  `code-review-and-quality` skill (its brief already covers "code written by yourself,
+  another agent, or a human"), which writes the marker with `"reviewer": "claude"`.
+  This loop may still run as an **advisory** secondary opinion — but in advisory mode
+  it MUST NOT write the marker (see `references/loop-details.md`), so it can never
+  overwrite the Claude marker and dead-end the PR gate. The trailer contract itself is
+  defined canonically in `~/.claude/skills/codex-build/SKILL.md`; this is a copy of the
+  detection line, not a second definition.
 
 ## The loop
 
@@ -113,7 +138,11 @@ Do these in order (details in `references/loop-details.md`):
    `"$(git rev-parse --absolute-git-dir)/codex-review-loop.json"` (schema in
    `loop-details.md`; resolve the git dir with git so it works in a worktree,
    where `.git` is a file) AFTER the final commit, so its `head` matches what
-   will be pushed. This is what lets the PR-gate hook pass.
+   will be pushed, with `"reviewer": "codex"`. This is what lets the PR-gate hook
+   pass. **Skip this step entirely when running in advisory mode on a Codex-authored
+   branch** (see the Prerequisites): the Claude-led `code-review-and-quality` pass owns
+   the marker there with `"reviewer": "claude"`, and an advisory Codex marker would
+   overwrite it and dead-end the gate.
 4. **Present escalations to Korab** if any. He decides on those before the PR opens —
    the loop does not apply them.
 
@@ -125,6 +154,14 @@ A PreToolUse hook (`scripts/pr-gate.sh`, registered in `.claude/settings.json`)
 blocks `gh pr create` unless a fresh marker matches the current HEAD. So if this loop
 is skipped, or HEAD moved after it ran, PR creation is refused with a message telling
 you to run this skill. Deliberate override: `CODEX_GATE_OFF=1`.
+
+**Docs-only auto-pass.** The gate short-circuits for a branch whose entire diff
+versus `origin/main` matches the safe-path allowlist (`docs/**/*.md`, `README.md`,
+root-level `*.md`) — it writes the marker itself (recording the classified file
+list) and lets the PR through without running this loop. The classification is
+**fail-closed**: any code file, any non-allowlisted path, an unresolved diff base,
+or an offline fetch forces the full review. So you never need to run the loop for a
+pure docs branch, and you can't accidentally skip it for a code change.
 
 ## Files
 

@@ -1,26 +1,40 @@
 ---
-// Portrait — the day/night illustrated-portrait <picture> pair, toggled
-// purely by CSS off the shift's `data-time` attribute on <html> (mirrors the
-// ShiftToggle idiom). Previously astro:assets <Image>; `imageService: true`
-// (Vercel's native optimizer, see astro.config.mjs) ignores requested
-// widths/formats for astro:assets sources exactly like it does `public/`
-// paths — the mobile-LCP audit caught the portrait shipping at full 1200w
-// via `/_vercel/image` regardless of the `widths` prop that used to live
-// here. Static AVIF/WebP/JPEG variants generated ahead of build by
-// scripts/gen-hero-variants.ts's portrait pass stand in instead, the same
-// pattern the hero images already use. Both callers keep their exact
-// per-surface `sizes` via props; the image pair, alt text, loading strategy,
-// and toggle CSS are the shared, single-owner part.
+// Portrait — the day/night illustrated-portrait <picture> pair, toggled purely
+// by CSS off the shift's `data-time` attribute on <html> (mirrors the
+// ShiftToggle idiom). `imageService: true` (Vercel's native optimizer, see
+// astro.config.mjs) ignores requested widths/formats for astro:assets sources
+// exactly like it does `public/` paths, so static AVIF/WebP/JPEG variants are
+// generated ahead of build by scripts/gen-hero-variants.ts and stand in here.
+//
+// Gaze rig v2 (opt-in via `gaze`, home hero only — R5). When enabled, a layered
+// eye cutout is mounted over the pictures: per eye, a painted iris/pupil sprite
+// (the only moving layer) rides within a lid aperture punched out of an
+// occluder, over a sclera underlay, under a fixed catchlight — cut from the
+// pristine sources by scripts/gen-eye-rig.ts. It is `display:none` and its
+// layers are never fetched until the client script passes the double gate
+// (pointer:fine AND not reduced-motion), fetch-decodes every layer for both
+// variants, and reveals AT REST. Touch, reduced-motion, and no-JS visitors —
+// and every Playwright/Chromatic screenshot, which runs reduced-motion — get
+// the untouched painted portrait, byte-identical <picture> and all (R5/AE5/AE8).
+// Geometry + motion come from src/lib/portrait-gaze.ts, so markup, generator,
+// and behaviour never drift.
 
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { PORTRAIT_VARIANTS } from "../../lib/portrait-gaze";
 
 interface Props {
   sizes: string;
   alt?: string;
+  /** Mount the cursor-tracking gaze rig. Home hero only (R5). */
+  gaze?: boolean;
 }
 
-const { sizes, alt = "Illustrated portrait of Korab Eland" } = Astro.props;
+const {
+  sizes,
+  alt = "Illustrated portrait of Korab Eland",
+  gaze = false,
+} = Astro.props;
 
 interface PortraitMeta {
   width: number;
@@ -38,8 +52,8 @@ interface PortraitPicture {
 
 // Variants live in public/portrait/ (fixed output dir, see
 // scripts/gen-hero-variants.ts's PORTRAIT_OUT_DIR) — absolute paths, not the
-// relative-URL trick the Keystatic hero components use, since this
-// component renders at multiple, differently-nested routes (/ and /about).
+// relative-URL trick the Keystatic hero components use, since this component
+// renders at multiple, differently-nested routes (/ and /about).
 function loadPortraitPicture(basename: string): PortraitPicture {
   const metaPath = resolve(
     process.cwd(),
@@ -67,43 +81,497 @@ function loadPortraitPicture(basename: string): PortraitPicture {
 
 const night = loadPortraitPicture("portrait-illustrated");
 const day = loadPortraitPicture("portrait-illustrated-day");
+
+// ── Rig geometry (only when gaze is on) ───────────────────────────────────
+// Per-eye box positions come from the generated rig meta (same throw-with-
+// regenerate-hint convention as the base pictures); layer URLs follow the
+// gen-eye-rig naming. Nothing here fetches an image — the client script does,
+// post-gate. The <picture> markup below is byte-identical whether or not gaze
+// is on (R5): the rig is a sibling, purely additive.
+const RIG_LAYERS = ["underlay", "occluder", "sprite", "highlight"] as const;
+
+interface RigEyeMeta {
+  boxLeft: number;
+  boxTop: number;
+  boxSize: number;
+}
+interface RigMeta {
+  eyes: Record<string, RigEyeMeta>;
+}
+
+function loadRigMeta(basename: string): RigMeta {
+  const metaPath = resolve(
+    process.cwd(),
+    "public/portrait/rig",
+    `${basename}.rig.gen.meta.json`,
+  );
+  if (!existsSync(metaPath)) {
+    throw new Error(
+      `Portrait: missing gaze rig assets for "${basename}" (expected ${metaPath}). Run \`pnpm gen:eye-rig\` — see scripts/gen-eye-rig.ts.`,
+    );
+  }
+  return JSON.parse(readFileSync(metaPath, "utf8"));
+}
+
+type RigEye = RigEyeMeta & { urls: Record<string, string> };
+interface RigVariant {
+  shift: string;
+  left: RigEye;
+  right: RigEye;
+}
+
+const rigVariants: RigVariant[] = gaze
+  ? PORTRAIT_VARIANTS.map((v) => {
+      const meta = loadRigMeta(v.basename);
+      const eye = (name: "left" | "right"): RigEye => ({
+        ...meta.eyes[name],
+        urls: Object.fromEntries(
+          RIG_LAYERS.map((l) => [
+            l,
+            `/portrait/rig/${v.basename}.${name}.${l}.gen.webp`,
+          ]),
+        ),
+      });
+      return { shift: v.shift, left: eye("left"), right: eye("right") };
+    })
+  : [];
 ---
 
-<picture class="portrait-night">
-  <source type="image/avif" srcset={night.avifSrcset} sizes={sizes} />
-  <source type="image/webp" srcset={night.webpSrcset} sizes={sizes} />
-  <img
-    src={night.fallbackSrc}
-    alt={alt}
-    width={night.width}
-    height={night.height}
-    loading="eager"
-    fetchpriority="high"
-    sizes={sizes}
-  />
-</picture>
-<picture class="portrait-day">
-  <source type="image/avif" srcset={day.avifSrcset} sizes={sizes} />
-  <source type="image/webp" srcset={day.webpSrcset} sizes={sizes} />
-  <img
-    src={day.fallbackSrc}
-    alt={alt}
-    width={day.width}
-    height={day.height}
-    loading="eager"
-    sizes={sizes}
-  />
-</picture>
+<div class="portrait-stack">
+  <picture class="portrait-night">
+    <source type="image/avif" srcset={night.avifSrcset} sizes={sizes} />
+    <source type="image/webp" srcset={night.webpSrcset} sizes={sizes} />
+    <img
+      src={night.fallbackSrc}
+      alt={alt}
+      width={night.width}
+      height={night.height}
+      loading="eager"
+      fetchpriority="high"
+      sizes={sizes}
+    />
+  </picture>
+  <picture class="portrait-day">
+    <source type="image/avif" srcset={day.avifSrcset} sizes={sizes} />
+    <source type="image/webp" srcset={day.webpSrcset} sizes={sizes} />
+    <img
+      src={day.fallbackSrc}
+      alt={alt}
+      width={day.width}
+      height={day.height}
+      loading="eager"
+      sizes={sizes}
+    />
+  </picture>
+  {
+    gaze && (
+      <div class="portrait-rig" data-portrait-rig aria-hidden="true">
+        {rigVariants.map((rv) => (
+          <div class={`rig-variant rig-${rv.shift}`}>
+            {(["left", "right"] as const).map((side) => {
+              const e = rv[side];
+              return (
+                <div
+                  class="rig-eye"
+                  data-eye={side}
+                  data-underlay={e.urls.underlay}
+                  data-occluder={e.urls.occluder}
+                  data-sprite={e.urls.sprite}
+                  data-highlight={e.urls.highlight}
+                  style={`left:${(e.boxLeft * 100).toFixed(3)}%;top:${(e.boxTop * 100).toFixed(3)}%;width:${(e.boxSize * 100).toFixed(3)}%`}
+                />
+              );
+            })}
+          </div>
+        ))}
+      </div>
+    )
+  }
+</div>
+
+{
+  gaze && (
+    <script>
+      import {
+        attenuation,
+        bandOuterRadius,
+        centerDistance,
+        clampDt,
+        gazeReduce,
+        gazeTemperamentFor,
+        halfWidth,
+        inBand,
+        inEllipse,
+        initGaze,
+        launchRest,
+        launchSaccade,
+        microDrift,
+        poseAt,
+        PORTRAIT_VARIANTS,
+        type GazeEvent,
+        type GazeMachine,
+        type Point,
+        type Rect,
+        RIG,
+        RIG_MANIFEST,
+        type Saccade,
+        vergedOffsets,
+      } from "../../lib/portrait-gaze";
+      import { isValidShift, type Shift } from "../../lib/shift";
+
+      // Double gate first (the repo's ShiftLog-torch convention). The script is
+      // hoisted for EVERY Portrait render, so the `[data-portrait-rig]` null
+      // guard is load-bearing for /about, which renders the component rig-free.
+      const rig = document.querySelector<HTMLElement>("[data-portrait-rig]");
+      const stack = rig?.closest<HTMLElement>(".portrait-stack") ?? null;
+      const finePointer = window.matchMedia("(pointer: fine)").matches;
+      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+      if (rig && stack && finePointer && !reduceMotion.matches) {
+        const shiftBasename: Record<string, string> = {};
+        for (const v of PORTRAIT_VARIANTS) shiftBasename[v.shift] = v.basename;
+        const currentShift = (): Shift => {
+          const t = document.documentElement.dataset.time;
+          return isValidShift(t) ? t : "night";
+        };
+
+        const eyeDivs = Array.from(
+          rig.querySelectorAll<HTMLElement>("[data-eye]"),
+        );
+
+        // Fetch-decode every layer for both variants; reveal only if ALL decode
+        // (atomic — R11/R16), otherwise leave the rig dormant and the static
+        // portrait showing (AE8). display:none throughout, so nothing flashes.
+        const built = eyeDivs.map((eyeDiv) => {
+          const layers: Record<string, HTMLImageElement> = {};
+          for (const layer of ["underlay", "occluder", "sprite", "highlight"]) {
+            const img = new Image();
+            img.className = `rig-layer rig-${layer}`;
+            img.alt = "";
+            img.decoding = "async";
+            img.src = eyeDiv.dataset[layer] ?? "";
+            layers[layer] = img;
+          }
+          return { eyeDiv, layers };
+        });
+
+        Promise.all(
+          built.flatMap(({ layers }) =>
+            Object.values(layers).map((img) => img.decode()),
+          ),
+        )
+          .then(() => startRig())
+          .catch(() => {
+            /* AE8: any fetch/decode failure → dormant, static portrait stays */
+          });
+
+        function startRig() {
+          const sprites: Record<"left" | "right", HTMLImageElement[]> = {
+            left: [],
+            right: [],
+          };
+          for (const { eyeDiv, layers } of built) {
+            // z-order: underlay (bottom) → sprite → highlight → occluder (top)
+            for (const l of ["underlay", "sprite", "highlight", "occluder"]) {
+              eyeDiv.appendChild(layers[l]);
+            }
+            const side = eyeDiv.dataset.eye as "left" | "right";
+            sprites[side].push(layers.sprite);
+          }
+          // Reveal at rest — rest parity makes this imperceptible (R3/R11).
+          rig?.classList.add("is-live");
+
+          // Temperament is pinned to night globally (2026-07-13): the eye
+          // behaviour no longer tracks the day/night palette. Only the eye
+          // GEOMETRY still follows the visible portrait (RIG_MANIFEST via
+          // currentShift below), so the pupils stay aligned on either variant.
+          const temperament = gazeTemperamentFor("night");
+
+          const rest = (): Saccade => ({
+            from: { x: 0, y: 0 },
+            to: { x: 0, y: 0 },
+            t0: 0,
+            dur: 1,
+            overshoot: 0,
+            settle: 0,
+          });
+          let machine: GazeMachine = gazeReduce(
+            initGaze(true),
+            { type: "decoded" },
+            temperament,
+          );
+          const sac: Record<"left" | "right", Saccade> = {
+            left: rest(),
+            right: rest(),
+          };
+          let cursor: Point | null = null;
+          // The hovered social control (below the proximity band) the eyes glance
+          // at directly — wins over cursor tracking while set (2026-07-13). We
+          // track the element, not a captured point, so a scroll or resize held
+          // over the control can't freeze the glance at its former viewport
+          // position: sync() reads its live centre each time it runs.
+          let lookEl: HTMLElement | null = null;
+          let raf = 0;
+          let paused = false;
+          let last = 0;
+          // A held-still cursor emits no pointer events, so the dispersion
+          // window and the face-zone dwell clock can only complete if the loop
+          // re-classifies from the last position on a timer — otherwise a pause
+          // never settles to eye contact (AE2). Throttled so samples advance in
+          // real time; reeval() stamps this, so a real move resets the timer.
+          let lastClassify = 0;
+          const CLASSIFY_TICK_MS = 60;
+
+          const liveRect = (): Rect => {
+            const b = stack!.getBoundingClientRect();
+            return { left: b.left, top: b.top, width: b.width, height: b.height };
+          };
+
+          const centerOf = (el: HTMLElement): Point => {
+            const b = el.getBoundingClientRect();
+            return { x: b.left + b.width / 2, y: b.top + b.height / 2 };
+          };
+
+          // Per-eye desired offset px for the current target (or rest),
+          // relaunched from the current sampled pose so motion is continuous. A
+          // hovered social control (lookEl) wins over cursor tracking and is
+          // glanced at with full travel — it sits below the proximity band,
+          // where the distance attenuation would otherwise zero the reach.
+          const sync = (now: number) => {
+            const r = liveRect();
+            const refPx = RIG.travelCeiling * r.width * temperament.travelScale;
+            // Read the hovered control's centre live: a held hover across a scroll
+            // or resize moves the control in the viewport without firing another
+            // mouseenter, so a captured point would go stale.
+            const target = lookEl
+              ? centerOf(lookEl)
+              : machine.state === "TRACKING"
+                ? machine.target
+                : null;
+            let dl: Point = { x: 0, y: 0 };
+            let dr: Point = { x: 0, y: 0 };
+            if (target) {
+              const reach = lookEl
+                ? refPx * RIG.hoverDepthScale
+                : refPx *
+                  attenuation(
+                    centerDistance(target, r),
+                    halfWidth(r),
+                    bandOuterRadius(r),
+                  );
+              const geo = RIG_MANIFEST[shiftBasename[currentShift()]];
+              const lc: Point = {
+                x: r.left + geo.left.cx * r.width,
+                y: r.top + geo.left.cy * r.width,
+              };
+              const rc: Point = {
+                x: r.left + geo.right.cx * r.width,
+                y: r.top + geo.right.cy * r.width,
+              };
+              const v = vergedOffsets(lc, rc, target, reach);
+              dl = v.left;
+              dr = v.right;
+            }
+            relaunch("left", dl, now, refPx);
+            relaunch("right", dr, now, refPx);
+          };
+
+          const relaunch = (
+            side: "left" | "right",
+            to: Point,
+            now: number,
+            refPx: number,
+          ) => {
+            const s = sac[side];
+            if (Math.abs(s.to.x - to.x) < 0.01 && Math.abs(s.to.y - to.y) < 0.01)
+              return;
+            if (machine.snap) {
+              sac[side] = { from: to, to, t0: now, dur: 1, overshoot: 0, settle: 0 };
+            } else if (lookEl) {
+              // Deliberate glance toward a hovered control: a normal reflexive
+              // saccade, whatever the cursor-driven machine state happens to be.
+              sac[side] = launchSaccade(poseAt(s, now), to, now, temperament, refPx);
+            } else if (machine.state === "CONTACT") {
+              // Returning to eye contact (cursor settled or left the band): ease
+              // back over restReturnMs — slower than a reflexive saccade, so the
+              // eyes relax to rest rather than snap (2026-07-13).
+              sac[side] = launchRest(poseAt(s, now), now, temperament.restReturnMs);
+            } else {
+              sac[side] = launchSaccade(poseAt(s, now), to, now, temperament, refPx);
+            }
+          };
+
+          const frame = (now: number) => {
+            raf = 0;
+            // Δt is clamped so a resumed background tab can't jolt the drift phase.
+            last = last === 0 ? now : last + clampDt(now - last);
+            // Drive fixation classification for a stationary cursor: while
+            // tracking, re-evaluate from the last position so the window/dwell
+            // can complete and settle to contact without a fresh pointer event.
+            if (
+              cursor &&
+              machine.state === "TRACKING" &&
+              now - lastClassify >= CLASSIFY_TICK_MS
+            ) {
+              reeval(now);
+            }
+            for (const side of ["left", "right"] as const) {
+              const off = poseAt(sac[side], now);
+              let x = off.x;
+              let y = off.y;
+              if (machine.state === "CONTACT" && !lookEl) {
+                const d = microDrift(last, temperament, false);
+                x += d.x;
+                y += d.y;
+              }
+              const t = `translate(${x.toFixed(2)}px, ${y.toFixed(2)}px)`;
+              for (const s of sprites[side]) s.style.transform = t;
+            }
+            if (!paused) raf = requestAnimationFrame(frame);
+          };
+          const runLoop = () => {
+            if (!paused && !raf) raf = requestAnimationFrame(frame);
+          };
+
+          const dispatch = (e: GazeEvent) => {
+            machine = gazeReduce(machine, e, temperament);
+          };
+
+          const onMove = (ev: MouseEvent) => {
+            cursor = { x: ev.clientX, y: ev.clientY };
+            reeval(performance.now());
+          };
+
+          // Re-evaluate geometry (band + face-zone membership against the live
+          // rect) and step the machine; used by pointermove, scroll and resize.
+          const reeval = (now: number) => {
+            if (!cursor) return;
+            lastClassify = now;
+            const r = liveRect();
+            const dc = centerDistance(cursor, r);
+            const band = inBand(dc, bandOuterRadius(r));
+            const geo = RIG_MANIFEST[shiftBasename[currentShift()]];
+            const nx = (cursor.x - r.left) / r.width;
+            const ny = (cursor.y - r.top) / r.width;
+            const fz = geo.faceZone;
+            const h = geo.faceZoneHysteresis;
+            const enter = inEllipse(nx, ny, {
+              cx: fz.cx,
+              cy: fz.cy,
+              rx: fz.rx * (1 - h),
+              ry: fz.ry * (1 - h),
+            });
+            const exit = inEllipse(nx, ny, {
+              cx: fz.cx,
+              cy: fz.cy,
+              rx: fz.rx * (1 + h),
+              ry: fz.ry * (1 + h),
+            });
+            dispatch({
+              type: "pointer",
+              x: cursor.x,
+              y: cursor.y,
+              t: now,
+              inBand: band,
+              inZoneEnter: enter,
+              inZoneExit: exit,
+            });
+            sync(now);
+          };
+
+          const onLeave = () => {
+            cursor = null;
+            dispatch({ type: "leave" });
+            sync(performance.now());
+          };
+          const onInterrupt = () => {
+            dispatch({ type: "interrupt" });
+            sync(performance.now());
+          };
+          const onVisibility = () => {
+            if (document.visibilityState === "hidden") {
+              onInterrupt();
+              paused = true;
+              if (raf) cancelAnimationFrame(raf);
+              raf = 0;
+            } else {
+              paused = false;
+              last = 0;
+              runLoop();
+            }
+          };
+          const disarm = () => {
+            dispatch({ type: "reducedMotion" });
+            sync(performance.now());
+            rig?.classList.remove("is-live");
+            paused = true;
+            if (raf) cancelAnimationFrame(raf);
+            raf = 0;
+          };
+
+          // No teardown (repo convention while no view transitions exist).
+          window.addEventListener("mousemove", onMove, { passive: true });
+          window.addEventListener("scroll", () => reeval(performance.now()), {
+            passive: true,
+          });
+          window.addEventListener("resize", () => reeval(performance.now()));
+          document.addEventListener("mouseleave", onLeave);
+          window.addEventListener("blur", onInterrupt);
+          document.addEventListener("visibilitychange", onVisibility);
+          // Shift toggle: snap to rest in the same frame as the CSS palette swap.
+          new MutationObserver(onInterrupt).observe(
+            document.documentElement,
+            { attributes: true, attributeFilter: ["data-time"] },
+          );
+          // OS reduced-motion turned on mid-visit → snap + hide (terminal).
+          reduceMotion.addEventListener("change", (e) => {
+            if (e.matches) disarm();
+          });
+
+          // Social-row glances (2026-07-13): hovering a tagged control — the
+          // four links under the portrait, all below the proximity band — pulls
+          // the gaze onto it, and leaving relaxes back to rest. We record the
+          // element and let sync() read its centre live, so a scroll or resize
+          // held over the control re-aims the eyes rather than freezing on its
+          // former viewport position.
+          for (const el of document.querySelectorAll<HTMLElement>(
+            "[data-gaze-target]",
+          )) {
+            el.addEventListener("mouseenter", () => {
+              lookEl = el;
+              sync(performance.now());
+            });
+            el.addEventListener("mouseleave", () => {
+              lookEl = null;
+              sync(performance.now());
+            });
+          }
+
+          runLoop();
+        }
+      }
+    </script>
+  )
+}
 
 <style>
+  .portrait-stack {
+    /* Positioning context for the gaze rig; layout-neutral (a full-width block
+       wrapping the block <img>), so the picture renders identically whether or
+       not the rig is mounted. */
+    position: relative;
+    display: block;
+    line-height: 0;
+  }
+
   img {
     display: block;
     width: 100%;
     height: auto;
   }
 
-  /* Portrait tracks the shift: orange field by night (the no-JS default),
-     blue by day. The day variant stays hidden until the head script sets
+  /* Portrait tracks the shift: orange field by night (the no-JS default), blue
+     by day. The day variant stays hidden until the head script sets
      data-time=day, mirroring the ShiftToggle idiom. */
   .portrait-day {
     display: none;
@@ -113,5 +581,48 @@ const day = loadPortraitPicture("portrait-illustrated-day");
   }
   :global(html[data-time="day"]) .portrait-day {
     display: block;
+  }
+
+  /* ─── Gaze rig v2 (R1–R5) ───────────────────────────────────────────────
+     Additive, decorative, never interactive: hidden until the client script
+     decodes every layer and adds .is-live, so reduced-motion / touch / no-JS
+     visitors (and every screenshot) never see it or fetch its layers. */
+  .portrait-rig {
+    position: absolute;
+    inset: 0;
+    display: none;
+    pointer-events: none;
+  }
+  .portrait-rig.is-live {
+    display: block;
+  }
+
+  /* Each variant's rig follows the same data-time swap as the <picture> pair. */
+  .rig-day {
+    display: none;
+  }
+  :global(html[data-time="day"]) .rig-night {
+    display: none;
+  }
+  :global(html[data-time="day"]) .rig-day {
+    display: block;
+  }
+
+  /* Absolutely positioned eye box, sized/placed from the SSOT fractions. The
+     four layer images fill it; only the sprite is transformed, by the rAF loop
+     (main-sequence motion — CSS transitions can't express overshoot/retarget). */
+  .rig-eye {
+    position: absolute;
+    aspect-ratio: 1;
+  }
+  .rig-eye :global(.rig-layer) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  .rig-eye :global(.rig-sprite) {
+    will-change: transform;
   }
 </style>

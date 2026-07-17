@@ -3,9 +3,9 @@
 # This is the third-strike handler: local model has failed 3 times, now we call in Sonnet.
 #
 # Usage:
-#   echo "failure description" | bash scripts/escalate.sh
-#   bash scripts/escalate.sh "failure description"
-#   bash scripts/escalate.sh --model opus "critical auth failure"
+#   echo "failure description" | bash scripts/workflow/escalate.sh
+#   bash scripts/workflow/escalate.sh "failure description"
+#   bash scripts/workflow/escalate.sh --model opus "critical auth failure"
 #
 # Flags:
 #   --model sonnet|opus  — override escalation target (default: sonnet)

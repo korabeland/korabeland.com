@@ -1,5 +1,5 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { test } from "@chromatic-com/playwright";
 import pixelmatch from "pixelmatch";
 import { PNG } from "pngjs";
@@ -9,7 +9,13 @@ import {
   staticRoutes,
 } from "../lib/collection-routes";
 
-const BASELINE_DIR = join(process.cwd(), "tests/visual/baselines");
+// `pnpm reseed:visual` points this at a gitignored staging dir so a reseed
+// regenerates every baseline through this exact capture path WITHOUT touching
+// the committed set — promotion into tests/visual/baselines/ is a separate,
+// reviewed step (see scripts/reseed-visual.mjs). Unset in normal runs.
+const BASELINE_DIR = process.env.VISUAL_BASELINE_DIR
+  ? resolve(process.env.VISUAL_BASELINE_DIR)
+  : join(process.cwd(), "tests/visual/baselines");
 const DIFF_DIR = join(process.cwd(), "tests/visual/diffs");
 const DIFF_THRESHOLD = 0.005;
 
