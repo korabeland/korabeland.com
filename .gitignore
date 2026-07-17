@@ -75,3 +75,7 @@ build-archive.log
 # from the originals Keystatic stores. Never committed — regenerated on demand.
 public/**/*.gen.*
 .gstack/
+
+# Local agent/codex tooling config (per-machine, not repo content).
+.agents/
+.codex/
