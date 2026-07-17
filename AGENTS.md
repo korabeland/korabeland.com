@@ -144,6 +144,7 @@ Korab works this repo solo. `main`'s branch protection has no required-approving
 - Before merging, read Devin's review comments. Fix genuine bugs and regressions — that's non-negotiable. Cosmetic/style suggestions can be deferred or explicitly declined.
 - Once `verify-all` and `Devin Review` are both green, merge normally: `gh pr merge --squash`. No `--admin` needed. Squash is the repo default merge method (`viewerDefaultMergeMethod: SQUASH`) — one clean conventional-commit per PR on `main`.
 - Squash caveat: a squash merge writes a new commit with no ancestry link to the branch's commits, so git can't detect the branch as merged. `git branch --no-merged main` over-reports (lists already-merged branches as open) and `git branch -d` refuses them. Confirm real merge status with `gh pr list --state all --head <branch>`, then delete with `-D`. Never treat `--no-merged` output as proof a branch is unfinished.
+- Remote branches auto-delete on merge (`deleteBranchOnMerge: true`), so `origin` stays clean without manual pruning. This is server-side and worktree-safe (unlike `gh pr merge --delete-branch`, whose local cleanup breaks in worktrees). Local branches are unaffected and still accumulate — prune them separately, skipping any branch checked out in a worktree.
 
 ---
 
