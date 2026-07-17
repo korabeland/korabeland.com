@@ -80,6 +80,10 @@ build-archive.log
 public/**/*.gen.*
 .gstack/
 
+# Local agent/codex tooling config (per-machine, not repo content).
+.agents/
+.codex/
+
 # Portrait gaze v2 measurement scratch (U2): throwaway centroid/retouch/proof
 # scripts and their PNG outputs. Not shipped — the SSOT is src/lib/portrait-gaze.ts.
 .gaze-measure/
