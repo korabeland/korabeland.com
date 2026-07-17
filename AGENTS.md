@@ -142,7 +142,8 @@ Korab works this repo solo. `main`'s branch protection has no required-approving
 
 - `Devin Review` genuinely gates on completion (`pending` → `success`), not just a static badge — merge is blocked until it's actually run. It does **not** gate on severity: it goes green even when it flagged real bugs.
 - Before merging, read Devin's review comments. Fix genuine bugs and regressions — that's non-negotiable. Cosmetic/style suggestions can be deferred or explicitly declined.
-- Once `verify-all` and `Devin Review` are both green, merge normally: `gh pr merge --squash`. No `--admin` needed.
+- Once `verify-all` and `Devin Review` are both green, merge normally: `gh pr merge --squash`. No `--admin` needed. Squash is the repo default merge method (`viewerDefaultMergeMethod: SQUASH`) — one clean conventional-commit per PR on `main`.
+- Squash caveat: a squash merge writes a new commit with no ancestry link to the branch's commits, so git can't detect the branch as merged. `git branch --no-merged main` over-reports (lists already-merged branches as open) and `git branch -d` refuses them. Confirm real merge status with `gh pr list --state all --head <branch>`, then delete with `-D`. Never treat `--no-merged` output as proof a branch is unfinished.
 
 ---
 
