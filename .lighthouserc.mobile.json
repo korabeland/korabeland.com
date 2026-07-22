@@ -5,7 +5,8 @@
       "url": [
         "http://localhost:4321/?shift=night",
         "http://localhost:4321/colophon?shift=night",
-        "http://localhost:4321/notes/system-designer-personal-os?shift=night"
+        "http://localhost:4321/notes/system-designer-personal-os?shift=night",
+        "http://localhost:4321/notes/pascals-nebula?shift=night"
       ],
       "startServerCommand": "node scripts/static-preview.mjs",
       "startServerReadyPattern": "static-preview:"

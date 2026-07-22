@@ -27,6 +27,13 @@ export default config({
           label: "Hero image alt text",
           description: "Describes the image for screen readers.",
         }),
+        heroVideo: fields.file({
+          label: "Hero video (optional)",
+          description:
+            "MP4 that plays over the hero image on motion-OK devices. The hero image is its poster and its reduced-motion fallback.",
+          directory: "public/notes",
+          publicPath: "/notes/",
+        }),
         content: fields.markdoc({ label: "Content" }),
       },
     }),

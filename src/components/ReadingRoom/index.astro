@@ -27,6 +27,7 @@ interface Props {
   backLabel?: string;
   heroImage?: string;
   heroImageAlt?: string;
+  heroVideo?: string;
 }
 
 const {
@@ -45,6 +46,7 @@ const {
   backLabel = "← back to notes",
   heroImage,
   heroImageAlt = "",
+  heroVideo,
 } = Astro.props;
 
 // heroImage is the bare Keystatic filename; variants live in public/notes/
@@ -54,6 +56,19 @@ const hero = heroImage
   ? loadHeroPicture("public/notes", heroImage, "ReadingRoom")
   : null;
 const HERO_SIZES = "(max-width: 680px) 100vw, 680px";
+
+// An optional hero video is a click-to-play native player: the hero image is
+// its poster (shown until the visitor presses play) and its no-JS/no-video
+// fallback. It does not autoplay and does not loop — it plays once and holds
+// on its final frame. `fields.file` returns the bare filename; resolve it
+// against the notes public path (tolerating an already-absolute value in case
+// the reader ever changes).
+const heroVideoSrc =
+  hero && heroVideo
+    ? heroVideo.startsWith("/")
+      ? heroVideo
+      : `/notes/${heroVideo}`
+    : null;
 ---
 
 <div class="return">
@@ -81,7 +96,23 @@ const HERO_SIZES = "(max-width: 680px) 100vw, 680px";
 
     <div class="rule-soft rule-top"></div>
 
-    {hero && (
+    {hero && heroVideoSrc && (
+      <figure class="hero hero--video">
+        <video
+          class="hero-video"
+          controls
+          playsinline
+          preload="none"
+          poster={hero.fallbackSrc}
+          width={hero.width}
+          height={hero.height}
+          aria-label={heroImageAlt}
+        >
+          <source src={heroVideoSrc} type="video/mp4" />
+        </video>
+      </figure>
+    )}
+    {hero && !heroVideoSrc && (
       <figure class="hero">
         <picture>
           <source type="image/avif" srcset={hero.avifSrcset} sizes={HERO_SIZES} />
@@ -162,6 +193,17 @@ const HERO_SIZES = "(max-width: 680px) 100vw, 680px";
     width: 100%;
     height: auto;
     border-radius: 2px;
+  }
+
+  /* Video hero: a native click-to-play player. The poster (the generated hero
+     PNG) shows until the visitor presses play; with no `loop` it plays once
+     and holds on its final frame. */
+  .hero-video {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 2px;
+    background: var(--surface-sunk, #000);
   }
 
   /* Body prose — console type scale. DocumentRenderer emits plain
