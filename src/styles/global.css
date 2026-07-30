@@ -51,9 +51,11 @@ body {
   letter-spacing: 0.04em;
   text-transform: uppercase;
   font-variant-numeric: tabular-nums;
-  /* --ink-soft, not --ink-mute — 11 px on --paper needs a 4.5:1 contrast
-     ratio to clear WCAG AA. --ink-mute (3.33:1) is reserved for visually
-     recessive meta on larger elements or bordered chips only. */
+  /* --ink-soft, not --ink-mute — 11px on --paper needs 4.5:1 to clear WCAG
+     AA, and --ink-mute measures 4.32:1 in the day palette (5.25:1 night), so
+     it misses in one shift. Beyond that it is a hierarchy rule: --ink-mute is
+     reserved for visually recessive meta on larger elements, bordered chips,
+     and non-text glyphs. See DESIGN.md §2 for the measured table. */
   color: var(--ink-soft);
 }
 
@@ -410,7 +412,7 @@ body {
 
 /* ─── Expanded hit areas ─────────────────────────────────────────────── */
 
-/* DESIGN.md §7 promises 44px touch targets, but the chrome controls are
+/* DESIGN.md §11 promises 44px touch targets, but the chrome controls are
    small mono text (11px nav links, 15px social icons, 24px toggle). An
    invisible ::after pads each control's tap area to 44px height, and 44px
    width where neighbours allow, without moving a pixel visually. */
