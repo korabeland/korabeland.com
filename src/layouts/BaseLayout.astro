@@ -51,12 +51,16 @@ const {
 
 const siteUrl = Astro.site?.href.replace(/\/$/, "") ?? "https://korabeland.com";
 const ogImageUrl = ogImage ? `${siteUrl}${ogImage}` : undefined;
-// Prerendered directory-style routes (page/index.html) carry a trailing
-// slash in Astro.url; every other reference to a page on this site (nav,
-// redirects, sitemap) omits it, so strip it here to keep canonical/og:url
-// consistent with the rest of the site. The bare root "/" still resolves
-// correctly since URL.pathname normalises an empty path back to "/".
-const canonicalUrl = Astro.url.href.replace(/\/$/, "");
+// Canonical identity is the path, not presentation/query state. In particular,
+// ?shift=day and /off-trail?from=notes must not create separate canonical URLs.
+// Prerendered directory-style routes carry a trailing slash in Astro.url, while
+// the site's links and sitemap omit it.
+const canonical = new URL(Astro.url);
+canonical.pathname =
+  canonical.pathname === "/" ? "/" : canonical.pathname.replace(/\/$/, "");
+canonical.search = "";
+canonical.hash = "";
+const canonicalUrl = canonical.href.replace(/\/$/, "");
 
 const year = new Date().getFullYear();
 

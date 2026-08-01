@@ -5,7 +5,14 @@ import keystaticConfig from "../../../keystatic.config";
 import { PostContent } from "../../components/PostContent";
 import ReadingRoom from "../../components/ReadingRoom/index.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import { formatNoteDate, listPosts } from "../../lib/posts";
+import { serializeJsonLd } from "../../lib/json-ld";
+import {
+  countWords,
+  estimateReadTime,
+  extractDocumentText,
+  formatNoteDate,
+  listPosts,
+} from "../../lib/posts";
 
 export const getStaticPaths: GetStaticPaths = async () => {
   const posts = await listPosts();
@@ -23,9 +30,9 @@ const content = await post.content();
 
 // Estimate read time and word count from the content payload. The reader
 // returns structured document data, so we flatten to a string first.
-const prose = JSON.stringify(content);
-const wordCount = prose.split(/\s+/).filter(Boolean).length;
-const readTime = `${Math.max(1, Math.round(wordCount / 220))} min`;
+const prose = extractDocumentText(content);
+const wordCount = countWords(prose);
+const readTime = estimateReadTime(prose);
 
 // Split the title on the last word so we can italicise it, matching the
 // export's "Forests that scale." treatment without requiring per-post
@@ -64,7 +71,7 @@ const jsonLd = {
   ogType="article"
   fullBleed
 >
-  <script type="application/ld+json" slot="jsonld" set:html={JSON.stringify(jsonLd)} />
+  <script is:inline type="application/ld+json" slot="jsonld" set:html={serializeJsonLd(jsonLd)} />
   <ReadingRoom
     title={head}
     titleEm={tail}

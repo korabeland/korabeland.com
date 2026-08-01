@@ -7,6 +7,7 @@ import type { GetStaticPaths } from "astro";
 import CaseStudy from "../../components/CaseStudy/index.astro";
 import { PostContent } from "../../components/PostContent";
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import { serializeJsonLd } from "../../lib/json-ld";
 import {
   formatSpan,
   listProjects,
@@ -81,7 +82,7 @@ const jsonLd = {
   active="work"
   ogType="article"
 >
-  <script type="application/ld+json" slot="jsonld" set:html={JSON.stringify(jsonLd)} />
+  <script is:inline type="application/ld+json" slot="jsonld" set:html={serializeJsonLd(jsonLd)} />
   <CaseStudy
     title={project.title}
     subtitle={project.description}

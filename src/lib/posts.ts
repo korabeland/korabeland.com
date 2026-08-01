@@ -9,9 +9,46 @@ export interface PostSummary {
   readTime: string;
 }
 
+interface MarkdocNodeLike {
+  type?: unknown;
+  attributes?: { content?: unknown };
+  children?: unknown[];
+}
+
 const reader = createReader(process.cwd(), keystaticConfig);
 
 const WORDS_PER_MIN = 220;
+
+/**
+ * Extract visible text from Keystatic's Markdoc document payload. Counting the
+ * JSON serialization would include AST keys, URLs, and parser metadata rather
+ * than the words a reader actually sees.
+ */
+export function extractDocumentText(document: unknown): string {
+  const root =
+    document && typeof document === "object" && "node" in document
+      ? (document as { node: unknown }).node
+      : document;
+
+  const visit = (value: unknown): string => {
+    if (Array.isArray(value)) return value.map(visit).filter(Boolean).join(" ");
+    if (!value || typeof value !== "object") return "";
+
+    const node = value as MarkdocNodeLike;
+    const text =
+      node.type === "text" && typeof node.attributes?.content === "string"
+        ? node.attributes.content
+        : "";
+    const children = node.children ? visit(node.children) : "";
+    return [text, children].filter(Boolean).join(" ");
+  };
+
+  return visit(root);
+}
+
+export function countWords(text: string): number {
+  return text.split(/\s+/).filter(Boolean).length;
+}
 
 /**
  * Full-date stamp for note surfaces, "2026.07.11" — same year-first ordering
@@ -30,9 +67,23 @@ export function formatNoteDate(iso: string | null): string {
 }
 
 export function estimateReadTime(text: string): string {
-  const words = text.split(/\s+/).filter(Boolean).length;
+  const words = countWords(text);
   const minutes = Math.max(1, Math.round(words / WORDS_PER_MIN));
   return `${minutes} min`;
+}
+
+/** Month-level label for the homepage, stable across build-machine timezones. */
+export function formatNoteMonth(iso: string | null): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return new Intl.DateTimeFormat("en-AU", {
+    timeZone: "UTC",
+    year: "numeric",
+    month: "short",
+  })
+    .format(d)
+    .toLowerCase();
 }
 
 /**
@@ -56,7 +107,7 @@ export async function listPosts(): Promise<PostSummary[]> {
     const post = await reader.collections.posts.read(slug);
     if (!post) continue;
     const content = await post.content();
-    const prose = JSON.stringify(content);
+    const prose = extractDocumentText(content);
     entries.push({
       slug,
       title: post.title,
