@@ -12,7 +12,8 @@ import SectionHead from "../components/SectionHead.astro";
 import ShiftLog from "../components/ShiftLog/ShiftLog.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { listExperience } from "../lib/experience";
-import { listPosts } from "../lib/posts";
+import { serializeJsonLd } from "../lib/json-ld";
+import { formatNoteMonth, listPosts } from "../lib/posts";
 import { listProjects, projectHref, projectStatus } from "../lib/projects";
 import type { ContributionData } from "../lib/shift-log";
 import { STATUS } from "../lib/status";
@@ -112,15 +113,6 @@ const jsonLd = {
   ],
 };
 
-// Month-level on purpose — the homepage list is a teaser ("jul 2026"), not a
-// dated record; full YYYY.MM.DD stamps live on /notes via formatNoteDate().
-function formatDate(iso: string | null): string {
-  if (!iso) return "";
-  return new Date(iso)
-    .toLocaleDateString("en-AU", { year: "numeric", month: "short" })
-    .toLowerCase();
-}
-
 // Social marks for the portrait caption — filled brand glyphs, inlined so they
 // inherit currentColor (they track --ink-soft/--signal on hover). Same
 // icon-const idiom as ShiftToggle. Order: email, LinkedIn, GitHub, X.
@@ -140,7 +132,7 @@ const MAIL_ICON =
   active="home"
   ogImage="/og.png"
 >
-  <script type="application/ld+json" slot="jsonld" set:html={JSON.stringify(jsonLd)} />
+  <script is:inline type="application/ld+json" slot="jsonld" set:html={serializeJsonLd(jsonLd)} />
   {/* Preload the night portrait (the home LCP element on mobile) so the
       fetch starts at head-parse instead of when the parser reaches the
       hero <picture> (~700ms later on slow-4G). Mirrors the AVIF srcset
@@ -274,7 +266,7 @@ const MAIL_ICON =
                 <a class="notes-link" href={`/notes/${post.slug}`}>
                   <span class="notes-title">{post.title}</span>
                   <span class="t-mono notes-meta">
-                    {formatDate(post.publishedAt)} · {post.readTime}
+                    {formatNoteMonth(post.publishedAt)} · {post.readTime}
                   </span>
                 </a>
               </li>

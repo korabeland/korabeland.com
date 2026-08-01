@@ -160,7 +160,7 @@ test.describe("case study hero delivery", () => {
       "No project in the projects collection currently declares a heroImage " +
         "(src/lib/projects.ts ProjectSummary.heroImage) — skipping until one does.",
     );
-    if (!heroProject || !heroProject.heroImage) return;
+    if (!heroProject?.heroImage) return;
 
     const route = `/work/${heroProject.slug}`;
     const basename = heroProject.heroImage.replace(/\.[^./]+$/, "");

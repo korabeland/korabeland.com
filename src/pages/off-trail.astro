@@ -5,6 +5,7 @@ export const prerender = false;
 
 import OffTrail from "../components/OffTrail/OffTrail.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
+import { serializeJsonLd } from "../lib/json-ld";
 
 const rawFrom = Astro.url.searchParams.get("from");
 const KNOWN = new Set(["notes", "work"]);
@@ -26,6 +27,6 @@ const jsonLd = {
   description="This page does not exist. Check back as the site grows."
   noindex={true}
 >
-  <script type="application/ld+json" slot="jsonld" set:html={JSON.stringify(jsonLd)} />
+  <script is:inline type="application/ld+json" slot="jsonld" set:html={serializeJsonLd(jsonLd)} />
   <OffTrail from={from} />
 </BaseLayout>

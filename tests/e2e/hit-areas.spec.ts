@@ -12,14 +12,6 @@ import { expect, test } from "@playwright/test";
 // Pad geometry mirrors the CSS: width max(100%, minW), height max(100%, 44),
 // centred on the control's box.
 
-type PadRect = {
-  left: number;
-  right: number;
-  top: number;
-  bottom: number;
-  label: string;
-};
-
 function padOverlaps(selector: string, minWidth: number) {
   return `(() => {
     const pads = [...document.querySelectorAll(${JSON.stringify(selector)})]

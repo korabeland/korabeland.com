@@ -1,5 +1,6 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import { serializeJsonLd } from "../../lib/json-ld";
 import { formatNoteDate, listPosts } from "../../lib/posts";
 
 const posts = await listPosts();
@@ -27,7 +28,7 @@ const jsonLd = {
   description="Field notes on building, tools, and thinking in public."
   active="notes"
 >
-  <script type="application/ld+json" slot="jsonld" set:html={JSON.stringify(jsonLd)} />
+  <script is:inline type="application/ld+json" slot="jsonld" set:html={serializeJsonLd(jsonLd)} />
   <section class="notes-head">
     <p class="t-label eyebrow">§ · field notes</p>
     <h1 class="t-display title">Field notes.</h1>

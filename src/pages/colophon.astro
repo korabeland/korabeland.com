@@ -2,6 +2,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import BaseLayout from "../layouts/BaseLayout.astro";
+import { serializeJsonLd } from "../lib/json-ld";
 
 const trailRegisterRoot = resolve(process.cwd(), "src/content/trail-register");
 
@@ -103,7 +104,7 @@ const tools: { label: string; note: string }[] = [
   description="How korabeland.com was built and the tools used."
   active="colophon"
 >
-  <script type="application/ld+json" slot="jsonld" set:html={JSON.stringify(jsonLd)} />
+  <script is:inline type="application/ld+json" slot="jsonld" set:html={serializeJsonLd(jsonLd)} />
   <article class="prose colophon">
     <header>
       <p class="t-label">§ · colophon</p>

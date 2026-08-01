@@ -6,6 +6,7 @@
 
 import ProjectLedger from "../../components/ProjectLedger/index.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import { serializeJsonLd } from "../../lib/json-ld";
 import { listProjects, projectHref, projectStatus } from "../../lib/projects";
 
 const projects = (await listProjects()).filter((p) => p.category === "side");
@@ -34,7 +35,7 @@ const jsonLd = {
   description="Personal AI projects, built to learn how these systems behave, not to bill hours."
   active="lab"
 >
-  <script type="application/ld+json" slot="jsonld" set:html={JSON.stringify(jsonLd)} />
+  <script is:inline type="application/ld+json" slot="jsonld" set:html={serializeJsonLd(jsonLd)} />
 
   <div class="work">
     <section class="work-head">

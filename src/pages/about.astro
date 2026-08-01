@@ -7,6 +7,7 @@
 import Portrait from "../components/Portrait/index.astro";
 import SkillsSection from "../components/SkillsSection/SkillsSection.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
+import { serializeJsonLd } from "../lib/json-ld";
 import { readSkills } from "../lib/skills";
 import { STATUS } from "../lib/status";
 
@@ -29,7 +30,7 @@ const jsonLd = {
   description="13 years across marketing, CX and operations. Now building the AI-driven kind. The career arc, how I operate, and how to reach me."
   active="about"
 >
-  <script type="application/ld+json" slot="jsonld" set:html={JSON.stringify(jsonLd)} />
+  <script is:inline type="application/ld+json" slot="jsonld" set:html={serializeJsonLd(jsonLd)} />
 
   <article class="about">
     <header class="about-header">

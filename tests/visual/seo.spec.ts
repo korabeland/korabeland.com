@@ -239,6 +239,30 @@ for (const route of routes) {
   });
 }
 
+test("canonical and og:url omit presentation query parameters", async ({
+  page,
+}) => {
+  for (const [path, expectedPath] of [
+    ["/?shift=day", "/"],
+    ["/off-trail?from=notes&shift=day", "/off-trail"],
+  ] as const) {
+    await page.goto(path);
+    for (const selector of [
+      'link[rel="canonical"]',
+      'meta[property="og:url"]',
+    ]) {
+      const raw =
+        (await page.locator(selector).getAttribute("href")) ??
+        (await page.locator(selector).getAttribute("content"));
+      expect(raw).toBeTruthy();
+      const url = new URL(raw ?? "");
+      expect(url.pathname).toBe(expectedPath);
+      expect(url.search).toBe("");
+      expect(url.hash).toBe("");
+    }
+  }
+});
+
 // Favicon + iOS touch icon are emitted once from BaseLayout, so they appear on
 // every route — asserting on "/" proves the shared shell wiring. GETting each
 // href confirms the portrait-derived PNGs were actually emitted, not just that

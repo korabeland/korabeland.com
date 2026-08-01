@@ -798,10 +798,10 @@ describe("main-sequence motion + vergence (U6 — R10/R12/R13/R17)", () => {
       [-1, 0],
       [0, 1],
       [0, -1],
-      [0.7071, 0.7071],
-      [-0.7071, 0.7071],
-      [0.7071, -0.7071],
-      [-0.7071, -0.7071],
+      [Math.SQRT1_2, Math.SQRT1_2],
+      [-Math.SQRT1_2, Math.SQRT1_2],
+      [Math.SQRT1_2, -Math.SQRT1_2],
+      [-Math.SQRT1_2, -Math.SQRT1_2],
     ] as const;
 
     it("the reachable envelope is a small fraction of image width", () => {

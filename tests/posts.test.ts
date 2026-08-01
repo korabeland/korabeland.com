@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  countWords,
   estimateReadTime,
+  extractDocumentText,
+  formatNoteMonth,
   type PostSummary,
   selectPublished,
 } from "@/lib/posts";
@@ -90,5 +93,50 @@ describe("estimateReadTime", () => {
     // 220 words separated by mixed whitespace → 1 min (round(220/220)=1).
     const text = Array.from({ length: 220 }, () => "w").join("\n\t  ");
     expect(estimateReadTime(text)).toBe("1 min");
+  });
+});
+
+describe("Markdoc text helpers", () => {
+  it("counts visible text without counting AST metadata", () => {
+    const document = {
+      node: {
+        type: "document",
+        attributes: { href: "metadata should not count" },
+        children: [
+          {
+            type: "paragraph",
+            children: [
+              {
+                type: "text",
+                attributes: { content: "Hello world" },
+                children: [],
+              },
+            ],
+          },
+          {
+            type: "link",
+            attributes: { href: "https://example.com" },
+            children: [
+              {
+                type: "text",
+                attributes: { content: "read more" },
+                children: [],
+              },
+            ],
+          },
+        ],
+      },
+    };
+
+    const text = extractDocumentText(document);
+    expect(text).toBe("Hello world read more");
+    expect(countWords(text)).toBe(4);
+  });
+});
+
+describe("formatNoteMonth", () => {
+  it("formats date-only values in UTC, independent of build timezone", () => {
+    expect(formatNoteMonth("2026-01-01")).toBe("jan 2026");
+    expect(formatNoteMonth("not-a-date")).toBe("");
   });
 });
