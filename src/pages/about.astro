@@ -20,14 +20,14 @@ const jsonLd = {
   url: "https://korabeland.com/about",
   name: "About · korab eland",
   description:
-    "13 years across marketing, CX and operations. Now building the AI-driven kind.",
+    "13 years across marketing, CX and operations. Now building AI systems for the same problems.",
   mainEntity: { "@id": "https://korabeland.com/#person" },
 };
 ---
 
 <BaseLayout
   title="about · korab eland"
-  description="13 years across marketing, CX and operations. Now building the AI-driven kind. The career arc, how I operate, and how to reach me."
+  description="13 years across marketing, CX and operations. Now building AI systems for the same problems. The career arc, how I operate, and how to reach me."
   active="about"
 >
   <script is:inline type="application/ld+json" slot="jsonld" set:html={serializeJsonLd(jsonLd)} />
