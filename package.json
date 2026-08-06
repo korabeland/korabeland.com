@@ -7,9 +7,9 @@
     "node": ">=22.12 <23"
   },
   "scripts": {
-    "predev": "pnpm gen:trail-register && pnpm gen:hero-variants && pnpm gen:eye-rig",
+    "predev": "pnpm gen:trail-register && pnpm gen:hero-variants && pnpm gen:eye-rig && pnpm gen:corpus-index",
     "dev": "astro dev",
-    "prebuild": "pnpm gen:trail-register && pnpm gen:shift-log && pnpm gen:hero-variants && pnpm gen:eye-rig",
+    "prebuild": "pnpm gen:trail-register && pnpm gen:shift-log && pnpm gen:hero-variants && pnpm gen:eye-rig && pnpm gen:corpus-index",
     "build": "astro build",
     "preview": "astro preview",
     "sync": "astro sync",
@@ -17,6 +17,7 @@
     "gen:shift-log": "tsx scripts/gen-shift-log.ts",
     "gen:hero-variants": "tsx scripts/gen-hero-variants.ts",
     "gen:eye-rig": "tsx scripts/gen-eye-rig.ts",
+    "gen:corpus-index": "tsx scripts/gen-corpus-index.ts",
     "verify": "biome check . && astro sync && tsc --noEmit && astro check",
     "pretest": "pnpm gen:eye-rig",
     "test": "vitest run",

@@ -65,6 +65,12 @@ src/content/trail-register/commits.json
 # Shift-log: generated per-build by scripts/gen-shift-log.ts.
 # Seed (contributions.seed.json) is committed as the fallback.
 src/content/shift-log/contributions.json
+
+# Ask the Operator corpus index: generated per-build by
+# scripts/gen-corpus-index.ts from site content. No seed fallback here,
+# unlike trail-register/shift-log above: a failed generation must fail the
+# build.
+src/content/ask-index/corpus.json
 .vercel
 .env*.local
 

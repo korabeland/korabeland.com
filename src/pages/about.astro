@@ -46,6 +46,10 @@ const jsonLd = {
       </figcaption>
     </figure>
 
+    <!-- ABOUT-PROSE:START: extraction anchor for scripts/gen-corpus-index.ts,
+         which reads this file at generation time and pulls the plain text
+         between these markers into the Ask the Operator corpus (U1). Keep
+         both markers, and never remove one without removing its pair. -->
     <section class="about-body" aria-labelledby="narrative">
       <h2 id="narrative" class="sr-only">Career narrative</h2>
       <p>
@@ -93,6 +97,7 @@ const jsonLd = {
         as a field note.
       </p>
     </section>
+    <!-- ABOUT-PROSE:END -->
 
     {skills && <SkillsSection data={skills} />}
 
