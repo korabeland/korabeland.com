@@ -13,7 +13,6 @@ import { describe, expect, it } from "vitest";
 import {
   buildDocumentChunks,
   computeCorpusRevision,
-  githubSlug,
   MAX_CHUNK_CHARS,
   normalizeChunkText,
   splitHtmlIntoSections,
@@ -94,8 +93,6 @@ function fixtureInput(
       base: "Testville",
       target: "Sampleburg",
       citizenship: "Testland citizen",
-      authorization: "no sponsorship required",
-      nationalities: ["Testland"],
     },
     ...overrides,
   };
@@ -154,9 +151,14 @@ describe("assembleCorpus: happy path", () => {
 
   it("emits status fact chunks under /about with the injected STATUS values", () => {
     const location = chunks.find(
-      (c) => c.sourceKind === "status" && c.anchor === "location",
+      (c) =>
+        c.sourceKind === "status" &&
+        c.sectionTitle === "Location and relocation",
     );
     expect(location?.route).toBe("/about");
+    // Route-only citation: /about renders no #location fragment, so the
+    // anchor must be empty rather than pointing at an id that does not exist.
+    expect(location?.anchor).toBe("");
     expect(location?.text).toContain("Testville");
     expect(location?.text).toContain("Sampleburg");
   });
@@ -197,21 +199,18 @@ describe("splitMarkdownIntoSections: heading-aware chunking", () => {
   });
 });
 
-describe("githubSlug + buildDocumentChunks: anchors", () => {
-  it("derives a GitHub-style slug from a heading", () => {
-    expect(githubSlug("How I Operate")).toBe("how-i-operate");
-    expect(githubSlug("AI, Data & Product")).toBe("ai-data-product");
-  });
-
-  it("dedupes a genuinely repeated heading the way GitHub does (bare, then -1)", () => {
+describe("buildDocumentChunks: markdown anchors stay empty", () => {
+  it("never derives a fragment anchor from a markdown heading (the Markdoc renderer emits no heading ids, so a derived fragment would be a dead link)", () => {
     const chunks = buildDocumentChunks({
       route: "/notes/x",
       sourceKind: "post",
       docId: "post:x",
       fallbackTitle: "X",
-      markdown: "## Overview\nFirst.\n\n## Overview\nSecond.\n",
+      markdown: "## Overview\nFirst.\n\n## Details\nSecond.\n",
     });
-    expect(chunks.map((c) => c.anchor)).toEqual(["overview", "overview-1"]);
+    expect(chunks.map((c) => c.anchor)).toEqual(["", ""]);
+    // The section names still travel with the chunks for display.
+    expect(chunks.map((c) => c.sectionTitle)).toEqual(["Overview", "Details"]);
   });
 });
 
@@ -240,7 +239,7 @@ describe("splitOversizedBody: the 2000-char cap", () => {
     expect(groups[0].length).toBeGreaterThan(2000);
   });
 
-  it("real chunking end-to-end: no emitted chunk exceeds the cap, and every part of the same oversized section shares its anchor", () => {
+  it("real chunking end-to-end: no emitted chunk exceeds the cap, and every part of the same oversized section shares its section title", () => {
     const paragraph = (n: number) => `Sentence about topic ${n}. `.repeat(50);
     const markdown = `## Long Section\n${[1, 2, 3, 4].map(paragraph).join("\n\n")}\n`;
     const chunks = buildDocumentChunks({
@@ -253,7 +252,8 @@ describe("splitOversizedBody: the 2000-char cap", () => {
     expect(chunks.length).toBeGreaterThan(1);
     for (const chunk of chunks) {
       expect(chunk.text.length).toBeLessThanOrEqual(MAX_CHUNK_CHARS);
-      expect(chunk.anchor).toBe("long-section");
+      expect(chunk.sectionTitle).toBe("Long Section");
+      expect(chunk.anchor).toBe("");
     }
   });
 });
@@ -313,6 +313,28 @@ describe("extractAboutProse: marker extraction", () => {
   it("throws naming the marker when the opening marker is missing", () => {
     const source = "<p>no markers here</p>";
     expect(() => extractAboutProse(source)).toThrow(/ABOUT-PROSE:START/);
+  });
+
+  it("throws on a duplicated START marker rather than extracting a partial range", () => {
+    const source =
+      "<!-- ABOUT-PROSE:START -->\n<p>one</p>\n<!-- ABOUT-PROSE:START -->\n<p>two</p>\n<!-- ABOUT-PROSE:END -->";
+    expect(() => extractAboutProse(source)).toThrow(
+      /exactly one.*START.*found 2/,
+    );
+  });
+
+  it("throws on a duplicated END marker rather than extracting a partial range", () => {
+    const source =
+      "<!-- ABOUT-PROSE:START -->\n<p>one</p>\n<!-- ABOUT-PROSE:END -->\n<p>two</p>\n<!-- ABOUT-PROSE:END -->";
+    expect(() => extractAboutProse(source)).toThrow(
+      /exactly one.*END.*found 2/,
+    );
+  });
+
+  it("throws when END appears before START instead of extracting nothing silently", () => {
+    const source =
+      "<!-- ABOUT-PROSE:END -->\n<p>stranded</p>\n<!-- ABOUT-PROSE:START -->";
+    expect(() => extractAboutProse(source)).toThrow(/ABOUT-PROSE/);
   });
 });
 
@@ -398,14 +420,18 @@ describe("buildStatusSections", () => {
       base: "Melbourne",
       target: "Washington, DC",
       citizenship: "US and Australian citizen",
-      authorization: "no US visa sponsorship required",
-      nationalities: ["United States", "Australia"],
     });
     expect(sections).toHaveLength(2);
     expect(sections[0].body).toContain("Melbourne");
     expect(sections[0].body).toContain("Washington, DC");
     expect(sections[1].body).toContain("US and Australian citizen");
-    expect(sections[1].body).toContain("United States and Australia");
+  });
+
+  it("keeps work-authorization copy out of the corpus (it renders on no visible page, so a citation could never be verified)", () => {
+    const sections = buildStatusSections(STATUS);
+    const allText = sections.map((s) => s.body).join(" ");
+    expect(allText.toLowerCase()).not.toContain("sponsorship");
+    expect(allText.toLowerCase()).not.toContain("authorization");
   });
 });
 

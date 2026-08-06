@@ -165,20 +165,37 @@ export function isProjectPublished(fm: Record<string, string>): boolean {
 const ABOUT_MARKER_START = "<!-- ABOUT-PROSE:START";
 const ABOUT_MARKER_END = "<!-- ABOUT-PROSE:END -->";
 
+function countOccurrences(haystack: string, needle: string): number {
+  let count = 0;
+  let index = haystack.indexOf(needle);
+  while (index !== -1) {
+    count++;
+    index = haystack.indexOf(needle, index + needle.length);
+  }
+  return count;
+}
+
 /**
  * Pulls the HTML between the ABOUT-PROSE:START/END markers out of
- * about.astro's raw source. A missing or unbalanced marker is a build
- * error naming the marker at fault, rather than a silent empty extraction,
- * so a future edit to about.astro that drops a marker fails loudly instead
- * of quietly shrinking the corpus.
+ * about.astro's raw source. A missing, duplicated, or unbalanced marker is
+ * a build error naming the marker at fault, rather than a silent empty or
+ * partial extraction, so a future edit to about.astro that drops or copies
+ * a marker fails loudly instead of quietly changing the corpus.
  */
 export function extractAboutProse(source: string): string {
-  const startIndex = source.indexOf(ABOUT_MARKER_START);
-  if (startIndex === -1) {
+  const startCount = countOccurrences(source, ABOUT_MARKER_START);
+  if (startCount !== 1) {
     throw new Error(
-      `gen-corpus-index: missing ${ABOUT_MARKER_START} marker in about.astro`,
+      `gen-corpus-index: expected exactly one ${ABOUT_MARKER_START} marker in about.astro, found ${startCount}`,
     );
   }
+  const endCount = countOccurrences(source, ABOUT_MARKER_END);
+  if (endCount !== 1) {
+    throw new Error(
+      `gen-corpus-index: expected exactly one ${ABOUT_MARKER_END} marker in about.astro, found ${endCount}`,
+    );
+  }
+  const startIndex = source.indexOf(ABOUT_MARKER_START);
   const startCommentEnd = source.indexOf("-->", startIndex);
   if (startCommentEnd === -1) {
     throw new Error(
@@ -189,7 +206,7 @@ export function extractAboutProse(source: string): string {
   const endIndex = source.indexOf(ABOUT_MARKER_END, contentStart);
   if (endIndex === -1) {
     throw new Error(
-      `gen-corpus-index: missing ${ABOUT_MARKER_END} marker in about.astro`,
+      `gen-corpus-index: ${ABOUT_MARKER_END} marker appears before the START marker's comment closes in about.astro`,
     );
   }
   return source.slice(contentStart, endIndex);
@@ -199,28 +216,39 @@ interface StatusFacts {
   base: string;
   target: string;
   citizenship: string;
-  authorization: string;
-  nationalities: readonly string[];
 }
 
 /**
  * Two coherent fact-group chunks rather than one, so a narrow question
  * ("where is Korab based") does not have to pull in the unrelated
- * authorization sentence. Values are read straight off STATUS
+ * citizenship sentence. Values are read straight off STATUS
  * (src/lib/status.ts), the single source of truth, never paraphrased, so
  * nothing here can drift from what the site itself states.
+ *
+ * Only facts /about VISIBLY renders belong here (STATUS.aboutLine shows
+ * relocation and citizenship): a chunk cited to a page must be verifiable
+ * on that page. STATUS.authorization and the nationality list render
+ * nowhere visible by deliberate decision (availability copy is LLM-facing
+ * only, PR #30), so they stay out of the corpus; direct availability
+ * questions are answered by the extractive engine's structured-fact path
+ * (U2), which reads STATUS itself rather than quoting these chunks.
+ *
+ * Anchors are "" on purpose: /about renders these facts inside its contact
+ * section, and the page has no #location or #citizenship fragment — a
+ * citation must never point at an id the page does not render, so these
+ * cite the route alone.
  */
 export function buildStatusSections(status: StatusFacts): AnchoredSection[] {
   return [
     {
       heading: "Location and relocation",
-      anchor: "location",
+      anchor: "",
       body: `Based in ${status.base}. Relocating to ${status.target}.`,
     },
     {
-      heading: "Citizenship and work authorization",
-      anchor: "citizenship",
-      body: `Citizenship: ${status.citizenship}. Work authorization: ${status.authorization}. Nationalities: ${status.nationalities.join(" and ")}.`,
+      heading: "Citizenship",
+      anchor: "",
+      body: `Citizenship: ${status.citizenship}.`,
     },
   ];
 }
@@ -270,14 +298,12 @@ export function assembleCorpus(input: AssembleCorpusInput): CorpusChunk[] {
     );
   }
 
+  // splitHtmlIntoSections already carries the page's real heading ids as
+  // anchors ("" for any text before the first heading) — pass them through
+  // untouched; inventing a fragment here would point at an id the page
+  // never renders.
   const aboutHtml = extractAboutProse(input.aboutAstroSource);
-  const aboutSections: AnchoredSection[] = splitHtmlIntoSections(aboutHtml).map(
-    (section) => ({
-      heading: section.heading,
-      anchor: section.heading === null ? "about" : section.anchor,
-      body: section.body,
-    }),
-  );
+  const aboutSections: AnchoredSection[] = splitHtmlIntoSections(aboutHtml);
   chunks.push(
     ...chunksFromAnchoredSections(aboutSections, {
       route: "/about",

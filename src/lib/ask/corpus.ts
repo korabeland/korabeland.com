@@ -27,10 +27,10 @@ export interface RawSection {
   body: string;
 }
 
-/** A section that already carries the anchor it should chunk under, either
- *  derived (githubSlug, for markdown) or borrowed from a real DOM id (the
- *  about-page HTML pipeline). Shared shape so both pipelines can hand off
- *  to the same chunk assembler. */
+/** A section that already carries the anchor it should chunk under: a real
+ *  DOM id (the about-page HTML pipeline) or "" when the rendered page has
+ *  no matching fragment (all markdown sources today). Shared shape so both
+ *  pipelines can hand off to the same chunk assembler. */
 export interface AnchoredSection {
   heading: string | null;
   anchor: string;
@@ -75,35 +75,6 @@ export function splitMarkdownIntoSections(markdown: string): RawSection[] {
   flush();
 
   return sections;
-}
-
-/**
- * GitHub-style heading slug: lowercase, drop everything but letters,
- * numbers, spaces and hyphens, then collapse whitespace into single
- * hyphens. This is the common-case ASCII-prose slug, not GitHub's full
- * Unicode table, which is all this site's headings ever need.
- */
-export function githubSlug(heading: string): string {
-  return heading
-    .toLowerCase()
-    .trim()
-    .replace(/[^\p{Letter}\p{Number}\s-]/gu, "")
-    .trim()
-    .replace(/\s+/g, "-");
-}
-
-/**
- * GitHub's own dedupe rule for repeated heading slugs within one document:
- * the first occurrence is bare, the second gets "-1", the third "-2", and
- * so on. buildDocumentChunks also runs the extra parts an oversized section
- * spins off through this same counter, so a second part reads as "the same
- * slug again" and picks up a suffix the way a genuine duplicate heading
- * would, keeping every chunk's anchor unique within its document.
- */
-function assignSlug(slug: string, seen: Map<string, number>): string {
-  const count = seen.get(slug) ?? 0;
-  seen.set(slug, count + 1);
-  return count === 0 ? slug : `${slug}-${count}`;
 }
 
 /**
@@ -176,7 +147,7 @@ export function normalizeChunkText(markdown: string): string {
 /**
  * Turns pre-anchored sections into corpus chunks, splitting any oversized
  * section at paragraph boundaries. Shared by the markdown pipeline
- * (buildDocumentChunks, which derives anchors with githubSlug) and the
+ * (buildDocumentChunks, which passes fallbackAnchor through) and the
  * about-page HTML pipeline in scripts/gen-corpus-index.ts, which already
  * has the page's real heading ids to reuse verbatim.
  */
@@ -238,11 +209,20 @@ export interface BuildDocumentChunksInput {
 }
 
 /**
- * The markdown pipeline: heading-aware section split, GitHub-style anchors
- * (deduped within the document), oversized-section splitting, and text
- * normalisation, glued together into ready-to-write CorpusChunk objects. A
- * document with no headings at all (the common case for this site's post
- * and project bodies) becomes a single section under fallbackAnchor.
+ * The markdown pipeline: heading-aware section split, oversized-section
+ * splitting, and text normalisation, glued together into ready-to-write
+ * CorpusChunk objects. A document with no headings at all (the common case
+ * for this site's post and project bodies) becomes a single section under
+ * fallbackAnchor.
+ *
+ * Every markdown-sourced section gets fallbackAnchor ("" by default), NOT a
+ * slug derived from its heading: the site renders .mdoc bodies through
+ * Markdoc's default transform (src/components/PostContent.tsx), which emits
+ * headings with no id attribute, so a derived fragment like
+ * "#what-this-site-is" would land at the top of the page — a citation that
+ * silently lies about its precision. sectionTitle still names the section
+ * for display. If the renderer ever emits heading ids, reinstate slug
+ * derivation here in the same change, so the two cannot drift apart.
  */
 export function buildDocumentChunks(
   input: BuildDocumentChunksInput,
@@ -258,13 +238,9 @@ export function buildDocumentChunks(
   } = input;
 
   const rawSections = splitMarkdownIntoSections(markdown);
-  const seenSlugs = new Map<string, number>();
   const anchored: AnchoredSection[] = rawSections.map((section) => ({
     heading: section.heading,
-    anchor:
-      section.heading === null
-        ? fallbackAnchor
-        : assignSlug(githubSlug(section.heading), seenSlugs),
+    anchor: fallbackAnchor,
     body: section.body,
   }));
 
