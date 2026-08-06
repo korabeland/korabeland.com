@@ -45,6 +45,15 @@ jobs:
       # Chromatic (below) is the real cross-environment visual gate.
       - run: pnpm test:visual
       - run: pnpm run lighthouse
+      # Production-build smoke: everything above runs against `pnpm dev`, so
+      # the serverless bundle Vercel actually deploys was never exercised
+      # before merge. This step imports the built function entry (emitted by
+      # the lighthouse step's `pnpm build` just above — keep the ordering) and
+      # asserts SSR semantics from the production bundle. A step inside
+      # verify-all rather than its own job: it reuses the existing build and
+      # is blocking under the one required check with no branch-protection
+      # change.
+      - run: pnpm smoke:production
       # Hand the Playwright-generated page archives to the `chromatic` job
       # below. test:visual produced them via @chromatic-com/playwright's
       # fixture teardown; `npx chromatic --playwright` only packages and
