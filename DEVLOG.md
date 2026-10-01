@@ -144,9 +144,3 @@ This was the foundational marathon — everything that needed to be true before 
 ## Pre-history — Brand foundation (Feb–Apr 2026)
 
 Before the Dev Team subdirectory existed as a build target, ~30 commits laid down the brand-level foundation in the parent repo: strategy doc, identity files (values, strengths, personality, voice guide, influences), the Paperclip autonomous agent org for content production, the Wispr Flow voice-note sync pipeline, and design references. Those commits don't belong in this dev log because they're not Dev Team build moves — but they're the inputs the colophon and design system pull from. See the parent repo's `git log` if you want that history.
-
----
-
-## Up next — Prompts 12–14
-
-Polish (12), launch checklist (13), ongoing operations (14).
