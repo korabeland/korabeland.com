@@ -8,6 +8,7 @@ import { defineConfig } from "astro/config";
 
 export default defineConfig({
   site: "https://korabeland.com",
+  compressHTML: true,
   // Static-by-default: every route prerenders unless it opts out with
   // `export const prerender = false`. Only /off-trail (reads ?from) and the two
   // dev/* previews are SSR. This makes forgetting an export fail safe (a static
