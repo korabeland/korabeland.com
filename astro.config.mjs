@@ -8,6 +8,7 @@ import { defineConfig } from "astro/config";
 
 export default defineConfig({
   site: "https://korabeland.com",
+  // Preserve separator spaces around inline links across template newlines.
   compressHTML: true,
   // Static-by-default: every route prerenders unless it opts out with
   // `export const prerender = false`. Only /off-trail (reads ?from) and the two

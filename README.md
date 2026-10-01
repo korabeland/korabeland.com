@@ -23,7 +23,7 @@ A few routes are deliberately quiet: `/for/<slug>` renders unlisted, tailored la
 
 ## How it's built
 
-- **[Astro 6](https://astro.build)** (TypeScript, strict) — page routing. Static by default; only `/off-trail` and the dev-only previews opt into SSR.
+- **[Astro](https://astro.build)** (TypeScript, strict) — page routing. Static by default; only `/off-trail` and the dev-only previews opt into SSR.
 - **[Tailwind CSS 4](https://tailwindcss.com)** — CSS-first config, design tokens in `src/styles/tokens.css`.
 - **[shadcn/ui](https://ui.shadcn.com) + React 19** — interactive islands, used only where they earn their weight.
 - **[Keystatic](https://keystatic.com)** — a local-git-backed CMS for posts, projects, experience and tailored pages. Admin UI at `/keystatic` in dev.
