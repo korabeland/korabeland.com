@@ -147,8 +147,6 @@ Before the Dev Team subdirectory existed as a build target, ~30 commits laid dow
 
 ---
 
-## Up next — Prompt 10: Component buildout (object-first)
+## Up next — Prompts 12–14
 
-The big one. Actually building the kiosk hero you've designed. The order is "object-first": the `MapSurface` component (topographic map with dashed trails, breathing "you are here" dot, contour rings, three destination pins, radar-ping marker) gets built and polished in isolation at `/_dev/kiosk` *before* anything else is wired in. Only after it passes a "mirror-sheen audit" do the rails (`TrailRegisterRail` + `PopularRoutesRail`) get added, then the full kiosk composition, then the routes themselves. `rough.js` carries the hand-drawn irregularity; everything is server-rendered with zero client JS.
-
-After Prompt 10: deployment + preview infra (11), polish (12), launch checklist (13), ongoing operations (14).
+Polish (12), launch checklist (13), ongoing operations (14).
