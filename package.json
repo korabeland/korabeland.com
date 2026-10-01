@@ -32,29 +32,34 @@
     ],
     "overrides": {
       "postcss": "^8.5.24",
-      "brace-expansion": "^5.0.9",
+      "brace-expansion": "^5.0.11",
       "minimatch": "^10.2.6",
-      "sharp": "^0.35.3",
-      "svgo": "^4.0.2"
+      "sharp": "^0.35.4",
+      "svgo": "^4.1.0",
+      "js-yaml@^4": "^4.3.2",
+      "nanoid@^3": "^3.3.18",
+      "nanoid@^5": "^5.1.16",
+      "tar@^7": "^7.5.21",
+      "ws@^8": "^8.21.0"
     }
   },
   "dependencies": {
-    "@astrojs/mdx": "^5.0.6",
-    "@astrojs/react": "^5.0.7",
+    "@astrojs/mdx": "^8.0.2",
+    "@astrojs/react": "^7.0.0",
     "@astrojs/sitemap": "^3.7.2",
-    "@astrojs/vercel": "^10.0.8",
+    "@astrojs/vercel": "^11.0.11",
     "@fontsource/jetbrains-mono": "^5.2.8",
     "@fontsource/schibsted-grotesk": "^5.2.8",
-    "@keystatic/astro": "^5.0.6",
+    "@keystatic/astro": "^6.0.0",
     "@keystatic/core": "^0.5.50",
     "@markdoc/markdoc": "^0.5.7",
     "@resvg/resvg-js": "^2.6.2",
     "@tailwindcss/vite": "^4.2.2",
-    "astro": "^6.4.8",
+    "astro": "^7.3.5",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "satori": "^0.26.0",
-    "sharp": "^0.35.3",
+    "sharp": "^0.35.4",
     "tailwindcss": "^4.2.2"
   },
   "devDependencies": {

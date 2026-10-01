@@ -8,12 +8,12 @@ Stack-specific rules for the korabeland.com codebase. Orchestration mechanics, e
 
 ## 1. Stack
 
-- **Astro 6** (TypeScript strict mode) — page routing, SSR via Vercel adapter
+- **Astro** (TypeScript strict mode; versions in `package.json`) — page routing, SSR via Vercel adapter
 - **Tailwind CSS 4** — Vite plugin (`@tailwindcss/vite`), CSS-first config (`@import "tailwindcss"` in `src/styles/global.css`)
 - **shadcn/ui** — React islands via `@astrojs/react`; components in `src/components/`
 - **Keystatic** — local-git-backed CMS (`@keystatic/core` + `@keystatic/astro`). Collections `posts`/`projects`/`experience`/`tailored` at `src/content/*/` plus a `skills` singleton. Note the `tailored` collection stores under `src/content/for/` (route `/for/<slug>`); `experience` and `skills` are content-gated — their dirs don't exist on disk until the first entry is authored in `/keystatic`. Admin UI at `/keystatic`. Readers in `src/lib/` split pure map/sort from the reader so Vitest tests them with fixtures.
 - **MDX** — `@astrojs/mdx` alongside Keystatic's markdoc format
-- **Vercel** — `@astrojs/vercel@10` adapter, `output: 'static'` (static-by-default; routes opt into SSR with `export const prerender = false` — only `/off-trail` and the `dev/*` previews do)
+- **Vercel** — `@astrojs/vercel` adapter, `output: 'static'` (static-by-default; routes opt into SSR with `export const prerender = false` — only `/off-trail` and the `dev/*` previews do)
 
 **Directory layout:**
 ```
@@ -50,7 +50,7 @@ src/content/
                     committed, fetch fails soft) — NOT Keystatic
 ```
 
-**Locked decisions:** Keystatic collection path uses trailing slash (`'src/content/posts/*/'`) for index-mode `index.mdoc` resolution. `@keystatic/astro@5` declares peer dep `astro@"2||3||4||5"` but works with Astro 6. TypeScript pinned to `^5` — ecosystem not yet ready for TS6.
+**Locked decisions:** Keystatic collection path uses trailing slash (`'src/content/posts/*/'`) for index-mode `index.mdoc` resolution. TypeScript pinned to `^5` — ecosystem not yet ready for TS6.
 
 ---
 
@@ -60,7 +60,7 @@ src/content/
 - `pnpm build` — production build (prebuild hooks: `gen-trail-register.ts` + `gen-shift-log.ts` + `gen-hero-variants.ts`; the last also runs on `predev`)
 - `pnpm verify` — Biome + `tsc --noEmit` + `astro check` (`.astro` frontmatter)
 - `pnpm test` — Vitest (non-visual, non-E2E)
-- `pnpm test:visual` — Playwright visual + E2E. Local pixelmatch baselines are **advisory**; the blocking visual gate is Chromatic in CI — see `docs/decisions/2026-07-10-visual-approval-policy.md`. Never delete/blind-reseed a baseline to go green. The suite honours `DEV_PORT` (default 4321) so a second worktree can run it on a non-colliding port: `DEV_PORT=4399 pnpm test:visual`.
+- `pnpm test:visual` — Playwright visual + E2E. For visual approval policy, see `docs/decisions/2026-07-10-visual-approval-policy.md`. Never delete/blind-reseed a baseline to go green. The suite honours `DEV_PORT` (default 4321) so a second worktree can run it on a non-colliding port: `DEV_PORT=4399 pnpm test:visual`.
 - `pnpm reseed:visual` — staged baseline reseed. Regenerates every local baseline into a gitignored staging dir for review (the committed baselines are untouched); after reviewing each diff, `pnpm reseed:visual --promote` moves the approved renders in atomically by rename. Use this instead of hand-deleting baselines.
 - `pnpm run lighthouse` — Lighthouse CI, desktop (`.lighthouserc.json`) + mobile (`.lighthouserc.mobile.json`) profiles. Distinct from bare `pnpm audit --prod` (pnpm's built-in dependency security audit, a blocking CI step) — the two were once both spelled `audit`; the Lighthouse script was renamed to end that collision.
 - `pnpm verify:all` — chains all four; must pass before any PR is opened
@@ -157,7 +157,7 @@ When a change matches a trigger below, the "required work" column is not optiona
 
 | Change trigger | Required work | Enforcement |
 | --- | --- | --- |
-| `package.json` or `pnpm-lock.yaml` | Run `pnpm audit --prod --audit-level=high`; update compatible integrations together (Astro-6 line); full suite after upgrade | Blocking CI step "Dependency security audit" |
+| `package.json` or `pnpm-lock.yaml` | Run `pnpm audit --prod --audit-level=high`; update compatible integrations together (versions in `package.json`); full suite after upgrade | Blocking CI step "Dependency security audit" |
 | New entry in `src/content/projects/` or `src/content/posts/` | Route/SEO/axe/visual coverage derives automatically from the collections — verify enumeration picked it up; a hero-bearing post must appear in **both** Lighthouse configs | `tests/coverage-sync.test.ts` (enumeration parity + Lighthouse containment) |
 | New or replaced image asset | Responsive delivery via `scripts/gen-hero-variants.ts` conventions (never astro:assets/`<Image>` for `public/` assets — the Vercel imageService ignores width/format requests); explicit dimensions; alt text; ≤200 KB delivered variant (`docs/decisions/2026-07-10-image-delivery-budget.md`) | `tests/e2e/hero-delivery.spec.ts` network asserts + CI Lighthouse LCP/CLS |
 | Shared markup/state appearing in a second surface | Reuse the existing owner — component catalogue in `docs/design/components.md` (`ProjectLedger`, `Portrait`, `StatusChip`, `src/lib/status.ts`, `src/lib/shift.ts`) — or extract one; an unavoidable duplicate gets a parity test (`tests/shift-parity.test.ts` is the template) | Code-review criterion + existing sync/parity tests |
