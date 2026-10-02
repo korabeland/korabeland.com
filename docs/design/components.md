@@ -514,7 +514,7 @@ compose, but the contract every page renders inside.
 | `title` | `string` | — (required) | `<title>` + `og:title` |
 | `description` | `string` | site default | Meta + OG description |
 | `active` | `"home" \| "notes" \| "projects" \| "work" \| "lab" \| "about" \| "colophon"` | — | Which nav item gets the signal underline + `aria-current="page"` |
-| `ogImage` / `ogType` | `string` | — / `"website"` | Social card |
+| `ogImage` / `ogType` | `string` | `"/og.png"` / `"website"` | Default share image for every page, with a `summary_large_image` Twitter card; pages may override the image |
 | `noindex` | `boolean` | — | Utility/preview routes |
 | `fullBleed` | `boolean` | `false` | `<main>` edge-to-edge (home kiosk owns its containers) |
 | `hideFooter` | `boolean` | `false` | Home renders its own closing strip |

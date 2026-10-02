@@ -1,7 +1,7 @@
 ---
 title: "feat: Portrait gaze v2 — anatomical eye movement"
 type: feat
-status: active
+status: completed
 date: 2026-07-12
 origin: docs/brainstorms/2026-07-12-portrait-gaze-v2-requirements.md
 ---

@@ -32,6 +32,9 @@ export default defineConfig({
   // with no PORT still defaults to 4321. See the DEV_PORT contract (Finding 2).
   server: { port: Number(process.env.PORT) || 4321 },
   trailingSlash: "never",
+  // The Playwright webServer sets TEST_CAPTURE=1 so the dev toolbar can't be
+  // captured into a screenshot baseline. Plain `pnpm dev` keeps the toolbar.
+  devToolbar: { enabled: !process.env.TEST_CAPTURE },
   // /projects moved to /work in the console redesign (2026-07-03).
   // The two side projects moved to /lab in the work/lab split (2026-07-11);
   // their old /work URLs were live and indexed, so they redirect permanently.
@@ -51,8 +54,12 @@ export default defineConfig({
     sitemap({
       // Exclude dev-only previews and the unlisted tailored pages. /for/ pages
       // are noindex, not robots-disallowed, so crawlers can still see the
-      // noindex directive — the sitemap just never advertises them.
-      filter: (page) => !page.includes("/dev/") && !page.includes("/for/"),
+      // noindex directive — the sitemap just never advertises them. /off-trail
+      // is the same case: it sends noindex, so it stays out of the sitemap too.
+      filter: (page) =>
+        !page.includes("/dev/") &&
+        !page.includes("/for/") &&
+        !page.includes("/off-trail"),
     }),
   ],
   vite: {
