@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import mdx from "@astrojs/mdx";
 import react from "@astrojs/react";
 import sitemap from "@astrojs/sitemap";
@@ -5,6 +6,14 @@ import vercel from "@astrojs/vercel";
 import keystatic from "@keystatic/astro";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "astro/config";
+import { themeScriptHash } from "./scripts/theme-script-hash";
+
+const themeScript = themeScriptHash(
+  readFileSync(
+    new URL("./src/layouts/BaseLayout.astro", import.meta.url),
+    "utf8",
+  ),
+);
 
 export default defineConfig({
   site: "https://korabeland.com",
@@ -18,7 +27,40 @@ export default defineConfig({
   // imageService: true swaps Astro's bundled Sharp (libvips ~17 MB, the bulk of
   // the server function) for Vercel's native image optimizer, slimming the
   // lambda to little more than the SSR routes it still needs to serve.
-  adapter: vercel({ imageService: true }),
+  // staticHeaders makes the adapter emit each prerendered page's CSP as a real
+  // response header in .vercel/output/config.json (SSR routes get theirs at
+  // runtime). The remaining headers live in vercel.json.
+  adapter: vercel({ imageService: true, staticHeaders: true }),
+  // Content-Security-Policy. Astro hashes every inline <script> and <style> it
+  // renders (the pre-paint theme script, inlined page CSS, bundled islands), so
+  // script-src never needs 'unsafe-inline'. The CSP lands as a header, which is
+  // also the only place frame-ancestors is honoured (a <meta> CSP ignores it).
+  security: {
+    csp: {
+      directives: [
+        "default-src 'self'",
+        "base-uri 'self'",
+        "object-src 'none'",
+        "form-action 'self'",
+        "frame-ancestors 'none'",
+        // Fonts under Vite's inline limit ship as data: URIs inside the
+        // inlined page CSS.
+        "font-src 'self' data:",
+      ],
+      // The no-flash theme script is is:inline, which Astro does not hash.
+      scriptDirective: { hashes: [themeScript] },
+      // Inline style="" attributes (CSS custom properties on the ledger, shift
+      // log and portrait) can't be hashed, so style attributes alone allow
+      // 'unsafe-inline'. Style elements stay hash-only. Overriding resources
+      // drops Astro's default 'self', so restate it.
+      styleDirective: {
+        resources: [
+          "'self'",
+          { resource: "'unsafe-inline'", kind: "attribute" },
+        ],
+      },
+    },
+  },
   // Inline all page CSS instead of linking external stylesheets: the mobile
   // Lighthouse audit measured ~750ms of render-blocking CSS on the critical
   // path (BaseLayout.css + page CSS) before first paint. Inlining trades a

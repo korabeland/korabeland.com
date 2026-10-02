@@ -11,6 +11,7 @@
     "dev": "astro dev",
     "prebuild": "pnpm gen:trail-register && pnpm gen:shift-log && pnpm gen:hero-variants && pnpm gen:eye-rig",
     "build": "astro build",
+    "postbuild": "tsx scripts/patch-vercel-config.ts",
     "preview": "astro preview",
     "sync": "astro sync",
     "gen:trail-register": "tsx scripts/gen-trail-register.ts",
