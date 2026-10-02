@@ -58,8 +58,9 @@ const hero = heroImage
 const HERO_SIZES = "(max-width: 680px) 100vw, 680px";
 
 // An optional hero video is a click-to-play native player: the hero image is
-// its poster (shown until the visitor presses play) and its no-JS/no-video
-// fallback. It does not autoplay and does not loop — it plays once and holds
+// its poster (shown until the visitor presses play; the 960w WebP, since the
+// poster attribute takes one URL with no format negotiation and WebP is
+// universally decodable where the PNG fallback would cost ~5x the bytes). It does not autoplay and does not loop — it plays once and holds
 // on its final frame. `fields.file` returns the bare filename; resolve it
 // against the notes public path (tolerating an already-absolute value in case
 // the reader ever changes).
@@ -103,7 +104,7 @@ const heroVideoSrc =
           controls
           playsinline
           preload="none"
-          poster={hero.fallbackSrc}
+          poster={hero.posterSrc}
           width={hero.width}
           height={hero.height}
           aria-label={heroImageAlt}
@@ -196,7 +197,7 @@ const heroVideoSrc =
   }
 
   /* Video hero: a native click-to-play player. The poster (the generated hero
-     PNG) shows until the visitor presses play; with no `loop` it plays once
+     WebP) shows until the visitor presses play; with no `loop` it plays once
      and holds on its final frame. */
   .hero-video {
     display: block;

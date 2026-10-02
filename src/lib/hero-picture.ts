@@ -20,6 +20,7 @@ export interface HeroPicture {
   avifSrcset: string;
   webpSrcset: string;
   fallbackSrc: string;
+  posterSrc: string;
   width: number;
   height: number;
 }
@@ -49,6 +50,7 @@ export function loadHeroPicture(
       .map((w) => `${basename}.gen.${w}.webp ${w}w`)
       .join(", "),
     fallbackSrc: `${basename}.gen.960.png`,
+    posterSrc: `${basename}.gen.960.webp`,
     width: meta.width,
     height: meta.height,
   };
