@@ -433,9 +433,9 @@ uses `--ink-soft` for AA in both shifts.
 ### Portrait
 
 `components/Portrait/index.astro` — the day/night illustrated-portrait
-`<picture>` pair, toggled purely by CSS off `data-time` (mirrors the ShiftToggle
-idiom: orange field by night, blue by day). Consumers: `index.astro`,
-`about.astro`.
+`<picture>` pair, selected by CSS off `data-time` with a client-managed hold
+while the incoming image loads (orange field by night, blue by day). Consumers:
+`index.astro`, `about.astro`.
 
 **Props** — `sizes` (required, per-surface), `alt` (default "Illustrated portrait
 of Korab Eland"), `gaze?` (mount the cursor-tracking gaze rig — home hero only;
@@ -454,9 +454,10 @@ or Save-Data exception, the hidden palette starts fetching at low priority.
 A toggle switches the page theme immediately; if the incoming portrait is
 still pending, the outgoing palette and matching gaze layers stay visible
 (`data-hold`) until the incoming image decodes. A failed decode retains the
-usable outgoing palette. Once ready, toggles swap immediately. Without JavaScript,
-only a `<noscript>` night picture has active URLs and downloads. Throws at build if
-variants are missing — run the generator.
+usable outgoing palette; a replacement responsive candidate is decoded again
+on image `load` before the hold is released. Once ready, toggles swap immediately.
+Without JavaScript, only a `<noscript>` night picture has active URLs and
+downloads. Throws at build if variants are missing — run the generator.
 
 **Gaze rig (v2, opt-in via `gaze`)** — a layered eye cutout mounted over the
 `<picture>` pair: per eye, a painted iris/pupil **sprite** (the only moving

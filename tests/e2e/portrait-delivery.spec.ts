@@ -14,7 +14,9 @@ async function sampleFrames(page: Page, frames: number) {
         const out: { shown: string[]; ready: boolean }[] = [];
         const tick = () => {
           const visible = [
-            ...document.querySelectorAll<HTMLElement>(".portrait-stack picture"),
+            ...document.querySelectorAll<HTMLElement>(
+              ".portrait-stack picture",
+            ),
           ].filter((p) => getComputedStyle(p).display !== "none");
           out.push({
             shown: visible.map((p) =>
@@ -46,7 +48,10 @@ async function expectPalette(page: Page, shift: Shift) {
   }
   if (await page.locator("[data-portrait-rig]").count()) {
     await expect(page.locator(`.rig-${shift}`)).toHaveCSS("display", "block");
-    await expect(page.locator(`.rig-${other(shift)}`)).toHaveCSS("display", "none");
+    await expect(page.locator(`.rig-${other(shift)}`)).toHaveCSS(
+      "display",
+      "none",
+    );
   }
 }
 
@@ -208,17 +213,16 @@ for (const route of ["/", "/about"]) {
             await page.setViewportSize({ width: 1280, height: 800 });
             await expect
               .poll(() =>
-                page.locator(`.portrait-${other(shift)} img`).evaluate(
-                  (element, width) => {
+                page
+                  .locator(`.portrait-${other(shift)} img`)
+                  .evaluate((element, width) => {
                     const img = element as HTMLImageElement;
                     return (
                       img.complete &&
                       img.naturalWidth > 0 &&
                       img.currentSrc.includes(`.gen.${width}.`)
                     );
-                  },
-                  largeWidth,
-                ),
+                  }, largeWidth),
               )
               .toBe(true);
             await expect(page.locator(".portrait-stack")).not.toHaveAttribute(
@@ -296,7 +300,28 @@ for (const route of ["/", "/about"]) {
       });
       await page.goto(`${route}?shift=day`);
       await expect(page.locator(".portrait-stack noscript img")).toBeVisible();
-      await expectPalette(page, "night");
+      // requestAnimationFrame never fires with scripting disabled. Inspect the
+      // rendered fallback directly while preserving the one-ready-palette check.
+      await expect
+        .poll(() =>
+          page.evaluate(() =>
+            Array.from(
+              document.querySelectorAll<HTMLElement>(".portrait-stack picture"),
+            )
+              .filter((p) => getComputedStyle(p).display !== "none")
+              .map((p) => {
+                const img = p.querySelector("img");
+                return {
+                  shift: p.classList.contains("portrait-day") ? "day" : "night",
+                  ready: !!img && img.complete && img.naturalWidth > 0,
+                };
+              }),
+          ),
+        )
+        .toEqual([{ shift: "night", ready: true }]);
+      if (await page.locator("[data-portrait-rig]").count()) {
+        await expect(page.locator("[data-portrait-rig]")).toBeHidden();
+      }
       expect(requested.length).toBeGreaterThan(0);
       expect(requested.every((url) => !isDayFile(url))).toBe(true);
     });
