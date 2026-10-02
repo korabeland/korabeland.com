@@ -6,9 +6,17 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+permissions:
+  contents: read
+# One run per PR (a new push supersedes the old one); pushes to main get a
+# unique group per commit and are never cancelled.
+concurrency:
+  group: ci-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
   verify-all:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with:
@@ -42,7 +50,7 @@ jobs:
       # Runs the screenshot project too, but only so Chromatic archives the
       # pages — the local pixelmatch diff self-skips under CI (see
       # screenshot.test.ts), so no baseline reset/reseed is needed here.
-      # Chromatic (below) is the real cross-environment visual gate.
+      # Chromatic (below) publishes the non-blocking visual record.
       - run: pnpm test:visual
       - run: pnpm run lighthouse
       # Production-build smoke: everything above runs against `pnpm dev`, so
@@ -78,10 +86,14 @@ jobs:
   # review" without gating the merge.
   # (Fork PRs never receive repo secrets by GitHub design; accepted for this
   # solo-maintained repo — revisit before inviting external contributions.)
+  # Skipped for Dependabot PRs: Dependabot runs cannot read Actions secrets, so
+  # the publish would only fail closed on the missing token. verify-all uses no
+  # secrets and runs normally.
   chromatic:
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && github.actor != 'dependabot[bot]'
     needs: verify-all
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
         with:

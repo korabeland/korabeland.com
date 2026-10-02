@@ -1,0 +1,39 @@
+version: 2
+updates:
+  # pnpm is handled by the npm ecosystem; it updates pnpm-lock.yaml.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      # Framework and its integrations move together so their compatibility
+      # is tested in one PR.
+      astro:
+        applies-to: version-updates
+        patterns: ["astro", "@astrojs/*"]
+      keystatic:
+        applies-to: version-updates
+        patterns: ["@keystatic/*"]
+      styling-and-react:
+        applies-to: version-updates
+        patterns: ["tailwindcss", "@tailwindcss/*", "react", "react-dom", "@types/react", "@types/react-dom"]
+      dev-tooling:
+        applies-to: version-updates
+        dependency-type: development
+    # Security updates are not part of these schedules or groups: Dependabot
+    # raises them as soon as an advisory lands, as separate PRs.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 2
+    commit-message:
+      prefix: "ci"
+    groups:
+      actions:
+        patterns: ["*"]

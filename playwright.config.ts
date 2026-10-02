@@ -95,7 +95,7 @@ export default defineConfig({
       // exactly, so this sibling would otherwise silently never execute. One
       // desktop viewport: the /dev/gaze-v2-poses harness is fixed-width per cell,
       // so more viewports add no coverage. The @chromatic-com/playwright fixture
-      // archives each shift to Chromatic (the blocking visual gate).
+      // archives each shift to Chromatic (the non-blocking visual record).
       name: "gaze-poses",
       testMatch: "**/visual/gaze-poses.spec.ts",
       use: { viewport: { width: 1280, height: 900 } },
