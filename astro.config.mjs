@@ -32,6 +32,9 @@ export default defineConfig({
   // with no PORT still defaults to 4321. See the DEV_PORT contract (Finding 2).
   server: { port: Number(process.env.PORT) || 4321 },
   trailingSlash: "never",
+  // The Playwright webServer sets TEST_CAPTURE=1 so the dev toolbar can't be
+  // captured into a screenshot baseline. Plain `pnpm dev` keeps the toolbar.
+  devToolbar: { enabled: !process.env.TEST_CAPTURE },
   // /projects moved to /work in the console redesign (2026-07-03).
   // The two side projects moved to /lab in the work/lab split (2026-07-11);
   // their old /work URLs were live and indexed, so they redirect permanently.

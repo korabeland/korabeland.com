@@ -75,7 +75,7 @@ for (const route of ROUTES) {
       throw new Error(
         `Baseline size mismatch on ${route} @ ${viewport}px: baseline is ` +
           `${w}×${h}, current render is ${current.width}×${current.height}. ` +
-          `A layout change resized the page — delete the baseline to re-seed.`,
+          `A layout change resized the page — review it, then run \`pnpm reseed:visual\` and \`pnpm reseed:visual --promote\`.`,
       );
     }
     const diffPng = new PNG({ width: w, height: h });
@@ -97,7 +97,7 @@ for (const route of ROUTES) {
       writeFileSync(diffPath, PNG.sync.write(diffPng));
       throw new Error(
         `Visual regression on ${route} @ ${viewport}px: ${(diffRatio * 100).toFixed(2)}% pixel diff exceeds ${DIFF_THRESHOLD * 100}% threshold. ` +
-          `Diff saved to ${diffPath}. Delete the baseline to update it.`,
+          `Diff saved to ${diffPath}. If the change is intended, review the diff, then run \`pnpm reseed:visual\` and \`pnpm reseed:visual --promote\`.`,
       );
     }
   });
