@@ -172,6 +172,69 @@ for (const route of ["/", "/about"]) {
         }
       });
 
+      test.describe("responsive candidate replacement", () => {
+        test.use({ deviceScaleFactor: route === "/" ? 3 : 1 });
+        test("releases the hold when a replacement candidate decodes", async ({
+          page,
+        }) => {
+          const smallWidth = route === "/" ? 720 : 360;
+          const largeWidth = route === "/" ? 1040 : 720;
+          let release!: () => void;
+          let stalled = false;
+          const pending = new Promise<void>((resolve) => {
+            release = resolve;
+          });
+          await page.setViewportSize({ width: 600, height: 800 });
+          await page.route(portraitRequests, async (intercepted) => {
+            const url = intercepted.request().url();
+            if (
+              isDayFile(url) !== (shift === "day") &&
+              url.includes(`.gen.${smallWidth}.`)
+            ) {
+              stalled = true;
+              await pending;
+            }
+            await intercepted.continue();
+          });
+          try {
+            await page.goto(`${route}?shift=${shift}`, { waitUntil: "load" });
+            await expect.poll(() => stalled).toBe(true);
+            await page.locator(".shift-toggle").click();
+            await expect(page.locator(".portrait-stack")).toHaveAttribute(
+              "data-hold",
+              shift,
+            );
+            await expectPalette(page, shift);
+            await page.setViewportSize({ width: 1280, height: 800 });
+            await expect
+              .poll(() =>
+                page.locator(`.portrait-${other(shift)} img`).evaluate(
+                  (element, width) => {
+                    const img = element as HTMLImageElement;
+                    return (
+                      img.complete &&
+                      img.naturalWidth > 0 &&
+                      img.currentSrc.includes(`.gen.${width}.`)
+                    );
+                  },
+                  largeWidth,
+                ),
+              )
+              .toBe(true);
+            await expect(page.locator(".portrait-stack")).not.toHaveAttribute(
+              "data-hold",
+              /.*/,
+            );
+            await expectPalette(page, other(shift));
+            await expect.poll(() => hiddenIsReady(page, shift)).toBe(true);
+            await page.locator(".shift-toggle").click();
+            await expectPalette(page, shift);
+          } finally {
+            release();
+          }
+        });
+      });
+
       test("a failed incoming image keeps the usable palette through repeated toggles", async ({
         page,
       }) => {

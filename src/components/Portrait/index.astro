@@ -182,6 +182,21 @@ const rigVariants: RigVariant[] = gaze
     img.src = img.dataset.src!;
   };
 
+  const decodeAndRelease = (
+    stack: HTMLElement,
+    img: HTMLImageElement,
+    shift: string,
+  ) => {
+    img.decode().then(
+      () => {
+        if (root.dataset.time === shift && isReady(img)) {
+          delete stack.dataset.hold;
+        }
+      },
+      () => {},
+    );
+  };
+
   const stacks = Array.from(
     document.querySelectorAll<HTMLElement>(".portrait-stack"),
   );
@@ -189,8 +204,16 @@ const rigVariants: RigVariant[] = gaze
   if (stacks.length > 0) {
     let shown = root.dataset.time === "day" ? "day" : "night";
     for (const stack of stacks) {
-      const img = pictureFor(stack, shown);
-      if (img) fetchNow(img, "high");
+      for (const shift of ["night", "day"]) {
+        const img = pictureFor(stack, shift);
+        if (!img) continue;
+        img.addEventListener("load", () => {
+          if (stack.dataset.hold && root.dataset.time === shift) {
+            decodeAndRelease(stack, img, shift);
+          }
+        });
+        if (shift === shown) fetchNow(img, "high");
+      }
     }
 
     new MutationObserver(() => {
@@ -208,12 +231,7 @@ const rigVariants: RigVariant[] = gaze
           continue;
         }
         stack.dataset.hold = outgoing;
-        const release = () => {
-          if (root.dataset.time === next && stack.dataset.hold === outgoing) {
-            delete stack.dataset.hold;
-          }
-        };
-        incoming.decode().then(release, () => {});
+        decodeAndRelease(stack, incoming, next);
       }
     }).observe(root, { attributes: true, attributeFilter: ["data-time"] });
 
