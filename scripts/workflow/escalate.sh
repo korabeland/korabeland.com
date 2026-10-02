@@ -42,11 +42,12 @@ echo "[escalate] Pruning context with Haiku before escalation..." >&2
 PRUNED=$(printf '%s' "$FAILURE" | bash "${SCRIPT_DIR}/prune-context.sh")
 
 # Derive versions at run time so the prompt cannot drift from the repo.
-# Run from the repo root (parent of scripts/workflow), as health-check.sh does.
-cd "${SCRIPT_DIR}/../.."
-ASTRO_VERSION="$(node -e "process.stdout.write(require('./package.json').dependencies.astro.replace(/^[^0-9]*/, ''))")"
-NODE_VERSION="$(tr -d '[:space:]' < .nvmrc)"
-PNPM_VERSION="$(node -e "process.stdout.write(require('./package.json').packageManager.split('@')[1])")"
+# Paths are anchored to the repo root without changing the working directory,
+# so relative paths in the failure text still resolve against the caller's cwd.
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+ASTRO_VERSION="$(node -e "process.stdout.write(require(process.argv[1]).dependencies.astro.replace(/^[^0-9]*/, ''))" "${REPO_ROOT}/package.json")"
+NODE_VERSION="$(tr -d '[:space:]' < "${REPO_ROOT}/.nvmrc")"
+PNPM_VERSION="$(node -e "process.stdout.write(require(process.argv[1]).packageManager.split('@')[1])" "${REPO_ROOT}/package.json")"
 
 echo "[escalate] Escalating to ${MODEL}..." >&2
 {
