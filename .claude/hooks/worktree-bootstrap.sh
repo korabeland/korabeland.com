@@ -7,7 +7,7 @@
 #
 # Bounded, fail-soft, idempotent contract:
 #   - Preconditions (ALL must hold, else exit 0 silently): the project root is a
-#     linked worktree under .claude/worktrees/, package.json + pnpm-lock.yaml
+#     linked git worktree (any location), package.json + pnpm-lock.yaml
 #     exist, and node_modules/.modules.yaml is ABSENT (pnpm writes it only on a
 #     completed install — the idempotence marker).
 #   - Concurrency: per-worktree mutex via `mkdir "$GITDIR/bootstrap.lock"`
@@ -31,10 +31,13 @@ set -uo pipefail   # deliberately NOT -e: a failed install must not abort the ho
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." 2>/dev/null && pwd)" || exit 0
 
 # --- Preconditions --------------------------------------------------------
-case "$ROOT" in
-  */.claude/worktrees/*) ;;                # only bootstrap inside a linked worktree
-  *) exit 0 ;;                             # the main clone manages its own deps
-esac
+# A linked worktree is one whose git dir differs from the repo's common git dir
+# (the primary checkout has them equal). Git's own facts, so any pool location
+# qualifies — .claude/worktrees, .treehouse, or anywhere else.
+GIT_DIR_ABS="$(git -C "$ROOT" rev-parse --absolute-git-dir 2>/dev/null)" || exit 0
+COMMON_DIR_ABS="$(cd "$ROOT" && cd "$(git rev-parse --git-common-dir 2>/dev/null)" 2>/dev/null && pwd -P)" || exit 0
+GIT_DIR_ABS="$(cd "$GIT_DIR_ABS" 2>/dev/null && pwd -P)" || exit 0
+[ "$GIT_DIR_ABS" != "$COMMON_DIR_ABS" ] || exit 0   # the main clone manages its own deps
 [ -f "$ROOT/package.json" ]   || exit 0
 [ -f "$ROOT/pnpm-lock.yaml" ] || exit 0
 [ -f "$ROOT/node_modules/.modules.yaml" ] && exit 0   # already installed — no-op
