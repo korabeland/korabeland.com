@@ -70,6 +70,33 @@ for (const route of ["/", "/about"]) {
         const pending = new Promise<void>((resolve) => {
           release = resolve;
         });
+        // The preloaded portrait starts as lazy markup, so its pending request
+        // alone need not block window.load while the module is still arriving.
+        // Keep a separate eager resource pending so the load probe cannot miss
+        // the event on a cold dev-server compilation.
+        await page.route(
+          "**/__portrait-load-barrier.svg",
+          async (intercepted) => {
+            await pending;
+            await intercepted.fulfill({
+              contentType: "image/svg+xml",
+              body: '<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"/>',
+            });
+          },
+        );
+        await page.addInitScript(() => {
+          document.addEventListener(
+            "DOMContentLoaded",
+            () => {
+              const barrier = document.createElement("img");
+              barrier.hidden = true;
+              barrier.loading = "eager";
+              barrier.src = "/__portrait-load-barrier.svg";
+              document.body.appendChild(barrier);
+            },
+            { once: true },
+          );
+        });
         await page.route(portraitRequests, async (intercepted) => {
           if (isDayFile(intercepted.request().url()) === (shift === "day")) {
             await pending;
@@ -80,6 +107,10 @@ for (const route of ["/", "/about"]) {
           await page.goto(`${route}?shift=${shift}`, {
             waitUntil: "domcontentloaded",
           });
+          await expect(page.locator(`.portrait-${shift} img`)).toHaveAttribute(
+            "src",
+            /portrait-illustrated/,
+          );
           await page.evaluate(() => {
             window.addEventListener(
               "load",

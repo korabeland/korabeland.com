@@ -455,7 +455,8 @@ A toggle switches the page theme immediately; if the incoming portrait is
 still pending, the outgoing palette and matching gaze layers stay visible
 (`data-hold`) until the incoming image decodes. A failed decode retains the
 usable outgoing palette; a replacement responsive candidate is decoded again
-on image `load` before the hold is released. Once the other palette has decoded, toggles swap immediately.
+on image `load` before the hold is released. Once the other palette has decoded,
+toggles swap immediately.
 Without JavaScript, only a `<noscript>` night picture has active URLs and
 downloads. Throws at build if variants are missing — run the generator.
 
@@ -474,7 +475,7 @@ fails CI when assets trail the SSOT. Double-gated (`pointer: fine` **and** not
 passes the gate, decodes every layer for both variants, and reveals **at rest**
 (any failure → dormant, static portrait stays). Touch, reduced-motion, no-JS —
 and every Playwright/Chromatic screenshot, which runs reduced-motion — get the
-byte-identical static `<picture>`, so the rig can't churn a visual baseline. The
+static portrait described above, so the rig can't churn a visual baseline. The
 composited eye's visual record is the pose grid at `/dev/gaze-v2-poses` (PROD
 404); rest-parity, byte-budget, and coverage are enforced in the generator and
 `tests/gen-eye-rig.test.ts`.
@@ -551,10 +552,11 @@ single source; add routes there.
 
 Patterns every component obeys. Enforced by review, tests, and the global CSS.
 
-**Zero-JS default.** Components server-render complete. The three JS exceptions
-(`OutcomeMetrics` count-up, `ShiftToggle`, `ShiftLog` torch) each render their
+**Zero-JS default.** Components server-render complete. The `OutcomeMetrics`
+count-up, `ShiftToggle`, and `ShiftLog` torch each render their
 final/static state first and enhance only when capability and
-`prefers-reduced-motion` allow. New JS needs the same justification.
+`prefers-reduced-motion` allow. Portrait image activation and its no-JS fallback
+follow the [Portrait contract](#portrait). New JS needs the same justification.
 
 **Day/night shift.** One token set; `[data-time="day"]` re-pins hues. Anything
 that must differ per shift toggles off `:global(html[data-time="day"])` in CSS —
