@@ -1,7 +1,7 @@
 ---
 title: "feat: Console UX enhancements — provenance, relocation, shift toggle, shift log"
 type: feat
-status: active
+status: completed
 date: 2026-07-06
 origin: docs/brainstorms/2026-07-06-ux-enhancement-ideas-requirements.md
 deepened: 2026-07-06

@@ -6,7 +6,6 @@ interface SeoRouteCase {
   title: string;
   descriptionFragment: string;
   ogType: string;
-  hasOgImage: boolean;
   noindex: boolean;
   hasJsonLd?: boolean;
 }
@@ -21,7 +20,6 @@ const curatedRoutes: SeoRouteCase[] = [
     title: "korab eland",
     descriptionFragment: "ambiguous problems into systems",
     ogType: "website",
-    hasOgImage: true,
     noindex: false,
   },
   {
@@ -29,7 +27,6 @@ const curatedRoutes: SeoRouteCase[] = [
     title: "work · case studies · korab eland",
     descriptionFragment: "Case studies from the field",
     ogType: "website",
-    hasOgImage: false,
     noindex: false,
   },
   {
@@ -39,7 +36,6 @@ const curatedRoutes: SeoRouteCase[] = [
     descriptionFragment:
       "decile model that scores each lead on its own probability",
     ogType: "article",
-    hasOgImage: false,
     noindex: false,
     hasJsonLd: true,
   },
@@ -48,7 +44,6 @@ const curatedRoutes: SeoRouteCase[] = [
     title: "about · korab eland",
     descriptionFragment: "13 years across marketing, CX and operations",
     ogType: "website",
-    hasOgImage: false,
     noindex: false,
   },
   {
@@ -56,7 +51,6 @@ const curatedRoutes: SeoRouteCase[] = [
     title: "korabeland.com: colophon",
     descriptionFragment: "How korabeland.com was built",
     ogType: "website",
-    hasOgImage: false,
     noindex: false,
   },
   {
@@ -64,7 +58,6 @@ const curatedRoutes: SeoRouteCase[] = [
     title: "field notes: korabeland.com",
     descriptionFragment: "Field notes on building",
     ogType: "website",
-    hasOgImage: false,
     noindex: false,
   },
   {
@@ -72,7 +65,6 @@ const curatedRoutes: SeoRouteCase[] = [
     title: "Hello World: field notes",
     descriptionFragment: "first post",
     ogType: "article",
-    hasOgImage: false,
     noindex: false,
   },
   {
@@ -80,7 +72,6 @@ const curatedRoutes: SeoRouteCase[] = [
     title: "korabeland.com: page not found",
     descriptionFragment: "This page does not exist",
     ogType: "website",
-    hasOgImage: false,
     noindex: true,
   },
   {
@@ -88,7 +79,6 @@ const curatedRoutes: SeoRouteCase[] = [
     title: "For Demo Company · korab eland",
     descriptionFragment: "prepared for Demo Company",
     ogType: "website",
-    hasOgImage: false,
     noindex: true,
     hasJsonLd: false,
   },
@@ -129,7 +119,6 @@ const generatedProjectRoutes: SeoRouteCase[] = projects
           (isLab ? `AI code tinkering: ${p.title}` : `Case study: ${p.title}`),
       ),
       ogType: "article",
-      hasOgImage: false,
       noindex: false,
     };
   });
@@ -143,7 +132,6 @@ const generatedPostRoutes: SeoRouteCase[] = posts
       p.description || `Field note: ${p.title}`,
     ),
     ogType: "article",
-    hasOgImage: false,
     noindex: false,
   }));
 
@@ -192,20 +180,16 @@ for (const route of routes) {
       "korabeland.com",
     );
 
-    // OG image (home only)
-    if (route.hasOgImage) {
-      await expect(page.locator('meta[property="og:image"]')).toHaveAttribute(
-        "content",
-        /og\.png/,
-      );
-    } else {
-      await expect(page.locator('meta[property="og:image"]')).toHaveCount(0);
-    }
+    // OG image: every page falls back to the site-wide /og.png
+    await expect(page.locator('meta[property="og:image"]')).toHaveAttribute(
+      "content",
+      /og\.png/,
+    );
 
-    // Twitter Card — summary_large_image when og:image present, else summary
+    // Twitter Card — large image card, since every page now carries og:image
     await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute(
       "content",
-      route.hasOgImage ? "summary_large_image" : "summary",
+      "summary_large_image",
     );
     await expect(page.locator('meta[name="twitter:title"]')).toHaveAttribute(
       "content",
@@ -339,7 +323,9 @@ test("/about JSON-LD references the Person node via mainEntity", async ({
 // Tailored /for/ pages are unlisted: noindex (asserted per-route above) AND
 // absent from the sitemap (AE5). Build-time output, so this is meaningful
 // post-build / in CI; it skips under the dev server.
-test("sitemap excludes /for/ tailored pages", async ({ request }) => {
+test("sitemap excludes /for/ tailored pages and /off-trail", async ({
+  request,
+}) => {
   const indexResp = await request.get("/sitemap-index.xml");
   if (indexResp.status() !== 200) {
     test.skip(true, "Sitemap not available in dev mode (build-time only)");
@@ -349,4 +335,16 @@ test("sitemap excludes /for/ tailored pages", async ({ request }) => {
   expect(sitemapResp.status()).toBe(200);
   const xml = await sitemapResp.text();
   expect(xml).not.toContain("/for/");
+  expect(xml).not.toContain("/off-trail");
+  // Guard against the filter over-matching: real pages stay listed.
+  expect(xml).toContain("/about");
+});
+
+test("404 page sends noindex", async ({ page }) => {
+  const resp = await page.goto("/404");
+  expect(resp?.status()).toBeLessThan(500);
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
+    "content",
+    /noindex/,
+  );
 });
