@@ -50,8 +50,32 @@ describe("response headers (vercel.json)", () => {
 
   it("switches off browser features the site never uses", () => {
     const policy = value("Permissions-Policy");
-    for (const feature of ["camera", "microphone", "geolocation", "payment"]) {
-      expect(policy).toContain(`${feature}=()`);
+    const allowlists = new Map(
+      policy.split(",").map((directive) => {
+        const pair = /^([a-z][a-z0-9-]*)\s*=\s*\(([^)]*)\)$/.exec(
+          directive.trim(),
+        );
+        if (!pair) throw new Error(`Invalid Permissions-Policy: ${directive}`);
+        return [pair[1], pair[2].trim().split(/\s+/).filter(Boolean)] as const;
+      }),
+    );
+    for (const feature of [
+      "accelerometer",
+      "bluetooth",
+      "browsing-topics",
+      "camera",
+      "display-capture",
+      "geolocation",
+      "gyroscope",
+      "hid",
+      "magnetometer",
+      "microphone",
+      "midi",
+      "payment",
+      "serial",
+      "usb",
+    ]) {
+      expect(allowlists.get(feature)).toEqual([]);
     }
   });
 });
@@ -91,12 +115,9 @@ describe("Content-Security-Policy source config (astro.config.mjs)", () => {
     ]);
   });
 
-  it("is delivered as headers for prerendered pages", () => {
+  it("registers the emitted CSP validation as the postbuild command", () => {
     const pkg = JSON.parse(readFileSync(resolve(ROOT, "package.json"), "utf8"));
-    expect(pkg.scripts.postbuild).toContain("patch-vercel-config");
-    expect(readFileSync(resolve(ROOT, "astro.config.mjs"), "utf8")).toContain(
-      "staticHeaders: true",
-    );
+    expect(pkg.scripts.postbuild).toBe("tsx scripts/patch-vercel-config.ts");
   });
 });
 
