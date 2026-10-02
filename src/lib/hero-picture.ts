@@ -20,6 +20,7 @@ export interface HeroPicture {
   avifSrcset: string;
   webpSrcset: string;
   fallbackSrc: string;
+  posterSrc: string;
   width: number;
   height: number;
 }
@@ -41,6 +42,9 @@ export function loadHeroPicture(
     );
   }
   const meta: HeroMeta = JSON.parse(readFileSync(metaPath, "utf8"));
+  const posterWidth =
+    [...meta.widths].sort((a, b) => b - a).find((w) => w <= 960) ??
+    Math.min(...meta.widths);
   return {
     avifSrcset: meta.widths
       .map((w) => `${basename}.gen.${w}.avif ${w}w`)
@@ -49,6 +53,7 @@ export function loadHeroPicture(
       .map((w) => `${basename}.gen.${w}.webp ${w}w`)
       .join(", "),
     fallbackSrc: `${basename}.gen.960.png`,
+    posterSrc: `${basename}.gen.${posterWidth}.webp`,
     width: meta.width,
     height: meta.height,
   };

@@ -87,3 +87,7 @@ public/**/*.gen.*
 # Portrait gaze v2 measurement scratch (U2): throwaway centroid/retouch/proof
 # scripts and their PNG outputs. Not shipped — the SSOT is src/lib/portrait-gaze.ts.
 .gaze-measure/
+
+# Local test-browser and pnpm store folders (never commit)
+.test-browsers/
+.pnpm-store/
