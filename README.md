@@ -2,6 +2,8 @@
 
 Korab Eland's personal site — a small, fast "console" that says who he is and shows the work. Live at [korabeland.com](https://korabeland.com).
 
+Requests to `www.korabeland.com` permanently redirect to `https://korabeland.com`, preserving the path and query string. The hosting rule lives in [`vercel.json`](vercel.json).
+
 The site's own thesis is its headline: *turn ambiguous problems into systems that ship.* This repo is one of those systems — a static-by-default Astro site, built and maintained by an AI team orchestrated through [Claude Code](https://claude.com/claude-code), with every change reviewed on a Vercel preview before it lands.
 
 ---

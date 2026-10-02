@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { STATUS } from "../../src/lib/status";
 import { postRoutesSync, projectRoutesSync } from "../lib/collection-routes";
 
 interface SeoRouteCase {
@@ -292,11 +293,13 @@ test("home JSON-LD graph includes a Person node", async ({ page }) => {
   expect(personNode?.name).toBe("Korab Eland");
   expect(personNode?.["@id"]).toBe("https://korabeland.com/#person");
 
-  // Relocation readout: address stays factually current (Melbourne), and
-  // nationality is added to signal work-authorization intent (R5).
+  // Relocation readout: the address derives from src/lib/status.ts (the single
+  // source for location facts), and nationality signals work-authorization
+  // intent (R5).
   const address = personNode?.address as Record<string, unknown> | undefined;
   expect(address).toBeTruthy();
-  expect(address?.addressLocality).toBe("Melbourne");
+  expect(address?.addressLocality).toBe(STATUS.base);
+  expect(address?.addressCountry).toBe(STATUS.baseCountryCode);
   // Dual citizenship: nationality is an array of Country nodes (US + AU).
   const nationality = personNode?.nationality as
     | Array<Record<string, unknown>>
@@ -305,6 +308,23 @@ test("home JSON-LD graph includes a Person node", async ({ page }) => {
   const names = (nationality ?? []).map((n) => n.name);
   expect(names).toContain("United States");
   expect(names).toContain("Australia");
+});
+
+// A note's article node is its own page, authored by the site's Person.
+test("note JSON-LD names its own page and links the Person", async ({
+  page,
+}) => {
+  await page.goto("/notes/hello-world");
+  const jsonLdText = await page
+    .locator('script[type="application/ld+json"]')
+    .textContent();
+  const jsonLd = JSON.parse(jsonLdText ?? "{}");
+  const self = "https://korabeland.com/notes/hello-world";
+  expect(jsonLd["@type"]).toBe("BlogPosting");
+  expect(jsonLd["@id"]).toBe(self);
+  expect(jsonLd.mainEntityOfPage?.["@id"]).toBe(self);
+  expect(jsonLd.author?.["@id"]).toBe("https://korabeland.com/#person");
+  expect(jsonLd.author?.url).toBe("https://korabeland.com/about");
 });
 
 // /about references the Person node via mainEntity rather than duplicating it.

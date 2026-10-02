@@ -95,8 +95,8 @@ const jsonLd = {
       ],
       address: {
         "@type": "PostalAddress",
-        addressLocality: "Melbourne",
-        addressCountry: "AU",
+        addressLocality: STATUS.base,
+        addressCountry: STATUS.baseCountryCode,
       },
       nationality: STATUS.nationalities.map((name) => ({
         "@type": "Country",

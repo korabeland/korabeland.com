@@ -15,6 +15,7 @@
 
 // Atomic facts — the only things to edit when the situation changes.
 const base = "Melbourne";
+const baseCountryCode = "AU"; // ISO 3166-1 alpha-2 country of `base`, for JSON-LD
 const target = "Washington, DC"; // title case for prose / JSON-LD / llms.txt
 const targetConsole = "washington dc"; // lowercase for the console-styled UI
 const citizenship = "US and Australian citizen";
@@ -22,6 +23,8 @@ const authorization = "no US visa sponsorship required";
 
 export const STATUS = {
   base,
+  /** ISO 3166-1 alpha-2 country of the base, for the JSON-LD PostalAddress. */
+  baseCountryCode,
   target,
   /** Nationalities, in JSON-LD / prose casing. Order = primary first. */
   nationalities: ["United States", "Australia"] as const,

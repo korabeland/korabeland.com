@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import config from "../astro.config.mjs";
@@ -76,6 +77,72 @@ describe("response headers (vercel.json)", () => {
       "usb",
     ]) {
       expect(allowlists.get(feature)).toEqual([]);
+    }
+  });
+});
+
+describe("www redirect (vercel.json)", () => {
+  const vercel = JSON.parse(readFileSync(resolve(ROOT, "vercel.json"), "utf8"));
+  const { getTransformedRoutes } = createRequire(
+    import.meta.resolve("@astrojs/vercel"),
+  )("@vercel/routing-utils");
+
+  it.each([
+    { name: "project config", redirects: vercel.redirects },
+    {
+      name: "equivalent named wildcard",
+      redirects: vercel.redirects.map((rule: Record<string, unknown>) => ({
+        ...rule,
+        source: "/:path(.*)",
+        destination: "https://korabeland.com/:path",
+      })),
+    },
+  ])("preserves permanent redirect behavior for $name", ({ redirects }) => {
+    const normalized = getTransformedRoutes({ redirects });
+    expect(normalized.error).toBeNull();
+    const routes = normalized.routes as {
+      src: string;
+      has?: { type: string; value: string }[];
+      status: number;
+      headers: { Location: string };
+    }[];
+    const redirect = (request: string) => {
+      const url = new URL(request);
+      for (const route of routes) {
+        const matchesHost = (route.has ?? []).every((condition) => {
+          expect(condition.type).toBe("host");
+          return url.hostname === condition.value;
+        });
+        const match = new RegExp(route.src).exec(url.pathname);
+        if (!matchesHost || !match) continue;
+        const location = new URL(
+          route.headers.Location.replace(
+            /\$(\d+)/g,
+            (_, index: string) => match[Number(index)] ?? "",
+          ),
+        );
+        expect(location.search).toBe("");
+        location.search = url.search;
+        return { status: route.status, location: location.href };
+      }
+      return undefined;
+    };
+
+    for (const path of [
+      "/",
+      "/?ref=home",
+      "/notes/a-b",
+      "/notes/a-b/?tag=one&tag=two&next=%2Fwork%2F",
+      "/work/nested/project",
+      "/notes/caf%C3%A9",
+    ]) {
+      expect(redirect(`https://www.korabeland.com${path}`)).toEqual({
+        status: 308,
+        location: `https://korabeland.com${path}`,
+      });
+      for (const host of ["korabeland.com", "preview.korabeland.com"]) {
+        expect(redirect(`https://${host}${path}`)).toBeUndefined();
+      }
     }
   });
 });

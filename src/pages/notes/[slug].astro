@@ -57,10 +57,14 @@ const jsonLd = {
   author: {
     "@type": "Person",
     name: "Korab Eland",
-    url: "https://korabeland.com/colophon",
+    "@id": "https://korabeland.com/#person",
+    url: "https://korabeland.com/about",
   },
   isPartOf: { "@id": "https://korabeland.com/notes" },
-  mainEntityOfPage: { "@id": "https://korabeland.com/#website" },
+  mainEntityOfPage: {
+    "@type": "WebPage",
+    "@id": `https://korabeland.com/notes/${slug}`,
+  },
 };
 ---
 
