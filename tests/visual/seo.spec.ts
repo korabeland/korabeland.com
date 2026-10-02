@@ -340,11 +340,9 @@ test("sitemap excludes /for/ tailored pages and /off-trail", async ({
   expect(xml).toContain("/about");
 });
 
-// The 404 page is served with HTTP 404 but must also tell crawlers not to
-// index it. Build-time route, so this only runs where /404 resolves.
 test("404 page sends noindex", async ({ page }) => {
   const resp = await page.goto("/404");
-  test.skip(!resp || resp.status() >= 500, "404 route unavailable");
+  expect(resp?.status()).toBeLessThan(500);
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
     "content",
     /noindex/,
