@@ -11,6 +11,9 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: dependency-audit
+  cancel-in-progress: false
 jobs:
   audit:
     runs-on: ubuntu-latest
