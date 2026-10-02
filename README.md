@@ -37,7 +37,7 @@ The site is small on purpose; the build pipeline does most of the work behind th
 - the home page's **shift log** comes from the GitHub contributions API,
 - the hero portrait's responsive image variants and its cursor-tracking **gaze rig** are both generated pre-build.
 
-Each generator writes a gitignored file and falls back to a committed seed, so tokenless and shallow-clone builds still render.
+The activity-data generators write gitignored JSON and fall back to committed seeds, so tokenless and shallow-clone builds still render. The image generators regenerate assets from committed sources.
 
 One detail worth calling out: Korab's location, work authorization, citizenship and nationality live in a **single source of truth** (`src/lib/status.ts`). The hero readout, the about page and the site's JSON-LD all import from it, so those facts can never drift apart.
 

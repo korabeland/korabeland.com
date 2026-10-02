@@ -1,7 +1,8 @@
 ---
-// Portrait — the day/night illustrated-portrait <picture> pair, toggled purely
-// by CSS off the shift's `data-time` attribute on <html> (mirrors the
-// ShiftToggle idiom). `imageService: true` (Vercel's native optimizer, see
+// Portrait — the shared day/night illustrated portrait. Delivery and palette
+// transition contract: docs/design/components.md#portrait.
+//
+// `imageService: true` (Vercel's native optimizer, see
 // astro.config.mjs) ignores requested widths/formats for astro:assets sources
 // exactly like it does `public/` paths, so static AVIF/WebP/JPEG variants are
 // generated ahead of build by scripts/gen-hero-variants.ts and stand in here.
@@ -15,13 +16,14 @@
 // (pointer:fine AND not reduced-motion), fetch-decodes every layer for both
 // variants, and reveals AT REST. Touch, reduced-motion, and no-JS visitors —
 // and every Playwright/Chromatic screenshot, which runs reduced-motion — get
-// the untouched painted portrait, byte-identical <picture> and all (R5/AE5/AE8).
+// the static painted portrait (delivery follows the contract above).
 // Geometry + motion come from src/lib/portrait-gaze.ts, so markup, generator,
 // and behaviour never drift.
 
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { PORTRAIT_VARIANTS } from "../../lib/portrait-gaze";
+import { loadPortraitPicture } from "../../lib/portrait-picture";
 
 interface Props {
   sizes: string;
@@ -35,49 +37,6 @@ const {
   alt = "Illustrated portrait of Korab Eland",
   gaze = false,
 } = Astro.props;
-
-interface PortraitMeta {
-  width: number;
-  height: number;
-  widths: number[];
-}
-
-interface PortraitPicture {
-  avifSrcset: string;
-  webpSrcset: string;
-  fallbackSrc: string;
-  width: number;
-  height: number;
-}
-
-// Variants live in public/portrait/ (fixed output dir, see
-// scripts/gen-hero-variants.ts's PORTRAIT_OUT_DIR) — absolute paths, not the
-// relative-URL trick the Keystatic hero components use, since this component
-// renders at multiple, differently-nested routes (/ and /about).
-function loadPortraitPicture(basename: string): PortraitPicture {
-  const metaPath = resolve(
-    process.cwd(),
-    "public/portrait",
-    `${basename}.gen.meta.json`,
-  );
-  if (!existsSync(metaPath)) {
-    throw new Error(
-      `Portrait: missing variants for "${basename}" (expected ${metaPath}). Run \`pnpm exec tsx scripts/gen-hero-variants.ts\` — see scripts/gen-hero-variants.ts.`,
-    );
-  }
-  const meta: PortraitMeta = JSON.parse(readFileSync(metaPath, "utf8"));
-  return {
-    avifSrcset: meta.widths
-      .map((w) => `/portrait/${basename}.gen.${w}.avif ${w}w`)
-      .join(", "),
-    webpSrcset: meta.widths
-      .map((w) => `/portrait/${basename}.gen.${w}.webp ${w}w`)
-      .join(", "),
-    fallbackSrc: `/portrait/${basename}.gen.720.jpg`,
-    width: meta.width,
-    height: meta.height,
-  };
-}
 
 const night = loadPortraitPicture("portrait-illustrated");
 const day = loadPortraitPicture("portrait-illustrated-day");
@@ -139,30 +98,44 @@ const rigVariants: RigVariant[] = gaze
 
 <div class="portrait-stack">
   <picture class="portrait-night">
-    <source type="image/avif" srcset={night.avifSrcset} sizes={sizes} />
-    <source type="image/webp" srcset={night.webpSrcset} sizes={sizes} />
+    <source type="image/avif" data-srcset={night.avifSrcset} sizes={sizes} />
+    <source type="image/webp" data-srcset={night.webpSrcset} sizes={sizes} />
     <img
-      src={night.fallbackSrc}
+      data-src={night.fallbackSrc}
       alt={alt}
       width={night.width}
       height={night.height}
-      loading="eager"
+      loading="lazy"
       fetchpriority="high"
       sizes={sizes}
     />
   </picture>
   <picture class="portrait-day">
-    <source type="image/avif" srcset={day.avifSrcset} sizes={sizes} />
-    <source type="image/webp" srcset={day.webpSrcset} sizes={sizes} />
+    <source type="image/avif" data-srcset={day.avifSrcset} sizes={sizes} />
+    <source type="image/webp" data-srcset={day.webpSrcset} sizes={sizes} />
     <img
-      src={day.fallbackSrc}
+      data-src={day.fallbackSrc}
       alt={alt}
       width={day.width}
       height={day.height}
-      loading="eager"
+      loading="lazy"
       sizes={sizes}
     />
   </picture>
+  <noscript>
+    <picture class="portrait-night">
+      <source type="image/avif" srcset={night.avifSrcset} sizes={sizes} />
+      <source type="image/webp" srcset={night.webpSrcset} sizes={sizes} />
+      <img
+        src={night.fallbackSrc}
+        alt={alt}
+        width={night.width}
+        height={night.height}
+        fetchpriority="high"
+        sizes={sizes}
+      />
+    </picture>
+  </noscript>
   {
     gaze && (
       <div class="portrait-rig" data-portrait-rig aria-hidden="true">
@@ -188,6 +161,101 @@ const rigVariants: RigVariant[] = gaze
     )
   }
 </div>
+
+<script>
+  const root = document.documentElement;
+
+  const pictureFor = (stack: Element, shift: string) =>
+    stack.querySelector<HTMLImageElement>(`.portrait-${shift} img`);
+
+  // "Ready" means decoded, not merely fetched: a loaded-but-undecoded image can
+  // still paint blank for a frame. A new `load` (e.g. a responsive candidate
+  // replacement) invalidates it until the latest candidate has decoded again.
+  const decoded = new WeakSet<HTMLImageElement>();
+
+  const isReady = (img: HTMLImageElement) =>
+    decoded.has(img) && img.complete && img.naturalWidth > 0;
+
+  const fetchNow = (img: HTMLImageElement, priority: "low" | "high") => {
+    img.fetchPriority = priority;
+    img.loading = "eager";
+    if (img.hasAttribute("src")) return;
+    for (const source of img.closest("picture")!.querySelectorAll("source")) {
+      source.srcset = source.dataset.srcset!;
+    }
+    img.src = img.dataset.src!;
+  };
+
+  // Decode, record it, and release the hold if this is the palette the page is
+  // now showing. A failed decode leaves the hold (and the usable outgoing
+  // palette) in place.
+  const decodeAndRelease = (
+    stack: HTMLElement,
+    img: HTMLImageElement,
+    shift: string,
+  ) => {
+    img.decode().then(
+      () => {
+        if (!img.complete || img.naturalWidth === 0) return;
+        decoded.add(img);
+        if (root.dataset.time === shift) delete stack.dataset.hold;
+      },
+      () => {},
+    );
+  };
+
+  const stacks = Array.from(
+    document.querySelectorAll<HTMLElement>(".portrait-stack"),
+  );
+
+  if (stacks.length > 0) {
+    let shown = root.dataset.time === "day" ? "day" : "night";
+    for (const stack of stacks) {
+      for (const shift of ["night", "day"]) {
+        const img = pictureFor(stack, shift);
+        if (!img) continue;
+        img.addEventListener("load", () => {
+          decoded.delete(img);
+          decodeAndRelease(stack, img, shift);
+        });
+        if (shift === shown) fetchNow(img, "high");
+        if (img.complete && img.naturalWidth > 0) {
+          decodeAndRelease(stack, img, shift);
+        }
+      }
+    }
+
+    new MutationObserver(() => {
+      const next = root.dataset.time === "day" ? "day" : "night";
+      if (next === shown) return;
+      const previous = shown;
+      shown = next;
+      for (const stack of stacks) {
+        const incoming = pictureFor(stack, next);
+        if (!incoming) continue;
+        const outgoing = stack.dataset.hold ?? previous;
+        fetchNow(incoming, "high");
+        if (next === outgoing || isReady(incoming)) {
+          delete stack.dataset.hold;
+          continue;
+        }
+        stack.dataset.hold = outgoing;
+        decodeAndRelease(stack, incoming, next);
+      }
+    }).observe(root, { attributes: true, attributeFilter: ["data-time"] });
+
+    const warm = () => {
+      const other = root.dataset.time === "day" ? "night" : "day";
+      for (const stack of stacks) {
+        const img = pictureFor(stack, other);
+        if (img) fetchNow(img, "low");
+      }
+    };
+
+    if (document.readyState === "complete") warm();
+    else window.addEventListener("load", warm, { once: true });
+  }
+</script>
 
 {
   gaze && (
@@ -570,6 +638,14 @@ const rigVariants: RigVariant[] = gaze
     height: auto;
   }
 
+  img:not([src]) {
+    visibility: hidden;
+  }
+
+  :global(html:not([data-time])) .portrait-stack > picture {
+    display: none;
+  }
+
   /* Portrait tracks the shift: orange field by night (the no-JS default), blue
      by day. The day variant stays hidden until the head script sets
      data-time=day, mirroring the ShiftToggle idiom. */
@@ -581,6 +657,35 @@ const rigVariants: RigVariant[] = gaze
   }
   :global(html[data-time="day"]) .portrait-day {
     display: block;
+  }
+  /* A toggle that beat the hidden palette's fetch keeps the outgoing palette up
+     until the incoming one has decoded (client script above). Beats the
+     data-time rules on specificity. */
+  .portrait-stack[data-hold="night"] .portrait-night {
+    display: block;
+  }
+  .portrait-stack[data-hold="night"] .portrait-day {
+    display: none;
+  }
+  .portrait-stack[data-hold="day"] .portrait-day {
+    display: block;
+  }
+  .portrait-stack[data-hold="day"] .portrait-night {
+    display: none;
+  }
+  /* The gaze rig's per-palette layers follow the same pin, so a held portrait
+     never carries the other palette's eyes. */
+  .portrait-stack[data-hold="night"] .rig-night {
+    display: block;
+  }
+  .portrait-stack[data-hold="night"] .rig-day {
+    display: none;
+  }
+  .portrait-stack[data-hold="day"] .rig-day {
+    display: block;
+  }
+  .portrait-stack[data-hold="day"] .rig-night {
+    display: none;
   }
 
   /* ─── Gaze rig v2 (R1–R5) ───────────────────────────────────────────────

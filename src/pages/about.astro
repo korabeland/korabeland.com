@@ -5,6 +5,7 @@
 // do not add specifics (names, vendors, metrics, comp, transitions).
 
 import Portrait from "../components/Portrait/index.astro";
+import PortraitPreload from "../components/Portrait/PortraitPreload.astro";
 import SkillsSection from "../components/SkillsSection/SkillsSection.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { serializeJsonLd } from "../lib/json-ld";
@@ -23,6 +24,8 @@ const jsonLd = {
     "13 years across marketing, CX and operations. Now building AI systems for the same problems.",
   mainEntity: { "@id": "https://korabeland.com/#person" },
 };
+
+const PORTRAIT_SIZES = "(max-width: 680px) 280px, 440px";
 ---
 
 <BaseLayout
@@ -31,6 +34,7 @@ const jsonLd = {
   active="about"
 >
   <script is:inline type="application/ld+json" slot="jsonld" set:html={serializeJsonLd(jsonLd)} />
+  <PortraitPreload slot="head" sizes={PORTRAIT_SIZES} />
 
   <article class="about">
     <header class="about-header">
@@ -39,7 +43,7 @@ const jsonLd = {
     </header>
 
     <figure class="about-portrait">
-      <Portrait sizes="(max-width: 680px) 280px, 440px" />
+      <Portrait sizes={PORTRAIT_SIZES} />
       <figcaption class="t-mono about-portrait-cap">
         <span>korab eland</span>
         <span class="about-portrait-loc">{STATUS.targetReadout}</span>

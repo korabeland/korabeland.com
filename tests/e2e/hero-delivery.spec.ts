@@ -176,27 +176,31 @@ test.describe("case study hero delivery", () => {
   });
 });
 
-// Home preloads its mobile LCP element (the night portrait) from the head.
-// The preload's imagesrcset is hand-mirrored in src/pages/index.astro from
-// the markup Portrait renders — this pins the two together so a variant
-// rename or width change can't silently turn the preload into a no-op
+// Home and /about preload the visible palette's portrait from the head
+// (PortraitPreload injects the link for the palette the theme script resolved,
+// so a day visitor never preloads the night image). The preload's srcset is
+// built by the same reader as the <picture>'s — this pins the two together so a
+// variant rename or width change can't silently turn the preload into a no-op
 // double-download.
-test("home LCP preload mirrors the night portrait's AVIF srcset", async ({
-  page,
-}) => {
-  await page.goto("/");
-  const preload = page.locator(
-    'link[rel="preload"][as="image"][type="image/avif"]',
-  );
-  await expect(preload).toHaveCount(1);
-  const preloadSrcset = await preload.getAttribute("imagesrcset");
-  const renderedSrcset = await page
-    .locator('picture.portrait-night source[type="image/avif"]')
-    .getAttribute("srcset");
-  expect(preloadSrcset).toBe(renderedSrcset);
-  expect(await preload.getAttribute("imagesizes")).toBe(
-    await page
-      .locator('picture.portrait-night source[type="image/avif"]')
-      .getAttribute("sizes"),
-  );
-});
+for (const route of ["/", "/about"]) {
+  for (const shift of ["night", "day"]) {
+    test(`${route} LCP preload mirrors the ${shift} portrait's AVIF srcset`, async ({
+      page,
+    }) => {
+      await page.goto(`${route}?shift=${shift}`);
+      const preload = page.locator(
+        'link[rel="preload"][as="image"][type="image/avif"]',
+      );
+      await expect(preload).toHaveCount(1);
+      const rendered = page.locator(
+        `picture.portrait-${shift} source[type="image/avif"]`,
+      );
+      expect(await preload.getAttribute("imagesrcset")).toBe(
+        await rendered.getAttribute("srcset"),
+      );
+      expect(await preload.getAttribute("imagesizes")).toBe(
+        await rendered.getAttribute("sizes"),
+      );
+    });
+  }
+}

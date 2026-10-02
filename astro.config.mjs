@@ -6,11 +6,20 @@ import vercel from "@astrojs/vercel";
 import keystatic from "@keystatic/astro";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "astro/config";
-import { themeScriptHash } from "./scripts/theme-script-hash";
+import {
+  portraitPreloadScriptHash,
+  themeScriptHash,
+} from "./scripts/theme-script-hash";
 
 const themeScript = themeScriptHash(
   readFileSync(
     new URL("./src/layouts/BaseLayout.astro", import.meta.url),
+    "utf8",
+  ),
+);
+const portraitPreloadScript = portraitPreloadScriptHash(
+  readFileSync(
+    new URL("./src/components/Portrait/PortraitPreload.astro", import.meta.url),
     "utf8",
   ),
 );
@@ -55,8 +64,9 @@ export default defineConfig({
             // inlined page CSS.
             "font-src 'self' data:",
           ],
-          // The no-flash theme script is is:inline, which Astro does not hash.
-          scriptDirective: { hashes: [themeScript] },
+          // The no-flash theme script and the portrait preload injector are
+          // is:inline, which Astro does not hash.
+          scriptDirective: { hashes: [themeScript, portraitPreloadScript] },
           // Inline style="" attributes (CSS custom properties on the ledger, shift
           // log and portrait) can't be hashed, so style attributes alone allow
           // 'unsafe-inline'. Style elements stay hash-only. Overriding resources

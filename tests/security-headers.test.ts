@@ -5,7 +5,10 @@ import { createRequire } from "node:module";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import config from "../astro.config.mjs";
-import { themeScriptHash } from "../scripts/theme-script-hash";
+import {
+  portraitPreloadScriptHash,
+  themeScriptHash,
+} from "../scripts/theme-script-hash";
 import {
   assertHardenedCsp,
   uncoveredInlineScripts,
@@ -171,7 +174,13 @@ describe("Content-Security-Policy source config (astro.config.mjs)", () => {
       resolve(ROOT, "src/layouts/BaseLayout.astro"),
       "utf8",
     );
-    expect(csp.scriptDirective).toEqual({ hashes: [themeScriptHash(layout)] });
+    const preload = readFileSync(
+      resolve(ROOT, "src/components/Portrait/PortraitPreload.astro"),
+      "utf8",
+    );
+    expect(csp.scriptDirective).toEqual({
+      hashes: [themeScriptHash(layout), portraitPreloadScriptHash(preload)],
+    });
     expect(csp.directives.some((d) => d.startsWith("script-src"))).toBe(false);
   });
 
@@ -264,6 +273,22 @@ describe("themeScriptHash", () => {
     expect(() => themeScriptHash("<script is:inline>x</script>")).toThrow(
       /SHIFT-RESOLVE/,
     );
+  });
+});
+
+describe("portraitPreloadScriptHash", () => {
+  it("hashes the script between the PORTRAIT-PRELOAD markers, ignoring its attributes", () => {
+    const source =
+      '<!-- PORTRAIT-PRELOAD:START --><script is:inline data-x="a>b">var a=1;</script><!-- PORTRAIT-PRELOAD:END -->';
+    expect(portraitPreloadScriptHash(source)).toBe(
+      `sha256-${createHash("sha256").update("var a=1;").digest("base64")}`,
+    );
+  });
+
+  it("throws if the marked block disappears", () => {
+    expect(() =>
+      portraitPreloadScriptHash("<script is:inline>x</script>"),
+    ).toThrow(/PORTRAIT-PRELOAD/);
   });
 });
 
