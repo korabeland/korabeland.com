@@ -1,0 +1,52 @@
+---
+// PortraitPreload — starts the visible portrait's fetch at head-parse, for the
+// palette the visitor is actually on. Portrait renders both palettes lazily (the
+// hidden one is never fetched until it is needed), so nothing else starts the
+// visible image early; this does, so the LCP element keeps the head start the
+// old static night-only preload gave it — without downloading the night image
+// for a day visitor.
+//
+// The pre-paint theme script in BaseLayout has already set `data-time` by the
+// time this runs (it is the first node in <head>); the script below reads it and
+// injects one <link rel=preload> for that palette. Its body is constant — the
+// per-page data rides on the tag's data-* attributes, which CSP does not hash —
+// so a single hash in astro.config.mjs (computed from this file by
+// scripts/theme-script-hash.ts) covers every page that mounts the component.
+// Without JS there is no preload and the lazy night image simply loads on
+// layout. tests/e2e/hero-delivery.spec.ts pins the preload to the rendered
+// <picture> so a variant rename or width change can't turn it into a no-op.
+import { PORTRAIT_VARIANTS } from "../../lib/portrait-gaze";
+import { loadPortraitPicture } from "../../lib/portrait-picture";
+
+interface Props {
+  /** Must match the `sizes` passed to the <Portrait> on the same page. */
+  sizes: string;
+}
+
+const { sizes } = Astro.props;
+
+const srcsets = Object.fromEntries(
+  PORTRAIT_VARIANTS.map((v) => [
+    v.shift,
+    loadPortraitPicture(v.basename).avifSrcset,
+  ]),
+);
+---
+
+<!-- PORTRAIT-PRELOAD:START — extraction anchor for scripts/theme-script-hash.ts
+     (the CSP hash) and tests/security-headers.test.ts. Keep the markers
+     immediately wrapping the <script> tag. -->
+<script is:inline data-night-srcset={srcsets.night} data-day-srcset={srcsets.day} data-sizes={sizes}>
+  (function () {
+    var d = document.currentScript.dataset;
+    var link = document.createElement("link");
+    link.rel = "preload";
+    link.as = "image";
+    link.type = "image/avif";
+    link.setAttribute("imagesrcset", document.documentElement.dataset.time === "day" ? d.daySrcset : d.nightSrcset);
+    link.setAttribute("imagesizes", d.sizes);
+    link.setAttribute("fetchpriority", "high");
+    document.head.appendChild(link);
+  })();
+</script>
+<!-- PORTRAIT-PRELOAD:END -->

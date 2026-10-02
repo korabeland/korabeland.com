@@ -1,7 +1,17 @@
 ---
 // Portrait — the day/night illustrated-portrait <picture> pair, toggled purely
 // by CSS off the shift's `data-time` attribute on <html> (mirrors the
-// ShiftToggle idiom). `imageService: true` (Vercel's native optimizer, see
+// ShiftToggle idiom).
+//
+// Only the visible palette is fetched up front. Both <img>s are lazy, so the
+// browser never requests the one CSS hides (display:none images don't load);
+// PortraitPreload (in <head>) starts the visible one's fetch early so the LCP
+// element keeps its head start. The hidden palette is warmed after the page has
+// settled (see the always-on script below) so the toggle still swaps instantly,
+// and that script holds the old palette on screen if a toggle ever beats the
+// warm-up — never a blank frame.
+//
+// `imageService: true` (Vercel's native optimizer, see
 // astro.config.mjs) ignores requested widths/formats for astro:assets sources
 // exactly like it does `public/` paths, so static AVIF/WebP/JPEG variants are
 // generated ahead of build by scripts/gen-hero-variants.ts and stand in here.
@@ -22,6 +32,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { PORTRAIT_VARIANTS } from "../../lib/portrait-gaze";
+import { loadPortraitPicture } from "../../lib/portrait-picture";
 
 interface Props {
   sizes: string;
@@ -35,49 +46,6 @@ const {
   alt = "Illustrated portrait of Korab Eland",
   gaze = false,
 } = Astro.props;
-
-interface PortraitMeta {
-  width: number;
-  height: number;
-  widths: number[];
-}
-
-interface PortraitPicture {
-  avifSrcset: string;
-  webpSrcset: string;
-  fallbackSrc: string;
-  width: number;
-  height: number;
-}
-
-// Variants live in public/portrait/ (fixed output dir, see
-// scripts/gen-hero-variants.ts's PORTRAIT_OUT_DIR) — absolute paths, not the
-// relative-URL trick the Keystatic hero components use, since this component
-// renders at multiple, differently-nested routes (/ and /about).
-function loadPortraitPicture(basename: string): PortraitPicture {
-  const metaPath = resolve(
-    process.cwd(),
-    "public/portrait",
-    `${basename}.gen.meta.json`,
-  );
-  if (!existsSync(metaPath)) {
-    throw new Error(
-      `Portrait: missing variants for "${basename}" (expected ${metaPath}). Run \`pnpm exec tsx scripts/gen-hero-variants.ts\` — see scripts/gen-hero-variants.ts.`,
-    );
-  }
-  const meta: PortraitMeta = JSON.parse(readFileSync(metaPath, "utf8"));
-  return {
-    avifSrcset: meta.widths
-      .map((w) => `/portrait/${basename}.gen.${w}.avif ${w}w`)
-      .join(", "),
-    webpSrcset: meta.widths
-      .map((w) => `/portrait/${basename}.gen.${w}.webp ${w}w`)
-      .join(", "),
-    fallbackSrc: `/portrait/${basename}.gen.720.jpg`,
-    width: meta.width,
-    height: meta.height,
-  };
-}
 
 const night = loadPortraitPicture("portrait-illustrated");
 const day = loadPortraitPicture("portrait-illustrated-day");
@@ -146,7 +114,7 @@ const rigVariants: RigVariant[] = gaze
       alt={alt}
       width={night.width}
       height={night.height}
-      loading="eager"
+      loading="lazy"
       fetchpriority="high"
       sizes={sizes}
     />
@@ -159,7 +127,7 @@ const rigVariants: RigVariant[] = gaze
       alt={alt}
       width={day.width}
       height={day.height}
-      loading="eager"
+      loading="lazy"
       sizes={sizes}
     />
   </picture>
@@ -188,6 +156,82 @@ const rigVariants: RigVariant[] = gaze
     )
   }
 </div>
+
+<script>
+  // Warm the palette the visitor is NOT looking at, once the page has settled,
+  // so the shift toggle swaps to an already-fetched image. Runs for every
+  // Portrait (the gaze script below is home-only).
+  //
+  // Hold: if a toggle lands before the warm-up has finished (slow connection,
+  // Save-Data, a very early click), the incoming <img> would paint blank. The
+  // stack pins the outgoing palette (data-hold, see the CSS) until the incoming
+  // one has loaded and decoded, then releases. The observer callback is a
+  // microtask, so the pin is in place before the first frame of the new shift.
+  const root = document.documentElement;
+
+  const pictureFor = (stack: Element, shift: string) =>
+    stack.querySelector<HTMLImageElement>(`.portrait-${shift} img`);
+
+  const isReady = (img: HTMLImageElement) =>
+    img.complete && img.naturalWidth > 0;
+
+  const fetchNow = (img: HTMLImageElement, priority: "low" | "high") => {
+    img.fetchPriority = priority;
+    img.loading = "eager";
+  };
+
+  const stacks = Array.from(
+    document.querySelectorAll<HTMLElement>(".portrait-stack"),
+  );
+
+  if (stacks.length > 0) {
+    let shown = root.dataset.time === "day" ? "day" : "night";
+
+    new MutationObserver(() => {
+      const next = root.dataset.time === "day" ? "day" : "night";
+      if (next === shown) return;
+      const previous = shown;
+      shown = next;
+      for (const stack of stacks) {
+        const incoming = pictureFor(stack, next);
+        if (!incoming || isReady(incoming)) continue;
+        stack.dataset.hold = previous;
+        fetchNow(incoming, "high");
+        const release = () => {
+          // Don't release an older hold over a newer one.
+          if (stack.dataset.hold === previous) delete stack.dataset.hold;
+        };
+        incoming.decode().then(release, release);
+      }
+    }).observe(root, { attributes: true, attributeFilter: ["data-time"] });
+
+    const warm = () => {
+      const other = root.dataset.time === "day" ? "night" : "day";
+      for (const stack of stacks) {
+        const img = pictureFor(stack, other);
+        if (img && !isReady(img)) fetchNow(img, "low");
+      }
+    };
+
+    // Save-Data visitors asked for fewer bytes: skip the warm-up and let the
+    // hold cover a toggle.
+    const saveData = (navigator as Navigator & {
+      connection?: { saveData?: boolean };
+    }).connection?.saveData;
+
+    if (!saveData) {
+      const whenIdle = () => {
+        if ("requestIdleCallback" in window) {
+          window.requestIdleCallback(warm, { timeout: 4000 });
+        } else {
+          setTimeout(warm, 2000);
+        }
+      };
+      if (document.readyState === "complete") whenIdle();
+      else window.addEventListener("load", whenIdle, { once: true });
+    }
+  }
+</script>
 
 {
   gaze && (
@@ -581,6 +625,35 @@ const rigVariants: RigVariant[] = gaze
   }
   :global(html[data-time="day"]) .portrait-day {
     display: block;
+  }
+  /* A toggle that beat the hidden palette's fetch keeps the outgoing palette up
+     until the incoming one has decoded (client script above). Beats the
+     data-time rules on specificity. */
+  .portrait-stack[data-hold="night"] .portrait-night {
+    display: block;
+  }
+  .portrait-stack[data-hold="night"] .portrait-day {
+    display: none;
+  }
+  .portrait-stack[data-hold="day"] .portrait-day {
+    display: block;
+  }
+  .portrait-stack[data-hold="day"] .portrait-night {
+    display: none;
+  }
+  /* The gaze rig's per-palette layers follow the same pin, so a held portrait
+     never carries the other palette's eyes. */
+  .portrait-stack[data-hold="night"] .rig-night {
+    display: block;
+  }
+  .portrait-stack[data-hold="night"] .rig-day {
+    display: none;
+  }
+  .portrait-stack[data-hold="day"] .rig-day {
+    display: block;
+  }
+  .portrait-stack[data-hold="day"] .rig-night {
+    display: none;
   }
 
   /* ─── Gaze rig v2 (R1–R5) ───────────────────────────────────────────────
