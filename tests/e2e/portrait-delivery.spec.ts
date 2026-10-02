@@ -133,6 +133,38 @@ for (const route of ["/", "/about"]) {
         );
       });
 
+      test("a toggle after the hidden palette has loaded but before it has decoded keeps the old portrait", async ({
+        page,
+      }) => {
+        // Decoding is slow, so the warmed palette is fetched but not yet ready
+        // to paint when the visitor toggles.
+        await page.addInitScript(() => {
+          const decode = HTMLImageElement.prototype.decode;
+          HTMLImageElement.prototype.decode = function (
+            this: HTMLImageElement,
+          ) {
+            return new Promise<void>((resolve) =>
+              setTimeout(resolve, 1500),
+            ).then(() => decode.call(this));
+          };
+        });
+        await page.goto(`${route}?shift=${shift}`, { waitUntil: "load" });
+        await expect.poll(() => hiddenIsReady(page, other(shift))).toBe(true);
+        await page.locator(".shift-toggle").click();
+        await expect(page.locator("html")).toHaveAttribute(
+          "data-time",
+          other(shift),
+        );
+        for (const frame of await sampleFrames(page, 30)) {
+          expect(frame).toEqual({ shown: [shift], ready: true });
+        }
+        await expect(page.locator(".portrait-stack")).not.toHaveAttribute(
+          "data-hold",
+          /.*/,
+        );
+        await expectPalette(page, other(shift));
+      });
+
       test("an early toggle switches the theme immediately and the portrait after decoding", async ({
         page,
       }) => {

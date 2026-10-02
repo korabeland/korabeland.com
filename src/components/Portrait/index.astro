@@ -168,8 +168,13 @@ const rigVariants: RigVariant[] = gaze
   const pictureFor = (stack: Element, shift: string) =>
     stack.querySelector<HTMLImageElement>(`.portrait-${shift} img`);
 
+  // "Ready" means decoded, not merely fetched: a loaded-but-undecoded image can
+  // still paint blank for a frame. A new `load` (e.g. a responsive candidate
+  // replacement) invalidates it until the latest candidate has decoded again.
+  const decoded = new WeakSet<HTMLImageElement>();
+
   const isReady = (img: HTMLImageElement) =>
-    img.complete && img.naturalWidth > 0;
+    decoded.has(img) && img.complete && img.naturalWidth > 0;
 
   const fetchNow = (img: HTMLImageElement, priority: "low" | "high") => {
     img.fetchPriority = priority;
@@ -181,6 +186,9 @@ const rigVariants: RigVariant[] = gaze
     img.src = img.dataset.src!;
   };
 
+  // Decode, record it, and release the hold if this is the palette the page is
+  // now showing. A failed decode leaves the hold (and the usable outgoing
+  // palette) in place.
   const decodeAndRelease = (
     stack: HTMLElement,
     img: HTMLImageElement,
@@ -188,9 +196,9 @@ const rigVariants: RigVariant[] = gaze
   ) => {
     img.decode().then(
       () => {
-        if (root.dataset.time === shift && isReady(img)) {
-          delete stack.dataset.hold;
-        }
+        if (!img.complete || img.naturalWidth === 0) return;
+        decoded.add(img);
+        if (root.dataset.time === shift) delete stack.dataset.hold;
       },
       () => {},
     );
@@ -207,11 +215,13 @@ const rigVariants: RigVariant[] = gaze
         const img = pictureFor(stack, shift);
         if (!img) continue;
         img.addEventListener("load", () => {
-          if (stack.dataset.hold && root.dataset.time === shift) {
-            decodeAndRelease(stack, img, shift);
-          }
+          decoded.delete(img);
+          decodeAndRelease(stack, img, shift);
         });
         if (shift === shown) fetchNow(img, "high");
+        if (img.complete && img.naturalWidth > 0) {
+          decodeAndRelease(stack, img, shift);
+        }
       }
     }
 

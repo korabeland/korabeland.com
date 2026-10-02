@@ -455,7 +455,7 @@ A toggle switches the page theme immediately; if the incoming portrait is
 still pending, the outgoing palette and matching gaze layers stay visible
 (`data-hold`) until the incoming image decodes. A failed decode retains the
 usable outgoing palette; a replacement responsive candidate is decoded again
-on image `load` before the hold is released. Once ready, toggles swap immediately.
+on image `load` before the hold is released. Once the other palette has decoded, toggles swap immediately.
 Without JavaScript, only a `<noscript>` night picture has active URLs and
 downloads. Throws at build if variants are missing — run the generator.
 
