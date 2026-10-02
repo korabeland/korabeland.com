@@ -41,7 +41,7 @@ R-IDs trace to the origin document (R1–R15). All fifteen are in scope; none na
 
 - korabeland.github.io playground, chatbot, press logos, scroll reveals, subdomains, automated tailored-page lifecycle, repo cards, changes to existing case-study content — all excluded per origin.
 - Day/night theme toggle: the dead `[data-time="day"]` tokens remain untouched; new components style against the default (night) tokens only. The open toggle decision stays open.
-- `404.astro` lacking `noindex` is pre-existing and out of scope (flagged during research as a possible drive-by, not planned here).
+- Current utility-route indexing behavior is documented in [README.md](../../README.md#whats-on-it).
 
 ### Deferred to Follow-Up Work
 

@@ -43,7 +43,6 @@ Statuses used after triage: `backlog` -> `next` | `parked` | `dropped`.
 | Item | Source | Next step | Status |
 |---|---|---|---|
 | Production-build smoke test (Playwright currently exercises `pnpm dev`, not the Vercel build) | `docs/reviews/2026-07-04-console-mvp-launch.md` | Add a minimal `pnpm build && preview` smoke job | backlog |
-| `404.astro` missing `noindex` | experience-ledger plan (deliberate deferral) | One-line drive-by fix | backlog |
 | Hand-picked `featured` frontmatter flag for home curation (v1 uses ship-date top-3) | site-health remediation plan | Add when date ordering stops matching taste | backlog |
 | Periodic manual refresh of the contribution seed JSON | console UX plan deferrals | Add to a maintenance checklist (or fold into Watchtower) | backlog |
 | Day-shift visual baselines (currently axe-only) | console UX plan deferrals | Only if day-shift regressions actually occur | backlog |
