@@ -1,0 +1,35 @@
+# Accepted development-only residuals in the full-graph summary: tmp
+# (GHSA-ph9p-34f9-6g65) via @lhci/cli 0.15.1 (latest release) and its
+# inquirer/external-editor chain; extract-zip advisories have no patched release.
+# None of these dependencies ships to visitors.
+name: Dependency audit
+# Surfaces newly published advisories on a schedule, so they show up here
+# instead of blocking an unrelated pull request in CI's `verify-all` job.
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Same threshold as the blocking PR gate in ci.yml. A failure here is the
+      # signal that a new advisory needs a fix.
+      - name: Production dependency audit
+        run: pnpm audit --prod --audit-level=high
+      # Awareness only: the full graph includes development tools. Runs even
+      # when the production audit fails, and never fails the job itself.
+      - name: Full dependency graph summary
+        if: always()
+        continue-on-error: true
+        run: pnpm audit || true

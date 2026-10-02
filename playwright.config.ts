@@ -111,9 +111,19 @@ export default defineConfig({
     // whole suite honours DEV_PORT — the dev server, baseURL, and storage
     // origins all resolve to the same PORT/ORIGIN, letting a second worktree
     // run on a non-colliding port.
-    command: `pnpm dev --port ${PORT}`,
+    //
+    // `--ignore-lock` keeps `astro dev` a foreground child: Astro 7 detects an
+    // AI-agent environment and detaches the server into the background (so the
+    // process Playwright started exits) unless the lock file is bypassed. It
+    // also stops concurrent worktrees colliding on the per-project lock.
+    // TEST_CAPTURE turns the dev toolbar off (see astro.config.mjs) so it can
+    // never land in a screenshot baseline.
+    command: `pnpm dev --port ${PORT} --ignore-lock`,
+    env: { TEST_CAPTURE: "1" },
     url: ORIGIN,
-    reuseExistingServer: !process.env.CI,
+    // Never adopt a server we didn't start: it may belong to another worktree
+    // or run without TEST_CAPTURE.
+    reuseExistingServer: false,
     timeout: 120000,
   },
 });

@@ -90,3 +90,7 @@ public/**/*.gen.*
 
 # local security-header verification build output
 .security-live/
+
+# Local test-browser and pnpm store folders (never commit)
+.test-browsers/
+.pnpm-store/

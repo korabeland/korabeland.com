@@ -17,7 +17,7 @@ The home page is the console: a hero readout, then a set of ledgers that fill in
 - **About (`/about`)** — the career narrative across thirteen years in marketing, CX and operations, plus a skills summary.
 - **Colophon (`/colophon`)** — how the site was built, and its own git build log: every commit, in the open.
 
-A few routes are deliberately quiet: `/for/<slug>` renders unlisted, tailored landing pages (noindex, excluded from the sitemap); `/off-trail` is the SSR companion to the 404; `/og.png` generates the social-share card on the fly.
+A few routes are deliberately quiet: `/for/<slug>` renders unlisted, tailored landing pages (noindex, excluded from the sitemap); `/off-trail` is the SSR companion to the 404. Both `/off-trail` and the 404 page carry `noindex`, and `/off-trail` is excluded from the sitemap. `/og.png` generates the social-share card at build time; page sharing and image overrides follow the [BaseLayout contract](docs/design/components.md#shell--baselayout).
 
 ---
 
