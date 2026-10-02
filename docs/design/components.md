@@ -446,12 +446,16 @@ of Korab Eland"), `gaze?` (mount the cursor-tracking gaze rig — home hero only
 `imageService: true` the Vercel optimiser ignores requested widths for
 `astro:assets` sources and shipped the portrait at full 1200w (mobile-LCP audit
 caught it). Only the visible palette is fetched up front (it's the LCP image):
-both `<img>`s are `loading=lazy`, so the CSS-hidden one never loads, and
-`PortraitPreload` (mounted in each page's `<head>`, same `sizes`) injects one
-`<link rel=preload>` for the palette `data-time` resolved to. After `load` +
-idle the hidden palette is warmed at low priority so the shift toggle swaps
-instantly; a toggle that beats the warm-up pins the outgoing palette
-(`data-hold`) until the new one decodes, never a blank frame. Throws at build if
+both palettes' source and fallback URLs start inert in `data-*` attributes,
+and the client activates only the visible picture initially. `PortraitPreload`
+(mounted in each page's `<head>`, same `sizes`) injects one `<link rel=preload>`
+for the palette `data-time` resolved to. At page `load`, with no further delay
+or Save-Data exception, the hidden palette starts fetching at low priority.
+A toggle switches the page theme immediately; if the incoming portrait is
+still pending, the outgoing palette and matching gaze layers stay visible
+(`data-hold`) until the incoming image decodes. A failed decode retains the
+usable outgoing palette. Once ready, toggles swap immediately. Without JavaScript,
+only a `<noscript>` night picture has active URLs and downloads. Throws at build if
 variants are missing — run the generator.
 
 **Gaze rig (v2, opt-in via `gaze`)** — a layered eye cutout mounted over the

@@ -1,22 +1,12 @@
 import { expect, type Page, test } from "@playwright/test";
 
-// The home portrait ships two palettes but only the visible one is fetched up
-// front; the other is warmed after the page has loaded so the shift toggle is
-// still instant. A toggle that beats the warm-up pins the old palette until the
-// new one has decoded, so the portrait is never blank. See
-// src/components/Portrait/index.astro and PortraitPreload.astro.
-
 const SHIFTS = ["night", "day"] as const;
 type Shift = (typeof SHIFTS)[number];
 const other = (s: Shift): Shift => (s === "night" ? "day" : "night");
-// Night files are portrait-illustrated.gen.*, day files portrait-illustrated-day.gen.*.
 const isDayFile = (url: string) => url.includes("/portrait-illustrated-day.");
-const isBaseFile = (url: string) =>
-  /\/portrait\/portrait-illustrated(-day)?\.gen\.\d+\.(avif|webp|jpg)$/.test(
-    url,
-  );
+const portraitRequests =
+  /\/portrait\/portrait-illustrated(-day)?\.gen\.\d+\.(avif|webp|jpg)$/;
 
-/** One animation frame per entry: which palettes are on screen and are they painted. */
 async function sampleFrames(page: Page, frames: number) {
   return page.evaluate(
     (n) =>
@@ -24,9 +14,7 @@ async function sampleFrames(page: Page, frames: number) {
         const out: { shown: string[]; ready: boolean }[] = [];
         const tick = () => {
           const visible = [
-            ...document.querySelectorAll<HTMLElement>(
-              ".portrait-stack picture",
-            ),
+            ...document.querySelectorAll<HTMLElement>(".portrait-stack picture"),
           ].filter((p) => getComputedStyle(p).display !== "none");
           out.push({
             shown: visible.map((p) =>
@@ -52,93 +40,202 @@ const hiddenIsReady = (page: Page, shift: Shift) =>
     return !!img && img.complete && img.naturalWidth > 0;
   }, shift);
 
-for (const shift of SHIFTS) {
-  test.describe(`home portrait, ${shift} shift`, () => {
-    test("fetches only the visible palette up front, then warms the other", async ({
-      page,
-    }) => {
-      const requested: { url: string; afterLoad: boolean }[] = [];
-      let loaded = false;
-      page.on("load", () => {
-        loaded = true;
-      });
-      page.on("request", (req) => {
-        if (isBaseFile(req.url())) {
-          requested.push({ url: req.url(), afterLoad: loaded });
+async function expectPalette(page: Page, shift: Shift) {
+  for (const frame of await sampleFrames(page, 3)) {
+    expect(frame).toEqual({ shown: [shift], ready: true });
+  }
+  if (await page.locator("[data-portrait-rig]").count()) {
+    await expect(page.locator(`.rig-${shift}`)).toHaveCSS("display", "block");
+    await expect(page.locator(`.rig-${other(shift)}`)).toHaveCSS("display", "none");
+  }
+}
+
+for (const route of ["/", "/about"]) {
+  for (const shift of SHIFTS) {
+    test.describe(`${route} portrait, ${shift} shift`, () => {
+      test("fetches only the visible palette initially and starts warming at load", async ({
+        page,
+      }) => {
+        const requested: string[] = [];
+        page.on("request", (req) => {
+          if (portraitRequests.test(req.url())) requested.push(req.url());
+        });
+
+        let release!: () => void;
+        const pending = new Promise<void>((resolve) => {
+          release = resolve;
+        });
+        await page.route(portraitRequests, async (intercepted) => {
+          if (isDayFile(intercepted.request().url()) === (shift === "day")) {
+            await pending;
+          }
+          await intercepted.continue();
+        });
+        try {
+          await page.goto(`${route}?shift=${shift}`, {
+            waitUntil: "domcontentloaded",
+          });
+          await page.evaluate(() => {
+            window.addEventListener(
+              "load",
+              () => {
+                document.documentElement.dataset.portraitWarmAtLoad = String(
+                  Array.from(
+                    document.querySelectorAll<HTMLImageElement>(
+                      ".portrait-stack > picture img",
+                    ),
+                  ).every(
+                    (img) => img.hasAttribute("src") && img.loading === "eager",
+                  ),
+                );
+              },
+              { once: true },
+            );
+          });
+          expect(requested.length).toBeGreaterThan(0);
+          expect(
+            requested.every((url) => isDayFile(url) === (shift === "day")),
+          ).toBe(true);
+          release();
+          await page.waitForLoadState("load");
+          await expect(page.locator("html")).toHaveAttribute(
+            "data-portrait-warm-at-load",
+            "true",
+          );
+          await expect.poll(() => hiddenIsReady(page, other(shift))).toBe(true);
+          expect(
+            requested.some((url) => isDayFile(url) !== (shift === "day")),
+          ).toBe(true);
+        } finally {
+          release();
         }
       });
 
-      await page.goto(`/?shift=${shift}`, { waitUntil: "load" });
-
-      const upFront = requested.filter((r) => !r.afterLoad);
-      expect(upFront.length).toBeGreaterThan(0);
-      expect(upFront.every((r) => isDayFile(r.url) === (shift === "day"))).toBe(
-        true,
-      );
-
-      await expect.poll(() => hiddenIsReady(page, other(shift))).toBe(true);
-      expect(
-        requested.some(
-          (r) => r.afterLoad && isDayFile(r.url) !== (shift === "day"),
-        ),
-      ).toBe(true);
-    });
-
-    test("toggling after the warm-up swaps palettes with no blank or stale frame", async ({
-      page,
-    }) => {
-      await page.goto(`/?shift=${shift}`, { waitUntil: "load" });
-      await expect.poll(() => hiddenIsReady(page, other(shift))).toBe(true);
-
-      await page.locator(".shift-toggle").click();
-      const frames = await sampleFrames(page, 30);
-
-      for (const frame of frames) {
-        expect(frame).toEqual({ shown: [other(shift)], ready: true });
-      }
-      await expect(page.locator(".portrait-stack")).not.toHaveAttribute(
-        "data-hold",
-        /.*/,
-      );
-    });
-
-    test("a toggle before the hidden palette is fetched holds the old palette instead of going blank", async ({
-      page,
-    }) => {
-      // Save-Data skips the warm-up, so the hidden palette is guaranteed not to
-      // be fetched when the toggle lands; the delay keeps it pending long
-      // enough to observe the hold.
-      await page.addInitScript(() => {
-        Object.defineProperty(navigator, "connection", {
-          value: { saveData: true },
-        });
+      test("toggling after warming swaps palettes without blank or stale frames", async ({
+        page,
+      }) => {
+        await page.goto(`${route}?shift=${shift}`);
+        await expect.poll(() => hiddenIsReady(page, other(shift))).toBe(true);
+        await page.locator(".shift-toggle").click();
+        for (const frame of await sampleFrames(page, 30)) {
+          expect(frame).toEqual({ shown: [other(shift)], ready: true });
+        }
+        await page.locator(".shift-toggle").click();
+        await expectPalette(page, shift);
+        await expect(page.locator(".portrait-stack")).not.toHaveAttribute(
+          "data-hold",
+          /.*/,
+        );
       });
-      await page.route(
-        "**/portrait/portrait-illustrated*.avif",
-        async (route) => {
-          if (isDayFile(route.request().url()) !== (shift === "day")) {
-            await new Promise((r) => setTimeout(r, 600));
+
+      test("an early toggle switches the theme immediately and the portrait after decoding", async ({
+        page,
+      }) => {
+        let release!: () => void;
+        const pending = new Promise<void>((resolve) => {
+          release = resolve;
+        });
+        await page.route(portraitRequests, async (intercepted) => {
+          if (isDayFile(intercepted.request().url()) !== (shift === "day")) {
+            await pending;
           }
-          await route.continue();
-        },
-      );
-      await page.goto(`/?shift=${shift}`, { waitUntil: "load" });
-      expect(await hiddenIsReady(page, other(shift))).toBe(false);
-      await page.locator(".shift-toggle").click();
+          await intercepted.continue();
+        });
+        try {
+          await page.goto(`${route}?shift=${shift}`, { waitUntil: "load" });
+          expect(await hiddenIsReady(page, other(shift))).toBe(false);
+          await page.locator(".shift-toggle").click();
+          await expect(page.locator("html")).toHaveAttribute(
+            "data-time",
+            other(shift),
+          );
+          for (const frame of await sampleFrames(page, 60)) {
+            expect(frame).toEqual({ shown: [shift], ready: true });
+          }
+          await expectPalette(page, shift);
+          await page.locator(".shift-toggle").click();
+          await expectPalette(page, shift);
+          await expect(page.locator(".portrait-stack")).not.toHaveAttribute(
+            "data-hold",
+            /.*/,
+          );
+          await page.locator(".shift-toggle").click();
+          await expectPalette(page, shift);
+          release();
+          await expect(page.locator(".portrait-stack")).not.toHaveAttribute(
+            "data-hold",
+            /.*/,
+          );
+          await expectPalette(page, other(shift));
+        } finally {
+          release();
+        }
+      });
 
-      const frames = await sampleFrames(page, 60);
-      expect(frames.every((f) => f.shown.length === 1 && f.ready)).toBe(true);
-      // The old palette is what stayed on screen while the new one loaded.
-      expect(frames[0].shown).toEqual([shift]);
+      test("a failed incoming image keeps the usable palette through repeated toggles", async ({
+        page,
+      }) => {
+        await page.route(portraitRequests, async (intercepted) => {
+          if (isDayFile(intercepted.request().url()) !== (shift === "day")) {
+            await intercepted.abort();
+          } else {
+            await intercepted.continue();
+          }
+        });
+        await page.goto(`${route}?shift=${shift}`);
+        await expect
+          .poll(() =>
+            page.evaluate((s) => {
+              const img = document.querySelector<HTMLImageElement>(
+                `.portrait-${s} img`,
+              );
+              return (
+                !!img &&
+                img.hasAttribute("src") &&
+                img.complete &&
+                img.naturalWidth === 0
+              );
+            }, other(shift)),
+          )
+          .toBe(true);
+        await page.locator(".shift-toggle").click();
+        await expect(page.locator("html")).toHaveAttribute(
+          "data-time",
+          other(shift),
+        );
+        await expectPalette(page, shift);
+        await expect(page.locator(".portrait-stack")).toHaveAttribute(
+          "data-hold",
+          shift,
+        );
+        await page.locator(".shift-toggle").click();
+        await expectPalette(page, shift);
+        await expect(page.locator(".portrait-stack")).not.toHaveAttribute(
+          "data-hold",
+          /.*/,
+        );
+        await page.locator(".shift-toggle").click();
+        await expectPalette(page, shift);
+        await expect(page.locator(".portrait-stack")).toHaveAttribute(
+          "data-hold",
+          shift,
+        );
+      });
+    });
+  }
 
-      await expect(page.locator(".portrait-stack")).not.toHaveAttribute(
-        "data-hold",
-        /.*/,
-      );
-      const settled = await sampleFrames(page, 3);
-      for (const frame of settled) {
-        expect(frame).toEqual({ shown: [other(shift)], ready: true });
-      }
+  test.describe(`${route} portrait without JavaScript`, () => {
+    test.use({ javaScriptEnabled: false });
+    test("downloads and displays only the night palette", async ({ page }) => {
+      const requested: string[] = [];
+      page.on("request", (req) => {
+        if (portraitRequests.test(req.url())) requested.push(req.url());
+      });
+      await page.goto(`${route}?shift=day`);
+      await expect(page.locator(".portrait-stack noscript img")).toBeVisible();
+      await expectPalette(page, "night");
+      expect(requested.length).toBeGreaterThan(0);
+      expect(requested.every((url) => !isDayFile(url))).toBe(true);
     });
   });
 }

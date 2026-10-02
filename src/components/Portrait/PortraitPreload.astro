@@ -1,8 +1,6 @@
 ---
 // PortraitPreload — starts the visible portrait's fetch at head-parse, for the
-// palette the visitor is actually on. Portrait renders both palettes lazily (the
-// hidden one is never fetched until it is needed), so nothing else starts the
-// visible image early; this does, so the LCP element keeps the head start the
+// palette the visitor is actually on, so the LCP element keeps the head start the
 // old static night-only preload gave it — without downloading the night image
 // for a day visitor.
 //
@@ -12,8 +10,7 @@
 // per-page data rides on the tag's data-* attributes, which CSP does not hash —
 // so a single hash in astro.config.mjs (computed from this file by
 // scripts/theme-script-hash.ts) covers every page that mounts the component.
-// Without JS there is no preload and the lazy night image simply loads on
-// layout. tests/e2e/hero-delivery.spec.ts pins the preload to the rendered
+// tests/e2e/hero-delivery.spec.ts pins the preload to the rendered
 // <picture> so a variant rename or width change can't turn it into a no-op.
 import { PORTRAIT_VARIANTS } from "../../lib/portrait-gaze";
 import { loadPortraitPicture } from "../../lib/portrait-picture";
