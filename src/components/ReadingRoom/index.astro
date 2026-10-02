@@ -59,9 +59,11 @@ const HERO_SIZES = "(max-width: 680px) 100vw, 680px";
 
 // An optional hero video is a click-to-play native player: the hero image is
 // its poster (shown until the visitor presses play; the 960w WebP, since the
-// poster attribute takes one URL with no format negotiation and WebP is
-// universally decodable where the PNG fallback would cost ~5x the bytes). It does not autoplay and does not loop — it plays once and holds
-// on its final frame. `fields.file` returns the bare filename; resolve it
+// poster attribute takes one URL with no format negotiation). Every browser
+// the site supports (Tailwind CSS 4 floor: Safari 16.4+, Chrome 111+,
+// Firefox 128+) decodes WebP. It does not autoplay and does not loop — it
+// plays once and holds on its final frame. `fields.file` returns the bare
+// filename; resolve it
 // against the notes public path (tolerating an already-absolute value in case
 // the reader ever changes).
 const heroVideoSrc =
