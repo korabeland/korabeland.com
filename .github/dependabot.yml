@@ -7,6 +7,13 @@ updates:
       interval: weekly
       day: monday
     open-pull-requests-limit: 3
+    # Dependabot's pnpm updater re-runs a failed lockfile update with a
+    # 3-day minimum release age (--config.minimum-release-age=4320) and fails
+    # outright if any selected version is younger. Only propose versions
+    # already past that age, with a day of margin. Security updates ignore
+    # cooldown.
+    cooldown:
+      default-days: 4
     commit-message:
       prefix: "chore(deps)"
     groups:
