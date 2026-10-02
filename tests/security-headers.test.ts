@@ -80,6 +80,23 @@ describe("response headers (vercel.json)", () => {
   });
 });
 
+describe("www redirect (vercel.json)", () => {
+  const vercel = JSON.parse(readFileSync(resolve(ROOT, "vercel.json"), "utf8"));
+
+  it("permanently redirects only the www host to the same path on the apex", () => {
+    expect(vercel.redirects).toHaveLength(1);
+    const [rule] = vercel.redirects;
+    expect(rule.has).toEqual([{ type: "host", value: "www.korabeland.com" }]);
+    expect(rule.permanent).toBe(true);
+    expect(rule.destination).toBe("https://korabeland.com/$1");
+    // The source captures the whole path; Vercel carries the query string.
+    expect(new RegExp(`^${rule.source}$`).exec("/notes/a-b")?.[1]).toBe(
+      "notes/a-b",
+    );
+    expect(new RegExp(`^${rule.source}$`).exec("/")?.[1]).toBe("");
+  });
+});
+
 describe("Content-Security-Policy source config (astro.config.mjs)", () => {
   const csp = config.security?.csp as {
     directives: string[];
