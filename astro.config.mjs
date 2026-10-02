@@ -15,6 +15,11 @@ const themeScript = themeScriptHash(
   ),
 );
 
+// Vite's dev server injects page styles as unhashed <style> elements at runtime,
+// which a hash-only style-src blocks (the dev pages render unstyled). The CSP
+// is a production-build concern, so it is off under `astro dev`.
+const isDev = process.argv.includes("dev");
+
 export default defineConfig({
   site: "https://korabeland.com",
   // Preserve separator spaces around inline links across template newlines.
@@ -36,30 +41,32 @@ export default defineConfig({
   // script-src never needs 'unsafe-inline'. The CSP lands as a header, which is
   // also the only place frame-ancestors is honoured (a <meta> CSP ignores it).
   security: {
-    csp: {
-      directives: [
-        "default-src 'self'",
-        "base-uri 'self'",
-        "object-src 'none'",
-        "form-action 'self'",
-        "frame-ancestors 'none'",
-        // Fonts under Vite's inline limit ship as data: URIs inside the
-        // inlined page CSS.
-        "font-src 'self' data:",
-      ],
-      // The no-flash theme script is is:inline, which Astro does not hash.
-      scriptDirective: { hashes: [themeScript] },
-      // Inline style="" attributes (CSS custom properties on the ledger, shift
-      // log and portrait) can't be hashed, so style attributes alone allow
-      // 'unsafe-inline'. Style elements stay hash-only. Overriding resources
-      // drops Astro's default 'self', so restate it.
-      styleDirective: {
-        resources: [
-          "'self'",
-          { resource: "'unsafe-inline'", kind: "attribute" },
-        ],
-      },
-    },
+    csp: isDev
+      ? false
+      : {
+          directives: [
+            "default-src 'self'",
+            "base-uri 'self'",
+            "object-src 'none'",
+            "form-action 'self'",
+            "frame-ancestors 'none'",
+            // Fonts under Vite's inline limit ship as data: URIs inside the
+            // inlined page CSS.
+            "font-src 'self' data:",
+          ],
+          // The no-flash theme script is is:inline, which Astro does not hash.
+          scriptDirective: { hashes: [themeScript] },
+          // Inline style="" attributes (CSS custom properties on the ledger, shift
+          // log and portrait) can't be hashed, so style attributes alone allow
+          // 'unsafe-inline'. Style elements stay hash-only. Overriding resources
+          // drops Astro's default 'self', so restate it.
+          styleDirective: {
+            resources: [
+              "'self'",
+              { resource: "'unsafe-inline'", kind: "attribute" },
+            ],
+          },
+        },
   },
   // Inline all page CSS instead of linking external stylesheets: the mobile
   // Lighthouse audit measured ~750ms of render-blocking CSS on the critical
