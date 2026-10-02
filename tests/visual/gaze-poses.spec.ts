@@ -5,7 +5,7 @@ import { expect } from "@playwright/test";
 // shows the rig under reduced-motion (the screenshot path), so /dev/gaze-v2-poses
 // is the only visual coverage of the composited eye. This spec drives that route
 // for both shifts and lets the @chromatic-com/playwright fixture archive it (the
-// blocking visual gate on PRs). It also asserts the poses are genuinely pinned
+// non-blocking visual record on PRs). It also asserts the poses are genuinely pinned
 // and every layer decoded (no 404s), so a broken asset or geometry regression
 // fails here in addition to Chromatic.
 //

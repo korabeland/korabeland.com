@@ -12,7 +12,7 @@
 //                                 committed baselines by rename (no rm, no
 //                                 blind delete). --force skips the HEAD-drift guard.
 //
-// Chromatic stays the blocking gate; these local baselines are advisory only.
+// Chromatic publishes a non-blocking visual record; these local baselines are advisory only.
 
 import { execFileSync, spawnSync } from "node:child_process";
 import {
@@ -89,7 +89,7 @@ if (PROMOTE) {
     `\n✓ Promoted ${promoted} baseline(s) into tests/visual/baselines/.`,
   );
   console.log(
-    "  Review is your responsibility (ADR Rule 1); Chromatic remains the blocking gate.\n" +
+    "  Review is your responsibility (ADR Rule 1); Chromatic is a non-blocking record, not a gate.\n" +
       "  Undo before committing with: git checkout -- tests/visual/baselines",
   );
   process.exit(0);

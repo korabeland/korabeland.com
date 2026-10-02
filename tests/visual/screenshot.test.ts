@@ -48,8 +48,8 @@ for (const route of ROUTES) {
     // In CI the pixelmatch baselines are untrustworthy — they're
     // macOS-generated and Linux renders differently, so a local diff there only
     // ever auto-seeds and passes (cost, no signal). Chromatic archives this same
-    // run and is the real cross-environment gate on PRs, so skip the local diff
-    // and never auto-seed in CI.
+    // run and publishes a non-blocking cross-environment visual record, so skip
+    // the local diff and never auto-seed in CI.
     if (process.env.CI) return;
 
     ensureDirs();

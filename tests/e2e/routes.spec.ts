@@ -370,7 +370,7 @@ test("/for/demo renders the tailored page with its case-study exits", async ({
   );
 });
 
-// U6 — an unknown /for/ slug falls through to the SSR 404 (off-trail); the
+// U6 — an unknown /for/ slug falls through to the prerendered 404 (off-trail); the
 // stale-link answer after a page is deleted (F3).
 test("/for/nonexistent-xyz returns 404 via the off-trail page", async ({
   page,
