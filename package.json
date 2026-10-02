@@ -22,8 +22,9 @@
     "test": "vitest run",
     "test:visual": "playwright test",
     "reseed:visual": "node scripts/reseed-visual.mjs",
+    "smoke:production": "tsx scripts/smoke-production-build.ts",
     "lighthouse": "pnpm build && lhci autorun && lhci autorun --config=.lighthouserc.mobile.json",
-    "verify:all": "pnpm verify && pnpm test && pnpm test:visual && pnpm run lighthouse"
+    "verify:all": "pnpm verify && pnpm test && pnpm test:visual && pnpm run lighthouse && pnpm smoke:production"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

@@ -2,7 +2,7 @@
 description: Diagnose a shell/environment error and return a one-line fix. Pass the error as an argument or it reads from clipboard.
 ---
 
-You are diagnosing a shell or environment error in this exact stack: Astro 6, Tailwind CSS 4 (Vite plugin, CSS-first config), shadcn/ui (React islands via @astrojs/react), Keystatic local-git CMS, Vitest 2, Playwright 1.56+, Biome 2, TypeScript 5 strict, pnpm 10.33.0, Node 20.18.3, macOS Apple Silicon (M-series), Vercel SSR adapter (@astrojs/vercel@10).
+You are diagnosing a shell or environment error in this exact stack: Astro, Tailwind CSS 4 (Vite plugin, CSS-first config), shadcn/ui (React islands via @astrojs/react), Keystatic local-git CMS, Vitest, Playwright, Biome, TypeScript 5 strict, macOS Apple Silicon (M-series), Vercel adapter (@astrojs/vercel, static by default). Exact versions live in `package.json` (framework, adapter, test tools, `packageManager` for pnpm) and `.nvmrc` (Node); read them there rather than assuming.
 
 Error to fix:
 $ARGUMENTS
