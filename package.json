@@ -65,7 +65,7 @@
     "tailwindcss": "^4.2.2"
   },
   "devDependencies": {
-    "@astrojs/check": "^0.9.9",
+    "@astrojs/check": "^0.9.10",
     "@axe-core/playwright": "^4.11.1",
     "@biomejs/biome": "^2.4.12",
     "@chromatic-com/playwright": "^0.13.1",
@@ -82,6 +82,6 @@
     "qrcode": "^1.5.4",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
-    "vitest": "^2.1.9"
+    "vitest": "^4.1.11"
   }
 }

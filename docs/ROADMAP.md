@@ -58,7 +58,7 @@ Statuses used after triage: `backlog` -> `next` | `parked` | `dropped`.
 - korabeland.github.io playground — activates only when side-project volume justifies the split.
 - Idea-stage inspiration (tree-structured navigation, WebGL shader hero, "Talk to My Site" chat, easter eggs) — `Personal_Brand/design/reddit_inspiration.md` and voice notes.
 - Interactive demo concepts from the pre-Astro stack plan (triage simulator, journey map builder, etc.) — predate and diverge from the shipped site.
-- Automated dependency-update PRs — blocking `pnpm audit` is the mechanism for now.
+- Automated dependency-update PRs — the blocking `pnpm audit` gate plus the scheduled `dependency-audit` workflow are the mechanism for now.
 - Quarterly Watchtower digest rotation + watcher-prompt tuning — follow-ups inside a plan that itself hasn't started.
 
 ## 6. Newer documented work (added 2026-10-01)
