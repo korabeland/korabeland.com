@@ -1,0 +1,46 @@
+version: 2
+updates:
+  # pnpm is handled by the npm ecosystem; it updates pnpm-lock.yaml.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 3
+    # Dependabot's pnpm updater re-runs a failed lockfile update with a
+    # 3-day minimum release age (--config.minimum-release-age=4320) and fails
+    # outright if any selected version is younger. Only propose versions
+    # already past that age, with a day of margin. Security updates ignore
+    # cooldown.
+    cooldown:
+      default-days: 4
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      # Framework and its integrations move together so their compatibility
+      # is tested in one PR.
+      astro:
+        applies-to: version-updates
+        patterns: ["astro", "@astrojs/*"]
+      keystatic:
+        applies-to: version-updates
+        patterns: ["@keystatic/*"]
+      styling-and-react:
+        applies-to: version-updates
+        patterns: ["tailwindcss", "@tailwindcss/*", "react", "react-dom", "@types/react", "@types/react-dom"]
+      dev-tooling:
+        applies-to: version-updates
+        dependency-type: development
+    # Security updates are not part of these schedules or groups: Dependabot
+    # raises them as soon as an advisory lands, as separate PRs.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 2
+    commit-message:
+      prefix: "ci"
+    groups:
+      actions:
+        patterns: ["*"]

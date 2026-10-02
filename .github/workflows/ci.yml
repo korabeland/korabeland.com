@@ -6,18 +6,26 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+permissions:
+  contents: read
+# One run per PR (a new push supersedes the old one); pushes to main get a
+# unique group per commit and are never cancelled.
+concurrency:
+  group: ci-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
   verify-all:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           # Chromatic needs full git history to find a baseline commit to
           # diff against — the default shallow (depth-1) clone leaves it
           # with only the current commit and it refuses to run.
           fetch-depth: 0
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: pnpm
@@ -30,7 +38,7 @@ jobs:
       - name: Dependency security audit
         run: pnpm audit --prod --audit-level=high
       - name: Cache Playwright browsers
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/ms-playwright
           # Keyed on the lockfile so a Playwright version bump busts it; a hit
@@ -42,7 +50,7 @@ jobs:
       # Runs the screenshot project too, but only so Chromatic archives the
       # pages — the local pixelmatch diff self-skips under CI (see
       # screenshot.test.ts), so no baseline reset/reseed is needed here.
-      # Chromatic (below) is the real cross-environment visual gate.
+      # Chromatic (below) publishes the non-blocking visual record.
       - run: pnpm test:visual
       - run: pnpm run lighthouse
       # Production-build smoke: everything above runs against `pnpm dev`, so
@@ -57,7 +65,7 @@ jobs:
       # uploads them, so the gate itself doesn't need this job's build.
       - name: Upload Chromatic archives
         if: github.event_name == 'pull_request'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: chromatic-archives
           path: test-results/chromatic-archives
@@ -78,24 +86,28 @@ jobs:
   # review" without gating the merge.
   # (Fork PRs never receive repo secrets by GitHub design; accepted for this
   # solo-maintained repo — revisit before inviting external contributions.)
+  # Skipped for Dependabot PRs: Dependabot runs cannot read Actions secrets, so
+  # the publish would only fail closed on the missing token. verify-all uses no
+  # secrets and runs normally.
   chromatic:
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && github.actor != 'dependabot[bot]'
     needs: verify-all
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           # Full history so Chromatic can locate a baseline commit, same as
           # verify-all's checkout.
           fetch-depth: 0
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Download Chromatic archives
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: chromatic-archives
           path: test-results/chromatic-archives
