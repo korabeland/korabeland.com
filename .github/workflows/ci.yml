@@ -86,8 +86,11 @@ jobs:
   # review" without gating the merge.
   # (Fork PRs never receive repo secrets by GitHub design; accepted for this
   # solo-maintained repo — revisit before inviting external contributions.)
+  # Skipped for Dependabot PRs: Dependabot runs cannot read Actions secrets, so
+  # the publish would only fail closed on the missing token. verify-all uses no
+  # secrets and runs normally.
   chromatic:
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && github.actor != 'dependabot[bot]'
     needs: verify-all
     runs-on: ubuntu-latest
     timeout-minutes: 15
