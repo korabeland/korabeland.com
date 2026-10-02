@@ -51,8 +51,12 @@ export default defineConfig({
     sitemap({
       // Exclude dev-only previews and the unlisted tailored pages. /for/ pages
       // are noindex, not robots-disallowed, so crawlers can still see the
-      // noindex directive — the sitemap just never advertises them.
-      filter: (page) => !page.includes("/dev/") && !page.includes("/for/"),
+      // noindex directive — the sitemap just never advertises them. /off-trail
+      // is the same case: it sends noindex, so it stays out of the sitemap too.
+      filter: (page) =>
+        !page.includes("/dev/") &&
+        !page.includes("/for/") &&
+        !page.includes("/off-trail"),
     }),
   ],
   vite: {

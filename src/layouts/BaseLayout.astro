@@ -24,7 +24,8 @@ interface Props {
     | "lab"
     | "about"
     | "colophon";
-  /** Absolute path to the OG image (e.g. "/og.png"). */
+  /** Absolute path to the OG image (e.g. "/og.png"). Defaults to the site-wide
+   *  share image so every page unfurls with a large card. */
   ogImage?: string;
   /** og:type value — defaults to "website". */
   ogType?: string;
@@ -42,7 +43,7 @@ const {
   title,
   description = "Korab Eland, operator. I turn ambiguous problems into systems that ship.",
   active,
-  ogImage,
+  ogImage = "/og.png",
   ogType = "website",
   noindex,
   fullBleed = false,
