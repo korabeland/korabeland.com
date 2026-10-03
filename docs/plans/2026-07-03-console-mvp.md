@@ -62,10 +62,11 @@ Metrics: "Vendor cost difference at pilot scale — >10×" · "Technical dimensi
 
 ## Disclosure rules (hard constraints — audit before every commit touching content)
 
-- NEVER: colleague names, vendor names (Enrola, Student Ignite), university partner names (SCU, JCU, UTS, UNSW, UoM, VU, Sunway…), contract clauses/prices, OKR text, org politics, comp, role-transition context.
-- Ranges only: 290 → "hundreds"; $2.5k vs $34k → "more than 10×"; 628,176 → "around 600k".
+- Except for the approved publication scope below, NEVER: colleague names, vendor names (Enrola, Student Ignite), university partner names (SCU, JCU, UTS, UNSW, UoM, VU, Sunway…), contract clauses/prices, OKR text, org politics, comp, role-transition context.
+- Outside the approved publication scope below, ranges only: 290 → "hundreds"; $2.5k vs $34k → "more than 10×"; 628,176 → "around 600k".
 - Keypath Education: named. Function names: allowed. "Our CRM" / "a data-platform migration": generic (Korab may later approve naming Dynamics 365 / Fabric — flagged, not approved).
-- Grep gate before PR: `rg -i "enrola|student ignite|scu|jcu|unsw|uom\b|\b290\b|34,?425|34k|628" src` returns nothing.
+- Approved publication scope (2026-10-02): the authored [experience entries](../../src/content/experience/) and [skills singleton](../../src/content/skills/index.yaml), including their exact metrics, public LinkedIn recommendation credits, education institutions and named tools. This approval applies to that content only; it does not clear additional disclosures or alter existing case-study facts.
+- Grep gate before PR: `rg -i "enrola|student ignite|scu|jcu|unsw|uom\b|\b290\b|34,?425|34k|628" src`. Every match must fall within the approved publication scope above; an unapproved disclosure blocks publication.
 
 ## Phases (one commit each; `pnpm verify` before every commit)
 

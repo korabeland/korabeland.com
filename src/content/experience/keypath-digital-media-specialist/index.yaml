@@ -1,0 +1,27 @@
+{
+  "slug": "keypath-digital-media-specialist",
+  "company": "Keypath Education",
+  "role": "Digital Media Specialist",
+  "location": "Melbourne, Australia",
+  "startDate": "2015-08-01",
+  "endDate": "2017-04-01",
+  "achievements": [
+    {
+      "text": "Cut cost per lead by 50% by optimising paid search and paid social.",
+      "metricValue": "50%",
+      "metricLabel": "lower cost per lead"
+    },
+    {
+      "text": "Brought paid search in-house from a third-party agency, building the processes and reporting to run it."
+    },
+    {
+      "text": "Led paid search strategy during Keypath's start-up phase in Australia. The results justified bringing a second specialist over from the US."
+    }
+  ],
+  "tags": [
+    "paid search",
+    "paid social",
+    "cost per lead"
+  ],
+  "testimonial": {}
+}

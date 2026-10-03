@@ -14,8 +14,11 @@ describe("llms.txt stays in sync with src/lib/status.ts", () => {
     expect(llms).toContain(STATUS.base);
   });
 
-  it("names the relocation target", () => {
-    expect(llms).toContain(STATUS.target);
+  it("does not describe a relocation under way", () => {
+    expect(llms).not.toMatch(/relocating/i);
+    expect(STATUS.heroReadout).toBe("⌖ washington dc");
+    expect(STATUS.baseCountryCode).toBe("US");
+    expect(STATUS.personDescription).toContain("Based in Washington, DC");
   });
 
   it("states citizenship verbatim", () => {

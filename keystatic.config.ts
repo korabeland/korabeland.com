@@ -176,7 +176,8 @@ export default config({
             }),
             metricValue: fields.text({
               label: "Highlight metric — value",
-              description: 'Optional. Ranges only, e.g. "30–50%", "hundreds".',
+              description:
+                "Optional. Follow the disclosure rules in docs/plans/2026-07-03-console-mvp.md.",
             }),
             metricLabel: fields.text({
               label: "Highlight metric — label",
@@ -257,7 +258,7 @@ export default config({
   },
   singletons: {
     skills: singleton({
-      label: "Skills & certifications",
+      label: "Skills, education & certifications",
       path: "src/content/skills/",
       schema: {
         categories: fields.array(
@@ -275,6 +276,17 @@ export default config({
             label: "Skill categories",
             itemLabel: (props) => props.fields.name.value,
           },
+        ),
+        education: fields.array(
+          fields.object({
+            name: fields.text({
+              label: "Name",
+              validation: { isRequired: true },
+            }),
+            institution: fields.text({ label: "Institution" }),
+            year: fields.text({ label: "Year" }),
+          }),
+          { label: "Education", itemLabel: (props) => props.fields.name.value },
         ),
         certifications: fields.array(
           fields.object({

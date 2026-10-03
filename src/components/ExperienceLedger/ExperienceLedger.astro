@@ -1,8 +1,8 @@
 ---
-// ExperienceLedger.astro — the experience section on the homepage. Reverse-chron
+// ExperienceLedger.astro — the experience section on About. Reverse-chron
 // roles (sorted by the reader) with quantified bullets, a "current" chip on the
-// active role, and a testimonial only when one exists (AE1). Ranges-only
-// numbers and no vendor names — the disclosure gate applies to every entry.
+// active role, and a testimonial only when one exists (AE1). Publication
+// constraints and approvals live in docs/plans/2026-07-03-console-mvp.md.
 
 import {
   type ExperienceSummary,
@@ -28,7 +28,9 @@ const { roles } = Astro.props;
           <div class="experience-head">
             <div class="experience-idline">
               <span class="experience-role">{role.role}</span>
-              <span class="experience-company">{role.company}</span>
+              <span class="experience-company">
+                {[role.company, role.location].filter(Boolean).join(" · ")}
+              </span>
             </div>
             <div class="experience-meta">
               {role.current && <StatusChip status="current" variant="chip" />}
@@ -60,7 +62,9 @@ const { roles } = Astro.props;
               </blockquote>
               {role.testimonial.attribution && (
                 <figcaption class="t-mono experience-attrib">
-                  {`— ${role.testimonial.attribution}`}
+                  {role.testimonial.sourceUrl ? (
+                    <a href={role.testimonial.sourceUrl}>{role.testimonial.attribution}</a>
+                  ) : role.testimonial.attribution}
                 </figcaption>
               )}
             </figure>
@@ -166,7 +170,6 @@ const { roles } = Astro.props;
     text-transform: none;
     letter-spacing: 0.02em;
     color: var(--signal);
-    white-space: nowrap;
     font-size: 13px;
   }
 

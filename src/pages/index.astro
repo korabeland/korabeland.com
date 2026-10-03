@@ -5,14 +5,12 @@
 
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import ExperienceLedger from "../components/ExperienceLedger/ExperienceLedger.astro";
 import Portrait from "../components/Portrait/index.astro";
 import PortraitPreload from "../components/Portrait/PortraitPreload.astro";
 import ProjectLedger from "../components/ProjectLedger/index.astro";
 import SectionHead from "../components/SectionHead.astro";
 import ShiftLog from "../components/ShiftLog/ShiftLog.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
-import { listExperience } from "../lib/experience";
 import { serializeJsonLd } from "../lib/json-ld";
 import { formatNoteMonth, listPosts } from "../lib/posts";
 import { listProjects, projectHref, projectStatus } from "../lib/projects";
@@ -42,7 +40,6 @@ const labItems = labProjects.map((p) => ({
   status: projectStatus(p),
   href: projectHref(p),
 }));
-const experience = await listExperience();
 const posts = (await listPosts()).slice(0, 3);
 
 // Shift log — a year of GitHub activity, the same generated-then-seed pipeline
@@ -239,9 +236,6 @@ const MAIL_ICON =
         />
       )
     }
-
-    <!-- ─── Experience ── renders only once real roles exist in Keystatic ── -->
-    {experience.length > 0 && <ExperienceLedger roles={experience} />}
 
     <!-- ─── Recent notes ──────────────────────────────────────────────── -->
     {

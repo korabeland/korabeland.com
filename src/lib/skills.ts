@@ -11,7 +11,13 @@ export interface Certification {
   year: string;
   url: string | null;
 }
+export interface Education {
+  name: string;
+  institution: string;
+  year: string;
+}
 export interface SkillsData {
+  education?: Education[];
   categories: SkillCategory[];
   certifications: Certification[];
 }
@@ -22,6 +28,11 @@ export interface SkillsData {
  * fixtures instead of a live filesystem reader.
  */
 export interface RawSkills {
+  education?: readonly {
+    name: string;
+    institution: string | null;
+    year: string | null;
+  }[];
   categories: readonly { name: string; skills: readonly string[] }[];
   certifications: readonly {
     name: string;
@@ -37,6 +48,11 @@ export function mapSkills(raw: RawSkills): SkillsData {
       name: c.name,
       skills: [...c.skills],
     })),
+    education: (raw.education ?? []).map((e) => ({
+      name: e.name,
+      institution: e.institution ?? "",
+      year: e.year ?? "",
+    })),
     certifications: raw.certifications.map((c) => ({
       name: c.name,
       issuer: c.issuer ?? "",
@@ -47,12 +63,16 @@ export function mapSkills(raw: RawSkills): SkillsData {
 }
 
 /**
- * A singleton that exists but carries no categories and no certifications is
+ * A singleton that exists but carries no categories, education or certifications is
  * treated as absent — the section is content-gated, so callers skip it rather
  * than render an empty scaffold.
  */
 export function hasSkillsContent(data: SkillsData): boolean {
-  return data.categories.length > 0 || data.certifications.length > 0;
+  return (
+    data.categories.length > 0 ||
+    data.certifications.length > 0 ||
+    (data.education?.length ?? 0) > 0
+  );
 }
 
 const reader = createReader(process.cwd(), keystaticConfig);

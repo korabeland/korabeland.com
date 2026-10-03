@@ -1,0 +1,28 @@
+{
+  "slug": "keypath-marketing-manager",
+  "company": "Keypath Education",
+  "role": "Marketing Manager",
+  "location": "Melbourne, Australia",
+  "startDate": "2017-05-01",
+  "endDate": "2019-02-01",
+  "achievements": [
+    {
+      "text": "Led a team of four marketing specialists planning, running and optimising multichannel campaigns for partner universities.",
+      "metricValue": "4",
+      "metricLabel": "marketing specialists led"
+    },
+    {
+      "text": "Created an onboarding webinar program for new students with simulive presentations, live Q&A, and surveys that informed retention tactics and became the company standard."
+    }
+  ],
+  "tags": [
+    "team leadership",
+    "student onboarding",
+    "retention"
+  ],
+  "testimonial": {
+    "quote": "He was my first mentor and someone I admire for his ability to cultivate his curiosity to imagine new possibilities and inspire others to do the same.",
+    "attribution": "Fern Speechley, Senior Marketing Manager",
+    "sourceUrl": "https://www.linkedin.com/in/korabeland/details/recommendations/"
+  }
+}
