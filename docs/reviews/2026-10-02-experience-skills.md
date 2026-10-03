@@ -54,9 +54,8 @@ and route coverage are unchanged.
 
 No additional public copy explicitly describes a move under way or the Keypath
 role as current. The dev-only experience preview retains a fictional current
-role fixture. Public llms.txt still attributes the whole 13-year career to
-Keypath Education, including media buying; the approved earliest role is at
-Plattform Education. That pre-existing sentence was left unchanged per scope.
+role fixture. Public llms.txt directs readers to the career content rather than
+duplicating the employment history.
 
 The branch must be reviewed on its Vercel preview before production. This worker
 does not merge the PR.

@@ -1,4 +1,4 @@
-// SINGLE SOURCE OF TRUTH for Korab's location, relocation, citizenship, work
+// SINGLE SOURCE OF TRUTH for Korab's location, citizenship, work
 // authorization, and nationality.
 //
 // Every surface that states these facts derives from HERE:

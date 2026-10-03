@@ -19,7 +19,6 @@ Statuses used after triage: `backlog` -> `next` | `parked` | `dropped`.
 
 | Item | Source | Next step | Status |
 |---|---|---|---|
-| Populate the experience ledger + skills sections. Collections and components shipped; `src/content/experience/` and `src/content/skills/` don't exist, so the sections render nothing | `docs/plans/2026-07-04-001-feat-experience-ledger-tailored-pages-plan.md` | Korab writes real entries; highest-leverage unshipped item on the site | backlog |
 | First real tailored `/for/[slug]` page. Infrastructure works; only the CI-anchor `demo` entry exists | `docs/tailored-pages.md` | Create one when the first real application goes out; then capture learnings in `docs/solutions/` | backlog |
 | Blog: three QA-passed outlines awaiting dictation (agent-org, model-selection, solo-builder); five notes are already published on /notes | `Personal_Brand/content/drafts/2026-04-10-*-outline.md`, `2026-04-11-solo-builder-outline.md` | Korab dictates against the agent-org outline ("I Built a Tiny Company to Run My Personal Brand"); Draft Writer takes it from there | backlog |
 | LinkedIn tune-up draft (headline, About, first post, Featured) | `Personal_Brand/content/drafts/linkedin-tuneup.md` | Korab reviews and applies | backlog |
@@ -73,6 +72,5 @@ Statuses used after triage: `backlog` -> `next` | `parked` | `dropped`.
 ### Suggested triage order
 
 1. Section 1 decisions (they unblock everything downstream).
-2. Experience + skills content — built, empty, visitor-visible today.
-3. Next blog post dictation — the content pipeline is idle waiting for it.
-4. Everything else on demand.
+2. Next blog post dictation — the content pipeline is idle waiting for it.
+3. Everything else on demand.

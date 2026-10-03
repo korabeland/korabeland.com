@@ -286,36 +286,38 @@ active role, and a testimonial only when one exists (AE1). Consumers:
 `index.astro`, `for/[slug].astro`, `dev/experience-preview.astro`.
 
 **Props** — `roles: ExperienceSummary[]` (from `src/lib/experience.ts`). Reader
-sorts; the component renders. Disclosure gate: ranges-only numbers, no vendor
-names.
+sorts; the component renders. Publication constraints and approved exceptions
+live in the [disclosure rules](../plans/2026-07-03-console-mvp.md#disclosure-rules-hard-constraints--audit-before-every-commit-touching-content).
 
-**Structure** — `<ol>` of roles; each row = id line (role + company),
+**Structure** — `<ol>` of roles; each row = id line (role + company + optional location),
 `StatusChip status="current"` when active, mono period, bullet list with `›`
-markers and optional mono metric, optional testimonial `<figure>`.
+markers and optional mono metric, optional testimonial `<figure>` with attribution
+linked when `testimonial.sourceUrl` is set.
 
 **Accessibility** — `<section aria-labelledby="experience-heading">`; semantic
 `<ol>` / `<figure>` / `<blockquote>`. Bullet `›` is a CSS `::before` (decorative).
 
-**Do / Don't** — render `StatusChip` for `current`, not a bespoke badge; keep the
-disclosure gate (ranges only). Empty `roles` renders an empty `<ol>` — gate at
-the page (content-gated until real roles land).
+**Do / Don't** — render `StatusChip` for `current`, not a bespoke badge; apply the
+disclosure rules linked above. Empty `roles` renders an empty `<ol>` — gate at
+the page when no roles exist.
 
 ---
 
 ### SkillsSection
 
-`components/SkillsSection/SkillsSection.astro` — skills + certifications on the
-about page. Categorised term lists (`<dl>`) and a cert list with issuer/year.
+`components/SkillsSection/SkillsSection.astro` — skills, education + certifications
+on the about page. Categorised term lists (`<dl>`), education with institution/year,
+and certifications with issuer/year.
 Consumers: `about.astro`, `for/[slug].astro`, `dev/skills-preview.astro`.
 
 **Props** — `data: SkillsData` (from `src/lib/skills.ts`).
 
-**States** — categories and certifications each render only when non-empty;
+**States** — categories, optional education and certifications each render only when non-empty;
 whole section is gated by `readSkills()` at the page. Cert names link when
 `cert.url` is set (`:hover` → `--signal`).
 
 **Accessibility** — `<section aria-labelledby="skills-heading">`; semantic `<dl>`
-for categories, `<ul>` for certs.
+for categories, separately labelled `<ul>` lists for education and certifications.
 
 ---
 

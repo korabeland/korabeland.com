@@ -67,7 +67,7 @@ R-IDs trace to the origin document (R1–R15). All fifteen are in scope; none na
 ### Institutional Learnings
 
 - `docs/reviews/2026-07-04-console-mvp-launch.md` — Keystatic image fields must point at `public/` (fix #10); canonical/sitemap consistency depends on `trailingSlash: "never"` (fixes #6–7); don't build config systems without consumers (fix #5, the deleted `siteMeta`); CI Playwright validates dev SSR, not the prod build (fix #8).
-- `docs/plans/2026-07-03-console-mvp.md` — motion budget locked at "exactly 3 moments" (this plan amends it, see Key Technical Decisions); JetBrains Mono + `tabular-nums` is the locked numeric treatment; moss reserved for "shipped"; disclosure grep gate (`rg -i "enrola|student ignite|scu|..."`) applies to all new content — ranges-only numbers, no vendor/partner names.
+- `docs/plans/2026-07-03-console-mvp.md` — motion budget locked at "exactly 3 moments" (this plan amends it, see Key Technical Decisions); JetBrains Mono + `tabular-nums` is the locked numeric treatment; moss reserved for "shipped"; publication constraints and approved exceptions live in that plan's [disclosure rules](2026-07-03-console-mvp.md#disclosure-rules-hard-constraints--audit-before-every-commit-touching-content).
 - Memory `feedback_astro_underscore_routing.md` — never use `src/pages/_for/` for unlisting; Astro drops underscore page dirs from routing entirely.
 - Flow analysis (this session) — tag-based build-time selection is fragile (tag rename silently empties a page); reader-pattern null-skipping would silently gut a tailored page; JS animation bypasses the CSS reduced-motion kill-switch.
 
@@ -156,7 +156,7 @@ R-IDs trace to the origin document (R1–R15). All fifteen are in scope; none na
 - New `<section class="experience-section" aria-labelledby="experience-heading">` following the existing section-head template, placed after the outcome ledger. All new ids/classes use the `experience-` prefix — the `ledger-*` namespace is taken and asserted in e2e tests.
 - **Section renders only when `listExperience()` returns entries** (mirrors the skills-singleton-absent behaviour in U1/U3). With the collection empty at launch, the homepage is unchanged; the section appears the moment real roles land. This keeps placeholder content off the live homepage and avoids a CI failure from an unconditional row assertion (see below).
 - Row layout per role: company, title, period (t-mono), achievement bullets; testimonial renders as a quoted aside only when present — no empty container (AE1).
-- Content constraint carried from the console plan: ranges-only numbers, no vendor/partner names; run the disclosure grep gate over new content before commit.
+- Apply the console plan's [disclosure rules](2026-07-03-console-mvp.md#disclosure-rules-hard-constraints--audit-before-every-commit-touching-content), including approved publication exceptions, to new content before commit.
 
 **Patterns to follow:** `.ledger-section` markup and stagger-reveal pattern in `src/pages/index.astro`.
 
@@ -304,7 +304,7 @@ R-IDs trace to the origin document (R1–R15). All fifteen are in scope; none na
 | Risk | Mitigation |
 |------|------------|
 | Content dependency: real roles, metrics, certs must come from Korab | Schema, readers, and section components land regardless and are covered by unit tests using test-only fixtures. New sections conditionally render (empty collection → section absent, homepage unchanged), so shipping the code without content neither breaks CI nor puts placeholder content live. Launch of real content is a content task, not a code blocker |
-| Disclosure gate: quantified work history is the riskiest content class on the site | Ranges-only numbers, no vendor/partner names; run the console plan's rg gate before every content commit |
+| Disclosure gate: quantified work history is the riskiest content class on the site | Apply the console plan's [disclosure rules](2026-07-03-console-mvp.md#disclosure-rules-hard-constraints--audit-before-every-commit-touching-content) |
 | Visual-baseline churn (homepage + about change in 3 units) | Regenerate locally once per unit, commit; Chromatic owns cross-env diffs; reduced-motion emulation keeps screenshots deterministic |
 | CI validates dev SSR, not prod build (known gap, console review fix #8) | U6 verification includes one manual local `pnpm build`; the deferred prod smoke test remains open and is not expanded here |
 | Orchestrator-only files (`keystatic.config.ts`, `astro.config.mjs`) touched by U1/U6 | This is a single-session solo build — edits stay in the main session, no parallel subagent writes |

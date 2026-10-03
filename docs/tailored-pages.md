@@ -50,6 +50,6 @@ different from the `/dev/` recipe.
 ## The permanent `demo` fixture
 
 `src/content/for/demo/` is a committed CI anchor (`/for/demo`). It references
-only the always-present case studies, so the fail-loud resolver never breaks the
-build while the experience collection and skills singleton are still empty. Do
-not delete it.
+only the always-present case studies, so the fail-loud resolver remains independent
+of whether the experience collection and skills singleton contain entries. Do not
+delete it.
