@@ -28,6 +28,11 @@
     "verify:all": "pnpm verify && pnpm test && pnpm test:visual && pnpm run lighthouse && pnpm smoke:production"
   },
   "pnpm": {
+    "auditConfig": {
+      "ignoreGhsas": [
+        "GHSA-ch52-4w7c-c8xp"
+      ]
+    },
     "onlyBuiltDependencies": [
       "esbuild",
       "sharp"
