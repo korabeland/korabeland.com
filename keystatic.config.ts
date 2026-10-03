@@ -257,7 +257,7 @@ export default config({
   },
   singletons: {
     skills: singleton({
-      label: "Skills & certifications",
+      label: "Skills, education & certifications",
       path: "src/content/skills/",
       schema: {
         categories: fields.array(
@@ -275,6 +275,17 @@ export default config({
             label: "Skill categories",
             itemLabel: (props) => props.fields.name.value,
           },
+        ),
+        education: fields.array(
+          fields.object({
+            name: fields.text({
+              label: "Name",
+              validation: { isRequired: true },
+            }),
+            institution: fields.text({ label: "Institution" }),
+            year: fields.text({ label: "Year" }),
+          }),
+          { label: "Education", itemLabel: (props) => props.fields.name.value },
         ),
         certifications: fields.array(
           fields.object({

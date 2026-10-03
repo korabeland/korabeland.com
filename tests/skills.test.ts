@@ -67,3 +67,26 @@ describe("hasSkillsContent", () => {
     ).toBe(true);
   });
 });
+
+describe("education", () => {
+  it("maps optional education and coalesces missing metadata", () => {
+    expect(
+      mapSkills(
+        raw({ education: [{ name: "Degree", institution: null, year: null }] }),
+      ).education,
+    ).toEqual([{ name: "Degree", institution: "", year: "" }]);
+    expect(mapSkills(raw()).education).toEqual([]);
+  });
+
+  it("renders the section for education alone", () => {
+    expect(
+      hasSkillsContent({
+        categories: [],
+        certifications: [],
+        education: [
+          { name: "Degree", institution: "University", year: "2013" },
+        ],
+      }),
+    ).toBe(true);
+  });
+});

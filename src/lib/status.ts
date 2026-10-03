@@ -14,10 +14,9 @@
 // the mismatch is impossible to miss. See AGENTS.md "Status facts".
 
 // Atomic facts — the only things to edit when the situation changes.
-const base = "Melbourne";
-const baseCountryCode = "AU"; // ISO 3166-1 alpha-2 country of `base`, for JSON-LD
-const target = "Washington, DC"; // title case for prose / JSON-LD / llms.txt
-const targetConsole = "washington dc"; // lowercase for the console-styled UI
+const base = "Washington, DC";
+const baseCountryCode = "US"; // ISO 3166-1 alpha-2 country of `base`, for JSON-LD
+const baseConsole = "washington dc"; // lowercase for the console-styled UI
 const citizenship = "US and Australian citizen";
 const authorization = "no US visa sponsorship required";
 
@@ -25,7 +24,6 @@ export const STATUS = {
   base,
   /** ISO 3166-1 alpha-2 country of the base, for the JSON-LD PostalAddress. */
   baseCountryCode,
-  target,
   /** Nationalities, in JSON-LD / prose casing. Order = primary first. */
   nationalities: ["United States", "Australia"] as const,
   /** Citizenship phrase used verbatim in llms.txt and the JSON-LD description. */
@@ -34,12 +32,12 @@ export const STATUS = {
   authorization,
 
   // Derived display strings — composed from the atoms above, never duplicated.
-  /** Home hero: the one visible relocation line. */
-  heroReadout: `⌖ ${base.toLowerCase()} → ${targetConsole}`,
-  /** About-page portrait caption: relocation target, console style. */
-  targetReadout: `⌖ ${targetConsole}`,
-  /** About page: relocation + citizenship, console style. */
-  aboutLine: `relocating ${base.toLowerCase()} → ${targetConsole} · ${citizenship.toLowerCase()}`,
+  /** Home hero: current base, console style. */
+  heroReadout: `⌖ ${baseConsole}`,
+  /** About-page portrait caption: current base, console style. */
+  baseReadout: `⌖ ${baseConsole}`,
+  /** About page: current base + citizenship, console style. */
+  aboutLine: `${baseConsole} · ${citizenship.toLowerCase()}`,
   /** JSON-LD Person description. */
-  personDescription: `Operator with 13 years across marketing, CX and operations. Turns ambiguous problems into systems that ship, now building with AI. Relocating to ${target}; ${citizenship}, ${authorization}.`,
+  personDescription: `Operator with 13 years across marketing, CX and operations. Turns ambiguous problems into systems that ship, now building with AI. Based in ${base}; ${citizenship}, ${authorization}.`,
 } as const;

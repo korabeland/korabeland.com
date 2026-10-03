@@ -1,0 +1,24 @@
+{
+  "slug": "plattform-digital-media-buyer",
+  "company": "Plattform Education",
+  "role": "Digital Media Buyer",
+  "location": "Lenexa, Kansas",
+  "startDate": "2013-09-01",
+  "endDate": "2015-07-01",
+  "achievements": [
+    {
+      "text": "Ran all digital campaigns for a major client with a $1M+ monthly paid media budget within the first year.",
+      "metricValue": "$1M+",
+      "metricLabel": "monthly paid media budget"
+    },
+    {
+      "text": "Lifted lead-to-application conversion by 10% through continuous testing across paid search, display and paid social."
+    }
+  ],
+  "tags": [
+    "paid media",
+    "budget ownership",
+    "conversion testing"
+  ],
+  "testimonial": {}
+}

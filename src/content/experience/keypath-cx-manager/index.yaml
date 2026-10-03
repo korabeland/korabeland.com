@@ -1,0 +1,38 @@
+{
+  "slug": "keypath-cx-manager",
+  "company": "Keypath Education",
+  "role": "Customer Experience Manager",
+  "location": "Melbourne, Australia",
+  "startDate": "2021-03-01",
+  "endDate": "2026-08-01",
+  "achievements": [
+    {
+      "text": "Launched a Voice of Customer program across 10+ university partners, with feedback loops that shaped product strategy and the student lifecycle."
+    },
+    {
+      "text": "Developed an AI chatbot for lead qualification that lifted on-page conversion by 30%.",
+      "metricValue": "30%",
+      "metricLabel": "on-page conversion lift from the AI chatbot"
+    },
+    {
+      "text": "Proved the lowest call tier wasn't worth calling: the share of call effort spent on it fell from 27.8% to 0.7%, and conversion held."
+    },
+    {
+      "text": "Found that about 98% of leads captured through chat never reached the CRM, and designed the integration to route them in."
+    },
+    {
+      "text": "Built a predictive lead-tiering model that cut admissions workload, then designed a decile scoring model to replace the fixed tiers."
+    }
+  ],
+  "tags": [
+    "voice of customer",
+    "chatbot",
+    "lead scoring",
+    "crm"
+  ],
+  "testimonial": {
+    "quote": "Korab is analytical and evidence led with a real interest and deep understanding of both the customer journey and operational limitations within the business.",
+    "attribution": "John Bright, Director of Project Management, Keypath Education",
+    "sourceUrl": "https://www.linkedin.com/in/korabeland/details/recommendations/"
+  }
+}

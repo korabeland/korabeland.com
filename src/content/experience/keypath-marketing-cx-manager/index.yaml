@@ -1,0 +1,29 @@
+{
+  "slug": "keypath-marketing-cx-manager",
+  "company": "Keypath Education",
+  "role": "Marketing and CX Manager",
+  "location": "Melbourne, Australia",
+  "startDate": "2019-02-01",
+  "endDate": "2021-03-01",
+  "achievements": [
+    {
+      "text": "Led integrated marketing for partner universities, beating enrolment targets several times with some of the best retention rates in the company."
+    },
+    {
+      "text": "Ran chat, appointment scheduling, email and SMS as one customer journey, lifting engagement and conversion."
+    },
+    {
+      "text": "Built the marketing automation strategy in Salesforce Marketing Cloud, running integrated campaigns across email, SMS and digital."
+    }
+  ],
+  "tags": [
+    "customer journey",
+    "marketing automation",
+    "salesforce marketing cloud"
+  ],
+  "testimonial": {
+    "quote": "He brings a rare combination of strategic vision and practical execution.",
+    "attribution": "Britni Mapel, Associate Director, Customer Experience",
+    "sourceUrl": "https://www.linkedin.com/in/korabeland/details/recommendations/"
+  }
+}

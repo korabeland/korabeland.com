@@ -305,13 +305,13 @@ for (const { path, href } of NAV_ACTIVE_CASES) {
   });
 }
 
-// U2 — the experience section is content-gated: with the collection empty it
-// must not render on the homepage (no placeholder content ships).
-test("homepage omits the experience section while the collection is empty", async ({
+// The authored experience collection now renders on the homepage.
+test("homepage renders the authored experience collection", async ({
   page,
 }) => {
   await page.goto("/");
-  await expect(page.locator("#experience-heading")).toHaveCount(0);
+  await expect(page.locator("#experience-heading")).toBeVisible();
+  await expect(page.locator(".experience-row")).toHaveCount(5);
 });
 
 // U2 — dev-only preview renders ExperienceLedger against fixtures so the section
@@ -334,12 +334,12 @@ test("/dev/experience-preview renders roles, a current chip, and conditional tes
   await expect(page.getByText("6 · stakeholders")).toBeVisible();
 });
 
-// U3 — skills section is content-gated: absent while the singleton is empty.
-test("about page omits the skills section while the singleton is empty", async ({
-  page,
-}) => {
+// The authored skills singleton now renders on About.
+test("about page renders the authored skills singleton", async ({ page }) => {
   await page.goto("/about");
-  await expect(page.locator("#skills-heading")).toHaveCount(0);
+  await expect(page.locator("#skills-heading")).toBeVisible();
+  await expect(page.locator(".skills-cat")).toHaveCount(5);
+  await expect(page.locator(".skills-cert")).toHaveCount(6);
 });
 
 // U3 — dev-only preview renders SkillsSection against a fixture.

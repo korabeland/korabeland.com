@@ -28,7 +28,9 @@ const { roles } = Astro.props;
           <div class="experience-head">
             <div class="experience-idline">
               <span class="experience-role">{role.role}</span>
-              <span class="experience-company">{role.company}</span>
+              <span class="experience-company">
+                {[role.company, role.location].filter(Boolean).join(" · ")}
+              </span>
             </div>
             <div class="experience-meta">
               {role.current && <StatusChip status="current" variant="chip" />}
@@ -60,7 +62,9 @@ const { roles } = Astro.props;
               </blockquote>
               {role.testimonial.attribution && (
                 <figcaption class="t-mono experience-attrib">
-                  {`— ${role.testimonial.attribution}`}
+                  {role.testimonial.sourceUrl ? (
+                    <a href={role.testimonial.sourceUrl}>{role.testimonial.attribution}</a>
+                  ) : role.testimonial.attribution}
                 </figcaption>
               )}
             </figure>
