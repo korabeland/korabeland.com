@@ -166,7 +166,7 @@ R-IDs trace to the origin document (R1–R15). All fifteen are in scope; none na
 - Integration: existing `#ledger-heading` / `.ledger-row` assertions still pass — the new section must not break the outcome ledger's selectors.
 - Accessibility: axe suite passes with the new section (existing `tests/visual/accessibility.test.ts` covers the route).
 
-**Verification:** `pnpm verify:all` green; regenerated homepage baselines committed; disclosure grep gate returns no hits on new content.
+**Verification:** `pnpm verify:all` green; regenerated homepage baselines committed; new content satisfies the console plan's [disclosure rules](2026-07-03-console-mvp.md#disclosure-rules-hard-constraints--audit-before-every-commit-touching-content).
 
 ---
 

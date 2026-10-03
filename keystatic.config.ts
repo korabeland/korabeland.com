@@ -176,7 +176,8 @@ export default config({
             }),
             metricValue: fields.text({
               label: "Highlight metric — value",
-              description: 'Optional. Ranges only, e.g. "30–50%", "hundreds".',
+              description:
+                "Optional. Follow the disclosure rules in docs/plans/2026-07-03-console-mvp.md.",
             }),
             metricLabel: fields.text({
               label: "Highlight metric — label",
