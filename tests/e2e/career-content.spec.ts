@@ -1,5 +1,25 @@
 import { expect, test } from "@playwright/test";
 
+test("homepage experience highlights stay readable on narrow screens", async ({
+  page,
+}) => {
+  for (const width of [320, 375, 768]) {
+    await page.setViewportSize({ width, height: 812 });
+    await page.goto("/", { waitUntil: "networkidle" });
+    await page.evaluate(() => document.fonts.ready);
+    const highlights = page.locator(".experience-metric");
+    await expect(highlights).toHaveCount(4);
+    for (const highlight of await highlights.all()) {
+      const bounds = await highlight.boundingBox();
+      expect(bounds).not.toBeNull();
+      expect(
+        (bounds?.x ?? 0) + (bounds?.width ?? 0),
+        `Highlight overflows the ${width}px viewport: ${await highlight.innerText()}`,
+      ).toBeLessThanOrEqual(width);
+    }
+  }
+});
+
 test("homepage publishes the approved career history and linked endorsements", async ({
   page,
 }) => {
