@@ -1,6 +1,8 @@
 # Experience and skills publication review
 
-The homepage now reads five approved experience entries, ordered newest first.
+The About page reads five approved experience entries, ordered newest first,
+after how I operate and directly before skills. The homepage has no experience
+section.
 The About page reads five skill categories, four education entries and six
 linked certifications. Education is optional and has its own list in the
 existing section. Certificate years remain blank.
@@ -59,3 +61,30 @@ duplicating the employment history.
 
 The branch must be reviewed on its Vercel preview before production. This worker
 does not merge the PR.
+
+## About-only placement follow-up
+
+The experience ledger now follows how I operate and directly precedes skills
+on About. Home retains its existing bands without experience. Browser checks
+assert that placement and retain the narrow-screen highlight regression added
+by no-mistakes. The console location now derives from the same base atom used
+by structured data, resolving Devin's duplication finding without a copy change.
+The approved biography wording is retained exactly; Devin flagged its inclusion
+of media buyer in the Keypath arc, while the earliest collection entry correctly
+names Plattform Education.
+
+Reviewed all eight resized Home/About captures at 375, 768, 1280 and 1920 pixels
+against the committed baselines. The first capture caught missing space before
+the experience heading; adding the usual section gap resolved it. Reviewed the
+three remaining Pascal's Nebula image differences as tiny star rendering noise.
+Promoted with the staged reseed command; no baselines or checks were removed.
+
+Static checks, all 322 unit tests, the full browser suite (248 passed, 3 existing
+skips), production build and all eight SSR smoke checks passed. Disclosure grep
+found no restricted terms. Desktop and mobile Lighthouse passed all configured
+assertions on port 4417.
+
+The first no-mistakes run completed with two approved exceptions: hosted-preview
+review follows PR publication, and the pre-existing unpatched dependency audit
+advisory is being handled separately on main. No audit exception, dependency
+change or CI change was added on this branch.

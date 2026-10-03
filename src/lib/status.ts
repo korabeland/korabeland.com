@@ -16,7 +16,7 @@
 // Atomic facts — the only things to edit when the situation changes.
 const base = "Washington, DC";
 const baseCountryCode = "US"; // ISO 3166-1 alpha-2 country of `base`, for JSON-LD
-const baseConsole = "washington dc"; // lowercase for the console-styled UI
+const baseConsole = base.toLowerCase().replaceAll(",", ""); // lowercase for the console-styled UI
 const citizenship = "US and Australian citizen";
 const authorization = "no US visa sponsorship required";
 

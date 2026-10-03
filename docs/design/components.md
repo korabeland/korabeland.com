@@ -280,10 +280,10 @@ moment #1). Gated by a `data-stagger` attribute, not a class, so `/work` rows
 
 ### ExperienceLedger
 
-`components/ExperienceLedger/ExperienceLedger.astro` — the homepage experience
+`components/ExperienceLedger/ExperienceLedger.astro` — the About-page experience
 section: reverse-chron roles with quantified bullets, a `current` chip on the
 active role, and a testimonial only when one exists (AE1). Consumers:
-`index.astro`, `for/[slug].astro`, `dev/experience-preview.astro`.
+`about.astro`, `for/[slug].astro`, `dev/experience-preview.astro`.
 
 **Props** — `roles: ExperienceSummary[]` (from `src/lib/experience.ts`). Reader
 sorts; the component renders. Publication constraints and approved exceptions

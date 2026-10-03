@@ -1,11 +1,11 @@
 import { expect, test } from "@playwright/test";
 
-test("homepage experience highlights stay readable on narrow screens", async ({
+test("About experience highlights stay readable on narrow screens", async ({
   page,
 }) => {
   for (const width of [320, 375, 768]) {
     await page.setViewportSize({ width, height: 812 });
-    await page.goto("/", { waitUntil: "networkidle" });
+    await page.goto("/about", { waitUntil: "networkidle" });
     await page.evaluate(() => document.fonts.ready);
     const highlights = page.locator(".experience-metric");
     await expect(highlights).toHaveCount(4);
@@ -20,10 +20,10 @@ test("homepage experience highlights stay readable on narrow screens", async ({
   }
 });
 
-test("homepage publishes the approved career history and linked endorsements", async ({
+test("About publishes the approved career history and linked endorsements", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/about");
   const section = page.locator(".experience-section");
   await expect(section.locator(".experience-role")).toHaveText([
     "Customer Experience Manager",
@@ -51,7 +51,12 @@ test("homepage publishes the approved career history and linked endorsements", a
     );
   }
   await expect(section).not.toContainText("—");
-  await expect(page.locator(".hero-reloc")).toContainText("washington dc");
+  await expect(page.locator(".about-authorization")).toContainText(
+    "washington dc",
+  );
+  await expect(
+    page.locator(".about-operate + .experience-section + .skills-section"),
+  ).toHaveCount(1);
 });
 
 test("About separates education from certificates and displays the current base", async ({

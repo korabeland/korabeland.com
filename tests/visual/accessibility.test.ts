@@ -12,8 +12,8 @@ const ROUTES = [
   ...staticRoutes,
   ...projectRoutesSync().map((entry) => entry.path),
   ...postRoutesSync().map((entry) => entry.path),
-  // Dev-only previews — the only place the experience and skills sections
-  // render until real content lands, so axe checks their markup and contrast.
+  // Dev-only previews keep fixture variants covered alongside the authored
+  // About sections, including the fictional current-role chip.
   "/dev/experience-preview",
   "/dev/skills-preview",
   // The permanent tailored-page fixture — a real shipping (noindex) page.

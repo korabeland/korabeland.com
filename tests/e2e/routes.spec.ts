@@ -305,11 +305,13 @@ for (const { path, href } of NAV_ACTIVE_CASES) {
   });
 }
 
-// The authored experience collection now renders on the homepage.
-test("homepage renders the authored experience collection", async ({
+// The authored experience collection lives on About so Home stays concise.
+test("About renders the authored experience collection and Home stays concise", async ({
   page,
 }) => {
   await page.goto("/");
+  await expect(page.locator(".experience-section")).toHaveCount(0);
+  await page.goto("/about");
   await expect(page.locator("#experience-heading")).toBeVisible();
   await expect(page.locator(".experience-row")).toHaveCount(5);
 });
