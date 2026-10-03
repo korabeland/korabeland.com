@@ -4,10 +4,10 @@
 
 ## Key Pages
 
-* / - Homepage. Positioning, the outcome ledger of case studies, career experience and recommendations, recent notes.
+* / - Homepage. Positioning, the outcome ledger of case studies, recent notes.
 * /work - Case studies and portfolio of past work demonstrating operator-level outcomes.
 * /work/<slug> - Individual case studies (e.g. /work/lead-scoring).
-* /about - Career narrative, skills, education, certifications, and how Korab runs his own work.
+* /about - Career narrative, career experience and recommendations, skills, education, certifications, and how Korab runs his own work.
 * /notes - Field notes on building.
 * /notes/<slug> - Individual field notes.
 * /colophon - How korabeland.com was built.
