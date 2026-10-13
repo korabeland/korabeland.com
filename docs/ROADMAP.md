@@ -64,7 +64,7 @@ Statuses used after triage: `backlog` -> `next` | `parked` | `dropped`.
 
 | Item | Source | Next step | Status |
 |---|---|---|---|
-| Ask the Operator: grounded chat widget with traces, public ledger, and CI-gated evals (three phases; extractive answers first, budgeted generative tier later). Foundation only so far: [PR #56](https://github.com/korabeland/korabeland.com/pull/56) (corpus index) and [PR #55](https://github.com/korabeland/korabeland.com/pull/55) (production smoke, the plan's U12 and the same work as the production-smoke row in section 4) are open; no widget or `/api/ask` route exists | `Personal_Brand/docs/plans/korabeland.com/2026-07-14-001-feat-ask-the-operator-chatbot-plan.md` (2026-07-14) | Decide whether to continue the plan; PR #56 has open review findings | backlog |
+| Ask the Operator: grounded chat widget with traces, public ledger, and CI-gated evals (three phases; extractive answers first, budgeted generative tier later). Foundation work is underway in PR 1 from current main, superseding the corpus-index proposal in PR #56; no widget or `/api/ask` route exists | `Personal_Brand/docs/plans/korabeland.com/2026-07-14-001-feat-ask-the-operator-chatbot-plan.md` (2026-07-14) | Complete and review PR 1 against the plan; later phases remain deferred | in progress |
 | Off-Shift mode: homepage toggle from professional Korab to personal Korab, both states prerendered. Requirements only, nothing built | `Personal_Brand/docs/plans/korabeland.com/2026-07-17-off-shift-mode-requirements.md` (2026-07-17) | Plan it; personal content needs Korab's input | backlog |
 
 ---
