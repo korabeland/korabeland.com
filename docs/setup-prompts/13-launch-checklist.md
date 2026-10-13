@@ -77,7 +77,7 @@ The reviewer subagent produces a single markdown table with three columns: Check
 - Passing items without evidence ("trust me" is not green).
 - Route-200 checks including `/blog/<slug>`, `/projects/<slug>`, `/work-with-me` or any other deferred route — those aren't launch routes.
 - `/_dev/kiosk` being reachable in production — critical fail.
-- Contact form / analytics / RSS feed checks asking to be marked "not yet implemented" — remove them entirely, they're deferred by design.
+- Contact form / RSS feed checks asking to be marked "not yet implemented" — remove them entirely, they're deferred by design.
 - Missing the mirror-sheen audit artifact or the trail-register generator verification — those two items are what make the MVP feel like the object rather than a scaffold.
 - Usage summary that doesn't actually show per-phase breakdown.
 
