@@ -10,7 +10,7 @@ import { describe, expect, it } from "vitest";
 
 function extractNvmrcMajor(): number {
   const raw = readFileSync(resolve(process.cwd(), ".nvmrc"), "utf8").trim();
-  // .nvmrc may be a bare major ("22") or a full version ("22.22.3").
+  // .nvmrc may be a bare major ("24") or a full version ("24.0.0").
   const major = Number.parseInt(raw.split(".")[0], 10);
   if (Number.isNaN(major)) {
     throw new Error(
@@ -44,7 +44,7 @@ function extractEnginesMajor(): number {
   if (!range) {
     throw new Error("package.json: no `engines.node` field found");
   }
-  // Extract the lower-bound major out of a semver range like ">=22 <23".
+  // Extract the lower-bound major out of a semver range like ">=24 <25".
   const match = range.match(/(\d+)/);
   if (!match) {
     throw new Error(
