@@ -20,7 +20,8 @@ export type AnalyticsClient = (options: {
 export interface AnalyticsEnvironment {
   /** The page's `document`: only `referrer` is touched. */
   document: Pick<Document, "referrer">;
-  location: Pick<Location, "host" | "hostname">;
+  location: Pick<Location, "host" | "hostname" | "pathname">;
+  enabled: boolean;
 }
 
 /**
@@ -34,7 +35,13 @@ export function startAnalytics(
   inject: AnalyticsClient,
   env: AnalyticsEnvironment,
 ): boolean {
-  if (isLocalHost(env.location.hostname)) return false;
+  if (
+    !env.enabled ||
+    isLocalHost(env.location.hostname) ||
+    /^\/(for|dev|keystatic|api)(\/|$)/.test(env.location.pathname)
+  ) {
+    return false;
+  }
   const safeReferrer = sanitizeReferrer(
     env.document.referrer,
     env.location.host,

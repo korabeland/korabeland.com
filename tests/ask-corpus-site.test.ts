@@ -24,6 +24,14 @@ describe("live site corpus", () => {
       );
       expect(facts?.text).toContain(`Role: ${project.role}.`);
       expect(facts?.text).toContain(`Team: ${project.team}.`);
+      const ledgerRoute = project.category === "side" ? "/lab" : "/work";
+      expect(
+        passages.some(
+          (passage) =>
+            passage.route === ledgerRoute &&
+            passage.text.includes(`${project.title}: ${project.outcome}`),
+        ),
+      ).toBe(true);
     }
 
     expect(

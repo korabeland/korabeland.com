@@ -91,6 +91,7 @@ const NAV_LINKS: readonly NavLink[] = [
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="referrer" content="origin" />
     <!-- theme-color must precede the shift script below: the script rewrites it
          on day resolution, so the element has to already exist in the DOM when
          the script runs. Default is night; the script swaps it to the day
@@ -266,13 +267,13 @@ const NAV_LINKS: readonly NavLink[] = [
     <!-- Vercel Web Analytics: the site's only collector (the adapter's own
          webAnalytics switch stays off, two would double-count). The filter in
          src/lib/analytics-privacy.ts strips query strings and fragments,
-         drops private/tailored paths and unsafe referrers, and nothing runs on
-         a developer machine. If the script is blocked, nothing else changes. -->
+         drops private/tailored paths and unsafe referrers. A referrer policy
+         above also strips page paths and queries from collector request headers. -->
     <script>
       import { inject } from "@vercel/analytics";
       import { startAnalytics } from "../lib/analytics-client";
 
-      startAnalytics(inject, { document, location });
+      startAnalytics(inject, { document, location, enabled: !noindex });
     </script>
   </body>
 </html>

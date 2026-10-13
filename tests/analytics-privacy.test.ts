@@ -120,7 +120,11 @@ describe("isLocalHost", () => {
 describe("startAnalytics", () => {
   function env(referrer: string, hostname = "korabeland.com") {
     const document = { referrer } as Document;
-    return { document, location: { host: hostname, hostname } as Location };
+    return {
+      document,
+      location: { host: hostname, hostname, pathname: "/about" } as Location,
+      enabled: true,
+    };
   }
 
   it("starts the collector once with the filter and a sanitised referrer", () => {
@@ -155,9 +159,32 @@ describe("startAnalytics", () => {
       location: {
         host: "korabeland.com",
         hostname: "korabeland.com",
+        pathname: "/about",
       } as Location,
+      enabled: true,
     });
     expect(result).toBe(false);
+    expect(inject).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    "/for/demo",
+    "/dev/preview",
+    "/keystatic/collection/posts",
+    "/api/x",
+  ])("does not load the collector for %s", (pathname) => {
+    const inject = vi.fn();
+    const e = env("");
+    e.location.pathname = pathname;
+    expect(startAnalytics(inject, e)).toBe(false);
+    expect(inject).not.toHaveBeenCalled();
+  });
+
+  it("does not load the collector when the shared layout marks a page private", () => {
+    const inject = vi.fn();
+    const e = env("");
+    e.enabled = false;
+    expect(startAnalytics(inject, e)).toBe(false);
     expect(inject).not.toHaveBeenCalled();
   });
 });

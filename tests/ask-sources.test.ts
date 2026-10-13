@@ -2,7 +2,7 @@
 import Markdoc from "@markdoc/markdoc";
 import { describe, expect, it } from "vitest";
 import { findBrokenCitations } from "@/lib/ask/citations";
-import { passagesFromDocuments } from "@/lib/ask/corpus";
+import { computeCorpusRevision, passagesFromDocuments } from "@/lib/ask/corpus";
 import { blocksFromMarkdoc } from "@/lib/ask/markdoc";
 import {
   aboutDocument,
@@ -10,6 +10,7 @@ import {
   llmsDocument,
   noteDocument,
   projectDocument,
+  projectLedgerDocument,
   sectionsFromBlocks,
   skillsDocument,
   statusDocument,
@@ -129,6 +130,33 @@ describe("projectDocument", () => {
       body: [],
     });
     expect(doc.sections[0].paragraphs.at(-1)).toContain("Status: in flight.");
+  });
+});
+
+describe("projectLedgerDocument", () => {
+  it("cites each published outcome on the matching work or lab ledger", () => {
+    const projects = [
+      project({ outcome: "measured conversion lift" }),
+      project({ slug: "lab-demo", category: "side", outcome: "daily driver" }),
+    ];
+    const work = projectLedgerDocument(projects, "work");
+    const lab = projectLedgerDocument(projects, "side");
+    expect(work.route).toBe("/work");
+    expect(work.sections[0].paragraphs).toEqual([
+      "Demo project: measured conversion lift",
+    ]);
+    expect(lab.route).toBe("/lab");
+    expect(lab.sections[0].paragraphs).toEqual(["Demo project: daily driver"]);
+  });
+
+  it("changes the corpus revision when only a published outcome changes", () => {
+    const original = project({ outcome: "daily driver" });
+    const revised = { ...original, outcome: "built for daily use" };
+    const revision = (item: ProjectSummary) =>
+      computeCorpusRevision(
+        passagesFromDocuments([projectLedgerDocument([item], "work")]),
+      );
+    expect(revision(revised)).not.toBe(revision(original));
   });
 });
 

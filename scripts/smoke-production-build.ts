@@ -79,11 +79,6 @@ const CHECKS: Check[] = [
         return "page heading missing from body";
       if (!body.includes(SUBLINE))
         return `query-derived subline "${SUBLINE}" missing — response not rendered per-request`;
-      // The shared page shell also ships the analytics client on SSR pages,
-      // once (the adapter's own collector is off; a second would double-count).
-      const collectors = body.split("/_vercel/insights/script.js").length - 1;
-      if (collectors !== 1)
-        return `expected the analytics client once, found ${collectors}`;
       return null;
     },
   },

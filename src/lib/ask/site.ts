@@ -28,6 +28,7 @@ import {
   llmsDocument,
   noteDocument,
   projectDocument,
+  projectLedgerDocument,
   skillsDocument,
   statusDocument,
 } from "./sources";
@@ -76,7 +77,15 @@ export async function buildSiteCorpus(
     documents.push(doc);
   }
 
-  for (const project of await listProjects()) {
+  const projects = await listProjects();
+  routes.add("/work");
+  routes.add("/lab");
+  documents.push(
+    projectLedgerDocument(projects, "work"),
+    projectLedgerDocument(projects, "side"),
+  );
+
+  for (const project of projects) {
     const entry = await readProject(project.slug);
     if (!entry)
       throw new Error(`ask corpus: project "${project.slug}" has no entry`);

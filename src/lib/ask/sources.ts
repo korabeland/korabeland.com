@@ -92,6 +92,31 @@ export interface ProjectInput {
   body: readonly TextBlock[];
 }
 
+export function projectLedgerDocument(
+  projects: readonly ProjectSummary[],
+  category: ProjectSummary["category"],
+): CorpusDocument {
+  const route = category === "side" ? "/lab" : "/work";
+  return {
+    docId: `project-ledger:${category}`,
+    route,
+    kind: "project",
+    sections: [
+      {
+        key: "outcomes",
+        heading: "Project outcomes",
+        anchor: "",
+        paragraphs: projects
+          .filter(
+            (project) =>
+              project.category === category && present(project.outcome),
+          )
+          .map((project) => `${clean(project.title)}: ${clean(project.outcome)}`),
+      },
+    ],
+  };
+}
+
 export function projectDocument({
   project,
   body,
