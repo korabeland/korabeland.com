@@ -59,7 +59,7 @@ The conventions the AI team follows — directory layout, file-ownership rules, 
 
 ## Working in the repo
 
-Node 22 (pinned in `.nvmrc`) and pnpm. Then:
+Node 24 (pinned in `.nvmrc`) and pnpm. Then:
 
 ```sh
 pnpm install

@@ -71,9 +71,8 @@ describe("runtime declarations stay in sync", () => {
   });
 
   it("engines.node's floor satisfies every dependency's own engines requirement", () => {
-    // engines.node was tightened to ">=22.12 <23" because astro itself
-    // declares ">=22.12.0" — a repo engines range looser than a dependency's
-    // lets Node 22.0–22.11 pass our gate and then fail at install/build.
+    // Keep the repo's engines floor at or above Astro's declared floor. A
+    // looser range can pass package-manager checks and then fail at build time.
     // Guard the floor against the strictest known dependency requirement.
     const pkg = JSON.parse(
       readFileSync(resolve(process.cwd(), "package.json"), "utf8"),
