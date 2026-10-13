@@ -57,6 +57,18 @@ export interface MonthTick {
   weekIndex: number;
 }
 
+/**
+ * Weeks rendered by the shift log: the most recent ~7 months. Long enough to
+ * show the build-up, short enough that the grid is not mostly blank cells.
+ */
+export const RECENT_WEEKS = 30;
+
+/**
+ * Minimum columns between two month ticks. A 3-letter 10px mono label spans
+ * about two columns at the narrowest cell width, so anything closer collides.
+ */
+const MIN_TICK_GAP_WEEKS = 3;
+
 const MONTH_ABBR = [
   "Jan",
   "Feb",
@@ -80,9 +92,9 @@ const MONTH_ABBR = [
  *
  * The month is read straight off the "YYYY-MM-DD" string (positions 5-6) rather
  * than via `new Date`, so the result is timezone-independent and byte-stable.
- * Deduped by month label: a 52-53 week window wraps back to its starting month
- * on the final column, and repeating that label would clutter the frame — the
- * first occurrence wins, yielding a clean 12-label run.
+ * Deduped by month label: windows spanning a full year can repeat a month near
+ * the end, and repeating that label would clutter the frame. The first
+ * occurrence wins.
  */
 export function monthTicks(data: ContributionData): MonthTick[] {
   const ticks: MonthTick[] = [];
@@ -101,7 +113,27 @@ export function monthTicks(data: ContributionData): MonthTick[] {
     ticks.push({ label, weekIndex });
   });
 
-  return ticks;
+  // A partial leading month leaves its tick right next to the following one;
+  // drop the earlier tick so no two labels overlap.
+  return ticks.filter((tick, i) => {
+    const next = ticks[i + 1];
+    return !next || next.weekIndex - tick.weekIndex >= MIN_TICK_GAP_WEEKS;
+  });
+}
+
+/**
+ * The last RECENT_WEEKS of `data`, with `total` recomputed from the slice so
+ * the summary stats describe exactly what the grid draws. Returns the input
+ * untouched when it already fits.
+ */
+export function recentWindow(data: ContributionData): ContributionData {
+  if (data.weeks.length <= RECENT_WEEKS) return data;
+  const weeks = data.weeks.slice(-RECENT_WEEKS);
+  const total = weeks.reduce(
+    (sum, week) => sum + week.days.reduce((s, day) => s + day.count, 0),
+    0,
+  );
+  return { ...data, total, weeks };
 }
 
 /** Maps a contributionLevel enum string to the 0-4 amber visual intensity scale. */

@@ -13,6 +13,8 @@ import {
   levelToIntensity,
   longestStreak,
   monthTicks,
+  RECENT_WEEKS,
+  recentWindow,
   summaryStats,
 } from "@/lib/shift-log";
 
@@ -365,27 +367,35 @@ describe("monthTicks", () => {
     const data = makeData([
       makeWeek("2026-06-01", ZERO_COUNTS, ZERO_LEVELS), // Jun → tick
       makeWeek("2026-06-08", ZERO_COUNTS, ZERO_LEVELS), // Jun → deduped
+      makeWeek("2026-06-15", ZERO_COUNTS, ZERO_LEVELS), // Jun → deduped
       makeWeek("2026-07-06", ZERO_COUNTS, ZERO_LEVELS), // Jul → tick
+      makeWeek("2026-07-13", ZERO_COUNTS, ZERO_LEVELS),
+      makeWeek("2026-07-20", ZERO_COUNTS, ZERO_LEVELS),
+      makeWeek("2026-07-27", ZERO_COUNTS, ZERO_LEVELS),
       makeWeek("2026-08-03", ZERO_COUNTS, ZERO_LEVELS), // Aug → tick
     ]);
 
     expect(monthTicks(data)).toEqual([
       { label: "Jun", weekIndex: 0 },
-      { label: "Jul", weekIndex: 2 },
-      { label: "Aug", weekIndex: 3 },
+      { label: "Jul", weekIndex: 3 },
+      { label: "Aug", weekIndex: 7 },
     ]);
   });
 
   it("attributes a week straddling a month boundary by its first day", () => {
     // Jul 30 → Aug 5: five of seven days are August, but the first day is July.
     const data = makeData([
+      makeWeek("2026-07-02", ZERO_COUNTS, ZERO_LEVELS),
+      makeWeek("2026-07-09", ZERO_COUNTS, ZERO_LEVELS),
+      makeWeek("2026-07-16", ZERO_COUNTS, ZERO_LEVELS),
+      makeWeek("2026-07-23", ZERO_COUNTS, ZERO_LEVELS),
       makeWeek("2026-07-30", ZERO_COUNTS, ZERO_LEVELS),
       makeWeek("2026-08-06", ZERO_COUNTS, ZERO_LEVELS),
     ]);
 
     expect(monthTicks(data)).toEqual([
       { label: "Jul", weekIndex: 0 },
-      { label: "Aug", weekIndex: 1 },
+      { label: "Aug", weekIndex: 5 },
     ]);
   });
 
@@ -508,5 +518,106 @@ describe("committed seed", () => {
     expect(stats.busiestWeekTotal).toBeGreaterThanOrEqual(0);
     expect(stats.currentStreak).toBeGreaterThanOrEqual(0);
     expect(stats.longestStreak).toBeGreaterThanOrEqual(stats.currentStreak);
+  });
+});
+
+describe("recentWindow", () => {
+  const LEVELS: ContributionLevel[] = Array(7).fill("NONE");
+  /** `n` weekly columns from 2026-01-05, week i contributing i+1 on its first day. */
+  const weeksOf = (n: number): ContributionWeek[] =>
+    Array.from({ length: n }, (_, i) => {
+      const start = new Date("2026-01-05T00:00:00Z");
+      start.setUTCDate(start.getUTCDate() + i * 7);
+      return makeWeek(
+        start.toISOString().slice(0, 10),
+        [i + 1, 0, 0, 0, 0, 0, 0],
+        LEVELS,
+      );
+    });
+
+  it("keeps the fixed 30 most recent weeks, ending at the latest one", () => {
+    const data = makeData(weeksOf(40));
+    const windowed = recentWindow(data);
+
+    expect(windowed.weeks).toHaveLength(RECENT_WEEKS);
+    expect(windowed.weeks.at(-1)).toBe(data.weeks.at(-1));
+    expect(windowed.weeks[0]).toBe(data.weeks[10]);
+  });
+
+  it("recomputes total from the slice, not the full-year total", () => {
+    const data = makeData(weeksOf(40), { total: 99999 });
+    // The last 30 weeks contribute 11..40 = 765.
+    expect(recentWindow(data).total).toBe(765);
+  });
+
+  it("makes summary stats describe the slice", () => {
+    const windowed = recentWindow(makeData(weeksOf(40)));
+    const stats = summaryStats(windowed);
+
+    expect(stats.total).toBe(765);
+    expect(stats.busiestWeekTotal).toBe(40);
+  });
+
+  it("returns the data unchanged when it already fits", () => {
+    const data = makeData(weeksOf(5));
+    expect(recentWindow(data)).toBe(data);
+  });
+
+  it("drops the blank pre-activity stretch from the committed seed", () => {
+    const windowed = recentWindow(seedJson as ContributionData);
+    const firstWeekTotal = windowed.weeks[0].days.reduce(
+      (sum, d) => sum + d.count,
+      0,
+    );
+    expect(windowed.weeks).toHaveLength(RECENT_WEEKS);
+    expect(windowed.total).toBeLessThanOrEqual(
+      (seedJson as ContributionData).total,
+    );
+    expect(firstWeekTotal).toBeGreaterThanOrEqual(0);
+  });
+});
+
+describe("monthTicks — label collision", () => {
+  const Z = [0, 0, 0, 0, 0, 0, 0];
+  const L: ContributionLevel[] = Array(7).fill("NONE");
+
+  it("drops a partial leading month whose tick sits right before the next", () => {
+    // Sep 28 is the lone Sep week; Oct begins one week later → Sep would collide.
+    const data = makeData([
+      makeWeek("2026-09-28", Z, L),
+      makeWeek("2026-10-05", Z, L),
+      makeWeek("2026-10-12", Z, L),
+      makeWeek("2026-10-19", Z, L),
+      makeWeek("2026-10-26", Z, L),
+      makeWeek("2026-11-02", Z, L),
+    ]);
+
+    expect(monthTicks(data).map((t) => t.label)).toEqual(["Oct", "Nov"]);
+  });
+
+  it("keeps adjacent labels that have room", () => {
+    const data = makeData([
+      makeWeek("2026-08-31", Z, L),
+      makeWeek("2026-09-07", Z, L),
+      makeWeek("2026-09-14", Z, L),
+      makeWeek("2026-09-21", Z, L),
+      makeWeek("2026-09-28", Z, L),
+    ]);
+    // Aug at 0, Sep at 1 → collide, Aug dropped; a full gap would be kept.
+    expect(monthTicks(data).map((t) => t.label)).toEqual(["Sep"]);
+  });
+
+  it("never emits two ticks closer than the minimum gap", () => {
+    const weeks = Array.from({ length: 30 }, (_, i) => {
+      const start = new Date("2026-01-05T00:00:00Z");
+      start.setUTCDate(start.getUTCDate() + i * 7);
+      return makeWeek(start.toISOString().slice(0, 10), Z, L);
+    });
+    const ticks = monthTicks(makeData(weeks));
+    for (let i = 1; i < ticks.length; i += 1) {
+      expect(
+        ticks[i].weekIndex - ticks[i - 1].weekIndex,
+      ).toBeGreaterThanOrEqual(3);
+    }
   });
 });

@@ -2,7 +2,7 @@
 // ShiftLog — GitHub contribution grid in console grammar (R9).
 //
 // The accessible representation is the mono summary line, computed from the
-// real data via src/lib/shift-log.ts (never hardcoded). The 52-53×7 cell
+// real data via src/lib/shift-log.ts (never hardcoded). The 30×7 cell
 // grid is aria-hidden decoration layered on top of that — screen readers
 // see only the summary and the staleness caption. Each cell gets an intensity
 // class (0-4) mapped to signal strength via scoped CSS.
@@ -16,6 +16,7 @@ import type { ContributionData } from "../../lib/shift-log";
 import {
   levelToIntensity,
   monthTicks,
+  recentWindow,
   summaryStats,
 } from "../../lib/shift-log";
 
@@ -23,7 +24,9 @@ interface Props {
   data: ContributionData;
 }
 
-const { data } = Astro.props;
+// Grid, ticks, and stats all derive from the same recent-weeks slice, so the
+// numbers never disagree with what is drawn.
+const data = recentWindow(Astro.props.data);
 
 const stats = summaryStats(data);
 const totalLabel = data.total.toLocaleString("en-US");
@@ -93,8 +96,8 @@ const legendLevels = [0, 1, 2, 3, 4] as const;
   ).matches;
 
   // Scroll cue: when the grid overflows its scroll box (narrow viewports),
-  // fade the clipped edge so it reads as "more this way" instead of "the year
-  // ends in January". Runs for every pointer type — touch users are exactly
+  // fade the clipped edge so it reads as "more this way" instead of "the data
+  // ends here". Runs for every pointer type — touch users are exactly
   // who scrolls this — and updates on scroll/resize.
   const panel = document.querySelector<HTMLElement>(".shiftlog-panel");
   const scroller = document.querySelector<HTMLElement>(".shiftlog-scroll");
@@ -295,7 +298,7 @@ const legendLevels = [0, 1, 2, 3, 4] as const;
   }
 
   .shiftlog-grid {
-    /* 53 equal columns that flex to fill the container width; position: relative
+    /* 30 equal columns that flex to fill the container width; position: relative
        makes the grid the offsetParent so the torch reads each cell's
        offsetLeft/offsetTop against it (KTD5). */
     position: relative;
