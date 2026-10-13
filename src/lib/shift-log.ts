@@ -122,16 +122,13 @@ export function monthTicks(data: ContributionData): MonthTick[] {
 }
 
 /**
- * The last `count` weeks of `data`, with `total` recomputed from the slice so
+ * The last RECENT_WEEKS of `data`, with `total` recomputed from the slice so
  * the summary stats describe exactly what the grid draws. Returns the input
  * untouched when it already fits.
  */
-export function recentWindow(
-  data: ContributionData,
-  count: number = RECENT_WEEKS,
-): ContributionData {
-  if (data.weeks.length <= count) return data;
-  const weeks = data.weeks.slice(-count);
+export function recentWindow(data: ContributionData): ContributionData {
+  if (data.weeks.length <= RECENT_WEEKS) return data;
+  const weeks = data.weeks.slice(-RECENT_WEEKS);
   const total = weeks.reduce(
     (sum, week) => sum + week.days.reduce((s, day) => s + day.count, 0),
     0,

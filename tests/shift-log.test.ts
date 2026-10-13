@@ -535,38 +535,32 @@ describe("recentWindow", () => {
       );
     });
 
-  it("keeps the most recent weeks, ending at the latest one", () => {
+  it("keeps the fixed 30 most recent weeks, ending at the latest one", () => {
     const data = makeData(weeksOf(40));
-    const windowed = recentWindow(data, 10);
+    const windowed = recentWindow(data);
 
-    expect(windowed.weeks).toHaveLength(10);
+    expect(windowed.weeks).toHaveLength(RECENT_WEEKS);
     expect(windowed.weeks.at(-1)).toBe(data.weeks.at(-1));
-    expect(windowed.weeks[0]).toBe(data.weeks[30]);
+    expect(windowed.weeks[0]).toBe(data.weeks[10]);
   });
 
   it("recomputes total from the slice, not the full-year total", () => {
     const data = makeData(weeksOf(40), { total: 99999 });
-    // weeks 30..39 contribute 31..40 = 355
-    expect(recentWindow(data, 10).total).toBe(355);
+    // The last 30 weeks contribute 11..40 = 765.
+    expect(recentWindow(data).total).toBe(765);
   });
 
   it("makes summary stats describe the slice", () => {
-    const windowed = recentWindow(makeData(weeksOf(40)), 10);
+    const windowed = recentWindow(makeData(weeksOf(40)));
     const stats = summaryStats(windowed);
 
-    expect(stats.total).toBe(355);
+    expect(stats.total).toBe(765);
     expect(stats.busiestWeekTotal).toBe(40);
   });
 
   it("returns the data unchanged when it already fits", () => {
     const data = makeData(weeksOf(5));
-    expect(recentWindow(data, 10)).toBe(data);
-  });
-
-  it("defaults to RECENT_WEEKS", () => {
-    expect(recentWindow(makeData(weeksOf(53))).weeks).toHaveLength(
-      RECENT_WEEKS,
-    );
+    expect(recentWindow(data)).toBe(data);
   });
 
   it("drops the blank pre-activity stretch from the committed seed", () => {
