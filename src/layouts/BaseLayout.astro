@@ -262,6 +262,18 @@ const NAV_LINKS: readonly NavLink[] = [
         </div>
       </footer>
     )}
+
+    <!-- Vercel Web Analytics: the site's only collector (the adapter's own
+         webAnalytics switch stays off, two would double-count). The filter in
+         src/lib/analytics-privacy.ts strips query strings and fragments,
+         drops private/tailored paths and unsafe referrers, and nothing runs on
+         a developer machine. If the script is blocked, nothing else changes. -->
+    <script>
+      import { inject } from "@vercel/analytics";
+      import { startAnalytics } from "../lib/analytics-client";
+
+      startAnalytics(inject, { document, location });
+    </script>
   </body>
 </html>
 
