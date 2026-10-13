@@ -106,6 +106,7 @@ test("the official collector receives filtered page and referrer data", async ({
     expect(pageview).not.toHaveProperty("userId");
     expect(pageview).not.toHaveProperty("props");
   } finally {
+    await page.unrouteAll({ behavior: "wait" });
     await context.close();
   }
 });
@@ -128,6 +129,7 @@ test("tailored pages never load the analytics collector", async ({ page }) => {
   await page.goto(`${browserOrigin}/for/demo?token=SECRET`);
   await expect(page.getByText("prepared for", { exact: false })).toBeVisible();
   expect(scriptLoads).toBe(0);
+  await page.unrouteAll({ behavior: "wait" });
 });
 
 test("navigation still works when the analytics collector is blocked", async ({
@@ -156,4 +158,5 @@ test("navigation still works when the analytics collector is blocked", async ({
   await expect(
     page.getByRole("heading", { name: "work · case studies" }),
   ).toBeVisible();
+  await page.unrouteAll({ behavior: "wait" });
 });
