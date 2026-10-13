@@ -17,7 +17,11 @@ nothing. The `@astrojs/vercel` adapter can inject a collector
 shell (`src/layouts/BaseLayout.astro`) loads the official `@vercel/analytics`
 client once and the adapter switch stays off. **Never enable both:** each
 pageview would count twice. `scripts/check-built-site.ts` fails the build if any
-built page references the collector other than exactly once.
+built citation does not resolve to a real route and anchor. The browser proof in
+`tests/e2e/analytics.spec.ts` runs a frozen copy of Vercel's served collector and
+checks its script request and pageview request, including URLs, headers and
+body, with a secret-bearing incoming referrer. It also confirms tailored pages
+do not load the collector and navigation works when the collector is blocked.
 
 ## What the filter does
 
