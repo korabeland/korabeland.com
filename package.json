@@ -4,7 +4,7 @@
   "private": true,
   "packageManager": "pnpm@10.33.0",
   "engines": {
-    "node": ">=22.12 <23"
+    "node": ">=24 <25"
   },
   "scripts": {
     "predev": "pnpm gen:trail-register && pnpm gen:hero-variants && pnpm gen:eye-rig",
