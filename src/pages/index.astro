@@ -42,7 +42,7 @@ const labItems = labProjects.map((p) => ({
 }));
 const posts = (await listPosts()).slice(0, 3);
 
-// Shift log — a year of GitHub activity, the same generated-then-seed pipeline
+// Shift log — recent months of GitHub activity, the same generated-then-seed pipeline
 // the colophon build log uses. Content-gated: the band renders only when real
 // data is present. The prebuild hook (`scripts/gen-shift-log.ts`) writes
 // contributions.json; the committed seed is the tokenless fallback.
@@ -206,13 +206,13 @@ const MAIL_ICON =
       stagger
     />
 
-    <!-- ─── Shift log ── a year of building, straight from GitHub ───────── -->
+    <!-- ─── Shift log ── recent months, straight from GitHub ───────── -->
     {
       contributions && (
         <section class="shift-section" aria-labelledby="shift-heading">
           <SectionHead
             id="shift-heading"
-            text="shift log · a year of building"
+            text="shift log · recent months"
             more={{
               href: "https://github.com/korabeland",
               label: "on github →",

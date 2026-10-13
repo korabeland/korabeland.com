@@ -57,6 +57,18 @@ export interface MonthTick {
   weekIndex: number;
 }
 
+/**
+ * Weeks rendered by the shift log: the most recent ~7 months. Long enough to
+ * show the build-up, short enough that the grid is not mostly blank cells.
+ */
+export const RECENT_WEEKS = 30;
+
+/**
+ * Minimum columns between two month ticks. A 3-letter 10px mono label spans
+ * about two columns at the narrowest cell width, so anything closer collides.
+ */
+const MIN_TICK_GAP_WEEKS = 3;
+
 const MONTH_ABBR = [
   "Jan",
   "Feb",
@@ -101,7 +113,30 @@ export function monthTicks(data: ContributionData): MonthTick[] {
     ticks.push({ label, weekIndex });
   });
 
-  return ticks;
+  // A partial leading month leaves its tick right next to the following one;
+  // drop the earlier tick so no two labels overlap.
+  return ticks.filter((tick, i) => {
+    const next = ticks[i + 1];
+    return !next || next.weekIndex - tick.weekIndex >= MIN_TICK_GAP_WEEKS;
+  });
+}
+
+/**
+ * The last `count` weeks of `data`, with `total` recomputed from the slice so
+ * the summary stats describe exactly what the grid draws. Returns the input
+ * untouched when it already fits.
+ */
+export function recentWindow(
+  data: ContributionData,
+  count: number = RECENT_WEEKS,
+): ContributionData {
+  if (data.weeks.length <= count) return data;
+  const weeks = data.weeks.slice(-count);
+  const total = weeks.reduce(
+    (sum, week) => sum + week.days.reduce((s, day) => s + day.count, 0),
+    0,
+  );
+  return { ...data, total, weeks };
 }
 
 /** Maps a contributionLevel enum string to the 0-4 amber visual intensity scale. */

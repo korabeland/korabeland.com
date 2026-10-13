@@ -12,7 +12,7 @@ The site's own thesis is its headline: *turn ambiguous problems into systems tha
 
 The home page is the console: a hero readout, then a set of ledgers that fill in as the work does.
 
-- **Home (`/`)** — the positioning line, a portrait whose gaze follows the cursor, and the outcome ledger of recent case studies. Below that: a year of GitHub activity (the *shift log*), AI code tinkering (the *lab*), and recent notes.
+- **Home (`/`)** — the positioning line, a portrait whose gaze follows the cursor, and the outcome ledger of recent case studies. Below that: recent months of GitHub activity (the *shift log*), AI code tinkering (the *lab*), and recent notes.
 - **Work (`/work`)** — case studies. The three most recent are featured on the home ledger; the full set lives here.
 - **Lab (`/lab`)** — personal AI code experiments, kept in a separate band so they never mix with the client work.
 - **Notes (`/notes`)** — field notes and longer-form writing.
