@@ -24,6 +24,7 @@
       "!node_modules",
       "!tests/visual/baselines",
       "!tests/visual/diffs",
+      "!tests/fixtures/vercel-analytics-collector.js",
       "!docs/design-references",
       "!.claude/settings.local.json",
       "!.claude/worktrees"
