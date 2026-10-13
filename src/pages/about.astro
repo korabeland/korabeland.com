@@ -10,6 +10,7 @@ import Portrait from "../components/Portrait/index.astro";
 import PortraitPreload from "../components/Portrait/PortraitPreload.astro";
 import SkillsSection from "../components/SkillsSection/SkillsSection.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
+import { ABOUT_ANCHORS, ABOUT_NARRATIVE, ABOUT_OPERATE } from "../lib/about";
 import { listExperience } from "../lib/experience";
 import { serializeJsonLd } from "../lib/json-ld";
 import { readSkills } from "../lib/skills";
@@ -54,48 +55,17 @@ const PORTRAIT_SIZES = "(max-width: 680px) 280px, 440px";
       </figcaption>
     </figure>
 
-    <section class="about-body" aria-labelledby="narrative">
-      <h2 id="narrative" class="sr-only">Career narrative</h2>
-      <p>
-        The thread across thirteen years is the same one every time: find the structure
-        inside a problem nobody has fully framed yet, then build something that keeps
-        running after I step back. The titles changed a lot more than the underlying
-        work did.
-      </p>
-      <p>
-        I started in digital media buying, running paid search and paid social
-        campaigns and learning to read a dashboard for the decision hiding inside it.
-        That pulled me into marketing, then into leading a marketing team, then into
-        customer experience. Each move widened the aperture, from a channel to a
-        funnel to the whole business. At Keypath Education I spent over a decade moving through that arc: media buyer, digital media specialist, marketing manager, marketing and CX manager, and finally CX manager for the Australian portfolio. Every
-        step added a layer of the business I had to understand well enough to explain
-        simply to the people making decisions in it.
-      </p>
-      <p>
-        The constant underneath the titles is the same instinct: simplify complex
-        strategy so people can actually act on it, and back decisions with evidence
-        instead of hearsay. That instinct is what's pulling me toward AI now. I've led
-        the evidence work behind a lead-scoring model that replaces fixed tiers with a
-        proper probability score, and I aligned stakeholders across four functions
-        before anyone touched a line of the build. I've also run an end-to-end pilot
-        on AI-driven SMS engagement, built on a randomised holdout so the result means
-        something rather than something that just feels right.
-      </p>
-      <p>
-        None of that is a pivot away from what came before. It's the same operating
-        system, aimed at harder problems: frame it properly and find the evidence, so
-        what I build holds up once I'm not the one holding it together.
-      </p>
+    <section class="about-body" aria-labelledby={ABOUT_ANCHORS.narrative}>
+      <h2 id={ABOUT_ANCHORS.narrative} class="sr-only">Career narrative</h2>
+      {ABOUT_NARRATIVE.map((paragraph) => <p>{paragraph}</p>)}
     </section>
 
-    <section class="about-operate" aria-labelledby="operate">
-      <h2 id="operate" class="t-label">how I operate</h2>
+    <section class="about-operate" aria-labelledby={ABOUT_ANCHORS.operate}>
+      <h2 id={ABOUT_ANCHORS.operate} class="t-label">how I operate</h2>
       <p>
-        I run my own work the same way I'd want a good system run: a backlog tied to
-        actual goals, AI doing the first pass of triage, everything written down as
-        plain markdown instead of trapped in someone's head. I wrote up
-        <a href="/notes/system-designer-personal-os">the full system</a>
-        as a field note.
+        {ABOUT_OPERATE.before}{" "}
+        <a href={ABOUT_OPERATE.link.href}>{ABOUT_OPERATE.link.text}</a>{" "}
+        {ABOUT_OPERATE.after}
       </p>
     </section>
 
@@ -103,8 +73,8 @@ const PORTRAIT_SIZES = "(max-width: 680px) 280px, 440px";
 
     {skills && <SkillsSection data={skills} />}
 
-    <section class="about-close" aria-labelledby="close">
-      <h2 id="close" class="sr-only">Contact</h2>
+    <section class="about-close" aria-labelledby={ABOUT_ANCHORS.close}>
+      <h2 id={ABOUT_ANCHORS.close} class="sr-only">Contact</h2>
       <p class="t-mono about-authorization">{STATUS.aboutLine}</p>
       <p class="t-mono about-links">
         <a href="mailto:hello@korabeland.com">email</a> ·{" "}

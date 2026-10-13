@@ -119,6 +119,12 @@ export async function listPosts(): Promise<PostSummary[]> {
   return selectPublished(entries);
 }
 
+/** Full entry for one slug, body included. Callers list through listPosts so
+ *  the draft gate applies; this only reads. */
+export async function readPost(slug: string) {
+  return reader.collections.posts.read(slug);
+}
+
 export async function recentPosts(limit = 4): Promise<PostSummary[]> {
   const posts = await listPosts();
   return posts.slice(0, limit);

@@ -94,3 +94,8 @@ public/**/*.gen.*
 # Local test-browser and pnpm store folders (never commit)
 .test-browsers/
 .pnpm-store/
+
+# Ask the Operator corpus: generated per build by scripts/gen-corpus-index.ts.
+# No seed fallback, unlike the trail-register and shift-log data: a failed
+# generation must fail the build rather than ship a stale index.
+src/content/ask-index/corpus.json
