@@ -100,7 +100,7 @@ test("the official collector receives filtered page and referrer data", async ({
 
     const pageview = JSON.parse(requests[1].body ?? "{}");
     expect(pageview.o).toBe(`${browserOrigin}/about`);
-    expect(pageview.r).toBeUndefined();
+    expect(pageview.r).toBe(`${sourceOrigin}/`);
     expect(pageview).not.toHaveProperty("userId");
     expect(pageview).not.toHaveProperty("props");
   } finally {
