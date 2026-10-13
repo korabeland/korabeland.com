@@ -82,7 +82,9 @@ test("the official collector receives filtered page and referrer data", async ({
         () => (window as Window & { initialReferrer?: string }).initialReferrer,
       ),
     ).toBe(`${sourceOrigin}/private?token=SECRET`);
-    expect(await page.evaluate(() => document.referrer)).toBe(`${sourceOrigin}/`);
+    expect(await page.evaluate(() => document.referrer)).toBe(
+      `${sourceOrigin}/`,
+    );
     expect(requests.map(({ method }) => method)).toEqual(["GET", "POST"]);
     expect(requests.map(({ url }) => url)).toEqual([
       `${browserOrigin}${collectorPrefix}script.js`,

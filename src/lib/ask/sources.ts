@@ -111,7 +111,9 @@ export function projectLedgerDocument(
             (project) =>
               project.category === category && present(project.outcome),
           )
-          .map((project) => `${clean(project.title)}: ${clean(project.outcome)}`),
+          .map(
+            (project) => `${clean(project.title)}: ${clean(project.outcome)}`,
+          ),
       },
     ],
   };
