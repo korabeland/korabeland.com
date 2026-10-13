@@ -92,9 +92,9 @@ const MONTH_ABBR = [
  *
  * The month is read straight off the "YYYY-MM-DD" string (positions 5-6) rather
  * than via `new Date`, so the result is timezone-independent and byte-stable.
- * Deduped by month label: a 52-53 week window wraps back to its starting month
- * on the final column, and repeating that label would clutter the frame — the
- * first occurrence wins, yielding a clean 12-label run.
+ * Deduped by month label: windows spanning a full year can repeat a month near
+ * the end, and repeating that label would clutter the frame. The first
+ * occurrence wins.
  */
 export function monthTicks(data: ContributionData): MonthTick[] {
   const ticks: MonthTick[] = [];

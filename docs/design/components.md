@@ -408,12 +408,12 @@ grammar (R9). Consumer: `index.astro`.
 **Props** — `data: ContributionData` (from `src/lib/shift-log.ts`; never
 hardcoded).
 
-**Structure** — a mono **summary line** (total · busiest week · streak) computed
-from the real data, a staleness caption, and a 52–53×7 cell grid inside a
-recessed instrument panel (`--paper-2`, `--rule`, `--r-2`). Cells carry an
-intensity class 0–4; the ramp mixes `--signal` over `--paper` in **oklab** (not
-oklch — oklch would detour through green in both palettes). A `less → more` legend
-reuses the swatches.
+**Structure** — a mono **summary line** (recent-window total · busiest week ·
+streak) computed from the real data, a staleness caption, and a 30×7 cell grid
+inside a recessed instrument panel (`--paper-2`, `--rule`, `--r-2`). Cells carry
+an intensity class 0–4; the ramp mixes `--signal` over `--paper` in **oklab**
+(not oklch — oklch would detour through green in both palettes). A `less → more`
+legend reuses the swatches.
 
 **JS enhancement — cursor torch.** The component's first client JS: busy cells
 (intensity 3–4) bloom toward the pointer. **Double-gated** on `pointer: fine`
