@@ -6,10 +6,8 @@ import {
   COUNTER_TTL_SECONDS,
   counterEnvironment,
   counterKey,
-  emptyCounts,
   type FetchLike,
   parseCounterBody,
-  readDay,
   recordEvent,
   utcDay,
 } from "@/lib/ask/counters";
@@ -124,28 +122,6 @@ describe("recordEvent", () => {
         fetch,
       }),
     ).rejects.toThrow();
-  });
-});
-
-describe("readDay", () => {
-  it("reads a day's hash into named counts", async () => {
-    const fetch: FetchLike = async () => ({
-      ok: true,
-      status: 200,
-      json: async () => ({ result: ["open", "3", "answer", "2", "junk", "9"] }),
-    });
-    expect(
-      await readDay({
-        env: "production",
-        day: "2026-10-14",
-        store: STORE,
-        fetch,
-      }),
-    ).toEqual({
-      ...emptyCounts(),
-      open: 3,
-      answer: 2,
-    });
   });
 });
 

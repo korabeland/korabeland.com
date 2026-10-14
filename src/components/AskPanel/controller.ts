@@ -158,6 +158,7 @@ function wire(dialog: HTMLDialogElement): void {
   if (!form || !input || !status || !history || !log) return;
   const store = sessionStore();
   let index: SearchIndex | null = null;
+  let historyRevision = 0;
 
   const paint = () => {
     const questions = loadHistory(store);
@@ -182,8 +183,11 @@ function wire(dialog: HTMLDialogElement): void {
   const ask = async (raw: string) => {
     const question = raw.trim();
     if (!question) return;
+    const revision = historyRevision;
+    input.value = "";
     sendEvent("question", post);
     const ready = await ensureIndex();
+    if (revision !== historyRevision) return;
     const questions = appendQuestion(store, question);
     const state = stateFor(index, question);
     if (!ready) {
@@ -203,7 +207,6 @@ function wire(dialog: HTMLDialogElement): void {
         : state.kind === "fallback"
           ? "Nothing on this site answers that. Reading and contact links are listed below."
           : "Search could not load. Reading and contact links are listed below.";
-    input.value = "";
     input.focus();
   };
 
@@ -219,6 +222,7 @@ function wire(dialog: HTMLDialogElement): void {
     });
   }
   dialog.querySelector("[data-ask-clear]")?.addEventListener("click", () => {
+    historyRevision += 1;
     clearHistory(store);
     paint();
     status.textContent = "History cleared.";

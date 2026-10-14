@@ -7,13 +7,11 @@ export interface MonthRow {
   /** "YYYY-MM" */
   month: string;
   pageviews: number;
-  visitors: number;
 }
 
 interface RawRow {
   timestamp?: unknown;
   pageviews?: unknown;
-  visitors?: unknown;
 }
 
 /** Rows from the analytics "visits/aggregate" response grouped by month. */
@@ -32,22 +30,21 @@ export function parseMonthRows(response: unknown): MonthRow[] {
     return {
       month: row.timestamp.slice(0, 7),
       pageviews: Number(row.pageviews) || 0,
-      visitors: Number(row.visitors) || 0,
     };
   });
 }
 
 export function formatCsv(rows: readonly MonthRow[]): string {
-  const lines = ["month,pageviews,visitors"];
+  const lines = ["month,pageviews"];
   for (const r of [...rows].sort((a, b) => (a.month < b.month ? -1 : 1))) {
-    lines.push(`${r.month},${r.pageviews},${r.visitors}`);
+    lines.push(`${r.month},${r.pageviews}`);
   }
   return `${lines.join("\n")}\n`;
 }
 
-/** First instant of the month `monthsBack` before `now`, as an ISO string. */
-export function monthStart(now: Date, monthsBack: number): string {
+/** First instant of the previous month, as an ISO string. */
+export function monthStart(now: Date): string {
   return new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - monthsBack, 1),
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1),
   ).toISOString();
 }

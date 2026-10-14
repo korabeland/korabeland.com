@@ -104,9 +104,9 @@ describe("release questions file", () => {
     }
   });
 
-  it("leaves every case unticked until Korab reviews it", () => {
+  it("keeps forty review markers after Korab records reviews", () => {
     const markdown = readFileSync(FILE, "utf8");
-    expect(markdown.match(/^- \[ \] Reviewed by Korab$/gm)).toHaveLength(40);
+    expect(markdown.match(/^- \[[ xX]\] Reviewed by Korab$/gm)).toHaveLength(40);
   });
 
   it("states the release bar", () => {

@@ -73,6 +73,31 @@ test("example questions search when chosen", async ({ page }) => {
   await expect(page.locator(".ask-entry").first()).toContainText("Washington");
 });
 
+test("clearing history cancels a pending search without clearing newer input", async ({
+  page,
+}) => {
+  let release!: () => void;
+  const held = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route("**/ask-index.json", async (route) => {
+    await held;
+    await route.continue();
+  });
+  await page.goto("/about");
+  await openPanel(page);
+  const input = page.getByLabel("Your question");
+  await input.fill(QUESTION);
+  await input.press("Enter");
+  await page.getByRole("button", { name: "clear history" }).click();
+  await input.fill("newer draft");
+
+  release();
+
+  await expect(page.locator(".ask-entry")).toHaveCount(0);
+  await expect(input).toHaveValue("newer draft");
+});
+
 test("history survives navigation, can be cleared, and is gone after a new session", async ({
   page,
   browser,

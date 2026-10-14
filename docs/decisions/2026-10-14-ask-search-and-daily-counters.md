@@ -68,11 +68,9 @@ one). Nothing here upgrades the store or adds a paid feature.
 
 ## Exporting numbers
 
-- `pnpm export:pageviews` prints monthly pageview and visitor totals as CSV from
+- `pnpm export:pageviews` prints monthly pageview totals as CSV from
   Vercel Web Analytics through the `vercel` CLI login. The Hobby plan keeps one
   month of analytics, so run it monthly and file the output.
-- `pnpm export:ask-counts` prints the daily Ask counters as CSV. It needs the
-  store variables in the shell; see the header of `scripts/export-ask-counts.ts`.
 
 ## Placement
 

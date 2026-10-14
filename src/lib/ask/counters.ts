@@ -104,37 +104,3 @@ export async function recordEvent(options: {
   const failed = Array.isArray(results) && results.find((r) => r?.error);
   if (failed) throw new Error("counter store rejected a command");
 }
-
-export type DailyCounts = Record<CounterEvent, number>;
-
-export function emptyCounts(): DailyCounts {
-  return { open: 0, question: 0, answer: 0, fallback: 0, error: 0 };
-}
-
-/** Reads one day's hash back (for the export script). */
-export async function readDay(options: {
-  env: CounterEnvironment;
-  day: string;
-  store: StoreConfig;
-  fetch: FetchLike;
-}): Promise<DailyCounts> {
-  const response = await options.fetch(options.store.url, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${options.store.token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(["HGETALL", counterKey(options.env, options.day)]),
-  });
-  if (!response.ok)
-    throw new Error(`counter store answered ${response.status}`);
-  const { result } = (await response.json()) as { result?: unknown };
-  const counts = emptyCounts();
-  if (Array.isArray(result)) {
-    for (let i = 0; i + 1 < result.length; i += 2) {
-      const name = result[i];
-      if (isCounterEvent(name)) counts[name] = Number(result[i + 1]) || 0;
-    }
-  }
-  return counts;
-}
