@@ -251,6 +251,31 @@ describe("handleCountRequest", () => {
     expect(fetch.calls).toHaveLength(0);
   });
 
+  it("refuses an oversized body even when no length header is sent", async () => {
+    const { fetch, d } = deps();
+    const chunk = new TextEncoder().encode("x".repeat(40));
+    let sent = 0;
+    const body = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        sent += 1;
+        if (sent > 1000) controller.close();
+        else controller.enqueue(chunk);
+      },
+    });
+    const req = new Request("https://korabeland.com/api/ask-count", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "sec-fetch-site": "same-origin",
+      },
+      body,
+      duplex: "half",
+    } as RequestInit);
+    expect((await handleCountRequest(req, d)).status).toBe(413);
+    expect(sent).toBeLessThan(10);
+    expect(fetch.calls).toHaveLength(0);
+  });
+
   it("falls back to the Origin header when Sec-Fetch-Site is absent", async () => {
     const { d } = deps();
     const base = { "content-type": "application/json" };

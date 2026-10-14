@@ -65,6 +65,33 @@ function sameOrigin(request: Request): boolean {
   }
 }
 
+/** The body as text, or null if it is larger than MAX_BODY_BYTES. Stops
+ *  reading at the cap, so a request without a length header cannot make the
+ *  server buffer a large body. */
+async function readBounded(request: Request): Promise<string | null> {
+  if (!request.body) return "";
+  const reader = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > MAX_BODY_BYTES) {
+      await reader.cancel();
+      return null;
+    }
+    chunks.push(value);
+  }
+  const bytes = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return new TextDecoder().decode(bytes);
+}
+
 /**
  * 204 for a counted or deliberately ignored event, 4xx for a request that
  * is not ours. A store failure is still 204: the browser never needs to know,
@@ -81,7 +108,8 @@ export async function handleCountRequest(
   }
   const length = Number(request.headers.get("content-length") ?? "0");
   if (length > MAX_BODY_BYTES) return reply(413);
-  const text = (await request.text()).slice(0, MAX_BODY_BYTES + 1);
+  const text = await readBounded(request);
+  if (text === null) return reply(413);
   const event = parseCounterBody(text);
   if (!event) return reply(400);
 
