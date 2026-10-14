@@ -76,13 +76,24 @@ test("example questions search when chosen", async ({ page }) => {
 test("clearing history cancels a pending search without clearing newer input", async ({
   page,
 }) => {
+  await page.addInitScript(() => {
+    sessionStorage.setItem(
+      "korab-ask-history",
+      JSON.stringify({ v: 1, q: ["Earlier question"] }),
+    );
+  });
   let release!: () => void;
   const held = new Promise<void>((resolve) => {
     release = resolve;
   });
+  let complete!: () => void;
+  const completed = new Promise<void>((resolve) => {
+    complete = resolve;
+  });
   await page.route("**/ask-index.json", async (route) => {
     await held;
     await route.continue();
+    complete();
   });
   await page.goto("/about");
   await openPanel(page);
@@ -92,7 +103,11 @@ test("clearing history cancels a pending search without clearing newer input", a
   await page.getByRole("button", { name: "clear history" }).click();
   await input.fill("newer draft");
 
+  const response = page.waitForResponse("**/ask-index.json");
   release();
+  await response;
+  await completed;
+  await page.evaluate(() => new Promise<void>(requestAnimationFrame));
 
   await expect(page.locator(".ask-entry")).toHaveCount(0);
   await expect(input).toHaveValue("newer draft");

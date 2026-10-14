@@ -6,7 +6,7 @@
 // `vercel` CLI, which uses the login you already have; no token is stored in
 // the repository. Usage:
 //   pnpm export:pageviews            # this month and the previous one
-//   pnpm export:pageviews > pageviews-2026-10.csv
+//   pnpm --silent export:pageviews > pageviews-2026-10.csv
 
 import { execFileSync } from "node:child_process";
 import {

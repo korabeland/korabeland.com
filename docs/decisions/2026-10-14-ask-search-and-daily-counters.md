@@ -70,7 +70,9 @@ one). Nothing here upgrades the store or adds a paid feature.
 
 - `pnpm export:pageviews` prints monthly pageview totals as CSV from
   Vercel Web Analytics through the `vercel` CLI login. The Hobby plan keeps one
-  month of analytics, so run it monthly and file the output.
+  month of analytics, so run it monthly and file the output. Use
+  `pnpm --silent export:pageviews > pageviews-YYYY-MM.csv` to keep pnpm's
+  command banner out of the CSV file.
 
 ## Placement
 
