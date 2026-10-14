@@ -1,6 +1,6 @@
 # Dependabot security overrides (2026-10-14)
 
-Each pnpm override in `package.json` below clears a Dependabot alert. Overrides are used only where a parent package pins the vulnerable version. Where the parent's supported range allows a patched release, the lockfile selects that release without an override.
+The four overrides added for this alert batch are listed below. They address dependencies whose current parent ranges do not resolve to patched versions. Where an existing parent range allows a patched release, the lockfile selects that release without an override.
 
 | Override | Alert fixed | Why the parent cannot fix it |
 | --- | --- | --- |
