@@ -19,7 +19,6 @@ overrides:
   source-map-js: ^1.2.2
   prosemirror-view: ^1.42.3
   '@vercel/routing-utils>path-to-regexp': 6.3.0
-  '@shuding/opentype.js>fflate': 0.7.5
   storybook>esbuild: 0.28.1
   tmp@<0.2.6: ^0.2.6
   uuid@^8: ^11.1.1
