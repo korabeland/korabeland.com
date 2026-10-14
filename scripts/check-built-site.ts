@@ -4,7 +4,9 @@
 //
 //   1. Every Ask the Operator citation opens a route that was built and lands
 //      on an element id that page really contains.
-//   2. Analytics loading and pageview requests are exercised by the browser
+//   2. The search panel's /ask-index.json is built and is byte-for-byte the
+//      corpus the citations were checked against.
+//   3. Analytics loading and pageview requests are exercised by the browser
 //      proof in tests/e2e/analytics.spec.ts.
 
 import { existsSync, readFileSync } from "node:fs";
@@ -48,6 +50,14 @@ if (!existsSync(clientDir)) {
 const artifact = JSON.parse(readFileSync(corpusFile, "utf8")) as CorpusArtifact;
 for (const problem of findBrokenCitations(artifact.passages, readRoute)) {
   fail(`citation: ${problem}`);
+}
+
+// 2. The file the browser searches.
+const served = readRoute("/ask-index.json");
+if (served === null) {
+  fail("ask-index.json: not in the build output");
+} else if (JSON.stringify(JSON.parse(served)) !== JSON.stringify(artifact)) {
+  fail("ask-index.json: differs from src/content/ask-index/corpus.json");
 }
 
 if (failures.length > 0) {

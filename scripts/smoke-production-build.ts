@@ -114,6 +114,12 @@ const CHECKS: Check[] = [
       return null;
     },
   },
+  {
+    name: "counter endpoint is in the bundle and refuses a GET",
+    path: "/api/ask-count",
+    expect: (res) =>
+      res.status === 405 ? null : `expected 405, got ${res.status}`,
+  },
   ...[
     "/dev/worktree-stamp.json",
     "/dev/experience-preview",
