@@ -72,10 +72,11 @@ one). Nothing here upgrades the store or adds a paid feature.
 
 - `pnpm export:pageviews` prints monthly pageview totals as CSV from
   Vercel Web Analytics through the `vercel` CLI login. The Hobby plan guarantees
-  a rolling month of analytics, so run it during the first UTC hour of each month
-  (00:00 to 00:59 UTC) to export the prior completed month. The command refuses
-  later runs: every hour after midnight on the 1st drops an hour from the start
-  of the prior month, so a later run would record a partial total as complete. Use
+  a rolling month of analytics, so run it just after midnight UTC on the first of
+  each month: an early run gives the complete prior month. A later run on the
+  1st still works, but each full hour past midnight has already left the window,
+  so the CSV row is marked `partial` with `approx_hours_missing` set to the
+  hours lost (an 18:00 UTC run shows about 18). Other days are refused. Use
   `pnpm --silent export:pageviews > pageviews-YYYY-MM.csv` to keep pnpm's
   command banner out of the CSV file.
 

@@ -7,6 +7,8 @@ export interface MonthRow {
   /** "YYYY-MM" */
   month: string;
   pageviews: number;
+  /** Approximate hours at the start of the month that had left the window. */
+  hoursMissing?: number;
 }
 
 interface RawRow {
@@ -35,28 +37,31 @@ export function parseMonthRows(response: unknown): MonthRow[] {
 }
 
 export function formatCsv(rows: readonly MonthRow[]): string {
-  const lines = ["month,pageviews"];
+  const lines = ["month,pageviews,status,approx_hours_missing"];
   for (const r of [...rows].sort((a, b) => (a.month < b.month ? -1 : 1))) {
-    lines.push(`${r.month},${r.pageviews}`);
+    const missing = r.hoursMissing ?? 0;
+    lines.push(
+      `${r.month},${r.pageviews},${missing > 0 ? "partial" : "complete"},${missing}`,
+    );
   }
   return `${lines.join("\n")}\n`;
 }
 
 /**
- * Analytics reports hourly, and the Hobby window reaches back one month from
- * the moment of the query. Each hour past midnight on the 1st therefore drops
- * an hour from the start of the prior month. Only the first UTC hour is safe.
+ * The prior month, exported on the first UTC day. The Hobby window reaches back
+ * one month from the query, and analytics report hourly, so each full hour past
+ * midnight drops an hour from the start of the prior month. Those hours cannot
+ * be recovered, so the range reports how many fell out and the CSV marks the
+ * month partial rather than letting a short total read as complete.
  */
-const EXPORT_DEADLINE_HOURS = 1;
-
-/** The completed month, only while all of it is still in the reporting window. */
 export function completedMonthRange(now: Date): {
   since: string;
   until: string;
+  hoursMissing: number;
 } {
-  if (now.getUTCDate() !== 1 || now.getUTCHours() >= EXPORT_DEADLINE_HOURS) {
+  if (now.getUTCDate() !== 1) {
     throw new Error(
-      "export pageviews during the first UTC hour of the month (00:00 to 00:59 UTC); later, the earliest hours of the prior month have left the one-month reporting window and the total would be partial",
+      "export pageviews on the first UTC day of the month; later, the prior month has left the one-month reporting window",
     );
   }
   return {
@@ -66,5 +71,6 @@ export function completedMonthRange(now: Date): {
     until: new Date(
       Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 0, 23, 59, 59, 999),
     ).toISOString(),
+    hoursMissing: now.getUTCHours(),
   };
 }
