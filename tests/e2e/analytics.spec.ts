@@ -148,7 +148,16 @@ test("navigation still works when the analytics collector is blocked", async ({
     const response = await route.fetch({
       url: `${ORIGIN}${requestUrl.pathname}${requestUrl.search}`,
     });
-    await route.fulfill({ response });
+    try {
+      await route.fulfill({ response });
+    } catch (error) {
+      if (
+        !(error instanceof Error) ||
+        !error.message.includes("already handled")
+      ) {
+        throw error;
+      }
+    }
   });
 
   await page.goto(`${browserOrigin}/about`);
@@ -157,6 +166,7 @@ test("navigation still works when the analytics collector is blocked", async ({
       name: "Turning ambiguous problems into systems",
     }),
   ).toBeVisible();
+  await expect.poll(() => collectorAborted).toBe(true);
   await page.getByRole("link", { name: "work", exact: true }).click();
   await expect(page).toHaveURL(`${browserOrigin}/work`);
   await expect(
@@ -164,5 +174,5 @@ test("navigation still works when the analytics collector is blocked", async ({
   ).toBeVisible();
   await expect.poll(() => collectorAborted).toBe(true);
   expect(collectorRequested).toBe(true);
-  await page.unrouteAll({ behavior: "wait" });
+  await page.unrouteAll({ behavior: "ignoreErrors" });
 });
