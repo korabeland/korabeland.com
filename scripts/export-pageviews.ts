@@ -10,8 +10,8 @@
 
 import { execFileSync } from "node:child_process";
 import {
-  formatCsv,
   completedMonthRange,
+  formatCsv,
   parseMonthRows,
 } from "../src/lib/pageview-export";
 

@@ -43,7 +43,10 @@ export function formatCsv(rows: readonly MonthRow[]): string {
 }
 
 /** The completed month still covered by Hobby's one-month reporting window. */
-export function completedMonthRange(now: Date): { since: string; until: string } {
+export function completedMonthRange(now: Date): {
+  since: string;
+  until: string;
+} {
   if (now.getUTCDate() !== 1) {
     throw new Error(
       "export pageviews on the first UTC day of the month to keep the prior month in the reporting window",
