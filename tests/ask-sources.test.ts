@@ -289,6 +289,17 @@ describe("llmsDocument", () => {
     );
   });
 
+  it("keeps introductory facts and skips navigation-only link lists", () => {
+    const doc = llmsDocument(
+      "> Summary\n\n- Seeking full-time employment.\n\n## Key Pages\n\n- [Home](https://example.com/)\n\n## Optional\n\n- [Notes](https://example.com/notes)\n",
+    );
+    expect(doc.sections).toHaveLength(1);
+    expect(doc.sections[0].paragraphs).toEqual([
+      "Summary",
+      "Seeking full-time employment.",
+    ]);
+  });
+
   it("throws when the file no longer has a summary or fact lists", () => {
     expect(() => llmsDocument("## Only\n\n* x\n")).toThrow(/summary/);
     expect(() => llmsDocument("> s\n\n## Key Pages\n\n* /\n")).toThrow(

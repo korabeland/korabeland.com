@@ -322,6 +322,7 @@ export function llmsDocument(source: string): CorpusDocument {
   const summary: string[] = [];
   const introductoryFacts: string[] = [];
   const named: { heading: string; items: string[] }[] = [];
+  const isLink = (item: string) => /^\[.+\]\(.+\):?/.test(item);
   for (const line of lines) {
     const h = /^##\s+(.+?)\s*$/.exec(line);
     if (h) {
@@ -331,7 +332,7 @@ export function llmsDocument(source: string): CorpusDocument {
       if (q?.[1].trim()) summary.push(q[1].trim());
       else if (/^[*-]\s+/.test(line)) {
         const item = line.replace(/^[*-]\s+/, "");
-        if (!/^\[.+\]\(.+\):?/.test(item) && !/^\/\s+-/.test(item)) {
+        if (!isLink(item) && !/^\/\s+-/.test(item)) {
           introductoryFacts.push(item);
         }
       }
@@ -347,9 +348,12 @@ export function llmsDocument(source: string): CorpusDocument {
     throw new Error("ask corpus: llms.txt has no '>' summary line");
   }
   const factual = named.filter(
-    (s) => s.items.length > 0 && !/^key pages$/i.test(s.heading),
+    (s) =>
+      s.items.length > 0 &&
+      !/^key pages$/i.test(s.heading) &&
+      !s.items.every(isLink),
   );
-  if (factual.length === 0) {
+  if (factual.length === 0 && introductoryFacts.length === 0) {
     throw new Error("ask corpus: llms.txt has no factual bullet sections");
   }
   return {
