@@ -320,6 +320,7 @@ export function statusDocument(status: StatusInput): CorpusDocument {
 export function llmsDocument(source: string): CorpusDocument {
   const lines = source.split("\n");
   const summary: string[] = [];
+  const introductoryFacts: string[] = [];
   const named: { heading: string; items: string[] }[] = [];
   for (const line of lines) {
     const h = /^##\s+(.+?)\s*$/.exec(line);
@@ -328,6 +329,12 @@ export function llmsDocument(source: string): CorpusDocument {
     } else if (named.length === 0) {
       const q = /^>\s?(.*)$/.exec(line);
       if (q?.[1].trim()) summary.push(q[1].trim());
+      else if (/^[*-]\s+/.test(line)) {
+        const item = line.replace(/^[*-]\s+/, "");
+        if (!/^\[.+\]\(.+\):?/.test(item) && !/^\/\s+-/.test(item)) {
+          introductoryFacts.push(item);
+        }
+      }
     } else if (/^[*-]\s+/.test(line)) {
       named[named.length - 1].items.push(line.replace(/^[*-]\s+/, ""));
     } else if (line.trim() && /^\s+\S/.test(line)) {
@@ -354,7 +361,7 @@ export function llmsDocument(source: string): CorpusDocument {
         key: "summary",
         heading: "Summary, work authorization and preferences",
         anchor: "",
-        paragraphs: [clean(summary.join(" "))],
+        paragraphs: [clean(summary.join(" ")), ...introductoryFacts.map(clean)],
       },
       ...factual.map((s, i) => ({
         key: `list${i}`,

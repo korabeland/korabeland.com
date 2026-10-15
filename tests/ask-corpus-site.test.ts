@@ -53,6 +53,13 @@ describe("live site corpus", () => {
     const llms = passages.filter((p) => p.route === "/llms.txt");
     expect(llms.some((p) => p.text.includes(STATUS.authorization))).toBe(true);
     expect(llms.some((p) => /Open to US-remote roles/.test(p.text))).toBe(true);
+    expect(
+      llms.some((p) =>
+        p.text.includes(
+          "Led the evidence work behind a lead-scoring model that replaced fixed tiers with a decile-based probability score.",
+        ),
+      ),
+    ).toBe(true);
     expect(llms.every((p) => p.anchor === "")).toBe(true);
   });
 
