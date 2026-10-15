@@ -232,8 +232,9 @@ export function mountAskSection(root: HTMLElement): void {
     history.hidden = false;
     history.setAttribute("aria-busy", "true");
     status.textContent = "Searching…";
+    const indexReady = ensureIndex();
     paint();
-    const ready = await ensureIndex();
+    const ready = await indexReady;
     if (revision !== historyRevision) return;
     history.setAttribute("aria-busy", "false");
     const state = stateFor(index, question, indexLoading);

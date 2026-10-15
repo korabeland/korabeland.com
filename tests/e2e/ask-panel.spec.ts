@@ -60,10 +60,13 @@ test("keyboard: reach an example, search, inspect a source, clear history", asyn
   const entry = page.locator(".ask-entry").first();
   await expect(entry.locator(".ask-q")).toHaveText(QUESTION);
   await expect(entry.locator(".ask-hit").first()).toBeVisible();
-  await expect(
-    entry.locator("a[href^='/work/lead-scoring']").first(),
-  ).toBeVisible();
-  await expect(page.getByRole("status")).toContainText("sources found");
+  const source = entry.locator("a[href^='/work/lead-scoring']").first();
+  await source.focus();
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/\/work\/lead-scoring/);
+
+  await gotoAbout(page);
+  await expect(page.locator(".ask-entry .ask-q")).toHaveText(QUESTION);
 
   // Typing a question and pressing Enter works from the keyboard alone.
   const input = page.getByLabel("Or ask your own");
@@ -176,6 +179,47 @@ test("a question is saved before the index loads, so leaving the page keeps it",
   );
   expect(stored).toContain(QUESTION);
   release();
+});
+
+test("a retry stays searching until the corpus finishes loading", async ({
+  page,
+}) => {
+  let failFirstRequest!: () => void;
+  const firstRequestHeld = new Promise<void>((resolve) => {
+    failFirstRequest = resolve;
+  });
+  let releaseRetry!: () => void;
+  const retryHeld = new Promise<void>((resolve) => {
+    releaseRetry = resolve;
+  });
+  let requests = 0;
+  await page.route("**/ask-index.json", async (route) => {
+    requests += 1;
+    if (requests === 1) {
+      await firstRequestHeld;
+      await route.fulfill({ status: 503 });
+      return;
+    }
+    await retryHeld;
+    await route.continue();
+  });
+
+  await gotoAbout(page);
+  await expect.poll(() => requests).toBe(1);
+  await ask(page, QUESTION);
+  const entry = page.locator(".ask-entry").first();
+  await expect(entry.locator(".ask-q-meta")).toHaveText("searching");
+  failFirstRequest();
+  await expect(page.getByRole("status")).toContainText("Search could not load");
+
+  await ask(page, "What is Perian?");
+  const retryEntry = page.locator(".ask-entry").first();
+  await expect(retryEntry.locator(".ask-q-meta")).toHaveText("searching");
+  await expect(page.getByRole("status")).toHaveText("Searching…");
+
+  releaseRetry();
+  await expect(page.getByRole("status")).toContainText("sources found");
+  await expect(retryEntry.locator(".ask-hit").first()).toBeVisible();
 });
 
 test("history survives navigation, can be cleared, and is gone after a new session", async ({
