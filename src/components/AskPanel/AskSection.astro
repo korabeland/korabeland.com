@@ -1,0 +1,383 @@
+---
+// AskSection — "Ask about my work", an inline search section on the About page.
+//
+// Why inline, not an overlay: a visitor reads results, compares them and opens
+// the sources, so the page they are reading should stay in reach. A modal would
+// trap focus, cover the experience ledger and fight the phone keyboard. History
+// lives in sessionStorage, so it waits here when a visitor returns from a result.
+//
+// Search runs in the browser over /ask-index.json (src/lib/ask/search.ts). No
+// model is called and no question text is sent anywhere. The only thing the
+// server hears is an event name for the daily counters (src/lib/ask/counters.ts).
+// The section is `hidden` until its script runs, so a no-JS visitor never sees
+// a form that does nothing. States, placement and rationale:
+// docs/decisions/2026-10-14-ask-search-and-daily-counters.md.
+import {
+  CONTACT_LINKS,
+  EXAMPLE_QUESTIONS,
+  INVITATION,
+  READING_LINKS,
+  SECTION_NOTE,
+} from "../../lib/ask/panel-copy";
+import SectionHead from "../SectionHead.astro";
+---
+
+<section class="ask" aria-labelledby="ask-heading" data-ask-section hidden>
+  <SectionHead id="ask-heading" text="ask about my work" />
+
+  <p class="ask-invite">{INVITATION}</p>
+
+  <ul class="ask-examples" aria-label="Example questions">
+    {
+      EXAMPLE_QUESTIONS.map((q) => (
+        <li>
+          <button class="ask-example" type="button" data-ask-example={q}>
+            <span class="ask-example-text">{q}</span>
+            <span class="ask-example-go t-mono" aria-hidden="true">↵</span>
+          </button>
+        </li>
+      ))
+    }
+  </ul>
+
+  <form class="ask-form" data-ask-form role="search">
+    <label class="t-label ask-label" for="ask-input">Or ask your own</label>
+    <div class="ask-field">
+      <input
+        id="ask-input"
+        class="ask-input"
+        type="search"
+        name="q"
+        maxlength="200"
+        autocomplete="off"
+        enterkeyhint="search"
+        data-ask-input
+      />
+      <button class="ask-submit" type="submit">search</button>
+    </div>
+  </form>
+
+  <p class="ask-status t-mono" role="status" aria-live="polite" data-ask-status></p>
+
+  <div class="ask-results" data-ask-history aria-busy="false" hidden>
+    <div class="ask-results-head">
+      <h3 class="t-label ask-results-title">This session</h3>
+      <button class="ask-clear t-mono" type="button" data-ask-clear>
+        clear history
+      </button>
+    </div>
+    <div class="ask-log" data-ask-log></div>
+  </div>
+
+  <p class="ask-note">{SECTION_NOTE}</p>
+
+  <p class="ask-more t-mono">
+    Prefer to read:
+    {
+      READING_LINKS.map((l, i) => (
+        <>
+          {i > 0 && " · "}
+          <a href={l.href}>{l.label}</a>
+        </>
+      ))
+    }
+    <span class="ask-more-gap"> | </span>
+    Ask me directly:
+    {
+      CONTACT_LINKS.map((l, i) => (
+        <>
+          {i > 0 && " · "}
+          <a href={l.href}>{l.label}</a>
+        </>
+      ))
+    }
+  </p>
+</section>
+
+<script>
+  import { mountAskSection } from "./controller";
+
+  const root = document.querySelector<HTMLElement>("[data-ask-section]");
+  if (root) {
+    mountAskSection(root);
+    root.hidden = false;
+  }
+</script>
+
+<style is:global>
+  .ask {
+    margin-top: var(--s-7);
+  }
+  .ask[hidden] {
+    display: none;
+  }
+  .ask-invite {
+    margin: var(--s-4) 0 var(--s-4);
+    max-width: 56ch;
+    font-size: 17px;
+    line-height: 1.6;
+    color: var(--ink);
+  }
+  .ask-note {
+    margin: var(--s-5) 0 0;
+    max-width: 62ch;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+  }
+  .ask .ask-status {
+    min-height: 1.2em;
+    margin: var(--s-3) 0 0;
+    text-transform: none;
+    letter-spacing: 0.02em;
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+
+  /* Example questions: ledger rows, the site's own list grammar. */
+  .ask-examples {
+    list-style: none;
+    margin: 0 0 var(--s-5);
+    padding: 0;
+    border-top: 1px solid var(--rule);
+  }
+  .ask-example {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-4);
+    width: 100%;
+    min-height: 48px;
+    padding: var(--s-3) var(--s-2);
+    font: inherit;
+    font-size: 16px;
+    line-height: 1.4;
+    text-align: left;
+    color: var(--ink);
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid var(--rule);
+    border-radius: var(--r-0);
+    cursor: pointer;
+    transition:
+      background 150ms ease,
+      color 150ms ease;
+  }
+  .ask-example-go {
+    flex: none;
+    color: var(--ink-soft);
+  }
+  .ask-example:hover,
+  .ask-example:focus-visible {
+    background: var(--paper-2);
+  }
+  .ask-example:hover .ask-example-go,
+  .ask-example:focus-visible .ask-example-go {
+    color: var(--signal);
+  }
+
+  .ask-label {
+    display: block;
+    margin: 0 0 var(--s-2);
+  }
+  .ask-field {
+    display: flex;
+    gap: var(--s-2);
+  }
+  .ask-input {
+    flex: 1;
+    min-width: 0;
+    min-height: 48px;
+    padding: 0 var(--s-3);
+    font: inherit;
+    font-size: 16px; /* 16px stops iOS zooming the page on focus */
+    color: var(--ink);
+    background: var(--paper-2);
+    border: 1px solid var(--rule);
+    border-radius: var(--r-1);
+  }
+  .ask-input:hover {
+    border-color: var(--ink-soft);
+  }
+  .ask-submit,
+  .ask-clear {
+    min-height: 48px;
+    padding: 0 var(--s-4);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink);
+    background: transparent;
+    border: 1px solid var(--ink-soft);
+    border-radius: var(--r-0);
+    cursor: pointer;
+    transition:
+      color 150ms ease,
+      border-color 150ms ease;
+  }
+  .ask-submit:hover,
+  .ask-clear:hover {
+    color: var(--signal);
+    border-color: var(--signal);
+  }
+  .ask-clear {
+    min-height: 36px;
+    padding: 0 var(--s-3);
+    border-color: var(--rule);
+    color: var(--ink-soft);
+  }
+  .ask-input:focus-visible,
+  .ask-submit:focus-visible,
+  .ask-clear:focus-visible,
+  .ask-example:focus-visible,
+  .ask a:focus-visible,
+  .ask summary:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+  }
+
+  /* Results. */
+  .ask-results {
+    margin-top: var(--s-5);
+  }
+  .ask-results-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-3);
+    padding-bottom: var(--s-2);
+    border-bottom: 1px solid var(--ink);
+  }
+  .ask-results-title {
+    margin: 0;
+  }
+  .ask-log {
+    display: flex;
+    flex-direction: column;
+  }
+  .ask-entry {
+    padding: var(--s-4) 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .ask-entry > summary {
+    cursor: pointer;
+    list-style: none;
+  }
+  .ask-entry > summary::-webkit-details-marker {
+    display: none;
+  }
+  .ask-q {
+    display: block;
+    margin: 0;
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--ink);
+    overflow-wrap: anywhere;
+  }
+  .ask .ask-q-meta {
+    display: block;
+    margin-top: var(--s-1);
+    text-transform: none;
+    letter-spacing: 0.02em;
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+  .ask-entry:not([open]) .ask-q::after {
+    content: " +";
+    color: var(--signal);
+  }
+  .ask-hits {
+    list-style: none;
+    margin: var(--s-3) 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-4);
+  }
+  .ask-hit {
+    padding-left: var(--s-3);
+    border-left: 1px solid var(--rule);
+  }
+  .ask-hit-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--s-2);
+    margin-bottom: var(--s-1);
+  }
+  .ask-kind {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .ask-hit-title {
+    font-size: 15px;
+    font-weight: 700;
+  }
+  .ask-excerpt {
+    margin: 0 0 var(--s-2);
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+  }
+  .ask-excerpt mark {
+    color: var(--ink);
+    font-weight: 700;
+    background: color-mix(in oklch, var(--signal) 22%, transparent);
+  }
+  .ask-source {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--ink-soft);
+    overflow-wrap: anywhere;
+  }
+  .ask-fallback {
+    margin: var(--s-3) 0 0;
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+  }
+  .ask a {
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-decoration-color: var(--signal);
+    text-underline-offset: 3px;
+  }
+  .ask a:hover {
+    color: var(--signal);
+  }
+  .ask .ask-more {
+    margin: var(--s-4) 0 0;
+    text-transform: none;
+    letter-spacing: 0.02em;
+    font-size: 13px;
+    line-height: 1.8;
+    color: var(--ink-soft);
+  }
+  .ask-more-gap {
+    margin: 0 var(--s-2);
+    color: var(--rule);
+  }
+
+  @media (max-width: 680px) {
+    /* One-handed on a phone: the field and its button stack full width so the
+       thumb reaches both, and the example rows stay full-width tap targets. */
+    .ask-field {
+      flex-direction: column;
+    }
+    .ask-submit {
+      width: 100%;
+    }
+    .ask-more-gap {
+      display: block;
+      height: 0;
+      overflow: hidden;
+    }
+  }
+</style>

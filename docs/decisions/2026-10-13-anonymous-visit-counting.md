@@ -4,9 +4,9 @@
 
 ## Decision
 
-The site counts visits with Vercel Web Analytics and keeps nothing else about a
-visitor. Counting is browser-only: the site stores no identifier, session or
-conversation anywhere.
+Pageviews are counted with Vercel Web Analytics. The collector stores no
+visitor identifier, session or conversation. The Ask panel's separate daily
+aggregate counters are described in the [PR 2 decision](2026-10-14-ask-search-and-daily-counters.md).
 
 ## Why a direct client, not the adapter switch
 
@@ -40,5 +40,5 @@ do not load the collector and navigation works when the collector is blocked.
 
 ## Limits
 
-Hobby keeps one month of data and has no custom events. Counts are approximate
-visits, not unique people.
+Counts are approximate visits, not unique people. For the Hobby retention
+window and monthly export procedure, see the [PR 2 decision](2026-10-14-ask-search-and-daily-counters.md).

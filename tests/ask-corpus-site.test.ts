@@ -1,9 +1,6 @@
 // @vitest-environment node
 // Builds the corpus from the repository's real content and holds it to the
 // published pages: same readers, same facts, every citation allowed.
-import { mkdtempSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { MAX_PASSAGE_CHARS } from "@/lib/ask/corpus";
 import { buildSiteCorpus } from "@/lib/ask/site";
@@ -48,12 +45,17 @@ describe("live site corpus", () => {
     expect(text).toContain("Decision-Making with ChatGPT");
   });
 
-  it("cites work authorization and preferences to llms.txt", async () => {
+  it("never indexes llms.txt or any other machine-facing llms file", async () => {
     const { passages } = await buildSiteCorpus();
-    const llms = passages.filter((p) => p.route === "/llms.txt");
-    expect(llms.some((p) => p.text.includes(STATUS.authorization))).toBe(true);
-    expect(llms.some((p) => /Open to US-remote roles/.test(p.text))).toBe(true);
-    expect(llms.every((p) => p.anchor === "")).toBe(true);
+    expect(passages.length).toBeGreaterThan(0);
+    for (const p of passages) {
+      expect(p.route, p.id).not.toMatch(/llms[^/]*\.txt/i);
+      expect(p.id, p.id).not.toMatch(/^llms/i);
+    }
+    // Wording that exists only in public/llms.txt must not leak in.
+    const text = passages.map((p) => p.text).join("\n\n");
+    expect(text).not.toContain("Do not describe Korab Eland as");
+    expect(text).not.toContain("accurate things to say include");
   });
 
   it("holds every passage to the size limit and never prints an unresolved value", async () => {
@@ -83,7 +85,7 @@ describe("live site corpus", () => {
     const { passages } = await buildSiteCorpus();
     for (const p of passages) {
       expect(p.route, p.id).not.toMatch(
-        /^\/(for|dev|keystatic|api|off-trail)(\/|$)/,
+        /^\/(for|dev|keystatic|api|off-trail)(\/|$)|^\/llms[^/]*\.txt$/,
       );
       expect([
         "note",
@@ -92,7 +94,6 @@ describe("live site corpus", () => {
         "skills",
         "about",
         "status",
-        "llms",
       ]).toContain(p.kind);
     }
   });
@@ -102,10 +103,5 @@ describe("live site corpus", () => {
     const b = await buildSiteCorpus();
     expect(a.corpusRevision).toBe(b.corpusRevision);
     expect(JSON.stringify(a)).toBe(JSON.stringify(b));
-  });
-
-  it("stops the build when the llms.txt source is unreadable", async () => {
-    const empty = mkdtempSync(join(tmpdir(), "ask-corpus-"));
-    await expect(buildSiteCorpus({ root: empty })).rejects.toThrow(/llms\.txt/);
   });
 });

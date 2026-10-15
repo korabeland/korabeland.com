@@ -17,6 +17,7 @@ The home page is the console: a hero readout, then a set of ledgers that fill in
 - **Lab (`/lab`)** — personal AI code experiments, kept in a separate band so they never mix with the client work.
 - **Notes (`/notes`)** — field notes and longer-form writing.
 - **About (`/about`)** — the career narrative across thirteen years in marketing, CX and operations, plus career experience with achievement highlights and linked recommendations, skills, education and linked certifications.
+- **Ask about my work** — an optional search section on About that finds excerpts from the site's published pages and links to their sources. Search runs in the browser; it does not generate answers.
 - **Colophon (`/colophon`)** — how the site was built, and its own git build log: every commit, in the open.
 
 A few routes are deliberately quiet: `/for/<slug>` renders unlisted, tailored landing pages (noindex, excluded from the sitemap); `/off-trail` is the SSR companion to the 404. Both `/off-trail` and the 404 page carry `noindex`, and `/off-trail` is excluded from the sitemap. `/og.png` generates the social-share card at build time; page sharing and image overrides follow the [BaseLayout contract](docs/design/components.md#shell--baselayout).

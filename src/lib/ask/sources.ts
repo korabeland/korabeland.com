@@ -26,7 +26,6 @@ export const ANCHORS = {
 } as const;
 
 export const ABOUT_ROUTE = "/about";
-export const LLMS_ROUTE = "/llms.txt";
 
 const clean = (text: string) => normalizeInline(text);
 const present = (text: string | null | undefined): text is string =>
@@ -307,65 +306,6 @@ export function statusDocument(status: StatusInput): CorpusDocument {
         anchor: ANCHORS.close,
         paragraphs: [`Based in ${status.base}. ${status.citizenship}.`],
       },
-    ],
-  };
-}
-
-/**
- * The public llms.txt carries facts About does not print: work authorization
- * and employment preferences. Each section after the summary becomes one
- * section, bullets as paragraphs. The "Key Pages" list is navigation, not
- * fact, and is skipped. A file that no longer has this shape throws.
- */
-export function llmsDocument(source: string): CorpusDocument {
-  const lines = source.split("\n");
-  const summary: string[] = [];
-  const named: { heading: string; items: string[] }[] = [];
-  for (const line of lines) {
-    const h = /^##\s+(.+?)\s*$/.exec(line);
-    if (h) {
-      named.push({ heading: h[1], items: [] });
-    } else if (named.length === 0) {
-      const q = /^>\s?(.*)$/.exec(line);
-      if (q?.[1].trim()) summary.push(q[1].trim());
-    } else if (/^[*-]\s+/.test(line)) {
-      named[named.length - 1].items.push(line.replace(/^[*-]\s+/, ""));
-    } else if (line.trim() && /^\s+\S/.test(line)) {
-      const last = named[named.length - 1];
-      if (last.items.length > 0)
-        last.items[last.items.length - 1] += ` ${line.trim()}`;
-    }
-  }
-  if (summary.length === 0) {
-    throw new Error("ask corpus: llms.txt has no '>' summary line");
-  }
-  const factual = named.filter(
-    (s) => s.items.length > 0 && !/^key pages$/i.test(s.heading),
-  );
-  if (factual.length === 0) {
-    throw new Error("ask corpus: llms.txt has no factual bullet sections");
-  }
-  return {
-    docId: "llms",
-    route: LLMS_ROUTE,
-    kind: "llms",
-    sections: [
-      {
-        key: "summary",
-        heading: "Summary, work authorization and preferences",
-        anchor: "",
-        paragraphs: [clean(summary.join(" "))],
-      },
-      ...factual.map((s, i) => ({
-        key: `list${i}`,
-        heading: clean(s.heading),
-        anchor: "",
-        // Each bullet restates its list heading, so a bullet from the
-        // "do not describe" list can never read as a claim on its own.
-        paragraphs: s.items.map((item) =>
-          clean(`${s.heading.replace(/:$/, "")}: ${item}`),
-        ),
-      })),
     ],
   };
 }

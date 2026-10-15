@@ -159,8 +159,10 @@ export function computeCorpusRevision(
 }
 
 /** Routes the corpus must never cite: tailored, development, admin, API and
- *  redirect-only utility routes. */
-const EXCLUDED_ROUTE = /^\/(for|dev|keystatic|api|off-trail)(\/|$)/;
+ *  redirect-only utility routes, and machine-facing files (llms.txt,
+ *  llms-full.txt and the like), which are written for crawlers, not readers. */
+const EXCLUDED_ROUTE =
+  /^\/(for|dev|keystatic|api|off-trail)(\/|$)|^\/llms[^/]*\.txt$/;
 
 /** Text that means a value failed to resolve before it reached the page. */
 const BROKEN_VALUE = /\bundefined\b|\bNaN\b|\[object /;

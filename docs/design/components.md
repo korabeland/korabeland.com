@@ -321,6 +321,15 @@ for categories, separately labelled `<ul>` lists for education and certification
 
 ---
 
+### AskSection
+
+`components/AskPanel/AskSection.astro` (behaviour in `controller.ts`, search in
+`src/lib/ask/`) — "ask about my work", an inline search section on the About page
+only. The placement, visual contract, interactions, accessibility and states
+are documented in the [PR 2 decision](../decisions/2026-10-14-ask-search-and-daily-counters.md).
+
+---
+
 ### CaseStudy
 
 `components/CaseStudy/index.astro` — the case-study page layout (console skin).

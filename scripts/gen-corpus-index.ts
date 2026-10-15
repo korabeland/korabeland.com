@@ -9,9 +9,9 @@
 // What goes in, all read through the site's own readers: published notes, all
 // projects (role, team, span, results with their basis, field log, reflection),
 // the experience records, skills/education/certifications, the About prose, the
-// location and citizenship facts, and public/llms.txt for work authorization
-// and employment preferences. Tailored pages, drafts, dev and admin routes and
-// the generated activity feeds are never read.
+// location and citizenship facts. Tailored pages, drafts, dev and admin routes,
+// machine-facing files such as public/llms.txt, and the generated activity
+// feeds are never read.
 
 import { mkdirSync, renameSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
@@ -22,7 +22,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const OUT_FILE = resolve(root, "src/content/ask-index/corpus.json");
 
 async function main(): Promise<void> {
-  const artifact = await buildSiteCorpus({ root });
+  const artifact = await buildSiteCorpus();
   mkdirSync(dirname(OUT_FILE), { recursive: true });
   const tmp = `${OUT_FILE}.tmp`;
   writeFileSync(tmp, `${JSON.stringify(artifact, null, 2)}\n`, "utf8");
