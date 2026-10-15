@@ -20,7 +20,7 @@
     "gen:eye-rig": "tsx scripts/gen-eye-rig.ts",
     "gen:corpus-index": "tsx scripts/gen-corpus-index.ts",
     "export:pageviews": "tsx scripts/export-pageviews.ts",
-    "verify": "biome check . && astro sync && tsc --noEmit && astro check",
+    "verify": "pnpm gen:corpus-index && biome check . && astro sync && tsc --noEmit && astro check",
     "pretest": "pnpm gen:eye-rig",
     "test": "vitest run",
     "test:visual": "playwright test",
