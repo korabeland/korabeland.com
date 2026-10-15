@@ -7,8 +7,8 @@
 The site gets an optional "Ask about my work" panel that searches the published
 content in the visitor's own browser. It finds passages, shows an excerpt and a
 link to the source page, and lists reading and contact links. It does not call a
-model, use embeddings, or write answers. The only thing the server ever learns
-is a count.
+model, use embeddings, or write answers. Search questions stay in the browser;
+the panel sends only anonymous event counts.
 
 ## What stays in the browser
 
