@@ -321,6 +321,30 @@ for categories, separately labelled `<ul>` lists for education and certification
 
 ---
 
+### AskSection
+
+`components/AskPanel/AskSection.astro` (behaviour in `controller.ts`, search in
+`src/lib/ask/`) — "ask about my work", an inline search section on the About page
+only, between the career narrative and "how I operate". Consumer: `about.astro`.
+Design rationale and every state are in
+`docs/decisions/2026-10-14-ask-search-and-daily-counters.md`.
+
+**Grammar** — uses `SectionHead`, ledger-style example rows (hairline-separated,
+48px minimum height, return glyph that takes `--signal` on hover/focus), a
+`--paper-2` field with a 2px corner, outlined mono buttons, results as left-ruled
+rows with a mono type label, excerpt highlights in `--signal` tint, and mono
+source paths. No shadow, no animation.
+
+**States** — idle, typing, searching (`aria-busy` on the results region), results
+(newest open, earlier folded), no match, search unavailable, cleared, no-JS
+(section `hidden`). Counter failure has no visible state by design.
+
+**Accessibility** — `<section aria-labelledby>`, a `role="search"` form with a
+visible label, one polite status region, native `<details>` folds, real links.
+Reduced motion: the post-search scroll is instant instead of smooth.
+
+---
+
 ### CaseStudy
 
 `components/CaseStudy/index.astro` — the case-study page layout (console skin).

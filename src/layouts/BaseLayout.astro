@@ -5,8 +5,6 @@
 // rail — wordmark + mono nav labels, plus a small portrait badge on
 // interior pages (the "logged-in operator").
 
-import AskPanel from "../components/AskPanel/AskPanel.astro";
-import AskTrigger from "../components/AskPanel/AskTrigger.astro";
 import ShiftToggle from "../components/ShiftToggle/ShiftToggle.astro";
 import "../styles/global.css";
 // Critical font files, preloaded so first paint already has them (CLS).
@@ -243,7 +241,6 @@ const NAV_LINKS: readonly NavLink[] = [
               ))}
             </ul>
           </nav>
-          {!noindex && <AskTrigger />}
           <a class="chrome-cta" href="mailto:hello@korabeland.com">get in touch</a>
         </div>
 
@@ -266,8 +263,6 @@ const NAV_LINKS: readonly NavLink[] = [
         </div>
       </footer>
     )}
-
-    {!noindex && <AskPanel />}
 
     <!-- Vercel Web Analytics: the site's only collector (the adapter's own
          webAnalytics switch stays off, two would double-count). The filter in
@@ -469,18 +464,6 @@ const NAV_LINKS: readonly NavLink[] = [
   .site-footer a:focus-visible {
     color: var(--ink);
     border-bottom-color: var(--signal);
-  }
-
-  /* Between phone and desktop the nav, the ask button and the CTA no longer fit
-     on one line beside the brand, so the button and CTA drop to a second line
-     under the nav rather than widening the page. */
-  @media (max-width: 1100px) {
-    .chrome-nav-row {
-      flex-wrap: wrap;
-    }
-    .chrome-nav {
-      flex: 1 1 100%;
-    }
   }
 
   @media (max-width: 680px) {

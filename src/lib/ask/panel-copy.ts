@@ -1,13 +1,21 @@
-// Words and links the Ask panel shows. Plain data so tests can hold them to
-// the index (every example must find something) and to the site's contact
-// details.
+// Words and links the Ask section shows. Plain data so tests can hold them to
+// the index (every example must find a page that really answers it) and to the
+// site's contact details. Voice follows DESIGN.md §10: first person, short
+// sentences, no hype, no em dashes.
 
+export const INVITATION =
+  "The story above is the short version. Ask for a specific and I will point you to the page that answers it.";
+
+export const SECTION_NOTE =
+  "Search runs on your device across everything published on this site. It finds passages and links to the page they come from. It does not write answers, and your questions stay in this tab until you clear them or close it.";
+
+/** Four questions the About page and the case studies actually answer, so one
+ *  tap shows a useful result. */
 export const EXAMPLE_QUESTIONS = [
-  "Where are you based?",
   "What results did the lead scoring project get?",
+  "What did you do at Keypath?",
+  "How was the AI SMS pilot measured?",
   "Which tools and skills do you use?",
-  "Tell me about your time at Keypath",
-  "What is Perian?",
 ] as const;
 
 export const READING_LINKS = [
@@ -22,11 +30,8 @@ export const CONTACT_LINKS = [
   { label: "LinkedIn", href: "https://www.linkedin.com/in/korabeland" },
 ] as const;
 
-export const PANEL_NOTE =
-  "Searches the pages published on this site, on your device. It finds passages and links to them; it does not write answers. Your questions stay in this tab until you clear them or close the tab.";
-
 export const FALLBACK_MESSAGE =
-  "Nothing on this site answers that. You can read through the pages below or ask Korab directly.";
+  "Nothing on this site answers that. You can read through the pages below or ask me directly.";
 
 export const ERROR_MESSAGE =
-  "Search could not load. You can read through the pages below or ask Korab directly.";
+  "Search could not load. You can read through the pages below or ask me directly.";

@@ -5,6 +5,7 @@
 // the approved publication scope covers the experience and skills content;
 // anything beyond it still needs sign-off.
 
+import AskSection from "../components/AskPanel/AskSection.astro";
 import ExperienceLedger from "../components/ExperienceLedger/ExperienceLedger.astro";
 import Portrait from "../components/Portrait/index.astro";
 import PortraitPreload from "../components/Portrait/PortraitPreload.astro";
@@ -60,6 +61,8 @@ const PORTRAIT_SIZES = "(max-width: 680px) 280px, 440px";
       {ABOUT_NARRATIVE.map((paragraph) => <p>{paragraph}</p>)}
     </section>
 
+    <AskSection />
+
     <section class="about-operate" aria-labelledby={ABOUT_ANCHORS.operate}>
       <h2 id={ABOUT_ANCHORS.operate} class="t-label">how I operate</h2>
       <p>
@@ -82,6 +85,7 @@ const PORTRAIT_SIZES = "(max-width: 680px) 280px, 440px";
       </p>
     </section>
   </article>
+
 </BaseLayout>
 
 <style>

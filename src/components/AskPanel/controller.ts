@@ -1,7 +1,8 @@
-// The Ask panel's behaviour, loaded the first time the panel opens. Search and
-// history run entirely in this browser. The only network traffic besides the
-// one-off corpus download is a bare event name for the daily counters, and a
-// failure of that traffic is ignored.
+// The Ask section's behaviour, loaded on the About page once the browser is
+// idle (or at once if the visitor reaches for it). Search and history run
+// entirely in this browser. The only network traffic besides the one-off corpus
+// download is a bare event name for the daily counters, and a failure of that
+// traffic is ignored.
 
 import {
   appendQuestion,
@@ -96,25 +97,43 @@ type EntryState =
   | { kind: "fallback" }
   | { kind: "error" };
 
-function renderEntry(question: string, state: EntryState): HTMLElement {
-  const article = el("article", "ask-entry");
-  article.append(el("h4", "ask-q", question));
+function entryMeta(state: EntryState): string {
+  if (state.kind === "results") {
+    const n = state.hits.length;
+    return `${n} ${n === 1 ? "source" : "sources"}`;
+  }
+  return state.kind === "fallback" ? "no match" : "search unavailable";
+}
+
+/** One question and what it found. The newest entry starts open; earlier ones
+ *  fold away under their question so a long session stays scannable. */
+function renderEntry(
+  question: string,
+  state: EntryState,
+  open: boolean,
+): HTMLElement {
+  const entry = el("details", "ask-entry");
+  entry.open = open;
+  const summary = el("summary");
+  summary.append(el("span", "ask-q", question));
+  summary.append(el("span", "ask-q-meta t-mono", entryMeta(state)));
+  entry.append(summary);
   if (state.kind === "results") {
     const list = el("ol", "ask-hits");
     for (const hit of state.hits) list.append(renderHit(hit));
-    article.append(list);
+    entry.append(list);
   } else {
-    article.append(
+    entry.append(
       el(
         "p",
         "ask-fallback",
         state.kind === "error" ? ERROR_MESSAGE : FALLBACK_MESSAGE,
       ),
     );
-    article.append(linkLine("Read:", READING_LINKS));
-    article.append(linkLine("Ask directly:", CONTACT_LINKS));
+    entry.append(linkLine("Read:", READING_LINKS));
+    entry.append(linkLine("Ask me directly:", CONTACT_LINKS));
   }
-  return article;
+  return entry;
 }
 
 let indexPromise: Promise<SearchIndex> | null = null;
@@ -145,15 +164,17 @@ function stateFor(index: SearchIndex | null, question: string): EntryState {
   }
 }
 
-let wired = false;
+let mounted = false;
 
-function wire(dialog: HTMLDialogElement): void {
-  const form = dialog.querySelector<HTMLFormElement>("[data-ask-form]");
-  const input = dialog.querySelector<HTMLInputElement>("[data-ask-input]");
-  const status = dialog.querySelector<HTMLElement>("[data-ask-status]");
-  const history = dialog.querySelector<HTMLElement>("[data-ask-history]");
-  const log = dialog.querySelector<HTMLElement>("[data-ask-log]");
+export function mountAskSection(root: HTMLElement): void {
+  if (mounted) return;
+  const form = root.querySelector<HTMLFormElement>("[data-ask-form]");
+  const input = root.querySelector<HTMLInputElement>("[data-ask-input]");
+  const status = root.querySelector<HTMLElement>("[data-ask-status]");
+  const history = root.querySelector<HTMLElement>("[data-ask-history]");
+  const log = root.querySelector<HTMLElement>("[data-ask-log]");
   if (!form || !input || !status || !history || !log) return;
+  mounted = true;
   const store = sessionStore();
   let index: SearchIndex | null = null;
   let historyRevision = 0;
@@ -164,7 +185,7 @@ function wire(dialog: HTMLDialogElement): void {
     log.replaceChildren(
       ...[...questions]
         .reverse()
-        .map((q) => renderEntry(q, stateFor(index, q))),
+        .map((q, i) => renderEntry(q, stateFor(index, q), i === 0)),
     );
   };
 
@@ -178,15 +199,30 @@ function wire(dialog: HTMLDialogElement): void {
     }
   };
 
+  const reducedMotion = () =>
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
   const ask = async (raw: string) => {
     const question = raw.trim();
-    if (!question) return;
+    if (!question) {
+      status.textContent = "Type a question first.";
+      input.focus();
+      return;
+    }
     const revision = historyRevision;
     input.value = "";
     sendEvent("question", post);
+    // Save the question before anything is awaited, so leaving the page while
+    // the index loads cannot lose it. Clearing history bumps the revision,
+    // which stops the pending search from restoring what was cleared.
+    appendQuestion(store, question);
+    history.hidden = false;
+    history.setAttribute("aria-busy", "true");
+    status.textContent = "Searching…";
+    paint();
     const ready = await ensureIndex();
     if (revision !== historyRevision) return;
-    const questions = appendQuestion(store, question);
+    history.setAttribute("aria-busy", "false");
     const state = stateFor(index, question);
     if (!ready) {
       sendEvent("error", post);
@@ -197,72 +233,46 @@ function wire(dialog: HTMLDialogElement): void {
     } else {
       sendEvent("error", post);
     }
-    history.hidden = questions.length === 0;
     paint();
     status.textContent =
       state.kind === "results"
-        ? `${state.hits.length} ${state.hits.length === 1 ? "source" : "sources"} found. Newest result is listed first under This session.`
+        ? `${state.hits.length} ${state.hits.length === 1 ? "source" : "sources"} found for "${question}". The newest result is first under This session.`
         : state.kind === "fallback"
           ? "Nothing on this site answers that. Reading and contact links are listed below."
           : "Search could not load. Reading and contact links are listed below.";
-    input.focus();
+    log.firstElementChild?.scrollIntoView({
+      block: "nearest",
+      behavior: reducedMotion() ? "auto" : "smooth",
+    });
   };
 
   form.addEventListener("submit", (event) => {
     event.preventDefault();
     void ask(input.value);
   });
-  for (const button of dialog.querySelectorAll<HTMLButtonElement>(
+  for (const button of root.querySelectorAll<HTMLButtonElement>(
     "[data-ask-example]",
   )) {
     button.addEventListener("click", () => {
       void ask(button.dataset.askExample ?? "");
     });
   }
-  dialog.querySelector("[data-ask-clear]")?.addEventListener("click", () => {
+  root.querySelector("[data-ask-clear]")?.addEventListener("click", () => {
     historyRevision += 1;
     clearHistory(store);
+    history.setAttribute("aria-busy", "false");
     paint();
     status.textContent = "History cleared.";
     input.focus();
   });
-  dialog
-    .querySelector("[data-ask-close]")
-    ?.addEventListener("click", () => dialog.close());
-  // A click on the dimmed area outside the panel closes it.
-  dialog.addEventListener("click", (event) => {
-    if (event.target === dialog) {
-      dialog.close();
-      return;
-    }
-    if (!(event.target instanceof Element)) return;
-    const anchor = event.target.closest<HTMLAnchorElement>(
-      "a[data-ask-source-link]",
-    );
-    if (!anchor) return;
-    const destination = new URL(anchor.href);
-    if (
-      destination.origin === location.origin &&
-      destination.pathname === location.pathname &&
-      destination.search === location.search
-    ) {
-      dialog.close();
-    }
-  });
+
+  // The first time the visitor reaches for the section in a session counts as
+  // one open. Showing history carried over from an earlier page does not.
+  const countOpen = () => countOpenOnce(sessionStore(), post);
+  root.addEventListener("focusin", countOpen, { once: true });
+  root.addEventListener("pointerdown", countOpen, { once: true });
 
   // Warm the index and show any history carried over from earlier pages.
   void ensureIndex().then(paint);
   paint();
-}
-
-export function openPanel(dialog: HTMLDialogElement): void {
-  if (!wired) {
-    wired = true;
-    wire(dialog);
-  }
-  if (!dialog.open) {
-    dialog.showModal();
-    countOpenOnce(sessionStore(), post);
-  }
-  dialog.querySelector<HTMLInputElement>("[data-ask-input]")?.focus();
 }

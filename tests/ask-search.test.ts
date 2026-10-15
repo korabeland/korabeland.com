@@ -111,6 +111,17 @@ describe("search over the live corpus", () => {
   });
 
   it.each([
+    [EXAMPLE_QUESTIONS[0], "/work/lead-scoring"],
+    [EXAMPLE_QUESTIONS[1], "/about#experience-heading"],
+    [EXAMPLE_QUESTIONS[2], "/work/ai-sms-pilot"],
+    [EXAMPLE_QUESTIONS[3], "/about#skills-heading"],
+  ])("example %s puts the page that answers it in the results", async (q, href) => {
+    const { passages } = await buildSiteCorpus();
+    const outcome = search(buildIndex(passages), q);
+    expect(outcome.hits.map((h) => h.href)).toContain(href);
+  });
+
+  it.each([
     ["Where are you based?", "/about#close"],
     ["What results did the lead scoring project get?", "/work/lead-scoring"],
     ["What is Perian?", "/lab/perian"],

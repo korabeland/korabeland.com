@@ -78,14 +78,80 @@ one). Nothing here upgrades the store or adds a paid feature.
   `pnpm --silent export:pageviews > pageviews-YYYY-MM.csv` to keep pnpm's
   command banner out of the CSV file.
 
-## Placement
+## Placement and design (About page only)
 
-The trigger sits in the header and the panel is a native `<dialog>`, so the
-browser supplies the focus trap, Escape to close and focus return. Pages with
-`noindex` (tailored `/for/*` pages, `/off-trail`, `/404`, previews) do not get
-the trigger, matching the analytics rule. Without JavaScript the trigger stays
-hidden. Only a small opener loads with every page; the search and rendering code
-loads on first open.
+Captain decisions, 2026-10-15: limit the feature to a single page until it is
+more developed, put it on About, and treat it as a design task rather than a
+relocation. Nothing else renders it or loads its script; the header and the
+shared page shell carry no trace of it. Search still covers the whole index, so
+results may link to any page.
+
+**(a) Where.** Between the career narrative and "how I operate". A visitor has
+just read the short version of the story and is most likely to want a specific
+(a result, a method, a tool). Placing it there makes it the next beat of the
+page, not a widget bolted on the header. It uses the site's own section grammar
+(mono section head over a 1px rule, ledger-style rows, hairlines, the one signal
+accent, sharp corners, no shadows), so it reads as part of the page in both
+shifts.
+
+**(b) Discovery.** One sentence in the site's first-person voice ("The story
+above is the short version. Ask for a specific and I will point you to the page
+that answers it.") over four example questions drawn from what About and the
+case studies really answer: the lead scoring result, the Keypath work, how the
+SMS pilot was measured, and the tools list. The examples are ledger rows with a
+return glyph, each at least 48px tall and full width, so one thumb tap shows a
+useful result. Below them is a field labelled "Or ask your own". A test holds
+every example to a result on the page that answers it. A short honest note says
+what the feature is: search on the visitor's device, no written answers,
+questions kept in the tab only.
+
+**(c) Inline, not an overlay.** The visitor reads results, compares them and
+opens sources, so the page they are reading must stay in reach. A modal would
+cover the experience ledger below, trap focus, and fight the phone keyboard
+(a bottom sheet plus a keyboard leaves a sliver of screen). Inline also needs no
+open and close state, and the history is waiting there when they return from a
+source. The cost is that results push the lower page down. Results are capped
+at four sources, and earlier questions fold under their own question line
+("+"), so the section stays short.
+
+**(d) States.**
+- *Idle:* invitation, four example rows, an empty field, the note, reading and
+  contact links. Nothing is shown for history.
+- *Typing:* a plain search field (16px so iOS does not zoom). An empty submit
+  says "Type a question first." and sends nothing, not even a count.
+- *Searching:* the question is saved to the tab's history first, then the
+  status line reads "Searching…" and the results region is marked busy. Local
+  search itself is instant; the only wait is the first download of the index.
+- *Results:* the newest question is open with up to four sources, each with a
+  type label, a linked title, an excerpt with the matched words highlighted, and
+  the source path. The status line announces "N sources found for ...".
+- *No match:* a plain sentence, then reading links and contact links.
+- *Search unavailable:* if the index cannot be fetched, the same reading and
+  contact links appear with "Search could not load."
+- *Cleared:* the history is removed, the status line says "History cleared.",
+  and focus returns to the field. A search still in flight when history is
+  cleared cannot bring the question back.
+- *Counter failure:* nothing visible, by design. Search never waits for a count.
+- *No JavaScript:* the section is hidden, so there is no form that does nothing.
+
+**Interaction details.** Keyboard: the example rows, field, search, clear
+history and the folds are all native controls in reading order; Enter works on
+all of them. Screen readers: one polite status region announces searching,
+counts, no match and cleared; results carry real headings, lists and links.
+Motion: no animation. After a search the newest result scrolls into view
+(smoothly only if the visitor has not asked for reduced motion). One-handed on
+a phone: rows and buttons are at least 44px, the field and its button stack
+full width under 680px, and nothing is fixed to the screen.
+
+**Counting.** The "open" count now means the first time in a browser session
+that the visitor reaches for the section (focus or press inside it). Showing
+history carried over from an earlier page is not an open.
+
+**Loading.** Only a small script ships with the About page. It reveals the
+section and loads the search code when the browser is idle, or at once if the
+tab already has history or the visitor reaches for the section first.
+
+Widening placement later means rendering `AskSection` on more pages.
 
 ## Release questions
 
