@@ -106,7 +106,9 @@ describe("release questions file", () => {
 
   it("keeps forty review markers after Korab records reviews", () => {
     const markdown = readFileSync(FILE, "utf8");
-    expect(markdown.match(/^- \[[ xX]\] Reviewed by Korab$/gm)).toHaveLength(40);
+    expect(markdown.match(/^- \[[ xX]\] Reviewed by Korab$/gm)).toHaveLength(
+      40,
+    );
   });
 
   it("states the release bar", () => {

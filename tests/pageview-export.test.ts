@@ -38,8 +38,8 @@ describe("pageview export", () => {
     });
   });
   it("rejects exports after the reporting window deadline", () => {
-    expect(() =>
-      completedMonthRange(new Date("2026-01-02T00:00:00Z")),
-    ).toThrow(/first UTC day/);
+    expect(() => completedMonthRange(new Date("2026-01-02T00:00:00Z"))).toThrow(
+      /first UTC day/,
+    );
   });
 });

@@ -117,7 +117,10 @@ test("clearing history cancels a pending search without clearing newer input", a
   release();
   await response;
   await completed;
-  await page.evaluate(() => new Promise<void>(requestAnimationFrame));
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) => requestAnimationFrame(() => resolve())),
+  );
 
   await expect(page.locator(".ask-entry")).toHaveCount(0);
   await expect(input).toHaveValue("newer draft");
