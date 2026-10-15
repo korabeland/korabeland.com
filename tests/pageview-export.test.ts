@@ -31,15 +31,23 @@ describe("pageview export", () => {
     expect(() => parseMonthRows({})).toThrow();
     expect(() => parseMonthRows({ data: [{ pageviews: 1 }] })).toThrow();
   });
-  it("requests the prior completed month on the first UTC day", () => {
-    expect(completedMonthRange(new Date("2026-01-01T10:00:00Z"))).toEqual({
+  it("requests the prior completed month early on the first UTC day", () => {
+    expect(completedMonthRange(new Date("2026-01-01T00:30:00Z"))).toEqual({
       since: "2025-12-01T00:00:00.000Z",
       until: "2025-12-31T23:59:59.999Z",
     });
   });
-  it("rejects exports after the reporting window deadline", () => {
+  it("refuses late on the first UTC day, when the month would be partial", () => {
+    expect(() => completedMonthRange(new Date("2026-11-01T18:00:00Z"))).toThrow(
+      /first UTC hour/,
+    );
+    expect(() => completedMonthRange(new Date("2026-11-01T01:00:00Z"))).toThrow(
+      /first UTC hour/,
+    );
+  });
+  it("refuses on any other day", () => {
     expect(() => completedMonthRange(new Date("2026-01-02T00:00:00Z"))).toThrow(
-      /first UTC day/,
+      /first UTC hour/,
     );
   });
 });

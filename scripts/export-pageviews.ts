@@ -1,11 +1,13 @@
 #!/usr/bin/env tsx
 // Prints monthly pageview totals for korabeland.com as CSV.
 //
-// Why: the Hobby plan of Vercel Web Analytics keeps one month of data, so run
-// this on the first UTC day of each month and file the completed month. It
+// Why: the Hobby plan of Vercel Web Analytics keeps a rolling month of data, so
+// run this during the first UTC hour of each month (00:00 to 00:59) and file
+// the completed month. Later runs are refused: the earliest hours of the prior
+// month would already be gone and the total would be partial. It
 // asks Vercel's API through the `vercel` CLI, which uses your login; no token
 // is stored in the repository. Usage:
-//   pnpm export:pageviews            # previous completed month, on day 1 UTC
+//   pnpm export:pageviews            # previous completed month, 00:00-00:59 UTC on day 1
 //   pnpm --silent export:pageviews > pageviews-2026-10.csv
 
 import { execFileSync } from "node:child_process";

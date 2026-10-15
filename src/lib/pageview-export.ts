@@ -42,14 +42,21 @@ export function formatCsv(rows: readonly MonthRow[]): string {
   return `${lines.join("\n")}\n`;
 }
 
-/** The completed month still covered by Hobby's one-month reporting window. */
+/**
+ * Analytics reports hourly, and the Hobby window reaches back one month from
+ * the moment of the query. Each hour past midnight on the 1st therefore drops
+ * an hour from the start of the prior month. Only the first UTC hour is safe.
+ */
+const EXPORT_DEADLINE_HOURS = 1;
+
+/** The completed month, only while all of it is still in the reporting window. */
 export function completedMonthRange(now: Date): {
   since: string;
   until: string;
 } {
-  if (now.getUTCDate() !== 1) {
+  if (now.getUTCDate() !== 1 || now.getUTCHours() >= EXPORT_DEADLINE_HOURS) {
     throw new Error(
-      "export pageviews on the first UTC day of the month to keep the prior month in the reporting window",
+      "export pageviews during the first UTC hour of the month (00:00 to 00:59 UTC); later, the earliest hours of the prior month have left the one-month reporting window and the total would be partial",
     );
   }
   return {
