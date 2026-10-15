@@ -135,25 +135,34 @@ test("tailored pages never load the analytics collector", async ({ page }) => {
 test("navigation still works when the analytics collector is blocked", async ({
   page,
 }) => {
-  await page.route(`${ORIGIN}/**`, async (route) => {
+  let collectorRequested = false;
+  let collectorAborted = false;
+  await page.route(`${browserOrigin}/**`, async (route) => {
     const requestUrl = new URL(route.request().url());
     if (requestUrl.pathname.startsWith(collectorPrefix)) {
+      collectorRequested = true;
       await route.abort();
+      collectorAborted = true;
       return;
     }
-    await route.continue();
+    const response = await route.fetch({
+      url: `${ORIGIN}${requestUrl.pathname}${requestUrl.search}`,
+    });
+    await route.fulfill({ response });
   });
 
-  await page.goto(`${ORIGIN}/about`);
+  await page.goto(`${browserOrigin}/about`);
   await expect(
     page.getByRole("heading", {
       name: "Turning ambiguous problems into systems",
     }),
   ).toBeVisible();
   await page.getByRole("link", { name: "work", exact: true }).click();
-  await expect(page).toHaveURL(`${ORIGIN}/work`);
+  await expect(page).toHaveURL(`${browserOrigin}/work`);
   await expect(
     page.getByRole("heading", { name: "work · case studies" }),
   ).toBeVisible();
+  await expect.poll(() => collectorAborted).toBe(true);
+  expect(collectorRequested).toBe(true);
   await page.unrouteAll({ behavior: "wait" });
 });

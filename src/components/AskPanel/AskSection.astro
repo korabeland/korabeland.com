@@ -95,35 +95,12 @@ import SectionHead from "../SectionHead.astro";
 </section>
 
 <script>
-  // The only code that loads with the About page: reveal the section, then load
-  // the search code once the browser is idle, or at once if this tab already has
-  // history to show or the visitor reaches for the section first.
+  import { mountAskSection } from "./controller";
+
   const root = document.querySelector<HTMLElement>("[data-ask-section]");
   if (root) {
+    mountAskSection(root);
     root.hidden = false;
-    let loading: Promise<typeof import("./controller")> | null = null;
-    const load = () => {
-      loading ??= import("./controller").then((m) => {
-        m.mountAskSection(root);
-        return m;
-      });
-      loading.catch(() => {
-        // Chunk failed to load (offline): the page keeps working without it.
-        loading = null;
-      });
-    };
-    let hasHistory = false;
-    try {
-      hasHistory = Boolean(sessionStorage.getItem("korab-ask-history"));
-    } catch {
-      hasHistory = false;
-    }
-    if (hasHistory) load();
-    else if ("requestIdleCallback" in window) requestIdleCallback(load);
-    else setTimeout(load, 1200);
-    for (const type of ["focusin", "pointerdown"] as const) {
-      root.addEventListener(type, load, { once: true });
-    }
   }
 </script>
 

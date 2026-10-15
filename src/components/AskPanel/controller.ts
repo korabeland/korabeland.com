@@ -1,5 +1,4 @@
-// The Ask section's behaviour, loaded on the About page once the browser is
-// idle (or at once if the visitor reaches for it). Search and history run
+// The Ask section's behaviour, loaded on the About page. Search and history run
 // entirely in this browser. The only network traffic besides the one-off corpus
 // download is a bare event name for the daily counters, and a failure of that
 // traffic is ignored.
@@ -95,6 +94,7 @@ function renderHit(hit: SearchHit): HTMLLIElement {
 type EntryState =
   | { kind: "results"; hits: SearchHit[] }
   | { kind: "fallback" }
+  | { kind: "searching" }
   | { kind: "error" };
 
 function entryMeta(state: EntryState): string {
@@ -102,7 +102,8 @@ function entryMeta(state: EntryState): string {
     const n = state.hits.length;
     return `${n} ${n === 1 ? "source" : "sources"}`;
   }
-  return state.kind === "fallback" ? "no match" : "search unavailable";
+  if (state.kind === "fallback") return "no match";
+  return state.kind === "searching" ? "searching" : "search unavailable";
 }
 
 /** One question and what it found. The newest entry starts open; earlier ones
@@ -122,6 +123,8 @@ function renderEntry(
     const list = el("ol", "ask-hits");
     for (const hit of state.hits) list.append(renderHit(hit));
     entry.append(list);
+  } else if (state.kind === "searching") {
+    entry.append(el("p", "ask-fallback", "Searching…"));
   } else {
     entry.append(
       el(
@@ -152,8 +155,12 @@ function loadIndex(): Promise<SearchIndex> {
   return indexPromise;
 }
 
-function stateFor(index: SearchIndex | null, question: string): EntryState {
-  if (!index) return { kind: "error" };
+function stateFor(
+  index: SearchIndex | null,
+  question: string,
+  indexLoading: boolean,
+): EntryState {
+  if (!index) return indexLoading ? { kind: "searching" } : { kind: "error" };
   try {
     const outcome = search(index, question);
     return outcome.status === "results"
@@ -177,6 +184,7 @@ export function mountAskSection(root: HTMLElement): void {
   mounted = true;
   const store = sessionStore();
   let index: SearchIndex | null = null;
+  let indexLoading = false;
   let historyRevision = 0;
 
   const paint = () => {
@@ -185,17 +193,22 @@ export function mountAskSection(root: HTMLElement): void {
     log.replaceChildren(
       ...[...questions]
         .reverse()
-        .map((q, i) => renderEntry(q, stateFor(index, q), i === 0)),
+        .map((q, i) =>
+          renderEntry(q, stateFor(index, q, indexLoading), i === 0),
+        ),
     );
   };
 
   const ensureIndex = async (): Promise<boolean> => {
+    indexLoading = true;
     try {
       index = await loadIndex();
       return true;
     } catch {
       index = null;
       return false;
+    } finally {
+      indexLoading = false;
     }
   };
 
@@ -223,7 +236,7 @@ export function mountAskSection(root: HTMLElement): void {
     const ready = await ensureIndex();
     if (revision !== historyRevision) return;
     history.setAttribute("aria-busy", "false");
-    const state = stateFor(index, question);
+    const state = stateFor(index, question, indexLoading);
     if (!ready) {
       sendEvent("error", post);
     } else if (state.kind === "results") {
