@@ -2,16 +2,16 @@
 // Prints monthly pageview totals for korabeland.com as CSV.
 //
 // Why: the Hobby plan of Vercel Web Analytics keeps one month of data, so run
-// this once a month and file the output. It asks Vercel's API through the
-// `vercel` CLI, which uses the login you already have; no token is stored in
-// the repository. Usage:
-//   pnpm export:pageviews            # this month and the previous one
+// this on the first UTC day of each month and file the completed month. It
+// asks Vercel's API through the `vercel` CLI, which uses your login; no token
+// is stored in the repository. Usage:
+//   pnpm export:pageviews            # previous completed month, on day 1 UTC
 //   pnpm --silent export:pageviews > pageviews-2026-10.csv
 
 import { execFileSync } from "node:child_process";
 import {
   formatCsv,
-  monthStart,
+  completedMonthRange,
   parseMonthRows,
 } from "../src/lib/pageview-export";
 
@@ -20,12 +20,12 @@ const PROJECT_ID = "prj_CLexAjSgpXWgay2rLgj4EZfC21FV";
 const TEAM_ID = "team_wcPSN7DA6vMbz5WiDFFw9qIX";
 
 function main(): void {
-  const now = new Date();
+  const range = completedMonthRange(new Date());
   const params = new URLSearchParams({
     projectId: PROJECT_ID,
     teamId: TEAM_ID,
-    since: monthStart(now),
-    until: now.toISOString(),
+    since: range.since,
+    until: range.until,
     by: "month",
   });
   const out = execFileSync(

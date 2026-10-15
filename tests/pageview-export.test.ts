@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { formatCsv, monthStart, parseMonthRows } from "@/lib/pageview-export";
+import {
+  completedMonthRange,
+  formatCsv,
+  parseMonthRows,
+} from "@/lib/pageview-export";
 
 describe("pageview export", () => {
   it("reads month rows from the analytics response", () => {
@@ -27,9 +31,15 @@ describe("pageview export", () => {
     expect(() => parseMonthRows({})).toThrow();
     expect(() => parseMonthRows({ data: [{ pageviews: 1 }] })).toThrow();
   });
-  it("finds the first of the month, across a year boundary", () => {
-    expect(monthStart(new Date("2026-01-20T10:00:00Z"))).toBe(
-      "2025-12-01T00:00:00.000Z",
-    );
+  it("requests the prior completed month on the first UTC day", () => {
+    expect(completedMonthRange(new Date("2026-01-01T10:00:00Z"))).toEqual({
+      since: "2025-12-01T00:00:00.000Z",
+      until: "2025-12-31T23:59:59.999Z",
+    });
+  });
+  it("rejects exports after the reporting window deadline", () => {
+    expect(() =>
+      completedMonthRange(new Date("2026-01-02T00:00:00Z")),
+    ).toThrow(/first UTC day/);
   });
 });

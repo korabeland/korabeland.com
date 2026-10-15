@@ -42,9 +42,19 @@ export function formatCsv(rows: readonly MonthRow[]): string {
   return `${lines.join("\n")}\n`;
 }
 
-/** First instant of the previous month, as an ISO string. */
-export function monthStart(now: Date): string {
-  return new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1),
-  ).toISOString();
+/** The completed month still covered by Hobby's one-month reporting window. */
+export function completedMonthRange(now: Date): { since: string; until: string } {
+  if (now.getUTCDate() !== 1) {
+    throw new Error(
+      "export pageviews on the first UTC day of the month to keep the prior month in the reporting window",
+    );
+  }
+  return {
+    since: new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1),
+    ).toISOString(),
+    until: new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 0, 23, 59, 59, 999),
+    ).toISOString(),
+  };
 }
