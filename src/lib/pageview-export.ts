@@ -7,9 +7,9 @@ export interface MonthRow {
   /** "YYYY-MM" */
   month: string;
   pageviews: number;
-  /** Approximate hours at the start of the month that had left the window. */
-  hoursMissing?: number;
 }
+
+export type CoverageStatus = "complete" | "partial";
 
 interface RawRow {
   timestamp?: unknown;
@@ -36,28 +36,31 @@ export function parseMonthRows(response: unknown): MonthRow[] {
   });
 }
 
-export function formatCsv(rows: readonly MonthRow[]): string {
-  const lines = ["month,pageviews,status,approx_hours_missing"];
+export function formatCsv(
+  rows: readonly MonthRow[],
+  status: CoverageStatus,
+): string {
+  const lines = ["month,pageviews,status"];
   for (const r of [...rows].sort((a, b) => (a.month < b.month ? -1 : 1))) {
-    const missing = r.hoursMissing ?? 0;
-    lines.push(
-      `${r.month},${r.pageviews},${missing > 0 ? "partial" : "complete"},${missing}`,
-    );
+    lines.push(`${r.month},${r.pageviews},${status}`);
   }
   return `${lines.join("\n")}\n`;
 }
 
+/** Determine whether the one-month window still includes the prior month's first hour. */
+export function coverageStatus(now: Date): CoverageStatus {
+  return now.getUTCDate() === 1 && now.getUTCHours() === 0
+    ? "complete"
+    : "partial";
+}
+
 /**
- * The prior month, exported on the first UTC day. The Hobby window reaches back
- * one month from the query, and analytics report hourly, so each full hour past
- * midnight drops an hour from the start of the prior month. Those hours cannot
- * be recovered, so the range reports how many fell out and the CSV marks the
- * month partial rather than letting a short total read as complete.
+ * The prior month, exported on the first UTC day. The caller checks coverage
+ * after the query, because the query can cross the retention boundary.
  */
 export function completedMonthRange(now: Date): {
   since: string;
   until: string;
-  hoursMissing: number;
 } {
   if (now.getUTCDate() !== 1) {
     throw new Error(
@@ -71,6 +74,5 @@ export function completedMonthRange(now: Date): {
     until: new Date(
       Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 0, 23, 59, 59, 999),
     ).toISOString(),
-    hoursMissing: now.getUTCHours(),
   };
 }

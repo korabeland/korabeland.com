@@ -3,9 +3,8 @@
 //
 // Why: the Hobby plan of Vercel Web Analytics keeps a rolling month of data, so
 // run this just after midnight UTC on the first of each month and file the
-// completed month. A run later on the 1st still works, but each full hour past
-// midnight has already left the window, so the row is marked "partial" with the
-// approximate hours missing. Other days are refused. It
+// completed month. The row is marked "partial" if the query reaches the point
+// when the first hour has left the window. Other days are refused. The script
 // asks Vercel's API through the `vercel` CLI, which uses your login; no token
 // is stored in the repository. Usage:
 //   pnpm export:pageviews            # previous month, on day 1 UTC
@@ -14,6 +13,7 @@
 import { execFileSync } from "node:child_process";
 import {
   completedMonthRange,
+  coverageStatus,
   formatCsv,
   parseMonthRows,
 } from "../src/lib/pageview-export";
@@ -42,14 +42,8 @@ function main(): void {
     ],
     { encoding: "utf8", stdio: ["ignore", "pipe", "inherit"] },
   );
-  process.stdout.write(
-    formatCsv(
-      parseMonthRows(JSON.parse(out)).map((row) => ({
-        ...row,
-        hoursMissing: range.hoursMissing,
-      })),
-    ),
-  );
+  const rows = parseMonthRows(JSON.parse(out));
+  process.stdout.write(formatCsv(rows, coverageStatus(new Date())));
 }
 
 try {
