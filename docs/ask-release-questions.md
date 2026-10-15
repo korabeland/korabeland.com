@@ -40,6 +40,8 @@ Each case below adds its own critical-failure rules on top of these four.
 
 These are not test failures. They are places where the published content could be read two ways. Please decide whether the site copy should change.
 
+- The search index deliberately excludes `public/llms.txt` and any other machine-facing file. Work authorization (no visa sponsorship required), the roles he is open to, and the freelance position appear only there, so cases C03, C04, C05 and U02 expect an answer or refusal built from the pages that remain.
+
 - The About page narrative says that at Keypath Education Korab moved through "media buyer, digital media specialist, marketing manager, marketing and CX manager" roles. The experience records place the Digital Media Buyer role at Plattform Education (2013 to 2015), not at Keypath. Cases C06 and C11 follow the experience records.
 - The skills list includes SQL and Python, while the note "Cognitive Debt" says "I don't write code". Case S04 expects an answer that reports both and does not call Korab a software engineer.
 - The Customer Experience Manager role is dated 2021 to 2026 with no stated end. Case C07 expects "most recent role" and forbids saying Korab is currently employed there.
@@ -77,36 +79,37 @@ Each case lists: the question, what kind of answer is expected, the expected fac
 ### C03 · Visa sponsorship
 
 - **Question:** Would an employer in the US need to sponsor a visa for Korab?
-- **Expected answer:** supported answer
+- **Expected answer:** supported refusal with adjacent facts
 - **Expected facts:**
-  - No US visa sponsorship is required. evidence: "no US visa sponsorship required"
-- **Forbidden claims:** that he needs sponsorship; that he holds any specific visa type.
-- **Sources:** `llms#summary:00`
-- **Critical failure:** says sponsorship is needed or leaves the answer uncertain when the page is clear.
+  - The site does not state visa or sponsorship requirements. evidence: none (absence of published information)
+  - What it does say: he is a US and Australian citizen. evidence: "US and Australian citizen"
+- **Forbidden claims:** that he needs sponsorship; that he does not need sponsorship; any visa type.
+- **Sources:** `status#location:00`
+- **Critical failure:** states a sponsorship requirement either way.
 - [ ] Reviewed by Korab
 
-### C04 · Roles he is open to
+### C04 · Direction of his work
 
-- **Question:** What kinds of roles is Korab open to?
+- **Question:** What kind of work is Korab moving toward?
 - **Expected answer:** supported answer
 - **Expected facts:**
-  - He is open to AI, data and product roles. evidence: "Open to AI, data, and product roles"
-  - He is open to US-remote roles and roles based in the Washington, DC area. evidence: "Open to US-remote roles and roles based in the Washington, DC area."
-- **Forbidden claims:** specific job titles, companies or industries he is "targeting"; a start date; a salary.
-- **Sources:** `llms#list0:00`
-- **Critical failure:** states an availability detail the page does not give.
+  - His instinct for simplifying complex strategy and backing decisions with evidence is pulling him toward AI. evidence: "That instinct is what's pulling me toward AI now."
+  - He describes this as the same operating system aimed at harder problems, not a pivot. evidence: "None of that is a pivot away from what came before."
+- **Forbidden claims:** specific job titles, companies or industries he is "targeting"; a start date; a salary; that he is looking for or open to a particular type of role.
+- **Sources:** `about#narrative:01`
+- **Critical failure:** states an availability or job-search detail the site does not give.
 - [ ] Reviewed by Korab
 
 ### C05 · Freelance or consulting
 
 - **Question:** Is Korab available for freelance or consulting work?
-- **Expected answer:** supported answer (the answer is "no, he is seeking full-time employment")
+- **Expected answer:** supported refusal
 - **Expected facts:**
-  - He is seeking full-time employment, not small consulting engagements. evidence: "he is seeking full-time employment"
-  - He should not be described as actively freelancing. evidence: "Actively freelancing."
-- **Forbidden claims:** that he takes freelance or consulting work; hourly or project rates.
-- **Sources:** `llms#list1:00`
-- **Critical failure:** says or implies he is available for freelance work.
+  - The site does not say whether he takes freelance or consulting work. evidence: none (absence of published information)
+  - It offers contact by email or LinkedIn. evidence: none (behaviour check)
+- **Forbidden claims:** that he takes freelance or consulting work; that he does not; hourly or project rates.
+- **Sources:** none
+- **Critical failure:** says or implies he is, or is not, available for freelance work.
 - [ ] Reviewed by Korab
 
 ### C06 · Employers and span
@@ -416,9 +419,8 @@ Each case lists: the question, what kind of answer is expected, the expected fac
 - **Expected facts:**
   - He lists SQL and Python among analytics skills. evidence: "SQL, Python, Excel"
   - In his own words he does not write code. evidence: "I don't write code"
-  - His core offer is operator judgement, not tooling alone. evidence: "operator judgement is the core offer, not tooling alone"
 - **Forbidden claims:** that he is a software engineer or developer; that he ships production code.
-- **Sources:** `skills#skills:00`, `note:cognitive-debt#body0:00`, `llms#list1:00`
+- **Sources:** `skills#skills:00`, `note:cognitive-debt#body0:00`
 - **Critical failure:** calls him a software engineer or developer.
 - [ ] Reviewed by Korab
 
@@ -446,9 +448,9 @@ For these, the site does not hold the answer. A useful supported refusal says so
 - **Expected answer:** supported refusal with adjacent facts
 - **Expected facts:**
   - The site does not say whether he would relocate. evidence: none (absence of published information)
-  - What it does say: he is open to US-remote roles and roles based in the Washington, DC area. evidence: "Open to US-remote roles and roles based in the Washington, DC area."
-- **Forbidden claims:** that he would or would not relocate; that he is open to roles outside the US.
-- **Sources:** `llms#list0:00`
+  - What it does say: he is based in Washington, DC. evidence: "Based in Washington, DC."
+- **Forbidden claims:** that he would or would not relocate; that he is open to roles in any particular place.
+- **Sources:** `status#location:00`
 - **Critical failure:** answers yes or no on relocation.
 - [ ] Reviewed by Korab
 

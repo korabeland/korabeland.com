@@ -102,7 +102,6 @@ const ALIAS_KIND_LABEL: Record<PassageKind, string> = {
   skills: "Skills",
   about: "About",
   status: "About",
-  llms: "Summary",
 };
 
 export function kindLabel(kind: PassageKind): string {

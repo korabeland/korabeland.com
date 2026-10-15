@@ -7,7 +7,6 @@ import { blocksFromMarkdoc } from "@/lib/ask/markdoc";
 import {
   aboutDocument,
   experienceDocument,
-  llmsDocument,
   noteDocument,
   projectDocument,
   projectLedgerDocument,
@@ -242,58 +241,6 @@ describe("aboutDocument and statusDocument", () => {
     }).sections[0].paragraphs[0];
     expect(text).toBe("Based in Washington, DC. US and Australian citizen.");
     expect(text).not.toMatch(/relocat|undefined/i);
-  });
-});
-
-const LLMS = `# Name
-
-> Summary line one.
-> Based in X; no visa needed.
-
-## Key Pages
-
-* / - Home.
-
-## If asked, say:
-
-* Open to remote roles.
-* Another fact
-  that wraps.
-
-## Do not describe as:
-
-* Freelancing.
-`;
-
-describe("llmsDocument", () => {
-  it("indexes the summary and fact lists but not the page directory", () => {
-    const doc = llmsDocument(LLMS);
-    expect(doc.route).toBe("/llms.txt");
-    expect(doc.sections.map((s) => s.heading)).toEqual([
-      "Summary, work authorization and preferences",
-      "If asked, say:",
-      "Do not describe as:",
-    ]);
-    expect(doc.sections[0].paragraphs[0]).toBe(
-      "Summary line one. Based in X; no visa needed.",
-    );
-    expect(doc.sections[1].paragraphs).toEqual([
-      "If asked, say: Open to remote roles.",
-      "If asked, say: Another fact that wraps.",
-    ]);
-  });
-
-  it("makes a negative bullet restate its heading so it cannot read as a claim", () => {
-    expect(llmsDocument(LLMS).sections[2].paragraphs[0]).toBe(
-      "Do not describe as: Freelancing.",
-    );
-  });
-
-  it("throws when the file no longer has a summary or fact lists", () => {
-    expect(() => llmsDocument("## Only\n\n* x\n")).toThrow(/summary/);
-    expect(() => llmsDocument("> s\n\n## Key Pages\n\n* /\n")).toThrow(
-      /factual/,
-    );
   });
 });
 

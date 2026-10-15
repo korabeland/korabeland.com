@@ -180,6 +180,8 @@ describe("validateCorpus", () => {
     ],
     ["an excluded route", [{ ...good, route: "/for/demo" }], /excluded/],
     ["a dev route", [{ ...good, route: "/dev/x" }], /excluded/],
+    ["llms.txt", [{ ...good, route: "/llms.txt" }], /excluded/],
+    ["llms-full.txt", [{ ...good, route: "/llms-full.txt" }], /excluded/],
     ["an unknown route", [{ ...good, route: "/nope" }], /unknown route/],
     [
       "an anchor the route does not emit",

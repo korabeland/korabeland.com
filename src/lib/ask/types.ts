@@ -9,8 +9,7 @@ export type PassageKind =
   | "experience"
   | "skills"
   | "about"
-  | "status"
-  | "llms";
+  | "status";
 
 /**
  * One retrievable unit of grounding text. `route` plus `anchor` is the
@@ -20,7 +19,7 @@ export type PassageKind =
 export interface CorpusPassage {
   /** Stable key, e.g. "project:lead-scoring#outcome:00". */
   id: string;
-  /** Site-relative path, e.g. "/work/lead-scoring" or "/llms.txt". */
+  /** Site-relative path, e.g. "/work/lead-scoring". */
   route: string;
   /** Element id the rendered page emits for this section, or "". */
   anchor: string;

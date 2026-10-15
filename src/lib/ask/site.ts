@@ -3,8 +3,6 @@
 // and assembles the corpus. The only impure part of the ask pipeline; the
 // logic it feeds is in sources.ts and corpus.ts.
 
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import { ABOUT_NARRATIVE } from "../about";
 import { listExperience } from "../experience";
 import { formatNoteDate, listPosts, readPost } from "../posts";
@@ -24,8 +22,6 @@ import {
   ANCHORS,
   aboutDocument,
   experienceDocument,
-  LLMS_ROUTE,
-  llmsDocument,
   noteDocument,
   projectDocument,
   projectLedgerDocument,
@@ -38,17 +34,9 @@ import {
   type CorpusDocument,
 } from "./types";
 
-export interface SiteCorpusOptions {
-  /** Repo root; llms.txt is read from <root>/public/llms.txt. */
-  root?: string;
-}
-
-export async function buildSiteCorpus(
-  options: SiteCorpusOptions = {},
-): Promise<CorpusArtifact> {
-  const root = options.root ?? process.cwd();
+export async function buildSiteCorpus(): Promise<CorpusArtifact> {
   const documents: CorpusDocument[] = [];
-  const routes = new Set<string>([ABOUT_ROUTE, LLMS_ROUTE]);
+  const routes = new Set<string>([ABOUT_ROUTE]);
   const anchors = new Map<string, Set<string>>([
     [
       ABOUT_ROUTE,
@@ -111,10 +99,6 @@ export async function buildSiteCorpus(
   if (skills) documents.push(skillsDocument(skills));
   documents.push(aboutDocument(ABOUT_NARRATIVE));
   documents.push(statusDocument(STATUS));
-  const llms = llmsDocument(
-    readFileSync(resolve(root, "public/llms.txt"), "utf8"),
-  );
-  documents.push(llms);
 
   const passages = passagesFromDocuments(documents, MAX_PASSAGE_CHARS);
   const rules: ValidationRules = {
@@ -123,17 +107,6 @@ export async function buildSiteCorpus(
     anchors,
   };
   assertValidCorpus(passages, rules);
-
-  // The work-authorization fact lives only in llms.txt on the public site;
-  // if it ever stops being citable the index must not ship without it.
-  const authorization = passages.find(
-    (p) => p.route === LLMS_ROUTE && p.text.includes(STATUS.authorization),
-  );
-  if (!authorization) {
-    throw new Error(
-      `ask corpus: no llms.txt passage states "${STATUS.authorization}"`,
-    );
-  }
 
   return {
     schemaVersion: CORPUS_SCHEMA_VERSION,

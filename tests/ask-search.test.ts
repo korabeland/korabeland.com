@@ -114,7 +114,7 @@ describe("search over the live corpus", () => {
     ["Where are you based?", "/about#close"],
     ["What results did the lead scoring project get?", "/work/lead-scoring"],
     ["What is Perian?", "/lab/perian"],
-    ["Do you need a visa sponsored?", "/llms.txt"],
+    ["What citizenship do you hold?", "/about#close"],
     ["Which certifications do you hold?", "/about#skills-heading"],
     ["What did you do at Plattform Education?", "/about#experience-heading"],
   ])("puts a relevant source in the top results for %s", async (q, href) => {
