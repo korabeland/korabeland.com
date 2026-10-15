@@ -70,6 +70,10 @@ describe("search over fixtures", () => {
     }
   });
 
+  it("treats inherited object names as words without synonyms", () => {
+    expect(search(index, "What is a constructor?").status).toBe("fallback");
+  });
+
   it("falls back when under half of the question's words appear together", () => {
     expect(search(index, "decile poem about cats").status).toBe("fallback");
   });

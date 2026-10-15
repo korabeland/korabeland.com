@@ -198,7 +198,11 @@ function queryGroups(query: string): TermGroup[] {
     const term = stem(token);
     if (seen.has(term)) continue;
     seen.add(term);
-    const synonyms = (SYNONYMS[token] ?? [])
+    const synonyms = (
+      Object.prototype.hasOwnProperty.call(SYNONYMS, token)
+        ? SYNONYMS[token]
+        : []
+    )
       .map((s) => stem(s.replace(/['’]/g, "")))
       .filter((s) => s !== term);
     groups.push({ term, synonyms: [...new Set(synonyms)] });
