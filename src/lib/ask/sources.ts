@@ -313,9 +313,9 @@ export function statusDocument(status: StatusInput): CorpusDocument {
 
 /**
  * The public llms.txt carries facts About does not print: work authorization
- * and employment preferences. Each section after the summary becomes one
- * section, bullets as paragraphs. The "Key Pages" list is navigation, not
- * fact, and is skipped. A file that no longer has this shape throws.
+ * and employment preferences. Introductory bullets and factual sections
+ * become paragraphs. Navigation-only link lists are skipped. A file without
+ * a summary or facts throws.
  */
 export function llmsDocument(source: string): CorpusDocument {
   const lines = source.split("\n");
