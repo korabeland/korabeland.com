@@ -72,6 +72,7 @@ function renderHit(hit: SearchHit): HTMLLIElement {
   head.append(el("span", "ask-kind", hit.kindLabel));
   const title = el("a", "ask-hit-title", hit.sectionTitle);
   title.href = hit.href;
+  title.dataset.askSourceLink = "";
   head.append(title);
   li.append(head);
 
@@ -82,13 +83,10 @@ function renderHit(hit: SearchHit): HTMLLIElement {
   }
   li.append(excerpt);
 
-  const details = el("details");
-  details.append(el("summary", undefined, "Show full passage"));
-  details.append(el("p", "ask-full", hit.text));
-  li.append(details);
-
   const source = el("p", "ask-source", "Source: ");
-  source.append(link(hit.href, hit.href));
+  const sourceLink = link(hit.href, hit.href);
+  sourceLink.dataset.askSourceLink = "";
+  source.append(sourceLink);
   li.append(source);
   return li;
 }
@@ -233,7 +231,23 @@ function wire(dialog: HTMLDialogElement): void {
     ?.addEventListener("click", () => dialog.close());
   // A click on the dimmed area outside the panel closes it.
   dialog.addEventListener("click", (event) => {
-    if (event.target === dialog) dialog.close();
+    if (event.target === dialog) {
+      dialog.close();
+      return;
+    }
+    if (!(event.target instanceof Element)) return;
+    const anchor = event.target.closest<HTMLAnchorElement>(
+      "a[data-ask-source-link]",
+    );
+    if (!anchor) return;
+    const destination = new URL(anchor.href);
+    if (
+      destination.origin === location.origin &&
+      destination.pathname === location.pathname &&
+      destination.search === location.search
+    ) {
+      dialog.close();
+    }
   });
 
   // Warm the index and show any history carried over from earlier pages.

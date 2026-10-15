@@ -61,6 +61,7 @@ describe("search over fixtures", () => {
     const outcome = search(index, "where do you live");
     expect(outcome.status).toBe("results");
     expect(outcome.hits[0].href).toBe("/about#close");
+    expect(outcome.hits[0]).not.toHaveProperty("text");
   });
 
   it("falls back for an empty question, stop words only, or unknown words", () => {

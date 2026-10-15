@@ -42,22 +42,32 @@ test("keyboard: open, search, inspect a source, close, focus returns", async ({
   await expect(dialog).toBeVisible();
   await expect(page.getByLabel("Your question")).toBeFocused();
 
-  await page.keyboard.type(QUESTION);
+  await page.keyboard.type("Where are you based?");
   await page.keyboard.press("Enter");
   const first = dialog.locator(".ask-entry").first();
-  await expect(first.locator(".ask-q")).toHaveText(QUESTION);
+  await expect(first.locator(".ask-q")).toHaveText("Where are you based?");
   await expect(first.locator(".ask-hit").first()).toBeVisible();
-  await expect(
-    first.locator("a[href^='/work/lead-scoring']").first(),
-  ).toBeVisible();
+  const titleLink = first.locator(".ask-hit-title").first();
+  await expect(titleLink).toHaveAttribute("href", "/about#close");
   await expect(dialog.getByRole("status")).toContainText("sources found");
 
-  // The full passage opens with the keyboard.
-  const summary = first.locator("summary").first();
-  await summary.focus();
+  await titleLink.focus();
   await page.keyboard.press("Enter");
-  await expect(first.locator(".ask-full").first()).toBeVisible();
+  await expect(dialog).toBeHidden();
+  await expect(page).toHaveURL(/\/about#close$/);
 
+  await trigger.focus();
+  await page.keyboard.press("Enter");
+  await expect(dialog).toBeVisible();
+  const sourceLink = dialog.locator(".ask-source a").first();
+  await sourceLink.focus();
+  await page.keyboard.press("Enter");
+  await expect(dialog).toBeHidden();
+  await expect(page).toHaveURL(/\/about#close$/);
+
+  await trigger.focus();
+  await page.keyboard.press("Enter");
+  await expect(dialog).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();
   await expect(trigger).toBeFocused();

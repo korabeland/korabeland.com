@@ -221,8 +221,6 @@ export interface SearchHit {
   kind: PassageKind;
   kindLabel: string;
   score: number;
-  /** The passage in full, for the "show full passage" disclosure. */
-  text: string;
   excerpt: ExcerptPart[];
 }
 
@@ -379,7 +377,6 @@ export function search(index: SearchIndex, query: string): SearchOutcome {
       kind: passage.kind,
       kindLabel: kindLabel(passage.kind),
       score,
-      text: passage.text,
       excerpt: buildExcerpt(passage.text, matched),
     });
     if (hits.length === MAX_HITS) break;
