@@ -14,7 +14,9 @@ is a count.
 
 - **Search.** The panel downloads `/ask-index.json` (the corrected index from
   PR 1, about 40 KB) the first time it opens and ranks passages on the device
-  with plain keyword scoring plus a small synonym table.
+  with plain keyword scoring plus a small synonym table. The index contains
+  reader-facing site pages and excludes machine-facing files such as
+  `llms.txt` and `llms-full.txt`.
 - **History.** The questions typed in a tab are kept in that tab's
   `sessionStorage`. They survive moving between pages, can be cleared with a
   button, and end with the tab's session. Results are recomputed from the index
