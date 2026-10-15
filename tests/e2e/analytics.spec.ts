@@ -135,26 +135,23 @@ test("tailored pages never load the analytics collector", async ({ page }) => {
 test("navigation still works when the analytics collector is blocked", async ({
   page,
 }) => {
-  await page.route(`${browserOrigin}/**`, async (route) => {
+  await page.route(`${ORIGIN}/**`, async (route) => {
     const requestUrl = new URL(route.request().url());
     if (requestUrl.pathname.startsWith(collectorPrefix)) {
       await route.abort();
       return;
     }
-    const response = await route.fetch({
-      url: `${ORIGIN}${requestUrl.pathname}${requestUrl.search}`,
-    });
-    await route.fulfill({ response });
+    await route.continue();
   });
 
-  await page.goto(`${browserOrigin}/about`);
+  await page.goto(`${ORIGIN}/about`);
   await expect(
     page.getByRole("heading", {
       name: "Turning ambiguous problems into systems",
     }),
   ).toBeVisible();
   await page.getByRole("link", { name: "work", exact: true }).click();
-  await expect(page).toHaveURL(`${browserOrigin}/work`);
+  await expect(page).toHaveURL(`${ORIGIN}/work`);
   await expect(
     page.getByRole("heading", { name: "work · case studies" }),
   ).toBeVisible();
