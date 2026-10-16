@@ -404,12 +404,11 @@ test("llms.txt references only routes that resolve", async ({ request }) => {
   const resp = await request.get("/llms.txt");
   expect(resp.status()).toBe(200);
   const text = await resp.text();
-  // Bullet lines like "* /work - ...". Take the path token, skip placeholder
-  // patterns ("/work/<slug>") which are illustrative, not literal routes.
-  const paths = text
-    .split("\n")
-    .map((line) => line.match(/^\*\s+(\/\S*)/)?.[1])
-    .filter((p): p is string => p !== undefined && !p.includes("<"));
+  // Markdown links like "[Work](https://korabeland.com/work)". Take the path of
+  // each same-site link; the llms.txt spec asks for real URLs, not bare paths.
+  const paths = [
+    ...text.matchAll(/\]\(https:\/\/korabeland\.com(\/[^)\s]*)?\)/g),
+  ].map((m) => m[1] ?? "/");
   expect(paths.length).toBeGreaterThan(0);
   for (const path of paths) {
     const routeResp = await request.get(path);
