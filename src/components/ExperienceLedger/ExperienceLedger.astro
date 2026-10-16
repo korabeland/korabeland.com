@@ -13,13 +13,15 @@ import StatusChip from "../StatusChip/StatusChip.astro";
 
 interface Props {
   roles: ExperienceSummary[];
+  /** Optional mono link on the section head's right (e.g. to /resume). */
+  more?: { href: string; label: string };
 }
 
-const { roles } = Astro.props;
+const { roles, more } = Astro.props;
 ---
 
 <section class="experience-section" aria-labelledby="experience-heading">
-  <SectionHead id="experience-heading" text="experience" />
+  <SectionHead id="experience-heading" text="experience" more={more} />
 
   <ol class="experience-list">
     {
