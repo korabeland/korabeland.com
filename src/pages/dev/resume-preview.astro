@@ -1,0 +1,95 @@
+---
+export const prerender = false;
+
+// Dev-only preview: renders the Resume component against fixtures so the
+// content-gated sections and the print layout are covered by e2e + axe without
+// committing placeholder content that would ship to prod. Returns 404 in
+// production; robots.txt disallows /dev/ and the sitemap filter excludes it.
+// ?empty=1 renders the no-data state.
+
+import Resume from "../../components/Resume/Resume.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import type { ExperienceSummary } from "../../lib/experience";
+import { buildResume } from "../../lib/resume";
+import type { SkillsData } from "../../lib/skills";
+
+if (import.meta.env.PROD) {
+  return new Response("Not found", { status: 404 });
+}
+
+const roles: ExperienceSummary[] = [
+  {
+    slug: "current-role",
+    company: "Current Co",
+    role: "Operations Lead",
+    location: "Melbourne",
+    startDate: "2021-02-01",
+    endDate: null,
+    current: true,
+    achievements: [
+      {
+        text: "Rebuilt triage so the team acts on evidence, not hunches.",
+        metric: { value: "30–50%", label: "less manual effort" },
+      },
+      {
+        text: "Aligned four functions before a line of code was written.",
+        metric: { value: "6", label: "stakeholders" },
+      },
+    ],
+    tags: ["operations", "evidence"],
+    testimonial: {
+      quote: "Framed the problem nobody had framed, then built the fix.",
+      attribution: "A manager",
+      sourceUrl: null,
+    },
+  },
+  {
+    slug: "prior-role",
+    company: "Prior Co",
+    role: "Marketing Manager",
+    location: "",
+    startDate: "2017-06-01",
+    endDate: "2021-01-01",
+    current: false,
+    achievements: [
+      {
+        text: "Led a channel-mix overhaul across paid search and social.",
+        metric: null,
+      },
+    ],
+    tags: ["marketing"],
+    testimonial: null,
+  },
+];
+
+const skills: SkillsData = {
+  categories: [
+    {
+      name: "Data & AI",
+      skills: ["SQL", "Python", "ML pipelines", "experiment design"],
+    },
+    {
+      name: "Operations",
+      skills: ["process design", "stakeholder alignment", "CX systems"],
+    },
+  ],
+  education: [
+    { name: "Some Degree", institution: "A University", year: "2013" },
+  ],
+  certifications: [
+    {
+      name: "Some Certification",
+      issuer: "An Institute",
+      year: "2024",
+      url: "https://example.co",
+    },
+  ],
+};
+
+const empty = Astro.url.searchParams.get("empty") === "1";
+const model = empty ? buildResume([], null) : buildResume(roles, skills);
+---
+
+<BaseLayout title="dev · resume preview" noindex={true}>
+  <Resume model={model} />
+</BaseLayout>

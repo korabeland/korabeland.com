@@ -1,0 +1,21 @@
+---
+// Resume — one printable page fed from the same data as the About page's
+// experience and skills sections (src/lib/experience.ts, src/lib/skills.ts).
+// Prerendered like the rest of the site; the print layout lives in the
+// Resume component.
+
+import Resume from "../components/Resume/Resume.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { listExperience } from "../lib/experience";
+import { buildResume } from "../lib/resume";
+import { readSkills } from "../lib/skills";
+
+const model = buildResume(await listExperience(), await readSkills());
+---
+
+<BaseLayout
+  title="resume · korab eland"
+  description="One-page resume for Korab Eland: experience, results and skills across marketing, CX and operations. Print it or save it as a PDF."
+>
+  <Resume model={model} />
+</BaseLayout>
