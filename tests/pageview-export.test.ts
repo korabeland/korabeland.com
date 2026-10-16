@@ -22,10 +22,13 @@ describe("pageview export", () => {
   });
   it("writes CSV oldest month first", () => {
     expect(
-      formatCsv([
-        { month: "2026-10", pageviews: 5 },
-        { month: "2026-09", pageviews: 7 },
-      ], "complete"),
+      formatCsv(
+        [
+          { month: "2026-10", pageviews: 5 },
+          { month: "2026-09", pageviews: 7 },
+        ],
+        "complete",
+      ),
     ).toBe("month,pageviews,status\n2026-09,7,complete\n2026-10,5,complete\n");
   });
   it("rejects a response without rows", () => {
