@@ -65,7 +65,7 @@ export const ABOUT_HIRING: readonly { label: string; value: string }[] = [
   {
     label: "Scope I have managed",
     value:
-      "Largest team: 5 people. Largest budget: $1M to $5M a year. Most recent role: Customer Experience Manager at Keypath Education, 2021 to August 2026 (ended).",
+      "Largest team: 5 people. As Marketing Manager, I managed an annual budget of $1M to $5M. As Digital Media Buyer at Plattform Education, which became Keypath, I managed about $12M a year in paid media (about $1M a month). Most recent role: Customer Experience Manager at Keypath Education, 2021 to August 2026 (ended).",
   },
   { label: "Contact", value: "Email or LinkedIn, whichever is easier." },
 ];

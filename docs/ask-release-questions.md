@@ -174,7 +174,7 @@ Each case lists: the question, what kind of answer is expected, the expected fac
 - **Question:** What did Korab achieve at Plattform Education?
 - **Expected answer:** supported answer
 - **Expected facts:**
-  - He ran all digital campaigns for a major client with a budget above $1M a month within the first year. evidence: "monthly paid media budget"
+  - As Digital Media Buyer at Plattform Education, which became Keypath, he ran all digital campaigns for a major client with about $12M a year in paid media (about $1M a month) within the first year. evidence: "about $12M a year in paid media (about $1M a month)"
   - He lifted lead-to-application conversion by 10%. evidence: "Lifted lead-to-application conversion by 10%"
 - **Forbidden claims:** any other percentage or budget figure; attributing this work to a Keypath role other than as the company Plattform later became.
 - **Sources:** `experience#plattform-digital-media-buyer:00`
@@ -404,8 +404,8 @@ Each case lists: the question, what kind of answer is expected, the expected fac
 - **Expected answer:** supported answer
 - **Expected facts:**
   - Salesforce Marketing Cloud and marketing automation. evidence: "Salesforce Marketing Cloud"
-  - Budget ownership of $1M+ a month. evidence: "budget ownership ($1M+ monthly)"
-- **Forbidden claims:** other platforms; a monthly budget above $1M+.
+  - As Marketing Manager, he managed an annual budget of $1M to $5M. evidence: "Marketing Manager budget ownership ($1M to $5M annually)"
+- **Forbidden claims:** other platforms; attributing the Marketing Manager budget to a different role or budget type.
 - **Sources:** `skills#skills:00`
 - **Critical failure:** changes the budget figure.
 - [ ] Reviewed by Korab
