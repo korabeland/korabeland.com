@@ -1,16 +1,19 @@
 #!/usr/bin/env tsx
 // Prints monthly pageview totals for korabeland.com as CSV.
 //
-// Why: the Hobby plan of Vercel Web Analytics keeps one month of data, so run
-// this on the first UTC day of each month and file the completed month. It
+// Why: the Hobby plan of Vercel Web Analytics keeps a rolling month of data, so
+// run this just after midnight UTC on the first of each month and file the
+// completed month. The row is marked "partial" if the query reaches the point
+// when the first hour has left the window. Other days are refused. The script
 // asks Vercel's API through the `vercel` CLI, which uses your login; no token
 // is stored in the repository. Usage:
-//   pnpm export:pageviews            # previous completed month, on day 1 UTC
+//   pnpm export:pageviews            # previous month, on day 1 UTC
 //   pnpm --silent export:pageviews > pageviews-2026-10.csv
 
 import { execFileSync } from "node:child_process";
 import {
   completedMonthRange,
+  coverageStatus,
   formatCsv,
   parseMonthRows,
 } from "../src/lib/pageview-export";
@@ -39,7 +42,8 @@ function main(): void {
     ],
     { encoding: "utf8", stdio: ["ignore", "pipe", "inherit"] },
   );
-  process.stdout.write(formatCsv(parseMonthRows(JSON.parse(out))));
+  const rows = parseMonthRows(JSON.parse(out));
+  process.stdout.write(formatCsv(rows, coverageStatus(new Date())));
 }
 
 try {

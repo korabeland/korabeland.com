@@ -9,6 +9,8 @@ export interface MonthRow {
   pageviews: number;
 }
 
+export type CoverageStatus = "complete" | "partial";
+
 interface RawRow {
   timestamp?: unknown;
   pageviews?: unknown;
@@ -34,22 +36,35 @@ export function parseMonthRows(response: unknown): MonthRow[] {
   });
 }
 
-export function formatCsv(rows: readonly MonthRow[]): string {
-  const lines = ["month,pageviews"];
+export function formatCsv(
+  rows: readonly MonthRow[],
+  status: CoverageStatus,
+): string {
+  const lines = ["month,pageviews,status"];
   for (const r of [...rows].sort((a, b) => (a.month < b.month ? -1 : 1))) {
-    lines.push(`${r.month},${r.pageviews}`);
+    lines.push(`${r.month},${r.pageviews},${status}`);
   }
   return `${lines.join("\n")}\n`;
 }
 
-/** The completed month still covered by Hobby's one-month reporting window. */
+/** Determine whether the one-month window still includes the prior month's first hour. */
+export function coverageStatus(now: Date): CoverageStatus {
+  return now.getUTCDate() === 1 && now.getUTCHours() === 0
+    ? "complete"
+    : "partial";
+}
+
+/**
+ * The prior month, exported on the first UTC day. The caller checks coverage
+ * after the query, because the query can cross the retention boundary.
+ */
 export function completedMonthRange(now: Date): {
   since: string;
   until: string;
 } {
   if (now.getUTCDate() !== 1) {
     throw new Error(
-      "export pageviews on the first UTC day of the month to keep the prior month in the reporting window",
+      "export pageviews on the first UTC day of the month; later, the prior month has left the one-month reporting window",
     );
   }
   return {
