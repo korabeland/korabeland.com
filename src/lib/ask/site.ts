@@ -43,6 +43,7 @@ export async function buildSiteCorpus(): Promise<CorpusArtifact> {
       new Set([
         ANCHORS.narrative,
         ANCHORS.operate,
+        ANCHORS.hiring,
         ANCHORS.close,
         ANCHORS.experience,
         ANCHORS.skills,

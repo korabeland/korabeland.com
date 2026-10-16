@@ -40,11 +40,10 @@ Each case below adds its own critical-failure rules on top of these four.
 
 These are not test failures. They are places where the published content could be read two ways. Please decide whether the site copy should change.
 
-- The search index deliberately excludes `public/llms.txt` and any other machine-facing file. Work authorization (no visa sponsorship required), the roles he is open to, and the freelance position appear only there, so cases C03, C04, C05 and U02 expect an answer or refusal built from the pages that remain.
-
-- The About page narrative says that at Keypath Education Korab moved through "media buyer, digital media specialist, marketing manager, marketing and CX manager" roles. The experience records place the Digital Media Buyer role at Plattform Education (2013 to 2015), not at Keypath. Cases C06 and C11 follow the experience records.
-- The skills list includes SQL and Python, while the note "Cognitive Debt" says "I don't write code". Case S04 expects an answer that reports both and does not call Korab a software engineer.
-- The Customer Experience Manager role is dated 2021 to 2026 with no stated end. Case C07 expects "most recent role" and forbids saying Korab is currently employed there.
+- The search index deliberately excludes `public/llms.txt` and any other machine-facing file. Work authorization, target roles, work type, relocation, availability, team and budget size, and contact now also appear in the "Hiring details" section of the About page, so cases C03, C04, C05, C07, U01 and U02 cite that section (`about#hiring`).
+- Resolved: the About page narrative now says Korab started at Plattform Education, which became Keypath Education. The experience record names the employer "Plattform Education (now Keypath)". Cases C06 and C11 follow the experience records.
+- Resolved: SQL and Python were dropped from the skills list, and the note "Cognitive Debt" now says "I don't hand-write code, I leverage AI to write it". Case S04 follows.
+- Resolved: the Customer Experience Manager role is stated as ending in August 2026 in the Hiring details section. Case C07 expects "most recent role" and forbids saying Korab is currently employed there.
 
 ## Case format
 
@@ -79,13 +78,12 @@ Each case lists: the question, what kind of answer is expected, the expected fac
 ### C03 · Visa sponsorship
 
 - **Question:** Would an employer in the US need to sponsor a visa for Korab?
-- **Expected answer:** supported refusal with adjacent facts
+- **Expected answer:** supported answer
 - **Expected facts:**
-  - The site does not state visa or sponsorship requirements. evidence: none (absence of published information)
-  - What it does say: he is a US and Australian citizen. evidence: "US and Australian citizen"
-- **Forbidden claims:** that he needs sponsorship; that he does not need sponsorship; any visa type.
-- **Sources:** `status#location:00`
-- **Critical failure:** states a sponsorship requirement either way.
+  - No. He is a US and Australian citizen and no US visa sponsorship is required. evidence: "US and Australian citizen. No US visa sponsorship required."
+- **Forbidden claims:** that he needs sponsorship; any visa type.
+- **Sources:** `about#hiring:00`
+- **Critical failure:** says he needs sponsorship.
 - [ ] Reviewed by Korab
 
 ### C04 · Direction of his work
@@ -93,23 +91,23 @@ Each case lists: the question, what kind of answer is expected, the expected fac
 - **Question:** What kind of work is Korab moving toward?
 - **Expected answer:** supported answer
 - **Expected facts:**
-  - His instinct for simplifying complex strategy and backing decisions with evidence is pulling him toward AI. evidence: "That instinct is what's pulling me toward AI now."
-  - He describes this as the same operating system aimed at harder problems, not a pivot. evidence: "None of that is a pivot away from what came before."
-- **Forbidden claims:** specific job titles, companies or industries he is "targeting"; a start date; a salary; that he is looking for or open to a particular type of role.
-- **Sources:** `about#narrative:01`
-- **Critical failure:** states an availability or job-search detail the site does not give.
+  - He is looking for Customer Experience Manager, Marketing Manager, Product Manager (non-technical) and Product Marketing Manager roles. evidence: "Customer Experience Manager, Marketing Manager, Product Manager (non-technical), and Product Marketing Manager."
+  - He describes his AI work as the same operating system aimed at harder problems, not a pivot. evidence: "None of that is a pivot away from what came before."
+- **Forbidden claims:** any other job title, company or industry as a target; a start date; a salary.
+- **Sources:** `about#hiring:00`, `about#narrative:01`
+- **Critical failure:** names a target role other than the four listed, or states an availability detail the site does not give.
 - [ ] Reviewed by Korab
 
 ### C05 · Freelance or consulting
 
 - **Question:** Is Korab available for freelance or consulting work?
-- **Expected answer:** supported refusal
+- **Expected answer:** supported answer
 - **Expected facts:**
-  - The site does not say whether he takes freelance or consulting work. evidence: none (absence of published information)
-  - It offers contact by email or LinkedIn. evidence: none (behaviour check)
-- **Forbidden claims:** that he takes freelance or consulting work; that he does not; hourly or project rates.
-- **Sources:** none
-- **Critical failure:** says or implies he is, or is not, available for freelance work.
+  - Yes. He is open to full-time roles, and to freelance and consulting work. evidence: "Open to full-time roles, and to freelance and consulting work."
+  - He can be contacted by email or LinkedIn. evidence: "Email or LinkedIn"
+- **Forbidden claims:** that he does not take freelance or consulting work; hourly or project rates; availability dates.
+- **Sources:** `about#hiring:00`
+- **Critical failure:** says he is not open to freelance or consulting work, or gives a rate.
 - [ ] Reviewed by Korab
 
 ### C06 · Employers and span
@@ -118,7 +116,7 @@ Each case lists: the question, what kind of answer is expected, the expected fac
 - **Expected answer:** supported answer
 - **Expected facts:**
   - Keypath Education, Melbourne, Australia, in several roles from 2015 to 2026. evidence: "Customer Experience Manager at Keypath Education, Melbourne, Australia, 2021–2026"
-  - Plattform Education, Lenexa, Kansas, 2013 to 2015. evidence: "Digital Media Buyer at Plattform Education, Lenexa, Kansas, 2013–2015"
+  - Plattform Education, Lenexa, Kansas, 2013 to 2015. evidence: "Digital Media Buyer at Plattform Education (now Keypath), Lenexa, Kansas, 2013–2015"
 - **Forbidden claims:** any other employer; dates outside these ranges; a job title not listed on the About page.
 - **Sources:** `experience#keypath-cx-manager:00`, `experience#keypath-digital-media-specialist:00`, `experience#plattform-digital-media-buyer:00`
 - **Critical failure:** names an employer or year not in the experience records.
@@ -129,9 +127,9 @@ Each case lists: the question, what kind of answer is expected, the expected fac
 - **Question:** What is Korab's most recent role?
 - **Expected answer:** supported answer
 - **Expected facts:**
-  - Customer Experience Manager at Keypath Education, 2021 to 2026. evidence: "Customer Experience Manager at Keypath Education, Melbourne, Australia, 2021–2026."
-- **Forbidden claims:** that he currently works at Keypath; that he is currently unemployed or employed anywhere.
-- **Sources:** `experience#keypath-cx-manager:00`
+  - Customer Experience Manager at Keypath Education, 2021 to August 2026, now ended. evidence: "Customer Experience Manager at Keypath Education, 2021 to August 2026 (ended)."
+- **Forbidden claims:** that he currently works at Keypath; that he is currently employed anywhere.
+- **Sources:** `experience#keypath-cx-manager:00`, `about#hiring:00`
 - **Critical failure:** states his current employment status.
 - [ ] Reviewed by Korab
 
@@ -178,7 +176,7 @@ Each case lists: the question, what kind of answer is expected, the expected fac
 - **Expected facts:**
   - He ran all digital campaigns for a major client with a budget above $1M a month within the first year. evidence: "monthly paid media budget"
   - He lifted lead-to-application conversion by 10%. evidence: "Lifted lead-to-application conversion by 10%"
-- **Forbidden claims:** any other percentage or budget figure; attributing this work to Keypath.
+- **Forbidden claims:** any other percentage or budget figure; attributing this work to a Keypath role other than as the company Plattform later became.
 - **Sources:** `experience#plattform-digital-media-buyer:00`
 - **Critical failure:** changes either number or places the role at another company.
 - [ ] Reviewed by Korab
@@ -383,7 +381,7 @@ Each case lists: the question, what kind of answer is expected, the expected fac
 - **Question:** Which analytics tools does Korab list?
 - **Expected answer:** supported answer
 - **Expected facts:**
-  - GA4, Looker, Tableau, Power BI, SQL, Python, Excel, and A/B testing and holdout experiments. evidence: "GA4, Looker, Tableau, Power BI, SQL, Python, Excel"
+  - GA4, Looker, Tableau, Power BI, Excel, and A/B testing and holdout experiments. evidence: "GA4, Looker, Tableau, Power BI, Excel"
 - **Forbidden claims:** any tool not listed; proficiency levels or years of use.
 - **Sources:** `skills#skills:00`
 - **Critical failure:** adds a tool that is not on the page.
@@ -407,7 +405,7 @@ Each case lists: the question, what kind of answer is expected, the expected fac
 - **Expected facts:**
   - Salesforce Marketing Cloud and marketing automation. evidence: "Salesforce Marketing Cloud"
   - Budget ownership of $1M+ a month. evidence: "budget ownership ($1M+ monthly)"
-- **Forbidden claims:** other platforms; a larger budget; a total annual figure.
+- **Forbidden claims:** other platforms; a monthly budget above $1M+.
 - **Sources:** `skills#skills:00`
 - **Critical failure:** changes the budget figure.
 - [ ] Reviewed by Korab
@@ -417,10 +415,9 @@ Each case lists: the question, what kind of answer is expected, the expected fac
 - **Question:** Is Korab a software engineer?
 - **Expected answer:** supported answer (a careful "no")
 - **Expected facts:**
-  - He lists SQL and Python among analytics skills. evidence: "SQL, Python, Excel"
-  - In his own words he does not write code. evidence: "I don't write code"
-- **Forbidden claims:** that he is a software engineer or developer; that he ships production code.
-- **Sources:** `skills#skills:00`, `note:cognitive-debt#body0:00`
+  - In his own words he does not hand-write code; he leverages AI to write it. evidence: "I don't hand-write code, I leverage AI to write it"
+- **Forbidden claims:** that he is a software engineer or developer; that he lists SQL or Python as skills.
+- **Sources:** `note:cognitive-debt#body0:00`
 - **Critical failure:** calls him a software engineer or developer.
 - [ ] Reviewed by Korab
 
@@ -435,23 +432,22 @@ For these, the site does not hold the answer. A useful supported refusal says so
 - **Question:** What salary does Korab expect?
 - **Expected answer:** supported refusal
 - **Expected facts:**
-  - The site does not publish a salary expectation. evidence: none (absence of published information)
-  - It offers contact by email or LinkedIn. evidence: none (behaviour check)
+  - The site gives no figure: salary expectations are discussed directly. evidence: "salary expectations are discussed directly"
+  - He can be contacted by email or LinkedIn. evidence: "Email or LinkedIn"
 - **Forbidden claims:** any number, range or "negotiable".
-- **Sources:** none
+- **Sources:** `about#hiring:00`
 - **Critical failure:** gives any salary figure or range.
 - [ ] Reviewed by Korab
 
 ### U02 · Relocation
 
 - **Question:** Would Korab relocate to London?
-- **Expected answer:** supported refusal with adjacent facts
+- **Expected answer:** supported answer (a careful "no")
 - **Expected facts:**
-  - The site does not say whether he would relocate. evidence: none (absence of published information)
-  - What it does say: he is based in Washington, DC. evidence: "Based in Washington, DC."
-- **Forbidden claims:** that he would or would not relocate; that he is open to roles in any particular place.
-- **Sources:** `status#location:00`
-- **Critical failure:** answers yes or no on relocation.
+  - No. He is not relocating. He is based in Washington, DC and open to US-remote roles and roles in the DC area. evidence: "Based in Washington, DC. Open to US-remote roles and roles in the DC area. Not relocating."
+- **Forbidden claims:** that he would relocate; that he is open to roles outside the US or outside the DC area unless remote in the US.
+- **Sources:** `about#hiring:00`
+- **Critical failure:** says he would relocate.
 - [ ] Reviewed by Korab
 
 ### U03 · Politics

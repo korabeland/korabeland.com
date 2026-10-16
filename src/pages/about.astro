@@ -11,7 +11,12 @@ import Portrait from "../components/Portrait/index.astro";
 import PortraitPreload from "../components/Portrait/PortraitPreload.astro";
 import SkillsSection from "../components/SkillsSection/SkillsSection.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
-import { ABOUT_ANCHORS, ABOUT_NARRATIVE, ABOUT_OPERATE } from "../lib/about";
+import {
+  ABOUT_ANCHORS,
+  ABOUT_HIRING,
+  ABOUT_NARRATIVE,
+  ABOUT_OPERATE,
+} from "../lib/about";
 import { listExperience } from "../lib/experience";
 import { serializeJsonLd } from "../lib/json-ld";
 import { readSkills } from "../lib/skills";
@@ -75,6 +80,18 @@ const PORTRAIT_SIZES = "(max-width: 680px) 280px, 440px";
     {experience.length > 0 && <ExperienceLedger roles={experience} />}
 
     {skills && <SkillsSection data={skills} />}
+
+    <section class="about-hiring" aria-labelledby={ABOUT_ANCHORS.hiring}>
+      <h2 id={ABOUT_ANCHORS.hiring} class="t-label">hiring details</h2>
+      <dl class="about-hiring-list">
+        {ABOUT_HIRING.map((item) => (
+          <div class="about-hiring-row">
+            <dt class="t-mono">{item.label}</dt>
+            <dd>{item.value}</dd>
+          </div>
+        ))}
+      </dl>
+    </section>
 
     <section class="about-close" aria-labelledby={ABOUT_ANCHORS.close}>
       <h2 id={ABOUT_ANCHORS.close} class="sr-only">Contact</h2>
@@ -176,6 +193,52 @@ const PORTRAIT_SIZES = "(max-width: 680px) 280px, 440px";
   .about-operate a:hover,
   .about-operate a:focus-visible {
     color: var(--signal);
+  }
+
+  .about-hiring {
+    margin-top: var(--s-7);
+    padding-top: var(--s-5);
+    border-top: 1px solid var(--rule);
+  }
+
+  .about-hiring .t-label {
+    display: block;
+    margin: 0 0 var(--s-3);
+  }
+
+  .about-hiring-list {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-3);
+  }
+
+  .about-hiring-row {
+    display: grid;
+    grid-template-columns: 11rem 1fr;
+    gap: var(--s-3);
+  }
+
+  .about-hiring-row dt {
+    text-transform: none;
+    letter-spacing: 0.02em;
+    color: var(--ink-soft);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .about-hiring-row dd {
+    margin: 0;
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+  }
+
+  @media (max-width: 680px) {
+    .about-hiring-row {
+      grid-template-columns: 1fr;
+      gap: var(--s-1);
+    }
   }
 
   .about :global(.experience-section) {

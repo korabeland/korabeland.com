@@ -230,7 +230,11 @@ describe("skillsDocument", () => {
 describe("aboutDocument and statusDocument", () => {
   it("cites the About page's real section ids", () => {
     const doc = aboutDocument(["One.", "Two."]);
-    expect(doc.sections.map((s) => s.anchor)).toEqual(["narrative", "operate"]);
+    expect(doc.sections.map((s) => s.anchor)).toEqual([
+      "narrative",
+      "operate",
+      "hiring",
+    ]);
     expect(doc.sections[0].paragraphs).toEqual(["One.", "Two."]);
   });
 

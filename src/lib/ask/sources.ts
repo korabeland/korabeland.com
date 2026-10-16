@@ -3,7 +3,7 @@
 // reading through the site's readers. Each document mirrors what its page
 // prints, and cites only routes and element ids that page emits.
 
-import { ABOUT_ANCHORS, aboutOperateText } from "../about";
+import { ABOUT_ANCHORS, ABOUT_HIRING, aboutOperateText } from "../about";
 import type { ExperienceSummary } from "../experience";
 import { formatExperiencePeriod } from "../experience";
 import type { ProjectSummary } from "../projects";
@@ -283,6 +283,14 @@ export function aboutDocument(narrative: readonly string[]): CorpusDocument {
         heading: "How I operate",
         anchor: ANCHORS.operate,
         paragraphs: [clean(aboutOperateText())],
+      },
+      {
+        key: "hiring",
+        heading: "Hiring details",
+        anchor: ANCHORS.hiring,
+        paragraphs: ABOUT_HIRING.map((item) =>
+          clean(`${item.label}: ${item.value}`),
+        ),
       },
     ],
   };

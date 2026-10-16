@@ -85,6 +85,6 @@ test("About separates education from certificates and displays the current base"
     "washington dc · us and australian citizen",
   );
   await expect(page.locator(".about-body")).toContainText(
-    "At Keypath Education I spent over a decade moving through that arc: media buyer, digital media specialist, marketing manager, marketing and CX manager, and finally CX manager for the Australian portfolio.",
+    "I spent over a decade moving through that arc, first at Plattform Education, which became Keypath Education, and then at Keypath: media buyer, digital media specialist, marketing manager, marketing and CX manager, and finally CX manager for the Australian portfolio.",
   );
 });
