@@ -36,7 +36,6 @@ The PR body read "Do NOT merge — Korab reviews first," restated as a standing 
 ## Open — deferred to Korab, not decided
 
 - **Day/night theme toggle.** The day-shift OKLCH tokens still exist in `tokens.css`, but nothing sets `data-time="day"` anywhere — no toggle, no `prefers-color-scheme` mapping. Decide: build the toggle, or delete the dead tokens and commit to dark-only.
-- **Production-build smoke test.** Devin flagged the same tradeoff already surfaced when fix #8 was made: Playwright now exercises `pnpm dev`, not the production Vercel build. A small smoke test against the real build would close that gap — not urgent, not yet actioned.
 
 ## Found, not resolved
 

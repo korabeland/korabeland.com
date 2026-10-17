@@ -60,11 +60,8 @@ jobs:
       # Chromatic (below) publishes the non-blocking visual record.
       - run: pnpm test:visual
       - run: pnpm run lighthouse
-      # Production-build smoke: everything above runs against `pnpm dev`, so
-      # the serverless bundle Vercel actually deploys was never exercised
-      # before merge. This step drives the built function (emitted by the
-      # lighthouse step's `pnpm build` just above — keep the ordering) and
-      # asserts SSR semantics from the production bundle.
+      # Re-run the production handler smoke as a dedicated CI step after
+      # Lighthouse's `pnpm build`, which also runs this check in postbuild.
       - run: pnpm smoke:production
       # Hand the Playwright-generated page archives to the `chromatic` job
       # below. test:visual produced them via @chromatic-com/playwright's
