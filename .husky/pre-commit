@@ -1,2 +1,3 @@
 # Stale-base guard runs first: a block means `pnpm verify` never starts.
-bash scripts/check-base-freshness.sh && pnpm verify
+# The artifact guard rejects newly staged logs, lab captures and CLI profiles.
+bash scripts/check-base-freshness.sh && bash scripts/check-new-artifacts.sh --staged && pnpm verify
