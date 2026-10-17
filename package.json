@@ -11,7 +11,7 @@
     "dev": "astro dev",
     "prebuild": "pnpm gen:trail-register && pnpm gen:shift-log && pnpm gen:hero-variants && pnpm gen:eye-rig && pnpm gen:corpus-index",
     "build": "astro build",
-    "postbuild": "tsx scripts/patch-vercel-config.ts",
+    "postbuild": "tsx scripts/patch-vercel-config.ts && tsx scripts/check-built-site.ts",
     "preview": "astro preview",
     "sync": "astro sync",
     "gen:trail-register": "tsx scripts/gen-trail-register.ts",
@@ -25,7 +25,7 @@
     "test": "vitest run",
     "test:visual": "playwright test",
     "reseed:visual": "node scripts/reseed-visual.mjs",
-    "smoke:production": "tsx scripts/smoke-production-build.ts && tsx scripts/check-built-site.ts",
+    "smoke:production": "tsx scripts/smoke-production-build.ts",
     "lighthouse": "pnpm build && lhci autorun && lhci autorun --config=.lighthouserc.mobile.json",
     "verify:all": "pnpm verify && pnpm test && pnpm test:visual && pnpm run lighthouse && pnpm smoke:production"
   },
