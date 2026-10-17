@@ -52,6 +52,11 @@ jobs:
           # lets `playwright install` skip the ~1-2 min browser download.
           key: ms-playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
       - run: pnpm exec playwright install --with-deps chromium
+      # Reject newly added logs, lab capture dirs and CLI profiles (added paths
+      # only, relative to the PR base). Inside verify-all so it gates merge.
+      - name: New-artifact guard
+        if: github.event_name == 'pull_request'
+        run: bash scripts/check-new-artifacts.sh --base "origin/${{ github.base_ref }}"
       - run: pnpm verify
       - run: pnpm test
       # Runs the screenshot project too, but only so Chromatic archives the

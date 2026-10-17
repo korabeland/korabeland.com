@@ -99,3 +99,7 @@ public/**/*.gen.*
 # No seed fallback, unlike the trail-register and shift-log data: a failed
 # generation must fail the build rather than ship a stale index.
 src/content/ask-index/corpus.json
+
+# Scratch space for generated output (logs, captures, CLI profiles). The
+# new-artifact guard (scripts/check-new-artifacts.sh) points agents here.
+.scratch/
