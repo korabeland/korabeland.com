@@ -230,8 +230,21 @@ describe("skillsDocument", () => {
 describe("aboutDocument and statusDocument", () => {
   it("cites the About page's real section ids", () => {
     const doc = aboutDocument(["One.", "Two."]);
-    expect(doc.sections.map((s) => s.anchor)).toEqual(["narrative", "operate"]);
+    expect(doc.sections.map((s) => s.anchor)).toEqual([
+      "narrative",
+      "operate",
+      "hiring",
+    ]);
     expect(doc.sections[0].paragraphs).toEqual(["One.", "Two."]);
+  });
+
+  it("indexes team and role-specific budgets as rendered on About", () => {
+    const hiring = aboutDocument([]).sections.find(
+      (section) => section.key === "hiring",
+    );
+    expect(hiring?.paragraphs).toContain(
+      "Scope I have managed: Largest team: 5 people. As Marketing Manager, I managed an annual budget of $1M to $5M. As Digital Media Buyer at Plattform Education, which became Keypath, I managed about $12M a year in paid media (about $1M a month). Most recent role: Customer Experience Manager at Keypath Education, 2021 to August 2026 (ended).",
+    );
   });
 
   it("states location and citizenship without a relocation clause", () => {

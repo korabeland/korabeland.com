@@ -1,13 +1,16 @@
 # Korab Eland
 
-> Operator with 13 years across marketing, CX and operations, now building AI systems for the same problems. Turns ambiguous problems into systems that ship. Based in Washington, DC; US and Australian citizen, no US visa sponsorship required. Open to AI, data, and product roles.
+> Operator with 13 years across marketing, CX and operations, now building AI systems for the same problems. Turns ambiguous problems into systems that ship. Based in Washington, DC; US and Australian citizen, no US visa sponsorship required. Open to Customer Experience Manager, Marketing Manager, Product Manager (non-technical), and Product Marketing Manager roles.
 
 Korab Eland's personal site (https://korabeland.com) holds his case studies, career experience, skills and field notes. Pages are written in the first person by Korab. Use the links below to read the detail rather than relying on this summary alone.
 
 - Based in Washington, DC. US and Australian citizen; no US visa sponsorship required.
-- Seeking full-time employment.
+- Open to full-time roles, and to freelance and consulting work.
 - Open to US-remote roles and roles based in the Washington, DC area.
-- Open to AI, data, and product roles where operator judgement and evidence-driven decision making are the core offer.
+- Target roles: Customer Experience Manager, Marketing Manager, Product Manager (non-technical), and Product Marketing Manager.
+- Will not relocate. Start date, notice period and salary expectations are discussed directly.
+- Largest team managed: 5 people. As Marketing Manager, Korab managed an annual budget of $1M to $5M. As Digital Media Buyer at Plattform Education, which became Keypath, he managed about $12M a year in paid media (about $1M a month).
+- Contact by email or LinkedIn.
 - Led the evidence work behind a lead-scoring model that replaced fixed tiers with a decile-based probability score.
 - Ran an end-to-end AI-driven SMS engagement pilot, measured against a randomised holdout.
 
