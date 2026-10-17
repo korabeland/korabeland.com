@@ -17,6 +17,7 @@ The home page is the console: a hero readout, then a set of ledgers that fill in
 - **Lab (`/lab`)** — personal AI code experiments, kept in a separate band so they never mix with the client work.
 - **Notes (`/notes`)** — field notes and longer-form writing.
 - **About (`/about`)** — the career narrative across thirteen years in marketing, CX and operations, hiring details, career experience with achievement highlights and linked recommendations, skills, education and linked certifications.
+- **Resume (`/resume`)** — a one-page view of experience and skills, with a print layout for saving as a PDF.
 - **Ask about my work** — an optional search section on About that finds excerpts from the site's published pages and links to their sources. Search runs in the browser; it does not generate answers.
 - **Colophon (`/colophon`)** — how the site was built, and its own git build log: every commit, in the open.
 
