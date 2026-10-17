@@ -72,7 +72,7 @@ Common tasks:
 | Command | What it does |
 |---|---|
 | `pnpm dev` | Local dev server (`astro dev`) |
-| `pnpm build` | Production build (runs the generators first) |
+| `pnpm build` | Production build (runs generators, then checks emitted site output and the Vercel handler) |
 | `pnpm verify` | Biome + `tsc --noEmit` + `astro check` |
 | `pnpm test` | Vitest (unit / logic) |
 | `pnpm test:visual` | Playwright visual + E2E + axe |

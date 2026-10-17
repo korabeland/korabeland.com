@@ -306,7 +306,6 @@ R-IDs trace to the origin document (R1–R15). All fifteen are in scope; none na
 | Content dependency: real roles, metrics, certs must come from Korab | Schema, readers, and section components land regardless and are covered by unit tests using test-only fixtures. New sections conditionally render (empty collection → section absent, homepage unchanged), so shipping the code without content neither breaks CI nor puts placeholder content live. Launch of real content is a content task, not a code blocker |
 | Disclosure gate: quantified work history is the riskiest content class on the site | Apply the console plan's [disclosure rules](2026-07-03-console-mvp.md#disclosure-rules-hard-constraints--audit-before-every-commit-touching-content) |
 | Visual-baseline churn (homepage + about change in 3 units) | Regenerate locally once per unit, commit; Chromatic owns cross-env diffs; reduced-motion emulation keeps screenshots deterministic |
-| CI validates dev SSR, not prod build (known gap, console review fix #8) | U6 verification includes one manual local `pnpm build`; the deferred prod smoke test remains open and is not expanded here |
 | Orchestrator-only files (`keystatic.config.ts`, `astro.config.mjs`) touched by U1/U6 | This is a single-session solo build — edits stay in the main session, no parallel subagent writes |
 
 ---

@@ -1,6 +1,7 @@
 #!/usr/bin/env tsx
-// Post-build checks on the prerendered output in dist/client. Runs after
-// `pnpm build` as part of `pnpm smoke:production`.
+// Post-build checks on the prerendered output in dist/client. Runs as part of
+// `pnpm build` (package.json `postbuild`), so a failure fails the build that
+// Vercel and CI both run.
 //
 //   1. Every Ask the Operator citation opens a route that was built and lands
 //      on an element id that page really contains.
