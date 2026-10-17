@@ -50,9 +50,9 @@ export const RESUME_CONTACT: readonly ResumeContactLink[] = [
     href: "https://github.com/korabeland",
   },
   {
-    label: "Site",
-    display: "korabeland.com",
-    href: "https://korabeland.com",
+    label: "X",
+    display: "x.com/korabeland",
+    href: "https://x.com/korabeland",
   },
 ];
 

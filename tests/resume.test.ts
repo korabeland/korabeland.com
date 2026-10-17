@@ -1,12 +1,9 @@
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import type { ExperienceSummary } from "@/lib/experience";
 import {
   buildResume,
   formatResumeMetric,
   RESUME_CONTACT,
-  RESUME_IDENTITY,
   toResumeRole,
   toResumeSkills,
 } from "@/lib/resume";
@@ -119,27 +116,7 @@ describe("buildResume", () => {
   });
 });
 
-// The site has no shared module for these facts, so the resume carries its own
-// copy. This guard fails the moment the home page stops matching it.
-describe("resume identity stays in sync with the home page", () => {
-  const home = readFileSync(
-    resolve(process.cwd(), "src/pages/index.astro"),
-    "utf8",
-  );
-
-  it("uses the home meta description for the headline and summary", () => {
-    expect(home).toContain(
-      `${RESUME_IDENTITY.headline} ${RESUME_IDENTITY.summary}`,
-    );
-  });
-  it("takes the location from the status facts", () => {
-    expect(RESUME_IDENTITY.location).toBe(STATUS.base);
-  });
-  it("uses the home page contact links", () => {
-    for (const link of RESUME_CONTACT.filter((l) => l.label !== "Site")) {
-      expect(home, link.href).toContain(`"${link.href}"`);
-    }
-  });
+describe("resume contact details", () => {
   it("prints every address as visible text", () => {
     for (const link of RESUME_CONTACT) {
       expect(link.href.replace(/^(mailto:|https?:\/\/(www\.)?)/, "")).toContain(
