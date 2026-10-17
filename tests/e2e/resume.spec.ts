@@ -42,6 +42,38 @@ test("/resume renders the authored experience and skills", async ({ page }) => {
   ).toBeVisible();
 });
 
+test("resume identity and contacts match the rendered home page", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const homeName = (await page.locator(".chrome-brand-text").innerText())
+    .trim()
+    .toLocaleLowerCase();
+  const homeHeadline = await page.locator("#hero-heading").evaluate((heading) => {
+    const visible = heading.cloneNode(true) as HTMLElement;
+    visible.querySelectorAll(".sr-only").forEach((node) => node.remove());
+    return visible.innerText.replace(/\s+/g, " ").trim();
+  });
+  const homeContacts = await page.locator(".hero-social-link").evaluateAll((links) =>
+    links.map((link) => (link as HTMLAnchorElement).href).sort(),
+  );
+
+  await page.goto("/resume");
+  const resumeName = (await page.locator(".resume-name").innerText())
+    .trim()
+    .toLocaleLowerCase();
+  const resumeHeadline = await page.locator(".resume-headline").innerText();
+  const resumeContacts = await page
+    .locator(".resume-contact a")
+    .evaluateAll((links) =>
+      links.map((link) => (link as HTMLAnchorElement).href).sort(),
+    );
+
+  expect(resumeName).toBe(homeName);
+  expect(resumeHeadline).toBe(homeHeadline);
+  expect(resumeContacts).toEqual(homeContacts);
+});
+
 test("About links to /resume from the experience section", async ({ page }) => {
   await page.goto("/about");
   const link = page.locator(".experience-section a[href='/resume']");
