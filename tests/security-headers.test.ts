@@ -191,9 +191,17 @@ describe("Content-Security-Policy source config (astro.config.mjs)", () => {
     ]);
   });
 
-  it("registers the emitted CSP validation as the postbuild command", () => {
+  it("runs emitted-output validation after the CSP patch during postbuild", () => {
     const pkg = JSON.parse(readFileSync(resolve(ROOT, "package.json"), "utf8"));
-    expect(pkg.scripts.postbuild).toBe("tsx scripts/patch-vercel-config.ts");
+    const postbuildStages = pkg.scripts.postbuild
+      .split("&&")
+      .map((stage: string) => stage.trim().split(/\s+/));
+
+    expect(postbuildStages).toEqual([
+      ["tsx", "scripts/patch-vercel-config.ts"],
+      ["tsx", "scripts/check-built-site.ts"],
+      ["tsx", "scripts/smoke-production-build.ts"],
+    ]);
   });
 });
 
