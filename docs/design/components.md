@@ -14,7 +14,7 @@ truth:
 Change design decisions in `../../DESIGN.md` (the repo-root spec) first, then
 regenerate `tokens.css`, then update the affected component and this doc. This
 doc is descriptive: it records what the components in `src/components/` actually
-do as of 2026-07-11. If code and doc disagree, the code is right and this file is
+do as of 2026-10-17. If code and doc disagree, the code is right and this file is
 stale — fix it.
 
 ---

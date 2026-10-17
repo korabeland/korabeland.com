@@ -24,7 +24,7 @@ Statuses used after triage: `backlog` -> `next` | `parked` | `dropped`.
 | LinkedIn tune-up draft (headline, About, first post, Featured) | `Personal_Brand/content/drafts/linkedin-tuneup.md` | Korab reviews and applies | backlog |
 | Remaining case-study write-ups from the shortlist (6 candidates incl. Keypath enterprise AI, Relocation OS, Life-Project OS) | `Personal_Brand/docs/plans/2026-07-03-business-ideas-shortlist.md` | Triage against the four already live on /work; Keypath one needs confidentiality clearance first | backlog |
 
-## 3. Site features (documented, unbuilt)
+## 3. Site features
 
 | Item | Source | Next step | Status |
 |---|---|---|---|
