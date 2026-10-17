@@ -49,14 +49,20 @@ test("resume identity and contacts match the rendered home page", async ({
   const homeName = (await page.locator(".chrome-brand-text").innerText())
     .trim()
     .toLocaleLowerCase();
-  const homeHeadline = await page.locator("#hero-heading").evaluate((heading) => {
-    const visible = heading.cloneNode(true) as HTMLElement;
-    visible.querySelectorAll(".sr-only").forEach((node) => node.remove());
-    return visible.innerText.replace(/\s+/g, " ").trim();
-  });
-  const homeContacts = await page.locator(".hero-social-link").evaluateAll((links) =>
-    links.map((link) => (link as HTMLAnchorElement).href).sort(),
-  );
+  const homeHeadline = await page
+    .locator("#hero-heading")
+    .evaluate((heading) => {
+      const visible = heading.cloneNode(true) as HTMLElement;
+      visible.querySelectorAll(".sr-only").forEach((node) => {
+        node.remove();
+      });
+      return visible.innerText.replace(/\s+/g, " ").trim();
+    });
+  const homeContacts = await page
+    .locator(".hero-social-link")
+    .evaluateAll((links) =>
+      links.map((link) => (link as HTMLAnchorElement).href).sort(),
+    );
 
   await page.goto("/resume");
   const resumeName = (await page.locator(".resume-name").innerText())

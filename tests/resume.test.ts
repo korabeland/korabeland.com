@@ -8,7 +8,6 @@ import {
   toResumeSkills,
 } from "@/lib/resume";
 import type { SkillsData } from "@/lib/skills";
-import { STATUS } from "@/lib/status";
 
 function role(overrides: Partial<ExperienceSummary> = {}): ExperienceSummary {
   return {
