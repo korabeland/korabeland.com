@@ -28,6 +28,54 @@ test("colophon features a latest commit with a valid datetime and earlier rows",
   ).toBeGreaterThan(0);
 });
 
+test("colophon renders the 'Built with AI, decided by me' section with live stats, sources, and no em dashes", async ({
+  page,
+}) => {
+  await page.goto("/colophon");
+
+  const section = page.locator("section.ai-split");
+  await expect(section).toHaveCount(1);
+  await expect(section.locator("h2#built-with-ai")).toHaveText(
+    "Built with AI, decided by me",
+  );
+
+  // Explicit division of work: agents build vs. I decide.
+  const splitLabels = section.locator(".split-card-label");
+  await expect(splitLabels).toHaveText(["agents build", "I decide"]);
+
+  // Three live repository stat cards: changes shipped, changes sent back, models used.
+  const shipped = section.locator('.ai-stat-card[data-stat="shipped"]');
+  const returned = section.locator('.ai-stat-card[data-stat="returned"]');
+  const models = section.locator('.ai-stat-card[data-stat="models"]');
+
+  await expect(shipped.locator(".ai-stat-title")).toHaveText("changes shipped");
+  await expect(shipped.locator(".ai-stat-value")).toContainText(
+    /\d+ merged pull requests/,
+  );
+  await expect(shipped.locator(".ai-stat-meta")).toContainText("Date range:");
+  await expect(shipped.locator(".ai-stat-meta")).toContainText("Source:");
+
+  await expect(returned.locator(".ai-stat-title")).toHaveText(
+    "changes sent back",
+  );
+  await expect(returned.locator(".ai-stat-value")).toContainText(
+    /\d+ closed without merging/,
+  );
+  await expect(returned.locator(".ai-stat-meta")).toContainText("Date range:");
+  await expect(returned.locator(".ai-stat-meta")).toContainText("Source:");
+
+  await expect(models.locator(".ai-stat-title")).toHaveText("models used");
+  await expect(models.locator(".ai-stat-value")).toContainText(
+    /\d+ of \d+ commits name a model in git/,
+  );
+  await expect(models.locator(".ai-stat-meta")).toContainText("Date range:");
+  await expect(models.locator(".ai-stat-meta")).toContainText("Source:");
+
+  // Copy rule: no em dashes anywhere in the section.
+  const textContent = (await section.textContent()) ?? "";
+  expect(textContent).not.toContain("\u2014");
+});
+
 test("hero social row links to X, LinkedIn, GitHub, and email with aria-labels", async ({
   page,
 }) => {

@@ -2,6 +2,13 @@
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import BaseLayout from "../layouts/BaseLayout.astro";
+import type { ColophonStatsData } from "../lib/colophon-stats";
+import {
+  formatHumanDate,
+  formatHumanDateRange,
+  isValidColophonStats,
+  meterSegments,
+} from "../lib/colophon-stats";
 import { serializeJsonLd } from "../lib/json-ld";
 
 const trailRegisterRoot = resolve(process.cwd(), "src/content/trail-register");
@@ -41,6 +48,25 @@ function loadCommits(): CommitEntry[] {
   return [];
 }
 
+function loadColophonStats(): ColophonStatsData | null {
+  const candidates = import.meta.env.PROD
+    ? ["stats.json", "stats.seed.json"]
+    : ["stats.seed.json"];
+  for (const name of candidates) {
+    const file = resolve(trailRegisterRoot, name);
+    if (!existsSync(file)) continue;
+    try {
+      const raw: unknown = JSON.parse(readFileSync(file, "utf8"));
+      if (isValidColophonStats(raw)) {
+        return raw;
+      }
+    } catch {
+      // fall through to the next candidate
+    }
+  }
+  return null;
+}
+
 function formatCommitDate(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
@@ -69,6 +95,20 @@ function relativeTime(iso: string): string {
 
 const commits = loadCommits().slice(0, 14);
 const [featured, ...rest] = commits;
+const stats = loadColophonStats();
+
+const prMeter = stats
+  ? meterSegments(
+      stats.pullRequests.mergedCount,
+      stats.pullRequests.closedUnmergedCount,
+    )
+  : null;
+const modelMeter = stats
+  ? meterSegments(
+      stats.commits.modelTrailerCommits,
+      stats.commits.totalCommits - stats.commits.modelTrailerCommits,
+    )
+  : null;
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -93,8 +133,8 @@ const tools: { label: string; note: string }[] = [
   { label: "Keystatic", note: "local-git-backed CMS for long-form posts" },
   { label: "Vercel", note: "hosting, preview deploys, edge functions" },
   {
-    label: "Claude Code + a small team of subagents",
-    note: "the build crew running this site",
+    label: "firstmate + Claude, Codex, and Gemini agents",
+    note: "the supervised agent crew building this site",
   },
 ];
 ---
@@ -114,6 +154,172 @@ const tools: { label: string; note: string }[] = [
         {" "}<a href="/about">about</a>.
       </p>
     </header>
+
+    {stats && prMeter && modelMeter && (
+      <section aria-labelledby="built-with-ai" class="ai-split">
+        <h2 id="built-with-ai">Built with AI, decided by me</h2>
+        <p class="ai-split-lede">
+          Agents write every change to this site. I make every request, design
+          pick, and merge call.
+        </p>
+        <p>
+          A supervising agent, my first mate (running on the open-source{" "}
+          <a href="https://github.com/kunchenguid/firstmate">firstmate</a>{" "}
+          supervisor), is my single point of contact. It never edits the site
+          itself. When I state what I want in plain English, it writes a task
+          brief, picks a worker model, and starts that worker in an isolated
+          copy of the repository so parallel jobs cannot collide. Each worker
+          runs its change through <code>no-mistakes</code>: a model from a
+          different family reviews the diff before type checks, unit tests,
+          Playwright browser tests, Lighthouse performance budgets, and a
+          production smoke check run. Clear review findings get fixed in the
+          pipeline; ambiguous product or design decisions come back to me as a
+          question. No agent can merge to <code>main</code> on its own.
+        </p>
+
+        <div
+          class="split-grid"
+          role="group"
+          aria-label="Division of work between agents and Korab"
+        >
+          <div class="split-card">
+            <p class="t-label split-card-label">agents build</p>
+            <ul class="split-list">
+              <li>Write code, styles, and tests in an isolated repo copy</li>
+              <li>Review every diff with a model from a different family</li>
+              <li>Fix lint, test, accessibility, and Lighthouse findings</li>
+              <li>Open the pull request and attach preview screenshots</li>
+            </ul>
+          </div>
+          <div class="split-card split-card--decider">
+            <p class="t-label split-card-label">I decide</p>
+            <ul class="split-list">
+              <li>State what to build and why in plain English</li>
+              <li>Set the design rules, voice, and scope boundaries</li>
+              <li>Answer product and design questions surfaced by review</li>
+              <li>Inspect the preview and approve or reject every merge</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="ai-stats" role="group" aria-label="Live repository numbers">
+          <div class="ai-stat-card" data-stat="shipped">
+            <div class="ai-stat-head">
+              <span class="t-label ai-stat-title">changes shipped</span>
+              <span class="t-mono ai-stat-value ai-stat-value--shipped">
+                {stats.pullRequests.mergedCount} merged pull requests
+              </span>
+            </div>
+            <svg
+              class="ai-meter-svg"
+              viewBox="0 0 1000 8"
+              preserveAspectRatio="none"
+              aria-hidden="true"
+            >
+              <rect
+                class="ai-meter-shipped"
+                x="0"
+                y="0"
+                width={prMeter.primaryWidth}
+                height="8"
+              />
+              <rect
+                class="ai-meter-returned"
+                x={prMeter.secondaryX}
+                y="0"
+                width={prMeter.secondaryWidth}
+                height="8"
+              />
+            </svg>
+            <p class="t-mono small ai-meter-caption">
+              {stats.pullRequests.mergedCount} merged ({prMeter.primaryPercent}%) · {stats.pullRequests.closedUnmergedCount} closed unmerged · {stats.commits.totalCommits} commits on main
+            </p>
+            <p class="ai-stat-meta">
+              <strong>Date range:</strong>{" "}
+              {formatHumanDateRange(stats.pullRequests.mergedRange)} for pull
+              requests ({formatHumanDateRange(stats.commits.commitRange)} for
+              commits on <code>main</code>).{" "}
+              <strong>Source:</strong> public GitHub pull requests on{" "}
+              <code>korabeland/korabeland.com</code> and <code>git log</code>,
+              recomputed at each build.
+            </p>
+          </div>
+
+          <div class="ai-stat-card" data-stat="returned">
+            <div class="ai-stat-head">
+              <span class="t-label ai-stat-title">changes sent back</span>
+              <span class="t-mono ai-stat-value ai-stat-value--returned">
+                {stats.pullRequests.closedUnmergedCount} closed without merging
+              </span>
+            </div>
+            <p class="t-mono small ai-meter-caption">
+              {stats.commits.noMistakesRounds} automated review and CI fix rounds across {stats.commits.noMistakesCommits} merged pull requests ({formatHumanDateRange(stats.commits.recentRange)})
+            </p>
+            <p class="ai-stat-meta">
+              <strong>Date range:</strong>{" "}
+              {formatHumanDateRange(stats.pullRequests.mergedRange)} (closed
+              between{" "}
+              {formatHumanDateRange(stats.pullRequests.closedUnmergedRange)}).{" "}
+              <strong>Source:</strong> public GitHub pull requests closed with{" "}
+              <code>merged_at: null</code> (four replaced by a clean rebuild on
+              a new branch, one closed after a CI check probe), plus{" "}
+              <code>no-mistakes</code> fix commits in <code>git log</code>.
+              Rework and direction calls I make inside a branch before merge
+              are not recorded as separate events in the public repo.
+            </p>
+          </div>
+
+          <div class="ai-stat-card" data-stat="models">
+            <div class="ai-stat-head">
+              <span class="t-label ai-stat-title">models used</span>
+              <span class="t-mono ai-stat-value">
+                {stats.commits.modelTrailerCommits} of {stats.commits.totalCommits} commits name a model in git
+              </span>
+            </div>
+            <svg
+              class="ai-meter-svg"
+              viewBox="0 0 1000 8"
+              preserveAspectRatio="none"
+              aria-hidden="true"
+            >
+              <rect
+                class="ai-meter-signal"
+                x="0"
+                y="0"
+                width={modelMeter.primaryWidth}
+                height="8"
+              />
+              <rect
+                class="ai-meter-untagged"
+                x={modelMeter.secondaryX}
+                y="0"
+                width={modelMeter.secondaryWidth}
+                height="8"
+              />
+            </svg>
+            <p class="t-mono small ai-meter-caption">
+              {stats.commits.modelTrailerCommits} commits with a Claude trailer ({modelMeter.primaryPercent}%) · {stats.commits.unattributedRecentCommits} commits since {formatHumanDate(stats.commits.recentRange.startDate)} with no model tag in git
+            </p>
+            <p class="ai-stat-meta">
+              <strong>Date range:</strong>{" "}
+              {formatHumanDateRange(stats.commits.modelTrailerRange)} for git
+              model trailers; {formatHumanDateRange(stats.commits.recentRange)}{" "}
+              for the current multi-model crew.{" "}
+              <strong>Source:</strong> <code>Co-authored-by</code> trailers in{" "}
+              <code>git log</code> and review logs in{" "}
+              <code>docs/reviews/</code>. Direct Claude Code commits through
+              August 2026 stamped a Claude Opus or Sonnet trailer into git, and
+              15 summer branches committed OpenAI Codex review logs. Since
+              October 2026, the first mate routes work across Anthropic Claude
+              (Opus, Sonnet, Haiku), OpenAI Codex, and Google Gemini (Argon),
+              with cross-family review, and does not write a model tag into
+              commits or pull requests. The public repo does not record a
+              per-model count for those recent changes.
+            </p>
+          </div>
+        </div>
+      </section>
+    )}
 
     {commits.length > 0 && (
       <section aria-labelledby="build-log" class="build-log">
@@ -196,6 +402,152 @@ const tools: { label: string; note: string }[] = [
 
   .colophon .lede {
     margin: 0 0 var(--s-5);
+  }
+
+  /* ─── Built with AI, decided by me ───────────────────────────────────── */
+
+  .ai-split-lede {
+    margin: 0 0 var(--s-3);
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  .split-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--s-4);
+    margin: var(--s-5) 0;
+  }
+
+  .split-card {
+    border: 1px solid var(--rule);
+    background: var(--paper-2);
+    padding: var(--s-4);
+  }
+
+  .split-card--decider {
+    border-left: 2px solid var(--signal);
+  }
+
+  .ai-split .split-card-label {
+    margin: 0 0 var(--s-3);
+    color: var(--ink);
+  }
+
+  .split-card--decider .split-card-label {
+    color: var(--signal);
+  }
+
+  .ai-split .split-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .ai-split .split-list li {
+    padding: var(--s-2) 0;
+    border-top: 1px solid var(--rule);
+    border-bottom: none;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--ink-soft);
+  }
+
+  .ai-split .split-list li:first-child {
+    padding-top: 0;
+    border-top: none;
+  }
+
+  .ai-split .split-list li:last-child {
+    padding-bottom: 0;
+  }
+
+  .ai-stats {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-4);
+    margin: var(--s-5) 0 0;
+  }
+
+  .ai-stat-card {
+    border: 1px solid var(--rule);
+    padding: var(--s-4);
+    background: var(--paper);
+  }
+
+  .ai-stat-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: var(--s-2) var(--s-4);
+    margin: 0 0 var(--s-3);
+  }
+
+  .ai-split .ai-stat-title {
+    margin: 0;
+    color: var(--ink);
+  }
+
+  .ai-split .ai-stat-value {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 500;
+    text-transform: none;
+    letter-spacing: 0.02em;
+    color: var(--ink);
+  }
+
+  .ai-split .ai-stat-value--shipped {
+    color: var(--moss);
+  }
+
+  .ai-split .ai-stat-value--returned {
+    color: var(--signal);
+  }
+
+  .ai-meter-svg {
+    display: block;
+    width: 100%;
+    height: 8px;
+    margin: 0 0 var(--s-2);
+    border: 1px solid var(--rule);
+    background: var(--paper-2);
+  }
+
+  .ai-meter-shipped {
+    fill: var(--moss);
+  }
+
+  .ai-meter-returned,
+  .ai-meter-signal {
+    fill: var(--signal);
+  }
+
+  .ai-meter-untagged {
+    fill: var(--rule);
+  }
+
+  .ai-split .ai-meter-caption {
+    margin: 0 0 var(--s-3);
+    color: var(--ink-soft);
+    text-transform: none;
+    letter-spacing: 0.01em;
+    line-height: 1.5;
+  }
+
+  .ai-split .ai-stat-meta {
+    margin: 0;
+    padding-top: var(--s-3);
+    border-top: 1px solid var(--rule);
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+  }
+
+  .ai-split .ai-stat-meta strong {
+    color: var(--ink);
+    font-weight: 500;
   }
 
   /* ─── Build log — the lead section: this site's own commits ─────────── */
@@ -299,6 +651,9 @@ const tools: { label: string; note: string }[] = [
   }
 
   @media (max-width: 680px) {
+    .split-grid {
+      grid-template-columns: 1fr;
+    }
     .build-log .commit {
       grid-template-columns: 68px 1fr;
     }
