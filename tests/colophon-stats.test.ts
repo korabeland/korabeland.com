@@ -354,10 +354,12 @@ describe("committed stats.seed.json and isValidColophonStats", () => {
         pullRequests: { ...seed.pullRequests, mergedCount: 0 },
       }),
     ).toBe(false);
-    expect(isValidColophonStats({
-      ...seed,
-      commits: { ...seed.commits, asOf: "not-a-date" },
-    })).toBe(false);
+    expect(
+      isValidColophonStats({
+        ...seed,
+        commits: { ...seed.commits, asOf: "not-a-date" },
+      }),
+    ).toBe(false);
   });
 });
 
@@ -408,12 +410,7 @@ describe("resolveColophonStats", () => {
       ...seed.commits,
       totalCommits: seed.commits.totalCommits + 1,
     };
-    const result = resolveColophonStats(
-      null,
-      liveCommits,
-      seed,
-      "2026-10-20",
-    );
+    const result = resolveColophonStats(null, liveCommits, seed, "2026-10-20");
 
     expect(result?.pullRequests.source).toBe("seed");
     expect(result?.pullRequests.asOf).toBe(seed.pullRequests.asOf);
