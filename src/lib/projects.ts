@@ -108,7 +108,7 @@ export async function readProject(slug: string) {
 
 /**
  * Base route differs by category: professional case studies live under
- * /work, AI code tinkering under /lab. Single source of truth so the two
+ * /work, personal AI systems and experiments under /lab. Single source of truth so the two
  * lists never cross-link into each other's route.
  */
 export function projectHref(
