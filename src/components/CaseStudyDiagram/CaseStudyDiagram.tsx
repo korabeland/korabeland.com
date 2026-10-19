@@ -3,24 +3,13 @@ import * as React from "react";
 const h = React.createElement;
 
 import {
-  type CaseStudyDiagramSpec,
   getCaseStudyDiagram,
   type PipelineDiagramSpec,
   type TelemetryDiagramSpec,
   type TopologyDiagramSpec,
 } from "./diagrams";
-export type CaseStudyDiagramProps =
-  | {
-      id: string;
-      spec?: undefined;
-    }
-  | {
-      id?: undefined;
-      spec: CaseStudyDiagramSpec;
-    };
-function resolveSpec(props: CaseStudyDiagramProps): CaseStudyDiagramSpec {
-  if (props.spec) return props.spec;
-  return getCaseStudyDiagram(props.id);
+export interface CaseStudyDiagramProps {
+  id: string;
 }
 function TopologyDesktopSvg({
   spec,
@@ -2377,7 +2366,7 @@ function TelemetryMobileSvg({
 export function CaseStudyDiagram(
   props: CaseStudyDiagramProps,
 ): React.ReactElement {
-  const spec = resolveSpec(props);
+  const spec = getCaseStudyDiagram(props.id);
   const baseId = `cs-diagram-${spec.id}`;
   const titleId = `${baseId}-title`;
   const captionId = `${baseId}-caption`;

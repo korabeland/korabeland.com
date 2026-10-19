@@ -382,8 +382,7 @@ export const CASE_STUDY_DIAGRAMS: Readonly<
 };
 
 export function getCaseStudyDiagram(id: string): CaseStudyDiagramSpec {
-  const key = id.trim();
-  const spec = CASE_STUDY_DIAGRAMS[key];
+  const spec = CASE_STUDY_DIAGRAMS[id];
   if (!spec) {
     throw new Error(
       `Unknown case-study diagram "${id}". Registered ids: ${Object.keys(CASE_STUDY_DIAGRAMS).join(", ")}.`,

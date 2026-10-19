@@ -136,7 +136,6 @@ test("/work/ai-sms-pilot renders the case study detail", async ({ page }) => {
 test("/work/ai-crew renders the case study and its three accessible diagrams across desktop and phone", async ({
   page,
 }) => {
-  const captureDir = process.env.CAPTURE_DIAGRAM_DIR;
   const diagramIds = [
     "ai-crew-topology",
     "ai-crew-pipeline",
@@ -153,12 +152,6 @@ test("/work/ai-crew renders the case study and its three accessible diagrams acr
 
   const diagrams = page.locator("figure.cs-diagram");
   await expect(diagrams).toHaveCount(3);
-  if (captureDir) {
-    await page.evaluate(() => {
-      document.querySelector("header")?.remove();
-      document.querySelector(".progress-track")?.remove();
-    });
-  }
 
   for (const id of diagramIds) {
     const fig = page.locator(`figure.cs-diagram[data-diagram-id="${id}"]`);
@@ -166,9 +159,6 @@ test("/work/ai-crew renders the case study and its three accessible diagrams acr
     await expect(fig.locator(".cs-diagram-svg--desktop")).toBeVisible();
     await expect(fig.locator(".cs-diagram-svg--mobile")).toBeHidden();
     await expect(fig.locator("figcaption.cs-diagram-caption")).toBeVisible();
-    if (captureDir) {
-      await fig.screenshot({ path: `${captureDir}/${id}_desktop_night.png` });
-    }
   }
 
   // Toggle to day shift and confirm diagrams remain visible with light tokens.
@@ -176,12 +166,6 @@ test("/work/ai-crew renders the case study and its three accessible diagrams acr
     document.documentElement.setAttribute("data-time", "day");
   });
   await expect(diagrams.first()).toBeVisible();
-  if (captureDir) {
-    for (const id of diagramIds) {
-      const fig = page.locator(`figure.cs-diagram[data-diagram-id="${id}"]`);
-      await fig.screenshot({ path: `${captureDir}/${id}_desktop_day.png` });
-    }
-  }
 
   // Phone viewport (375px): swaps to mobile SVG layout and never overflows horizontally.
   await page.setViewportSize({ width: 375, height: 812 });
@@ -189,18 +173,6 @@ test("/work/ai-crew renders the case study and its three accessible diagrams acr
     const fig = page.locator(`figure.cs-diagram[data-diagram-id="${id}"]`);
     await expect(fig.locator(".cs-diagram-svg--mobile")).toBeVisible();
     await expect(fig.locator(".cs-diagram-svg--desktop")).toBeHidden();
-    if (captureDir) {
-      await fig.screenshot({ path: `${captureDir}/${id}_phone_day.png` });
-    }
-  }
-  if (captureDir) {
-    await page.evaluate(() => {
-      document.documentElement.removeAttribute("data-time");
-    });
-    for (const id of diagramIds) {
-      const fig = page.locator(`figure.cs-diagram[data-diagram-id="${id}"]`);
-      await fig.screenshot({ path: `${captureDir}/${id}_phone_night.png` });
-    }
   }
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth > window.innerWidth,
