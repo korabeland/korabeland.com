@@ -1,9 +1,13 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   formatSpan,
+  listProjects,
   mapMetrics,
   projectHref,
   type RawOutcomeMetric,
+  readProject,
 } from "@/lib/projects";
 
 function metric(overrides: Partial<RawOutcomeMetric> = {}): RawOutcomeMetric {
@@ -115,5 +119,53 @@ describe("formatSpan — fact-strip duration", () => {
     // in a negative-offset zone would pull these into the prior day/year.
     expect(formatSpan("2026-01-01", null)).toBe("2026");
     expect(formatSpan("2025-12-15", "2026-01-01")).toBe("2025–2026 · 1 month");
+  });
+});
+
+describe("nextProject chain integrity", () => {
+  it.each([
+    "work",
+    "side",
+  ] as const)("forms a closed in-category cycle across all %s projects", async (category) => {
+    const slice = (await listProjects()).filter((p) => p.category === category);
+    expect(slice.length).toBeGreaterThanOrEqual(2);
+    const bySlug = new Map(slice.map((p) => [p.slug, p]));
+
+    const visited = new Set<string>();
+    let current = slice[0].slug;
+    for (let i = 0; i < slice.length; i++) {
+      visited.add(current);
+      const entry = bySlug.get(current);
+      expect(entry, `${current} must stay in ${category}`).toBeDefined();
+      current = entry?.nextProject ?? "";
+    }
+    expect(visited.size).toBe(slice.length);
+    expect(current).toBe(slice[0].slug);
+  });
+});
+
+describe("relocation-playbook lab entry", () => {
+  it("publishes under /lab with repo and case-study links, honesty bounds, and no em dashes", async () => {
+    const project = await readProject("relocation-playbook");
+    expect(project).not.toBeNull();
+    expect(project?.category).toBe("side");
+    expect(projectHref({ slug: "relocation-playbook", category: "side" })).toBe(
+      "/lab/relocation-playbook",
+    );
+
+    const raw = readFileSync(
+      resolve(
+        process.cwd(),
+        "src/content/projects/relocation-playbook/index.mdoc",
+      ),
+      "utf8",
+    );
+    expect(raw).not.toContain("—");
+    expect(raw).toContain("https://github.com/korabeland/relocation-playbook");
+    expect(raw).toContain(
+      "https://github.com/korabeland/relocation-playbook/blob/main/docs/case-study.md",
+    );
+    expect(raw).toMatch(/Every example.*is invented/i);
+    expect(raw).toMatch(/no claim about measured time savings/i);
   });
 });

@@ -1,0 +1,58 @@
+---
+slug: relocation-playbook
+title: 'Relocation Playbook: an AI chief of staff for an international move'
+description: >-
+  An international move is dozens of interdependent parts that shift every
+  week. I built a plain-file kit and operating contract to use an AI assistant
+  as a household chief of staff, then rebuilt it around structured state
+  records when prose notes started to drift.
+category: side
+role: Solo design + build
+team: Solo project
+stack: Plain files · AI assistant · Notion · Calendar
+outcome: reusable plain-file kit · process case study
+tags:
+  - ai
+  - systems
+  - workflows
+  - open-source
+outcomeMetrics:
+  - value: 8 workflows
+    label: Step-by-step procedures in the reusable kit
+    provenance: >-
+      Packaged in workflows/ in the public repository: capture, backlog
+      processing, research, documents, trigger activation, weekly summary,
+      session start, and session end, all governed by one approval contract in
+      AGENTS.md.
+  - value: 3 confidence tiers
+    label: Provenance model replacing a single verified list
+    provenance: >-
+      Every fact record is marked confirmed, assumption, or recommendation
+      alongside its source, verified_on date, and verify_by date. Added after
+      an unconfirmed inference was found inside a file previously named
+      verified facts. The first reconciliation after the redesign caught a
+      wrong date and missing obligations; no time savings were measured.
+fieldLog: []
+reflection: >-
+  Prose copies of a fact drift. Putting facts, deadlines, and decisions into
+  small structured records and composing every summary from them held up
+  better, and running the same close after solo and shared sessions fixed the
+  stale agenda. Still, a system like this reduces the chance of drift; it does
+  not remove the need to look.
+nextProject: perian
+---
+Moving between countries is not one problem. It is dozens of interdependent ones: leaving a home, setting up a new one, work and income, health coverage, identity documents, tax administration, shipping, selling things, and the people involved. When a travel date or work assumption shifts, it ripples into lease notice periods, coverage start dates, sale timing, and weekly cash needs. The hard part is not any single question. It is keeping the whole picture consistent as the plan moves.
+
+I used an AI assistant working from a folder of plain files to help coordinate one real international move, then restated the method as [Relocation Playbook](https://github.com/korabeland/relocation-playbook), an open-source kit and [process case study](https://github.com/korabeland/relocation-playbook/blob/main/docs/case-study.md). Every example in the kit and case study is invented. Both leave out the names, places, employers, providers, money figures, and outcome of the real move, and make no claim about measured time savings or missed deadlines avoided.
+
+The first system kept parts separate by job: `PLAN.md` for strategy, a Notion board for tasks, shared folders for research and documents, and a short memory index. The assistant compared administrative, financial, healthcare, and shipping options, drafted checklists and tables, structured a four-bucket scenario budget (exit, travel, one-time setup, and recurring costs), and separated listing dates from handover dates for a household sale. One person drove the assistant while the rest of the household joined plain-language reviews.
+
+As the plan shifted from waiting on triggers to back-planning from a date, and later absorbed changing work and coverage assumptions, that first setup broke in specific ways:
+
+- **A stale shared agenda.** The agenda page was refreshed only after weekly reviews. Solo sessions in between changed the plan without a close step, leaving the shared agenda behind the real work.
+- **Scattered facts and costly starts.** Dates in the memory index drifted from the task board, and reading the board page by page at session start was slow.
+- **Overconfident fields and conflicting rules.** A file named "verified facts" held an unconfirmed inference. Approval wording conflicted across files, and the assistant's own gap audit overstated a shallow earlier topic as absent.
+
+I redesigned the foundation around small structured records in `state/` and one approval contract in `AGENTS.md`. Each fact now records `confirmed`, `assumption`, or `recommendation`, its source, when it was checked, and a `verify_by` date. Deadlines mark hard (legal or booked) versus soft (self-imposed) dates alongside open decisions, a prioritised research queue, and a cached board snapshot. The session-end workflow now runs after every solo or shared session, composes the agenda from the records rather than conversation memory, and reports any outside surface it did not update.
+
+The first reconciliation after the redesign caught a wrong date and missing obligations, and the research queue produced two new research files. Later snapshots still had retired tasks, a marked duplicate, and a summary that disagreed with its own category counts. Everything ran interactively while I was in the conversation; scheduled checks, text intake, recurring audits, and an arrival concierge were never built.

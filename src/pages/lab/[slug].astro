@@ -6,6 +6,7 @@
 import type { GetStaticPaths } from "astro";
 import CaseStudy from "../../components/CaseStudy/index.astro";
 import { PostContent } from "../../components/PostContent";
+import RelocationSystemDiagram from "../../components/RelocationSystemDiagram/index.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { serializeJsonLd } from "../../lib/json-ld";
 import {
@@ -98,5 +99,6 @@ const jsonLd = {
     eyebrowLabel="project"
   >
     <PostContent document={content} />
+    {slug === "relocation-playbook" && <RelocationSystemDiagram />}
   </CaseStudy>
 </BaseLayout>

@@ -109,8 +109,38 @@ test("/lab renders the tinkering index, work case studies absent", async ({
   await expect(page.locator(".ledger-row")).toHaveCount(
     labProjectRoutes.length,
   );
+  await expect(
+    page.locator('a[href="/lab/relocation-playbook"]'),
+  ).toBeVisible();
   // Hard split: no work case study leaks onto /lab.
   await expect(page.locator('a[href^="/work/"]')).toHaveCount(0);
+});
+
+test("/lab/relocation-playbook renders the architecture comparison without overflow on phone or desktop in both shifts", async ({
+  page,
+}) => {
+  for (const shift of ["night", "day"] as const) {
+    for (const width of [375, 1280]) {
+      await page.setViewportSize({ width, height: 812 });
+      const response = await page.goto(
+        `/lab/relocation-playbook?shift=${shift}`,
+      );
+      expect(response?.status()).toBe(200);
+      const diagram = page.locator("figure.reloc-diagram");
+      await expect(diagram).toBeVisible();
+      const box = await diagram.boundingBox();
+      expect(box).not.toBeNull();
+      expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(width);
+    }
+  }
+  await expect(
+    page.locator('a[href="https://github.com/korabeland/relocation-playbook"]'),
+  ).toBeVisible();
+  await expect(
+    page.locator(
+      'a[href="https://github.com/korabeland/relocation-playbook/blob/main/docs/case-study.md"]',
+    ),
+  ).toBeVisible();
 });
 
 // /work/lead-scoring — case-study detail renders title, fact strip, and body.
