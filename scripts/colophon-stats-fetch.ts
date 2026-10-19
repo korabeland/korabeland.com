@@ -179,9 +179,7 @@ export function readGitCommitStats(
           mainRevision = resolved;
           break;
         }
-      } catch {
-        continue;
-      }
+      } catch {}
     }
     if (!mainRevision) return null;
 

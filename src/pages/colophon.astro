@@ -76,7 +76,10 @@ function formatCommitDate(iso: string): string {
   return `${yyyy}.${mm}.${dd}`;
 }
 
-function statsSource(metric: { source: "live" | "seed"; asOf: string }): string {
+function statsSource(metric: {
+  source: "live" | "seed";
+  asOf: string;
+}): string {
   return `${metric.source === "live" ? "Live" : "Snapshot"} as of ${formatHumanDate(metric.asOf)}`;
 }
 
