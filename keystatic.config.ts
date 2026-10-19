@@ -1,4 +1,5 @@
 import { collection, config, fields, singleton } from "@keystatic/core";
+import { block } from "@keystatic/core/content-components";
 
 export default config({
   storage: {
@@ -135,7 +136,34 @@ export default config({
           label: "Next project slug",
           description: "Slug of the next project to link to at the bottom.",
         }),
-        content: fields.markdoc({ label: "Content" }),
+        content: fields.markdoc({
+          label: "Content",
+          components: {
+            diagram: block({
+              label: "Case study diagram",
+              schema: {
+                id: fields.select({
+                  label: "Diagram",
+                  options: [
+                    {
+                      label: "Crew command topology",
+                      value: "ai-crew-topology",
+                    },
+                    {
+                      label: "Request-to-deploy flow",
+                      value: "ai-crew-pipeline",
+                    },
+                    {
+                      label: "October merge cadence",
+                      value: "ai-crew-october-merges",
+                    },
+                  ],
+                  defaultValue: "ai-crew-topology",
+                }),
+              },
+            }),
+          },
+        }),
       },
     }),
     experience: collection({

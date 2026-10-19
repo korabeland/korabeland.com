@@ -303,7 +303,7 @@ export const CASE_STUDY_DIAGRAMS: Readonly<
     description:
       "Bar chart of daily merged pull requests on korabeland/korabeland.com from 1 to 17 October 2026 (UTC), totaling 27 pull requests: 3 merges on 1 October alongside the site audit, a burst of 12 merges on 2 October (11 built by agents from the audit plus 1 automated dependency update), 2 merges on 3 October, a pause from 4 to 12 October, and 10 merges from 13 to 17 October shipping About page experience and skills, local Ask search, anonymous visit counts, Dependabot fixes, hiring details, and emitted-site build checks.",
     caption:
-      "Public merge history on korabeland/korabeland.com (1 to 17 October 2026, UTC). The 1 October audit produced 11 agent-built fixes that merged alongside 1 automated dependency update on 2 October, followed by 10 feature and hardening merges across 3 to 17 October.",
+      "Public merge history on korabeland/korabeland.com (1 to 17 October 2026, UTC). The 1 October audit produced 11 agent-built fixes that merged alongside 1 automated dependency update on 2 October. Two more merges landed on 3 October, followed by 10 feature and hardening merges from 13 to 17 October.",
     kpis: [
       {
         label: "1 OCT 2026 · TRIGGER",

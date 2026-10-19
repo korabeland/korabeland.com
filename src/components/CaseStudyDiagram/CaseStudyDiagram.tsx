@@ -764,18 +764,6 @@ function TopologyMobileSvg({
       },
       "Separate crew & queue \u00B7 never shares site queue",
     ),
-    h("line", {
-      x1: 160,
-      y1: 228,
-      x2: 160,
-      y2: 250,
-      stroke: "var(--signal)",
-      strokeWidth: 1.25,
-    }),
-    h("polygon", {
-      points: "160,250 156.5,243.5 163.5,243.5",
-      fill: "var(--signal)",
-    }),
     h("rect", {
       x: 10,
       y: 250,
@@ -794,6 +782,34 @@ function TopologyMobileSvg({
       fill: "var(--paper-2)",
       stroke: "var(--rule)",
       strokeWidth: 1,
+    }),
+    h("line", {
+      x1: 310,
+      y1: 140,
+      x2: 316,
+      y2: 140,
+      stroke: "var(--signal)",
+      strokeWidth: 1.25,
+    }),
+    h("line", {
+      x1: 316,
+      y1: 140,
+      x2: 316,
+      y2: 260,
+      stroke: "var(--signal)",
+      strokeWidth: 1.25,
+    }),
+    h("line", {
+      x1: 316,
+      y1: 260,
+      x2: 300,
+      y2: 260,
+      stroke: "var(--signal)",
+      strokeWidth: 1.25,
+    }),
+    h("polygon", {
+      points: "300,260 306.5,256.5 306.5,263.5",
+      fill: "var(--signal)",
     }),
     h(
       "text",
