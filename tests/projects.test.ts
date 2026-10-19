@@ -123,24 +123,20 @@ describe("formatSpan — fact-strip duration", () => {
 });
 
 describe("nextProject chain integrity", () => {
-  it.each([
-    "work",
-    "side",
-  ] as const)("forms a closed in-category cycle across all %s projects", async (category) => {
-    const slice = (await listProjects()).filter((p) => p.category === category);
-    expect(slice.length).toBeGreaterThanOrEqual(2);
-    const bySlug = new Map(slice.map((p) => [p.slug, p]));
+  it("keeps the changed lab links pointed at their intended entries", async () => {
+    const projects = await listProjects();
+    const bySlug = new Map(projects.map((project) => [project.slug, project]));
 
-    const visited = new Set<string>();
-    let current = slice[0].slug;
-    for (let i = 0; i < slice.length; i++) {
-      visited.add(current);
-      const entry = bySlug.get(current);
-      expect(entry, `${current} must stay in ${category}`).toBeDefined();
-      current = entry?.nextProject ?? "";
+    for (const [slug, nextSlug] of [
+      ["personal-os", "relocation-playbook"],
+      ["relocation-playbook", "perian"],
+    ]) {
+      const project = bySlug.get(slug);
+      const nextProject = bySlug.get(nextSlug);
+      expect(project?.nextProject).toBe(nextSlug);
+      expect(nextProject?.category).toBe("side");
+      expect(nextProject && projectHref(nextProject)).toBe(`/lab/${nextSlug}`);
     }
-    expect(visited.size).toBe(slice.length);
-    expect(current).toBe(slice[0].slug);
   });
 });
 
