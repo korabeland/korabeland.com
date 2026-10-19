@@ -294,6 +294,62 @@ const HERO_SIZES = "(max-width: 960px) 100vw, 960px";
     line-height: 1.6;
     color: var(--ink-soft);
   }
+  .prose :global(.cs-diagram) {
+    margin: var(--s-6) 0 var(--s-7);
+    border: 1px solid var(--rule);
+    background: var(--paper-2);
+    max-width: 100%;
+    overflow: hidden;
+  }
+  .prose :global(.cs-diagram-head) {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--s-3);
+    padding: var(--s-2) var(--s-4);
+    border-bottom: 1px solid var(--rule);
+    background: var(--paper-3);
+  }
+  .prose :global(.cs-diagram-eyebrow),
+  .prose :global(.cs-diagram-kicker) {
+    color: var(--signal);
+  }
+  .prose :global(.cs-diagram-meta) {
+    color: var(--ink-soft);
+  }
+  .prose :global(.cs-diagram-title-bar) {
+    padding: var(--s-3) var(--s-4);
+    border-bottom: 1px solid var(--rule);
+  }
+  .prose :global(.cs-diagram-title) {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 1.35;
+    color: var(--ink);
+    display: block;
+  }
+  .prose :global(.cs-diagram-canvas) {
+    padding: var(--s-2);
+    background: var(--paper);
+  }
+  .prose :global(.cs-diagram-svg) {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .prose :global(.cs-diagram-svg--mobile) {
+    display: none;
+  }
+  .prose :global(.cs-diagram-caption) {
+    padding: var(--s-3) var(--s-4);
+    border-top: 1px solid var(--rule);
+    background: var(--paper-2);
+    color: var(--ink-soft);
+    text-transform: none;
+    letter-spacing: 0.01em;
+    line-height: 1.55;
+  }
 
   .outcome,
   .field-log,
@@ -341,6 +397,19 @@ const HERO_SIZES = "(max-width: 960px) 100vw, 960px";
   @media (max-width: 680px) {
     .head-meta {
       flex-wrap: wrap;
+    }
+    .prose :global(.cs-diagram-head) {
+      flex-direction: column;
+      gap: var(--s-1);
+    }
+    .prose :global(.cs-diagram-canvas) {
+      padding: var(--s-1);
+    }
+    .prose :global(.cs-diagram-svg--desktop) {
+      display: none;
+    }
+    .prose :global(.cs-diagram-svg--mobile) {
+      display: block;
     }
   }
 </style>

@@ -1,0 +1,87 @@
+---
+slug: ai-crew
+title: 'The AI crew behind korabeland.com'
+description: >-
+  How a supervised crew of AI agents builds and maintains this site across
+  isolated repository copies, cross-family code review, and a six-part
+  verification gate.
+category: work
+role: Solo design + direction
+team: Solo human + supervised AI crew
+stack: Astro · TypeScript · Playwright · firstmate · no-mistakes
+outcome: 12 changes merged day after audit · 27 PRs across 1-17 Oct
+startedAt: 2026-07-03
+shippedAt: 2026-10-02
+tags:
+  - ai
+  - agents
+  - automation
+  - verification
+outcomeMetrics:
+  - value: '12'
+    label: Changes merged the day after the 1 Oct audit
+    provenance: >-
+      On 1 October 2026 the first mate audited the site; on 2 October 2026, 12
+      PRs (#60 through #71) merged to main in korabeland/korabeland.com: 11
+      agent-built site changes plus 1 automated dependency update.
+  - value: '27'
+    label: Pull requests merged across 1-17 Oct 2026
+    provenance: >-
+      Counted from public merge history on korabeland/korabeland.com from 1 to
+      17 October 2026 UTC (#57 through #85, excluding unmerged numbers #79 and
+      #83).
+  - value: '6'
+    label: Required checks in verify-all per PR
+    provenance: >-
+      The verify-all suite runs dependency audit, type and content checks, unit
+      tests, Playwright browser tests, Lighthouse performance budgets, and a
+      smoke test of the built site.
+  - value: '3'
+    label: Model families across coding and review
+    provenance: >-
+      Workers run across OpenAI Codex, Anthropic Claude (Sonnet, Haiku, Opus),
+      and Google Gemini (Argon), with no-mistakes pairing each change with a
+      reviewer from a different model family.
+fieldLog: []
+reflection: >-
+  AI agents can build and verify changes quickly, but only when the repository
+  and workflow give them clear guardrails. Isolated copies, cross-family code
+  review, and a strict test suite matter because they catch mistakes before a
+  merge ever reaches my desk.
+nextProject: lead-scoring
+---
+## Who does what
+
+I direct the work on korabeland.com, and I do not write the code by hand. I state what I want in plain English, make the product and design calls, and approve every merge to the live site. No agent can merge to the site on its own.
+
+My single point of contact is a supervising agent, the first mate. It runs on [firstmate](https://github.com/kunchenguid/firstmate), an open-source supervisor for coding agents by Kun Chen that I use and have contributed fixes to upstream. The first mate never edits the site itself. For each request, it decides which project the work belongs to, writes instructions for a worker, chooses the worker's model, starts it, supervises it, and reports results back to me in plain English. A persistent second mate supervises a separate domain, my local-model lab, with its own crew so site work and lab work never share a queue.
+
+{% diagram id="ai-crew-topology" /%}
+
+Workers are separate AI coding agents. Each one runs in its own isolated copy of the repository so parallel jobs cannot collide. They use a mix of model families: OpenAI Codex models, Anthropic Claude (Sonnet, Haiku, and Opus), and Google Gemini (Argon). The first mate routes each job by the kind of work and by which provider has spare allowance, keeping costs down. Prose writing goes to Gemini Argon, and this case study itself was drafted by a Gemini Argon worker.
+
+## How a change reaches the live site
+
+When I ask for a change, such as adding a printable resume page, the first mate turns that request into written instructions, picks a model, and starts a worker in a fresh repository copy. The worker builds the change and runs it through `no-mistakes`, an automated pipeline that starts with code review by a model from a different family than the builder (a Codex model reviews Claude or Gemini work), followed by tests, documentation checks, linting, a pull request, and CI.
+
+{% diagram id="ai-crew-pipeline" /%}
+
+When the review raises findings, the first mate decides the clear technical ones directly, while genuinely ambiguous product or design questions come back to me as a plain-English question. Every pull request also has to pass `verify-all`, the site's six-part check suite: a dependency security audit, type and content checks, unit tests, Playwright browser tests across desktop and phone widths, Lighthouse performance budgets, and a smoke test of the built site.
+
+Once I review and approve a pull request, the first mate merges approved changes one at a time. Each branch is updated onto `main` and re-checked, taking about ten minutes of CI per merge, before Vercel deploys it live.
+
+## What did not go perfectly
+
+Running a crew of coding agents exposed failure modes that needed explicit guardrails:
+
+- **Port and process collisions**: workers once stopped another worker's preview server by process name. Now every worker gets its own dedicated port and may only stop processes it started itself.
+- **Scratch files in pull requests**: review pipelines can sweep temporary scratch files into a commit (one push was rejected for files over 50 MB). Every pipeline commit's file list is now checked before a merge is requested.
+- **Provider usage limits**: the crew is capped at a few parallel workers, and routing shifts between model providers as allowances run down.
+
+## Proof point: the 1 October audit
+
+On 1 October 2026, the first mate ran an audit of the site. The next day, 2 October, 12 changes merged to `main`: 11 built by agents from the audit and 1 automated dependency update. They covered security headers and a Content-Security-Policy, share images and indexing, structured data and `www` redirects, image and performance fixes, test reliability, CI bounds, and dependency tooling.
+
+{% diagram id="ai-crew-october-merges" /%}
+
+Across the full window from 1 to 17 October 2026, 27 pull requests merged to the site. Shipped work since that audit includes career experience and skills on the About page, a local Ask search on the About page, anonymous visit counts with a monthly export, Dependabot security fixes, recruiter-facing hiring details, and build checks on the emitted site.
