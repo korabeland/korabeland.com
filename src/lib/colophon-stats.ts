@@ -57,7 +57,7 @@ export interface GitStats {
   recentRange: DateRange;
   /** Merged commits whose body records automated no-mistakes pipeline passes. */
   noMistakesCommits: number;
-  /** Total no-mistakes(review|ci|lint|document|test) rounds recorded across those commits. */
+  /** Total automated pipeline fix rounds recorded across those commits. */
   noMistakesRounds: number;
 }
 

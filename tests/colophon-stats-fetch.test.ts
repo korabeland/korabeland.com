@@ -166,11 +166,20 @@ describe("readGitCommitStats", () => {
     ].join("\x1e");
 
     const execGit = vi.fn((args: string[]) => {
-      if (args[0] === "rev-parse") return "false\n";
+      if (args[0] === "rev-parse" && args[1] === "--is-shallow-repository") {
+        return "false\n";
+      }
+      if (args[0] === "rev-parse" && args[2] === "origin/main") {
+        return "main-revision-sha\n";
+      }
       return `${logOut}\x1e`;
     });
 
     const stats = readGitCommitStats("/repo", execGit);
+    expect(execGit).toHaveBeenCalledWith(
+      ["log", "main-revision-sha", "--date=short", expect.any(String)],
+      "/repo",
+    );
     expect(stats).toEqual({
       totalCommits: 2,
       commitRange: { startDate: "2026-03-12", endDate: "2026-10-17" },
@@ -181,6 +190,30 @@ describe("readGitCommitStats", () => {
       noMistakesCommits: 1,
       noMistakesRounds: 1,
     });
+  });
+
+  it("falls back to the local main revision when origin/main is unavailable", () => {
+    const logOut = [
+      ["1111111", "2026-03-12", "feat: first", ""].join("\x1f"),
+    ].join("\x1e");
+    const execGit = vi.fn((args: string[]) => {
+      if (args[0] === "rev-parse" && args[1] === "--is-shallow-repository") {
+        return "false\n";
+      }
+      if (args[0] === "rev-parse" && args[2] === "origin/main") {
+        throw new Error("unknown revision");
+      }
+      if (args[0] === "rev-parse" && args[2] === "main") {
+        return "local-main-sha\n";
+      }
+      return `${logOut}\x1e`;
+    });
+
+    expect(readGitCommitStats("/repo", execGit)?.totalCommits).toBe(1);
+    expect(execGit).toHaveBeenCalledWith(
+      ["log", "local-main-sha", "--date=short", expect.any(String)],
+      "/repo",
+    );
   });
 
   it("returns null if git throws", () => {

@@ -168,9 +168,27 @@ export function readGitCommitStats(
       return null;
     }
 
+    let mainRevision: string | null = null;
+    for (const ref of ["origin/main", "main"]) {
+      try {
+        const resolved = execGit(
+          ["rev-parse", "--verify", ref],
+          repoRoot,
+        ).trim();
+        if (resolved) {
+          mainRevision = resolved;
+          break;
+        }
+      } catch {
+        continue;
+      }
+    }
+    if (!mainRevision) return null;
+
     const stdout = execGit(
       [
         "log",
+        mainRevision,
         "--date=short",
         `--format=%H${FIELD_SEP}%ad${FIELD_SEP}%s${FIELD_SEP}%b${RECORD_SEP}`,
       ],
