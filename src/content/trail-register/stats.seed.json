@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-10-19",
-  "source": "seed",
   "pullRequests": {
+    "asOf": "2026-10-19",
+    "source": "seed",
     "mergedCount": 79,
     "closedUnmergedCount": 5,
     "mergedRange": {
@@ -14,6 +14,8 @@
     }
   },
   "commits": {
+    "asOf": "2026-10-19",
+    "source": "seed",
     "totalCommits": 114,
     "commitRange": {
       "startDate": "2026-03-01",

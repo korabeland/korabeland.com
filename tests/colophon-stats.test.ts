@@ -10,6 +10,7 @@ import {
   isValidColophonStats,
   meterSegments,
   type PullRequestRecord,
+  resolveColophonStats,
   summarizeGitCommits,
   summarizePullRequests,
 } from "@/lib/colophon-stats";
@@ -322,10 +323,12 @@ describe("meterSegments", () => {
 describe("committed stats.seed.json and isValidColophonStats", () => {
   const seed = seedJson as ColophonStatsData;
 
-  it("passes isValidColophonStats and declares source as seed", () => {
+  it("passes isValidColophonStats and declares each metric as a dated seed", () => {
     expect(isValidColophonStats(seed)).toBe(true);
-    expect(seed.source).toBe("seed");
-    expect(seed.generatedAt).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(seed.pullRequests.source).toBe("seed");
+    expect(seed.pullRequests.asOf).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(seed.commits.source).toBe("seed");
+    expect(seed.commits.asOf).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 
   it("has positive shipped PR and commit counts with ordered date ranges", () => {
@@ -351,11 +354,78 @@ describe("committed stats.seed.json and isValidColophonStats", () => {
         pullRequests: { ...seed.pullRequests, mergedCount: 0 },
       }),
     ).toBe(false);
-    expect(
-      isValidColophonStats({
-        ...seed,
-        generatedAt: "not-a-date",
-      }),
-    ).toBe(false);
+    expect(isValidColophonStats({
+      ...seed,
+      commits: { ...seed.commits, asOf: "not-a-date" },
+    })).toBe(false);
+  });
+});
+
+describe("resolveColophonStats", () => {
+  const seed = seedJson as ColophonStatsData;
+
+  it("labels both available metrics live with the current date", () => {
+    const livePullRequests = {
+      ...seed.pullRequests,
+      mergedCount: seed.pullRequests.mergedCount + 1,
+    };
+    const liveCommits = {
+      ...seed.commits,
+      totalCommits: seed.commits.totalCommits + 1,
+    };
+    const result = resolveColophonStats(
+      livePullRequests,
+      liveCommits,
+      seed,
+      "2026-10-20",
+    );
+
+    expect(result?.pullRequests.source).toBe("live");
+    expect(result?.pullRequests.asOf).toBe("2026-10-20");
+    expect(result?.pullRequests.mergedCount).toBe(livePullRequests.mergedCount);
+    expect(result?.commits.source).toBe("live");
+    expect(result?.commits.asOf).toBe("2026-10-20");
+    expect(result?.commits.totalCommits).toBe(liveCommits.totalCommits);
+  });
+
+  it("keeps a partial seed fallback's original date beside live metrics", () => {
+    const result = resolveColophonStats(
+      { ...seed.pullRequests, mergedCount: seed.pullRequests.mergedCount + 1 },
+      null,
+      seed,
+      "2026-10-20",
+    );
+
+    expect(result?.pullRequests.source).toBe("live");
+    expect(result?.pullRequests.asOf).toBe("2026-10-20");
+    expect(result?.commits.source).toBe("seed");
+    expect(result?.commits.asOf).toBe(seed.commits.asOf);
+    expect(result?.commits).toEqual(seed.commits);
+  });
+
+  it("keeps the pull-request seed when only commit data is live", () => {
+    const liveCommits = {
+      ...seed.commits,
+      totalCommits: seed.commits.totalCommits + 1,
+    };
+    const result = resolveColophonStats(
+      null,
+      liveCommits,
+      seed,
+      "2026-10-20",
+    );
+
+    expect(result?.pullRequests.source).toBe("seed");
+    expect(result?.pullRequests.asOf).toBe(seed.pullRequests.asOf);
+    expect(result?.pullRequests).toEqual(seed.pullRequests);
+    expect(result?.commits.source).toBe("live");
+    expect(result?.commits.asOf).toBe("2026-10-20");
+    expect(result?.commits.totalCommits).toBe(liveCommits.totalCommits);
+  });
+
+  it("keeps both original dates when all metrics use the seed", () => {
+    const result = resolveColophonStats(null, null, seed, "2026-10-20");
+
+    expect(result).toEqual(seed);
   });
 });

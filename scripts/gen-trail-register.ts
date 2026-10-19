@@ -9,8 +9,11 @@ import {
 } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { ColophonStatsData } from "../src/lib/colophon-stats";
-import { isValidColophonStats } from "../src/lib/colophon-stats";
+import {
+  type ColophonStatsData,
+  isValidColophonStats,
+  resolveColophonStats,
+} from "../src/lib/colophon-stats";
 import {
   fetchPullRequestStats,
   readGitCommitStats,
@@ -121,24 +124,16 @@ async function generateStats(): Promise<void> {
   const gitStats = readGitCommitStats(repoRoot);
   const prStats = await fetchPullRequestStats(resolveToken());
 
-  if (!gitStats && !prStats) {
+  const payload = resolveColophonStats(
+    prStats,
+    gitStats,
+    seed,
+    new Date().toISOString().slice(0, 10),
+  );
+  if (!payload) {
     fallbackStatsToSeed();
     return;
   }
-
-  const pullRequests = prStats ?? seed?.pullRequests;
-  const commits = gitStats ?? seed?.commits;
-  if (!pullRequests || !commits) {
-    fallbackStatsToSeed();
-    return;
-  }
-
-  const payload: ColophonStatsData = {
-    generatedAt: new Date().toISOString().slice(0, 10),
-    source: "live",
-    pullRequests,
-    commits,
-  };
 
   if (!isValidColophonStats(payload)) {
     fallbackStatsToSeed();

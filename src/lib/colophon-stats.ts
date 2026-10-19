@@ -61,12 +61,14 @@ export interface GitStats {
   noMistakesRounds: number;
 }
 
-export interface ColophonStatsData {
-  /** ISO "YYYY-MM-DD" when the snapshot was generated. */
-  generatedAt: string;
+export type ColophonMetric<T> = T & {
+  asOf: string;
   source: "live" | "seed";
-  pullRequests: PullRequestStats;
-  commits: GitStats;
+};
+
+export interface ColophonStatsData {
+  pullRequests: ColophonMetric<PullRequestStats>;
+  commits: ColophonMetric<GitStats>;
 }
 
 export interface MeterSegments {
@@ -223,6 +225,24 @@ export function summarizeGitCommits(
   };
 }
 
+/** Combines each live metric with its own dated seed fallback. */
+export function resolveColophonStats(
+  livePullRequests: PullRequestStats | null,
+  liveCommits: GitStats | null,
+  seed: ColophonStatsData | null,
+  asOf: string,
+): ColophonStatsData | null {
+  const pullRequests = livePullRequests
+    ? { ...livePullRequests, asOf, source: "live" as const }
+    : seed?.pullRequests;
+  const commits = liveCommits
+    ? { ...liveCommits, asOf, source: "live" as const }
+    : seed?.commits;
+
+  if (!pullRequests || !commits) return null;
+  return { pullRequests, commits };
+}
+
 function parseIsoParts(
   isoDate: string,
 ): { year: number; monthIndex: number; day: number } | null {
@@ -320,18 +340,14 @@ function isValidDateRange(value: unknown): value is DateRange {
 export function isValidColophonStats(raw: unknown): raw is ColophonStatsData {
   if (!raw || typeof raw !== "object") return false;
   const data = raw as Record<string, unknown>;
-  if (
-    typeof data.generatedAt !== "string" ||
-    !ISO_DATE_RE.test(data.generatedAt) ||
-    (data.source !== "live" && data.source !== "seed")
-  ) {
-    return false;
-  }
 
   const prs = data.pullRequests as Record<string, unknown> | undefined;
   if (
     !prs ||
     typeof prs !== "object" ||
+    typeof prs.asOf !== "string" ||
+    !ISO_DATE_RE.test(prs.asOf) ||
+    (prs.source !== "live" && prs.source !== "seed") ||
     typeof prs.mergedCount !== "number" ||
     prs.mergedCount <= 0 ||
     typeof prs.closedUnmergedCount !== "number" ||
@@ -346,6 +362,9 @@ export function isValidColophonStats(raw: unknown): raw is ColophonStatsData {
   if (
     !commits ||
     typeof commits !== "object" ||
+    typeof commits.asOf !== "string" ||
+    !ISO_DATE_RE.test(commits.asOf) ||
+    (commits.source !== "live" && commits.source !== "seed") ||
     typeof commits.totalCommits !== "number" ||
     commits.totalCommits <= 0 ||
     typeof commits.modelTrailerCommits !== "number" ||

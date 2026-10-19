@@ -76,6 +76,10 @@ function formatCommitDate(iso: string): string {
   return `${yyyy}.${mm}.${dd}`;
 }
 
+function statsSource(metric: { source: "live" | "seed"; asOf: string }): string {
+  return `${metric.source === "live" ? "Live" : "Snapshot"} as of ${formatHumanDate(metric.asOf)}`;
+}
+
 // Human-relative age for the featured commit — "shipped today / yesterday /
 // N days ago". Computed at build time (the page rebuilds on every push), so
 // it is accurate as of each deploy without any client JS.
@@ -202,7 +206,7 @@ const tools: { label: string; note: string }[] = [
           </div>
         </div>
 
-        <div class="ai-stats" role="group" aria-label="Live repository numbers">
+        <div class="ai-stats" role="group" aria-label="Repository numbers">
           <div class="ai-stat-card" data-stat="shipped">
             <div class="ai-stat-head">
               <span class="t-label ai-stat-title">changes shipped</span>
@@ -240,8 +244,10 @@ const tools: { label: string; note: string }[] = [
               requests ({formatHumanDateRange(stats.commits.commitRange)} for
               commits on <code>main</code>).{" "}
               <strong>Source:</strong> public GitHub pull requests on{" "}
-              <code>korabeland/korabeland.com</code> and <code>git log</code>,
-              recomputed at each build.
+              <code>korabeland/korabeland.com</code> and <code>git log</code>.
+              {" "}<strong>Pull-request data:</strong>{" "}
+              {statsSource(stats.pullRequests)}. <strong>Commit data:</strong>{" "}
+              {statsSource(stats.commits)}.
             </p>
           </div>
 
@@ -266,6 +272,8 @@ const tools: { label: string; note: string }[] = [
               <code>no-mistakes</code> fix commits in <code>git log</code>.
               Rework and direction calls I make inside a branch before merge
               are not recorded as separate events in the public repo.
+              <strong>Data status:</strong> pull requests {statsSource(stats.pullRequests)};
+              commits {statsSource(stats.commits)}.
             </p>
           </div>
 
@@ -308,13 +316,14 @@ const tools: { label: string; note: string }[] = [
               <strong>Source:</strong> <code>Co-authored-by</code> trailers in{" "}
               <code>git log</code> and review logs in{" "}
               <code>docs/reviews/</code>. Direct Claude Code commits through
-              August 2026 stamped a Claude Opus or Sonnet trailer into git, and
-              15 summer branches committed OpenAI Codex review logs. Since
+              August 2026 stamped a Claude Opus or Sonnet trailer into git.
+              Earlier work also committed OpenAI Codex review logs. Since
               October 2026, the first mate routes work across Anthropic Claude
               (Opus, Sonnet, Haiku), OpenAI Codex, and Google Gemini (Argon),
               with cross-family review, and does not write a model tag into
               commits or pull requests. The public repo does not record a
               per-model count for those recent changes.
+              <strong>Data status:</strong> {statsSource(stats.commits)}.
             </p>
           </div>
         </div>
