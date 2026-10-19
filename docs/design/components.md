@@ -515,13 +515,14 @@ subline, and a `.btn` back to `/`. `<section aria-labelledby="off-trail-title">`
 ### PostContent
 
 `components/PostContent.tsx` — the one React island. Renders Keystatic's
-`fields.markdoc()` AST through Markdoc's React renderer. Consumers:
-`work/[slug].astro`, `lab/[slug].astro`, `notes/[slug].astro`.
+`fields.markdoc()` AST through Markdoc's React renderer, including registered
+case-study diagram blocks. Consumers: `work/[slug].astro`, `lab/[slug].astro`,
+`notes/[slug].astro`.
 
 **Props** — `document: { node } | Node` (Keystatic reader output). Not a visual
-component; it emits plain `<p>/<h2>/<ul>` that the parent layout (`CaseStudy` /
-`ReadingRoom`) styles via `:global`. Styling belongs to the host layout, not
-here.
+component; the parent layout (`CaseStudy` / `ReadingRoom`) styles its output via
+`:global`. Diagram visuals are rendered by `CaseStudyDiagram`; styling belongs
+to the host layout, not here.
 
 ---
 
