@@ -199,11 +199,12 @@ describe("shift-parity — inline head script vs resolveShift()", () => {
   // Every hour of the day, cross-checked against every precedence layer —
   // the exhaustive sweep the spec calls for, beyond the boundary spot-checks
   // above.
-  it.each(
-    Array.from({ length: 24 }, (_, hour) => hour),
-  )("hour %i alone (no query/stored/session) matches resolveShift()", (hour) => {
-    const pure = resolveShift({ hour });
-    const inline = runInlineShift(scriptBody, { hour });
-    expect(inline.shift).toBe(pure.shift);
-  });
+  it.each(Array.from({ length: 24 }, (_, hour) => hour))(
+    "hour %i alone (no query/stored/session) matches resolveShift()",
+    (hour) => {
+      const pure = resolveShift({ hour });
+      const inline = runInlineShift(scriptBody, { hour });
+      expect(inline.shift).toBe(pure.shift);
+    },
+  );
 });

@@ -62,14 +62,17 @@ describe("check-new-artifacts", () => {
     ["build-archive.log", "build or error log"],
     [".security-live/vercel-global/auth.json", "laboratory capture directory"],
     ["somewhere/auth.json", "CLI profile file"],
-  ])("rejects newly added %s and names the safe destination", (path, reason) => {
-    const r = run(makeRepo([], [path]), "--base", "main");
-    expect(r.code).toBe(1);
-    expect(r.err).toContain(`REJECTED: ${path} (${reason})`);
-    expect(r.err).toContain(
-      "Move generated output to the ignored scratch directory",
-    );
-  });
+  ])(
+    "rejects newly added %s and names the safe destination",
+    (path, reason) => {
+      const r = run(makeRepo([], [path]), "--base", "main");
+      expect(r.code).toBe(1);
+      expect(r.err).toContain(`REJECTED: ${path} (${reason})`);
+      expect(r.err).toContain(
+        "Move generated output to the ignored scratch directory",
+      );
+    },
+  );
 
   it("accepts deliverable files and the frozen analytics fixture", () => {
     const r = run(
