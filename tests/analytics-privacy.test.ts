@@ -101,20 +101,18 @@ describe("filterAnalyticsEvent", () => {
 });
 
 describe("isLocalHost", () => {
-  it.each([
-    "localhost",
-    "127.0.0.1",
-    "[::1]".slice(1, -1),
-    "foo.localhost",
-  ])("%s is local", (h) => {
-    expect(isLocalHost(h)).toBe(true);
-  });
-  it.each([
-    "korabeland.com",
-    "preview-abc.vercel.app",
-  ])("%s is not local", (h) => {
-    expect(isLocalHost(h)).toBe(false);
-  });
+  it.each(["localhost", "127.0.0.1", "[::1]".slice(1, -1), "foo.localhost"])(
+    "%s is local",
+    (h) => {
+      expect(isLocalHost(h)).toBe(true);
+    },
+  );
+  it.each(["korabeland.com", "preview-abc.vercel.app"])(
+    "%s is not local",
+    (h) => {
+      expect(isLocalHost(h)).toBe(false);
+    },
+  );
 });
 
 describe("startAnalytics", () => {
