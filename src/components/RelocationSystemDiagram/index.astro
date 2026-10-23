@@ -1,0 +1,228 @@
+---
+// RelocationSystemDiagram/index.astro — static console comparison of the
+// Relocation Playbook's first system versus the foundation redesign
+// (docs/case-study.md §2, §5, §6). Server-rendered HTML/CSS only: zero client
+// JavaScript, no inline styles, token-driven for night and day shifts, and
+// stacks cleanly below the 680px prose breakpoint.
+
+interface RecordRow {
+  name: string;
+  detail: string;
+}
+
+const firstSystemRows: RecordRow[] = [
+  {
+    name: "PLAN.md",
+    detail: "strategy, phases, constraints, and triggers",
+  },
+  {
+    name: "Task board (Notion)",
+    detail: "status, owner, phase, and due date",
+  },
+  {
+    name: "Research/ & Documents/",
+    detail: "options, drafts, and shared household outputs",
+  },
+  {
+    name: "memory index",
+    detail: "short list of pointers and condensed dates",
+  },
+];
+
+const redesignRows: RecordRow[] = [
+  {
+    name: "state/facts",
+    detail: "confirmed | assumption | recommendation · source · verify_by",
+  },
+  {
+    name: "state/deadlines",
+    detail: "hard (legal or booked) | soft (self-imposed) · owner",
+  },
+  {
+    name: "state/decisions",
+    detail: "open choices, options, and recommendation",
+  },
+  {
+    name: "state/research-queue",
+    detail: "prioritised questions with sources",
+  },
+  {
+    name: "state/board-snapshot",
+    detail: "cached task board with date and completeness note",
+  },
+];
+---
+
+<figure class="reloc-diagram" aria-labelledby="reloc-diagram-caption">
+  <figcaption id="reloc-diagram-caption" class="t-label diagram-caption">
+    architecture · first system vs foundation redesign
+  </figcaption>
+
+  <div class="diagram-grid">
+    <div class="diagram-panel">
+      <div class="panel-head">
+        <span class="t-label panel-step">01 · first system</span>
+        <span class="panel-title">Four separate surfaces read at session start</span>
+      </div>
+
+      <ul class="node-list">
+        {firstSystemRows.map((row) => (
+          <li class="node-row">
+            <span class="t-mono node-name">{row.name}</span>
+            <span class="node-detail">{row.detail}</span>
+          </li>
+        ))}
+      </ul>
+
+      <div class="panel-close">
+        <span class="t-label close-label">close · weekly reviews only</span>
+        <span class="close-body">
+          Solo sessions ended without a close step. Prose facts drifted across
+          surfaces and the shared agenda fell behind the work.
+        </span>
+      </div>
+    </div>
+
+    <div class="diagram-panel diagram-panel-active">
+      <div class="panel-head">
+        <span class="t-label panel-step panel-step-active">02 · foundation redesign</span>
+        <span class="panel-title">Structured records + one AGENTS.md contract</span>
+      </div>
+
+      <ul class="node-list">
+        {redesignRows.map((row) => (
+          <li class="node-row">
+            <span class="t-mono node-name">{row.name}</span>
+            <span class="node-detail">{row.detail}</span>
+          </li>
+        ))}
+      </ul>
+
+      <div class="panel-close">
+        <span class="t-label close-label close-label-active">
+          close · after every solo or shared session
+        </span>
+        <span class="close-body">
+          Composes the shared agenda from state/ records, proposes board
+          changes for approval, and reports any surface not updated.
+        </span>
+      </div>
+    </div>
+  </div>
+</figure>
+
+<style>
+  .reloc-diagram {
+    margin: var(--s-6) 0 var(--s-5);
+    padding: 0;
+  }
+
+  .diagram-caption {
+    display: block;
+    margin: 0 0 var(--s-3);
+  }
+
+  .diagram-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--s-4);
+  }
+
+  .diagram-panel {
+    background: var(--paper-2);
+    border: 1px solid var(--rule);
+    padding: var(--s-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-4);
+    min-width: 0;
+  }
+
+  .diagram-panel-active {
+    border-top: 2px solid var(--signal);
+  }
+
+  .panel-head {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-1);
+    padding-bottom: var(--s-3);
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .panel-step-active {
+    color: var(--signal);
+  }
+
+  .panel-title {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 15px;
+    line-height: 1.35;
+    color: var(--ink);
+  }
+
+  .reloc-diagram .node-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-2);
+    flex: 1;
+  }
+
+  .reloc-diagram .node-row {
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    padding: var(--s-2) var(--s-3);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .node-name {
+    text-transform: none;
+    letter-spacing: 0.01em;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ink);
+    overflow-wrap: break-word;
+  }
+
+  .node-detail {
+    font-family: var(--font-body);
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--ink-soft);
+    overflow-wrap: break-word;
+  }
+
+  .panel-close {
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    padding: var(--s-3);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-1);
+  }
+
+  .close-label-active {
+    color: var(--signal);
+  }
+
+  .close-body {
+    font-family: var(--font-body);
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--ink-soft);
+    overflow-wrap: break-word;
+  }
+
+  @media (max-width: 680px) {
+    .diagram-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

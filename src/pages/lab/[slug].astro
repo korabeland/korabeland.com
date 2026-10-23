@@ -1,11 +1,12 @@
 ---
-// /lab/[slug] — AI code tinkering detail. Same CaseStudy layout as /work,
+// /lab/[slug] — personal AI systems and experiments. Same CaseStudy layout as /work,
 // re-skinned via eyebrowLabel/backHref so it never reads as a client case
 // study. See docs/plans/2026-07-03-console-mvp.md.
 
 import type { GetStaticPaths } from "astro";
 import CaseStudy from "../../components/CaseStudy/index.astro";
 import { PostContent } from "../../components/PostContent";
+import RelocationSystemDiagram from "../../components/RelocationSystemDiagram/index.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { serializeJsonLd } from "../../lib/json-ld";
 import {
@@ -98,5 +99,6 @@ const jsonLd = {
     eyebrowLabel="project"
   >
     <PostContent document={content} />
+    {slug === "relocation-playbook" && <RelocationSystemDiagram />}
   </CaseStudy>
 </BaseLayout>

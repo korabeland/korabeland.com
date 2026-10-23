@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   formatSpan,
+  listProjects,
   mapMetrics,
   projectHref,
   type RawOutcomeMetric,
+  readProject,
 } from "@/lib/projects";
 
 function metric(overrides: Partial<RawOutcomeMetric> = {}): RawOutcomeMetric {
@@ -115,5 +117,34 @@ describe("formatSpan — fact-strip duration", () => {
     // in a negative-offset zone would pull these into the prior day/year.
     expect(formatSpan("2026-01-01", null)).toBe("2026");
     expect(formatSpan("2025-12-15", "2026-01-01")).toBe("2025–2026 · 1 month");
+  });
+});
+
+describe("nextProject chain integrity", () => {
+  it("keeps the changed lab links pointed at their intended entries", async () => {
+    const projects = await listProjects();
+    const bySlug = new Map(projects.map((project) => [project.slug, project]));
+
+    for (const [slug, nextSlug] of [
+      ["personal-os", "relocation-playbook"],
+      ["relocation-playbook", "perian"],
+    ]) {
+      const project = bySlug.get(slug);
+      const nextProject = bySlug.get(nextSlug);
+      expect(project?.nextProject).toBe(nextSlug);
+      expect(nextProject?.category).toBe("side");
+      expect(nextProject && projectHref(nextProject)).toBe(`/lab/${nextSlug}`);
+    }
+  });
+});
+
+describe("relocation-playbook lab entry", () => {
+  it("uses the lab route", async () => {
+    const project = await readProject("relocation-playbook");
+    expect(project).not.toBeNull();
+    expect(project?.category).toBe("side");
+    expect(projectHref({ slug: "relocation-playbook", category: "side" })).toBe(
+      "/lab/relocation-playbook",
+    );
   });
 });
