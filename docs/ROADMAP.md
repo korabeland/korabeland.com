@@ -24,13 +24,13 @@ Statuses used after triage: `backlog` -> `next` | `parked` | `dropped`.
 | LinkedIn tune-up draft (headline, About, first post, Featured) | `Personal_Brand/content/drafts/linkedin-tuneup.md` | Korab reviews and applies | backlog |
 | Remaining case-study write-ups from the shortlist (6 candidates incl. Keypath enterprise AI, Relocation OS, Life-Project OS) | `Personal_Brand/docs/plans/2026-07-03-business-ideas-shortlist.md` | Triage against the four already live on /work; Keypath one needs confidentiality clearance first | backlog |
 
-## 3. Site features (documented, unbuilt)
+## 3. Site features
 
 | Item | Source | Next step | Status |
 |---|---|---|---|
 | "Window into Claude Code usage" live-portfolio section (commit visualisations, agent-run stats). Flagged top priority in two separate docs | `Personal_Brand/ideas/wispr-flow-notes.md` (2026-03-28); business shortlist | Brainstorm -> requirements; strongest feature candidate | backlog |
 | R8: "Built with AI, decided by me" colophon extension (real repo stats + honest AI-vs-Korab split) | `docs/brainstorms/2026-07-06-ux-enhancement-ideas-requirements.md` | Plan it; colophon already has the build log to hang it on | backlog |
-| R6: single-source `/resume` route + print stylesheet (one-page brief) | same brainstorm | Plan; decide print-CSS vs PDF export | backlog |
+| R6: single-source `/resume` route + print stylesheet (one-page brief) | same brainstorm | Captain reviews the preview before production release | built, awaiting review |
 | R3: 90-second brief toggle on case studies | same brainstorm | Plan if case-study depth becomes a friction signal | backlog |
 | R4: requirement-to-evidence map on `/for/` pages | same brainstorm | Only worth building once real `/for/` pages exist | backlog |
 | R10: decision forks ("the option not taken") in case-study Field Logs | same brainstorm | Content-first: try it in one case study | backlog |
