@@ -59,8 +59,9 @@ tests/visual/.reseed-pending/
 .pr-description.md
 
 # Trail-register: generated per-build by scripts/gen-trail-register.ts.
-# Seed (commits.seed.json) is committed as the shallow-clone fallback.
+# Seeds (commits.seed.json, stats.seed.json) are committed as shallow-clone/offline fallbacks.
 src/content/trail-register/commits.json
+src/content/trail-register/stats.json
 
 # Shift-log: generated per-build by scripts/gen-shift-log.ts.
 # Seed (contributions.seed.json) is committed as the fallback.
