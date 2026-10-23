@@ -38,6 +38,21 @@ describe("blocksFromMarkdoc", () => {
     expect(blocks.map((b) => b.text)).toEqual(["one", "two"]);
   });
 
+  it("indexes {% diagram %} tags into accessible summary paragraphs and rejects unknown tags", () => {
+    const blocks = blocksFromMarkdoc(
+      parse('Before.\n\n{% diagram id="ai-crew-topology" /%}\n\nAfter.'),
+    );
+    expect(blocks).toHaveLength(3);
+    expect(blocks[0]).toEqual({ kind: "paragraph", text: "Before." });
+    expect(blocks[1].kind).toBe("paragraph");
+    expect(blocks[1].text).toContain("fig 01 · crew command topology");
+    expect(blocks[2]).toEqual({ kind: "paragraph", text: "After." });
+
+    expect(() => blocksFromMarkdoc(parse("{% unknown /%}"))).toThrow(
+      /unsupported Markdoc tag "unknown"/,
+    );
+  });
+
   it("stops on a node type it does not understand", () => {
     expect(() =>
       blocksFromMarkdoc(parse("| a | b |\n|---|---|\n| 1 | 2 |")),

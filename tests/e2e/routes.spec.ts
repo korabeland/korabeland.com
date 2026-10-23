@@ -20,6 +20,7 @@ const allPostRoutes = postRoutesSync().map((entry) => entry.path);
 const SPOT_CHECKED_PROJECT_ROUTES = new Set([
   "/work/lead-scoring",
   "/work/ai-sms-pilot",
+  "/work/ai-crew",
 ]);
 const SPOT_CHECKED_POST_ROUTES = new Set(["/notes/hello-world"]);
 
@@ -128,6 +129,55 @@ test("/work/ai-sms-pilot renders the case study detail", async ({ page }) => {
   await expect(page.locator("h1.head-title")).toContainText(
     "AI SMS engagement",
   );
+});
+
+// /work/ai-crew — AI crew case study with 3 static inline SVG diagrams,
+// accessible names, day/night shift support, and zero horizontal overflow on phone.
+test("/work/ai-crew renders the case study and its three accessible diagrams across desktop and phone", async ({
+  page,
+}) => {
+  const diagramIds = [
+    "ai-crew-topology",
+    "ai-crew-pipeline",
+    "ai-crew-october-merges",
+  ] as const;
+
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const response = await page.goto("/work/ai-crew");
+  expect(response?.status()).toBe(200);
+  await expect(page.locator("h1.head-title")).toContainText(
+    "The AI crew behind korabeland.com",
+  );
+  await expect(page.locator(".statuschip")).toContainText("shipped");
+
+  const diagrams = page.locator("figure.cs-diagram");
+  await expect(diagrams).toHaveCount(3);
+
+  for (const id of diagramIds) {
+    const fig = page.locator(`figure.cs-diagram[data-diagram-id="${id}"]`);
+    await expect(fig).toBeVisible();
+    await expect(fig.locator(".cs-diagram-svg--desktop")).toBeVisible();
+    await expect(fig.locator(".cs-diagram-svg--mobile")).toBeHidden();
+    await expect(fig.locator("figcaption.cs-diagram-caption")).toBeVisible();
+  }
+
+  // Toggle to day shift and confirm diagrams remain visible with light tokens.
+  await page.evaluate(() => {
+    document.documentElement.setAttribute("data-time", "day");
+  });
+  await expect(diagrams.first()).toBeVisible();
+
+  // Phone viewport (375px): swaps to mobile SVG layout and never overflows horizontally.
+  await page.setViewportSize({ width: 375, height: 812 });
+  for (const id of diagramIds) {
+    const fig = page.locator(`figure.cs-diagram[data-diagram-id="${id}"]`);
+    await expect(fig.locator(".cs-diagram-svg--mobile")).toBeVisible();
+    await expect(fig.locator(".cs-diagram-svg--desktop")).toBeHidden();
+  }
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth > window.innerWidth,
+  );
+  expect(overflow).toBe(false);
 });
 
 // Generic coverage for every project route not already spot-checked above —

@@ -4,6 +4,11 @@
 // re-parsed from source. A node type it has not been taught throws, so a new
 // kind of content stops the build instead of silently dropping text.
 
+import {
+  diagramAccessibleSummary,
+  getCaseStudyDiagram,
+} from "../../components/CaseStudyDiagram/diagrams";
+
 export interface TextBlock {
   kind: "heading" | "paragraph";
   text: string;
@@ -11,7 +16,8 @@ export interface TextBlock {
 
 interface MarkdocNodeLike {
   type?: unknown;
-  attributes?: { content?: unknown };
+  tag?: unknown;
+  attributes?: { content?: unknown; id?: unknown };
   children?: unknown[];
 }
 
@@ -64,6 +70,20 @@ function collect(value: unknown, out: TextBlock[]): void {
       out.push({ kind: "paragraph", text: content });
     }
     return;
+  }
+  if (type === "tag") {
+    if (node.tag === "diagram") {
+      const id = node.attributes?.id;
+      if (typeof id !== "string" || !id.trim()) {
+        throw new Error('ask corpus: diagram tag missing "id" attribute');
+      }
+      const spec = getCaseStudyDiagram(id);
+      out.push({ kind: "paragraph", text: diagramAccessibleSummary(spec) });
+      return;
+    }
+    throw new Error(
+      `ask corpus: unsupported Markdoc tag "${String(node.tag)}"`,
+    );
   }
   if (type === "hr") return;
   throw new Error(`ask corpus: unsupported Markdoc block "${type}"`);
