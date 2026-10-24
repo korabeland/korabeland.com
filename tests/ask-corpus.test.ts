@@ -188,13 +188,12 @@ describe("validateCorpus", () => {
       [{ ...good, route: "/about", anchor: "ghost" }],
       /unknown anchor/,
     ],
-  ] as [
-    string,
-    CorpusPassage[],
-    RegExp,
-  ][])("flags %s", (_name, passages, pattern) => {
-    expect(validateCorpus(passages, rules).join("\n")).toMatch(pattern);
-  });
+  ] as [string, CorpusPassage[], RegExp][])(
+    "flags %s",
+    (_name, passages, pattern) => {
+      expect(validateCorpus(passages, rules).join("\n")).toMatch(pattern);
+    },
+  );
 
   it("assertValidCorpus throws with every problem listed", () => {
     expect(() =>

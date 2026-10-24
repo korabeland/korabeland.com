@@ -47,6 +47,7 @@ function runBiomeCheck(): { stdout: string; exitCode: number } {
 describe("biome.json excludes .claude/worktrees", () => {
   beforeAll(() => {
     scratchDir = mkdtempSync(join(tmpdir(), "biome-worktree-scope-"));
+    execFileSync("git", ["init"], { cwd: scratchDir, stdio: "ignore" });
 
     // Real root config, read at test time so this guard tracks the actual
     // exclusion pattern rather than a hardcoded copy.
