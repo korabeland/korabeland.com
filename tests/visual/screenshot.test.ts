@@ -59,17 +59,19 @@ for (const route of ROUTES) {
           images.every((image) => image.complete && image.naturalWidth > 0)
         );
       });
-      await page.locator("figure[data-diagram]").evaluateAll(async (figures) => {
-        const shift =
-          document.documentElement.dataset.time === "day" ? "day" : "night";
-        await Promise.all(
-          figures.map((figure) =>
-            figure
-              .querySelector<HTMLImageElement>(`.diagram-${shift} img`)
-              ?.decode(),
-          ),
-        );
-      });
+      await page
+        .locator("figure[data-diagram]")
+        .evaluateAll(async (figures) => {
+          const shift =
+            document.documentElement.dataset.time === "day" ? "day" : "night";
+          await Promise.all(
+            figures.map((figure) =>
+              figure
+                .querySelector<HTMLImageElement>(`.diagram-${shift} img`)
+                ?.decode(),
+            ),
+          );
+        });
     }
 
     // In CI the pixelmatch baselines are untrustworthy — they're
