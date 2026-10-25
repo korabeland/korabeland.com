@@ -45,6 +45,35 @@ for (const route of ROUTES) {
     // background revalidation and font swaps.
     await page.locator("main#main").waitFor({ state: "visible" });
 
+    if (route === "/lab/relocation-playbook") {
+      await page.waitForFunction(() => {
+        const shift =
+          document.documentElement.dataset.time === "day" ? "day" : "night";
+        const images = Array.from(
+          document.querySelectorAll<HTMLImageElement>(
+            `figure[data-diagram] .diagram-${shift} img`,
+          ),
+        );
+        return (
+          images.length === 5 &&
+          images.every((image) => image.complete && image.naturalWidth > 0)
+        );
+      });
+      await page
+        .locator("figure[data-diagram]")
+        .evaluateAll(async (figures) => {
+          const shift =
+            document.documentElement.dataset.time === "day" ? "day" : "night";
+          await Promise.all(
+            figures.map((figure) =>
+              figure
+                .querySelector<HTMLImageElement>(`.diagram-${shift} img`)
+                ?.decode(),
+            ),
+          );
+        });
+    }
+
     // In CI the pixelmatch baselines are untrustworthy — they're
     // macOS-generated and Linux renders differently, so a local diff there only
     // ever auto-seeds and passes (cost, no signal). Chromatic archives this same
