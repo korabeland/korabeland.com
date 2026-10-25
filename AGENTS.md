@@ -60,7 +60,7 @@ src/content/
 ## 2. Build & verify
 
 - `pnpm dev` — local dev server
-- `pnpm build` — production build (prebuild hooks: `gen-trail-register.ts` + `gen-shift-log.ts` + `gen-hero-variants.ts` + `gen-eye-rig.ts` + `gen-corpus-index.ts`; `gen-trail-register.ts`, `gen-hero-variants.ts`, `gen-eye-rig.ts` and `gen-corpus-index.ts` also run on `predev`; postbuild: `patch-vercel-config.ts` CSP checks + `check-built-site.ts` for Ask citations and `/ask-index.json` + `smoke-production-build.ts` for emitted Vercel handler behavior)
+- `pnpm build` — production build (prebuild hooks: `gen-trail-register.ts` + `gen-shift-log.ts` + `gen-hero-variants.ts` + `gen-eye-rig.ts` + `gen-relocation-diagrams.ts` + `gen-corpus-index.ts`; `gen-trail-register.ts`, `gen-hero-variants.ts`, `gen-eye-rig.ts`, `gen-relocation-diagrams.ts` and `gen-corpus-index.ts` also run on `predev`; postbuild: `patch-vercel-config.ts` CSP checks + `check-built-site.ts` for Ask citations and `/ask-index.json` + `smoke-production-build.ts` for emitted Vercel handler behavior)
 - `pnpm verify` — Biome + `tsc --noEmit` + `astro check` (`.astro` frontmatter)
 - `pnpm test` — Vitest (non-visual, non-E2E)
 - `pnpm test:visual` — Playwright visual + E2E. For visual approval policy, see `docs/decisions/2026-07-10-visual-approval-policy.md`. Never delete/blind-reseed a baseline to go green. The suite honours `DEV_PORT` (default 4321) so a second worktree can run it on a non-colliding port: `DEV_PORT=4399 pnpm test:visual`.
@@ -111,6 +111,7 @@ generation fails the build instead of shipping a stale index.
 - `src/content/trail-register/commits.json` — from `git log` by `scripts/gen-trail-register.ts` (seed: `commits.seed.json`)
 - `src/content/shift-log/contributions.json` — from the GitHub contributions API by `scripts/gen-shift-log.ts` (seed: `contributions.seed.json`, fail-soft)
 - `src/content/ask-index/corpus.json` — from published site content by `scripts/gen-corpus-index.ts` (no seed; generation failure stops the build)
+- `public/lab/relocation-playbook/diagrams/*.gen.*` — responsive day/night variants from committed artwork by `scripts/gen-relocation-diagrams.ts` (no seed; generated files are gitignored)
 
 ---
 
@@ -165,7 +166,7 @@ When a change matches a trigger below, the "required work" column is not optiona
 | --- | --- | --- |
 | `package.json` or `pnpm-lock.yaml` | Run `pnpm audit --prod --audit-level=high`; update compatible integrations together (versions in `package.json`); full suite after upgrade | Blocking CI step "Dependency security audit" |
 | New entry in `src/content/projects/` or `src/content/posts/` | Route/SEO/axe/visual coverage derives automatically from the collections — verify enumeration picked it up; a hero-bearing post must appear in **both** Lighthouse configs | `tests/coverage-sync.test.ts` (enumeration parity + Lighthouse containment) |
-| New or replaced image asset | Responsive delivery via `scripts/gen-hero-variants.ts` conventions (never astro:assets/`<Image>` for `public/` assets — the Vercel imageService ignores width/format requests); explicit dimensions; alt text; ≤200 KB delivered variant (`docs/decisions/2026-07-10-image-delivery-budget.md`) | `tests/e2e/hero-delivery.spec.ts` network asserts + CI Lighthouse LCP/CLS |
+| New or replaced image asset | Responsive delivery via its generator (`scripts/gen-hero-variants.ts` for collection heroes; `scripts/gen-relocation-diagrams.ts` for Relocation Playbook artwork); explicit dimensions; alt text; ≤200 KB delivered variant (`docs/decisions/2026-07-10-image-delivery-budget.md`); never use astro:assets/`<Image>` for `public/` assets because the Vercel imageService ignores width/format requests | `tests/e2e/hero-delivery.spec.ts` network asserts + CI Lighthouse LCP/CLS |
 | Shared markup/state appearing in a second surface | Reuse the existing owner — component catalogue in `docs/design/components.md` (`ProjectLedger`, `Portrait`, `StatusChip`, `src/lib/status.ts`, `src/lib/shift.ts`) — or extract one; an unavoidable duplicate gets a parity test (`tests/shift-parity.test.ts` is the template) | Code-review criterion + existing sync/parity tests |
 | Runtime or onboarding doc (`.nvmrc`, `.tool-versions`, `engines`, README) | `.nvmrc` is canonical; update mirrors in the same commit | `tests/runtime-sync.test.ts` |
 | Visual output changes | Follow the approval policy: Chromatic is a **non-blocking published visual record reviewed by the AI agent** — the human `UI Tests` gate was never wired and is abandoned (ADR amendment c). On any change that can alter a rendered page, review the diff (Chromatic build or a local capture) and flag only genuine regressions; local baselines reseed only after visual review of every diff — use `pnpm reseed:visual` → review → `--promote`, never hand-delete | Required checks are `verify-all` + `Devin Review`; the `chromatic` job publishes the record but does not gate; `docs/decisions/2026-07-10-visual-approval-policy.md` |
