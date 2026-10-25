@@ -270,8 +270,7 @@ const tools: { label: string; note: string }[] = [
               between{" "}
               {formatHumanDateRange(stats.pullRequests.closedUnmergedRange)}).{" "}
               <strong>Source:</strong> public GitHub pull requests closed with{" "}
-              <code>merged_at: null</code> (four replaced by a clean rebuild on
-              a new branch, one closed after a CI check probe), plus{" "}
+              <code>merged_at: null</code>, plus{" "}
               <code>no-mistakes</code> fix commits in <code>git log</code>.
               Rework and direction calls I make inside a branch before merge
               are not recorded as separate events in the public repo.
