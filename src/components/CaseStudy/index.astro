@@ -30,7 +30,7 @@ interface LogEntry {
 interface Props {
   title: string;
   subtitle?: string;
-  /** "in flight" | "shipped" — drives the status chip colour. */
+  /** "in flight" | "shipped" | "complete" — drives the status chip colour. */
   status?: string;
   facts: Fact[];
   heroImage?: string;
@@ -85,7 +85,7 @@ const HERO_SIZES = "(max-width: 960px) 100vw, 960px";
     <span class="t-label">{eyebrowLabel}</span>
     {status && (
       <StatusChip
-        status={status === "shipped" ? "shipped" : "in-flight"}
+        status={status === "shipped" || status === "complete" ? "shipped" : "in-flight"}
         variant="chip"
         label={status}
       />

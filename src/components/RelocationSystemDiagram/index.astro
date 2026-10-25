@@ -1,0 +1,172 @@
+---
+// Relocation Playbook diagrams. The component keeps story placement, captions,
+// and accessible descriptions while responsive images carry the illustrations.
+
+import type { RelocationDiagramVariant } from "./segments";
+
+interface Props {
+  variant?: RelocationDiagramVariant;
+}
+
+const { variant = "system-overview" } = Astro.props;
+const captionId = `reloc-diagram-caption-${variant}`;
+
+const diagrams: Record<
+  RelocationDiagramVariant,
+  { caption: string; alt: string }
+> = {
+  "system-overview": {
+    caption:
+      "system overview · markdown folder, Claude Code, approval gate, and shared reviews",
+    alt: "Flow from a markdown folder holding the plan, tasks, and research through Claude Code and human approval before changes outside the folder, then to a Notion task board and a weekly plain-English partner review.",
+  },
+  "ripple-effects": {
+    caption:
+      "dependency ripple · when one travel date or work assumption shifts",
+    alt: "A shift in the travel date or work assumption branches to lease notice periods, health coverage start dates, sale timing, and the weekly budget.",
+  },
+  "first-system": {
+    caption: "first system · work split across four surfaces",
+    alt: "Four surfaces support the first system: PLAN.md for strategy and timeline tasks, a Notion task board read at each session start, research and document folders, and a short memory index. The system had no wrap-up after solo sessions, memory dates drifted from the Notion board, and an unconfirmed guess was filed as verified facts.",
+  },
+  "weekly-agenda": {
+    caption: "weekly review · how the session agenda was built",
+    alt: "The overall plan, urgent deadlines, and open decisions feed a weekly partner session in plain English. It structures discussions, tracks small details, asks questions, and lets topics be added or removed.",
+  },
+  "redesigned-system": {
+    caption:
+      "redesigned system · structured memory in state/ feeding one session-end wrap-up",
+    alt: "Strict templates and the AGENTS.md approval contract feed state/ records for facts, deadlines, decisions, research, and a board snapshot. Solo sessions and partner reviews share a session-end wrap-up that builds the next agenda from state/ and flags changes outside the folder.",
+  },
+};
+
+const { caption, alt } = diagrams[variant];
+const shifts = ["night", "day"] as const;
+const widths = [680, 1360] as const;
+const imagePath = (
+  shift: (typeof shifts)[number],
+  width: number,
+  format: string,
+) =>
+  `/lab/relocation-playbook/diagrams/${variant}-${shift}.gen.${width}.${format}`;
+const imageSrcset = (shift: (typeof shifts)[number], format: string) =>
+  widths
+    .map((width) => `${imagePath(shift, width, format)} ${width}w`)
+    .join(", ");
+---
+
+<figure
+  class="reloc-diagram"
+  data-diagram={variant}
+  aria-labelledby={captionId}
+>
+  <figcaption id={captionId} class="t-label diagram-caption">
+    {caption}
+  </figcaption>
+
+  <div class="diagram-image-stack">
+    {
+      shifts.map((shift) => (
+        <picture class:list={["diagram-picture", `diagram-${shift}`]} data-shift={shift}>
+          <source
+            type="image/avif"
+            data-srcset={imageSrcset(shift, "avif")}
+            sizes="(max-width: 680px) 100vw, 680px"
+          />
+          <source
+            type="image/webp"
+            data-srcset={imageSrcset(shift, "webp")}
+            sizes="(max-width: 680px) 100vw, 680px"
+          />
+          <img
+            data-src={imagePath(shift, 680, "webp")}
+            alt={alt}
+            width="1536"
+            height="1024"
+            loading="eager"
+            decoding="async"
+            sizes="(max-width: 680px) 100vw, 680px"
+          />
+        </picture>
+      ))
+    }
+  </div>
+  <noscript>
+    <img
+      class="diagram-noscript-image"
+      src={imagePath("night", 680, "webp")}
+      alt={alt}
+      width="1536"
+      height="1024"
+    />
+  </noscript>
+</figure>
+
+<script>
+  const root = document.documentElement;
+  const stacks = Array.from(
+    document.querySelectorAll<HTMLElement>(".diagram-image-stack"),
+  );
+  const activeShift = () => (root.dataset.time === "day" ? "day" : "night");
+
+  const loadShift = (stack: HTMLElement, shift: string) => {
+    const picture = stack.querySelector<HTMLPictureElement>(
+      `.diagram-${shift}`,
+    );
+    const image = picture?.querySelector<HTMLImageElement>("img");
+    if (!picture || !image || image.hasAttribute("src")) return;
+
+    for (const source of picture.querySelectorAll<HTMLSourceElement>("source")) {
+      source.srcset = source.dataset.srcset ?? "";
+    }
+    image.src = image.dataset.src ?? "";
+  };
+
+  for (const stack of stacks) loadShift(stack, activeShift());
+
+  new MutationObserver(() => {
+    for (const stack of stacks) loadShift(stack, activeShift());
+  }).observe(root, { attributes: true, attributeFilter: ["data-time"] });
+</script>
+
+<style>
+  .reloc-diagram {
+    margin: var(--s-6) 0 var(--s-5);
+    padding: 0;
+  }
+
+  .diagram-caption {
+    display: block;
+    margin: 0 0 var(--s-3);
+  }
+
+  .diagram-image-stack {
+    width: 100%;
+    overflow: hidden;
+    background: var(--paper-2);
+  }
+
+  .diagram-picture {
+    display: none;
+  }
+
+  :global(html[data-time="day"]) .diagram-night {
+    display: none;
+  }
+
+  :global(html[data-time="day"]) .diagram-day,
+  :global(html:not([data-time="day"])) .diagram-night {
+    display: block;
+  }
+
+  .diagram-picture img,
+  .diagram-noscript-image {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .diagram-picture img:not([src]) {
+    visibility: hidden;
+  }
+</style>

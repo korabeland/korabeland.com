@@ -106,14 +106,16 @@ fi
 SUMMARY="*(summary unavailable)*"
 if command -v claude >/dev/null 2>&1; then
   echo "▶ Generating summary with Claude..."
+  COMMITS_FILE=$(mktemp "${TMPDIR:-/tmp}/pr-commits.XXXXXX")
+  trap 'rm -f "$COMMITS_FILE"' EXIT
   {
     git log "origin/main..HEAD" --oneline 2>/dev/null
     echo ""
     git diff "origin/main..HEAD" --stat 2>/dev/null
-  } > /tmp/pr-commits.txt
-  if [ -s /tmp/pr-commits.txt ]; then
+  } > "$COMMITS_FILE"
+  if [ -s "$COMMITS_FILE" ]; then
     SUMMARY=$(claude -p "Summarize these git commits for a PR reviewer in 2-3 sentences. Be specific about what changed visually or functionally. Skip implementation details." \
-      --model claude-haiku-4-5-20251001 < /tmp/pr-commits.txt 2>/dev/null || echo "*(summary unavailable)*")
+      --model claude-haiku-4-5-20251001 < "$COMMITS_FILE" 2>/dev/null || echo "*(summary unavailable)*")
   fi
 fi
 
