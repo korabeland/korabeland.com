@@ -116,7 +116,7 @@ test("/lab renders the tinkering index, work case studies absent", async ({
   await expect(page.locator('a[href^="/work/"]')).toHaveCount(0);
 });
 
-test("/lab/relocation-playbook renders the architecture comparison without overflow on phone or desktop in both shifts", async ({
+test("/lab/relocation-playbook renders the five inline diagrams without overflow on phone or desktop in both shifts", async ({
   page,
 }) => {
   for (const shift of ["night", "day"] as const) {
@@ -126,13 +126,28 @@ test("/lab/relocation-playbook renders the architecture comparison without overf
         `/lab/relocation-playbook?shift=${shift}`,
       );
       expect(response?.status()).toBe(200);
-      const diagram = page.locator("figure.reloc-diagram");
-      await expect(diagram).toBeVisible();
-      const box = await diagram.boundingBox();
-      expect(box).not.toBeNull();
-      expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(width);
+      const diagrams = page.locator("figure.reloc-diagram");
+      await expect(diagrams).toHaveCount(5);
+      for (let i = 0; i < 5; i++) {
+        const diagram = diagrams.nth(i);
+        await expect(diagram).toBeVisible();
+        const box = await diagram.boundingBox();
+        expect(box).not.toBeNull();
+        expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(width);
+      }
     }
   }
+  await expect(page.locator(".strip .fact-label")).toHaveText([
+    "stack",
+    "span",
+    "status",
+  ]);
+  await expect(page.locator(".strip .fact-value")).toHaveText([
+    "Markdown files · Claude Code · Notion · Calendar",
+    "2026 · 6 months",
+    "complete",
+  ]);
+  await expect(page.locator(".head-meta .statuschip")).toHaveText("complete");
   await expect(
     page.locator('a[href="https://github.com/korabeland/relocation-playbook"]'),
   ).toBeVisible();

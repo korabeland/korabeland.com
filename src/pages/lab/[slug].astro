@@ -7,6 +7,7 @@ import type { GetStaticPaths } from "astro";
 import CaseStudy from "../../components/CaseStudy/index.astro";
 import { PostContent } from "../../components/PostContent";
 import RelocationSystemDiagram from "../../components/RelocationSystemDiagram/index.astro";
+import { buildRelocationStoryParts } from "../../components/RelocationSystemDiagram/segments";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { serializeJsonLd } from "../../lib/json-ld";
 import {
@@ -32,19 +33,21 @@ if (!project) throw new Error(`Project not found: ${slug}`);
 
 const content = await project.content();
 
-// Status derives from shippedAt — same rule as the ledger chips on /lab.
-const status = project.shippedAt ? "shipped" : "in flight";
+// Status derives from shippedAt: "complete" on /lab detail pages when shipped,
+// "in flight" otherwise (/work keeps "shipped").
+const status = project.shippedAt ? "complete" : "in flight";
 
 const span = formatSpan(project.startedAt, project.shippedAt);
 
-// Fact strip: Role / Team / Stack / Span / Status.
+// Fact strip on /lab detail pages: Stack / Span / Status (Role and Team are omitted).
 const facts = [
-  { label: "role", value: project.role || "—" },
-  { label: "team", value: project.team || "—" },
   { label: "stack", value: project.stack || "—" },
   { label: "span", value: span || "—" },
   { label: "status", value: status },
 ];
+
+const relocationStoryParts =
+  slug === "relocation-playbook" ? buildRelocationStoryParts(content) : null;
 
 const outcomeMetrics = mapMetrics(slug, project.outcomeMetrics);
 const fieldLog = project.fieldLog.map((f) => ({
@@ -98,7 +101,15 @@ const jsonLd = {
     backLabel="← all tinkering"
     eyebrowLabel="project"
   >
-    <PostContent document={content} />
-    {slug === "relocation-playbook" && <RelocationSystemDiagram />}
+    {relocationStoryParts ? (
+      relocationStoryParts.map((part) => (
+        <>
+          <RelocationSystemDiagram variant={part.diagram} />
+          <PostContent document={part.document} />
+        </>
+      ))
+    ) : (
+      <PostContent document={content} />
+    )}
   </CaseStudy>
 </BaseLayout>

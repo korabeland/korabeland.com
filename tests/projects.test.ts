@@ -139,10 +139,18 @@ describe("nextProject chain integrity", () => {
 });
 
 describe("relocation-playbook lab entry", () => {
-  it("uses the lab route", async () => {
+  it("uses the lab route and carries the approved span and stack", async () => {
     const project = await readProject("relocation-playbook");
     expect(project).not.toBeNull();
     expect(project?.category).toBe("side");
+    expect(project?.stack).toBe(
+      "Markdown files · Claude Code · Notion · Calendar",
+    );
+    expect(project?.startedAt).toBe("2026-03-01");
+    expect(project?.shippedAt).toBe("2026-09-03");
+    expect(
+      formatSpan(project?.startedAt ?? null, project?.shippedAt ?? null),
+    ).toBe("2026 · 6 months");
     expect(projectHref({ slug: "relocation-playbook", category: "side" })).toBe(
       "/lab/relocation-playbook",
     );

@@ -1,115 +1,382 @@
 ---
-// RelocationSystemDiagram/index.astro — static console comparison of the
-// Relocation Playbook's first system versus the foundation redesign
-// (docs/case-study.md §2, §5, §6). Server-rendered HTML/CSS only: zero client
+// RelocationSystemDiagram/index.astro — static console diagrams for the
+// Relocation Playbook lab entry. Server-rendered HTML/CSS only: zero client
 // JavaScript, no inline styles, token-driven for night and day shifts, and
-// stacks cleanly below the 680px prose breakpoint.
+// stacks cleanly below the 680px prose breakpoint with no horizontal overflow.
+
+import type { RelocationDiagramVariant } from "./segments";
+
+interface Props {
+  variant?: RelocationDiagramVariant;
+}
 
 interface RecordRow {
+  step?: string;
   name: string;
   detail: string;
+  active?: boolean;
 }
+
+const { variant = "system-overview" } = Astro.props;
+const captionId = `reloc-diagram-caption-${variant}`;
+
+const overviewStages: RecordRow[] = [
+  {
+    step: "01 · single source of truth",
+    name: "Markdown folder",
+    detail:
+      "Simple text files in one folder hold the plan, tasks, research, and weekly check-ins.",
+  },
+  {
+    step: "02 · household chief of staff",
+    name: "Claude Code",
+    detail:
+      "Works from the markdown folder to read and edit files, research options, and draft agendas.",
+  },
+  {
+    step: "03 · approval gate",
+    name: "My approval before any change",
+    detail:
+      "Only I drive the AI tooling. Human approval is required before changes are made outside the folder.",
+    active: true,
+  },
+  {
+    step: "04 · shared surfaces",
+    name: "Notion task board + weekly partner session",
+    detail:
+      "Tasks live on the Notion board, while weekly reviews with my partner run in plain English.",
+  },
+];
+
+const rippleRows: RecordRow[] = [
+  {
+    step: "01 · housing",
+    name: "Lease notice periods",
+    detail:
+      "Ending a lease and matching notice dates when the departure timeline moves.",
+  },
+  {
+    step: "02 · insurance",
+    name: "Health coverage",
+    detail:
+      "Adjusting insurance start dates when travel dates or work assumptions change.",
+  },
+  {
+    step: "03 · belongings",
+    name: "Sale timing",
+    detail: "Re-timing when to sell what you cannot take.",
+  },
+  {
+    step: "04 · cash flow",
+    name: "Weekly budget",
+    detail: "Recalculating the cash you need in a given week.",
+  },
+];
 
 const firstSystemRows: RecordRow[] = [
   {
     name: "PLAN.md",
-    detail: "strategy, phases, constraints, and triggers",
+    detail:
+      "Overall strategy, move structure, and tasks prioritised against the timeline.",
   },
   {
-    name: "Task board (Notion)",
-    detail: "status, owner, phase, and due date",
+    name: "Notion task board",
+    detail: "To-do list read page by page at the start of every session.",
   },
   {
-    name: "Research/ & Documents/",
-    detail: "options, drafts, and shared household outputs",
+    name: "Research and document folders",
+    detail: "Shared folders for background research and drafted documents.",
   },
   {
-    name: "memory index",
-    detail: "short list of pointers and condensed dates",
+    name: "Short memory index",
+    detail: "Condensed notes and dates kept alongside the plan.",
+  },
+];
+
+const agendaInputs: RecordRow[] = [
+  {
+    step: "input 01",
+    name: "Overall plan",
+    detail: "Move structure, timeline priorities, and background research.",
+  },
+  {
+    step: "input 02",
+    name: "Urgent deadlines",
+    detail: "Whatever was most urgent to act on next.",
+  },
+  {
+    step: "input 03",
+    name: "Open decisions",
+    detail: "Choices and questions to talk through together as a couple.",
   },
 ];
 
 const redesignRows: RecordRow[] = [
   {
     name: "state/facts",
-    detail: "confirmed | assumption | recommendation · source · verify_by",
+    detail:
+      "Confirmed, assumption, or recommendation · source · date checked · date to check again.",
   },
   {
     name: "state/deadlines",
-    detail: "hard (legal or booked) | soft (self-imposed) · owner",
+    detail: "Hard (legal or booked) or soft (self-imposed).",
   },
   {
     name: "state/decisions",
-    detail: "open choices, options, and recommendation",
+    detail: "Open decisions sitting next to deadlines.",
   },
   {
     name: "state/research-queue",
-    detail: "prioritised questions with sources",
+    detail: "Prioritised research queue.",
   },
   {
     name: "state/board-snapshot",
-    detail: "cached task board with date and completeness note",
+    detail: "Cached snapshot of the task board for fast starts.",
+  },
+];
+
+const redesignSessionRows: RecordRow[] = [
+  {
+    name: "Solo sessions mid-week",
+    detail:
+      "Updates structured records in state/ and runs the session-end wrap-up.",
+  },
+  {
+    name: "Partner review sessions",
+    detail:
+      "Reviews the plain-English agenda together and runs the same session-end wrap-up.",
   },
 ];
 ---
 
-<figure class="reloc-diagram" aria-labelledby="reloc-diagram-caption">
-  <figcaption id="reloc-diagram-caption" class="t-label diagram-caption">
-    architecture · first system vs foundation redesign
-  </figcaption>
+{
+  variant === "system-overview" && (
+    <figure
+      class="reloc-diagram"
+      data-diagram="system-overview"
+      aria-labelledby={captionId}
+    >
+      <figcaption id={captionId} class="t-label diagram-caption">
+        system overview · markdown folder, Claude Code, approval gate, and shared reviews
+      </figcaption>
 
-  <div class="diagram-grid">
-    <div class="diagram-panel">
-      <div class="panel-head">
-        <span class="t-label panel-step">01 · first system</span>
-        <span class="panel-title">Four separate surfaces read at session start</span>
-      </div>
-
-      <ul class="node-list">
-        {firstSystemRows.map((row) => (
-          <li class="node-row">
-            <span class="t-mono node-name">{row.name}</span>
-            <span class="node-detail">{row.detail}</span>
-          </li>
+      <div class="diagram-grid">
+        {overviewStages.map((stage) => (
+          <div
+            class:list={[
+              "diagram-panel",
+              stage.active && "diagram-panel-active",
+            ]}
+          >
+            <div class="panel-head">
+              <span
+                class:list={[
+                  "t-label panel-step",
+                  stage.active && "panel-step-active",
+                ]}
+              >
+                {stage.step}
+              </span>
+              <span class="panel-title">{stage.name}</span>
+            </div>
+            <span class="close-body">{stage.detail}</span>
+          </div>
         ))}
-      </ul>
-
-      <div class="panel-close">
-        <span class="t-label close-label">close · weekly reviews only</span>
-        <span class="close-body">
-          Solo sessions ended without a close step. Prose facts drifted across
-          surfaces and the shared agenda fell behind the work.
-        </span>
       </div>
-    </div>
+    </figure>
+  )
+}
 
-    <div class="diagram-panel diagram-panel-active">
-      <div class="panel-head">
-        <span class="t-label panel-step panel-step-active">02 · foundation redesign</span>
-        <span class="panel-title">Structured records + one AGENTS.md contract</span>
+{
+  variant === "ripple-effects" && (
+    <figure
+      class="reloc-diagram"
+      data-diagram="ripple-effects"
+      aria-labelledby={captionId}
+    >
+      <figcaption id={captionId} class="t-label diagram-caption">
+        dependency ripple · when one travel date or work assumption shifts
+      </figcaption>
+
+      <div class="diagram-stack">
+        <div class="diagram-panel diagram-panel-active">
+          <div class="panel-head">
+            <span class="t-label panel-step panel-step-active">
+              trigger · upstream shift
+            </span>
+            <span class="panel-title">
+              Shifted travel date or work assumption
+            </span>
+          </div>
+          <span class="close-body">
+            Moving between Melbourne and Washington DC tied dozens of dependent
+            plans together. One shift ripples into four downstream areas:
+          </span>
+        </div>
+
+        <div class="diagram-grid">
+          {rippleRows.map((row) => (
+            <div class="node-row">
+              <span class="t-label panel-step">{row.step}</span>
+              <span class="t-mono node-name">{row.name}</span>
+              <span class="node-detail">{row.detail}</span>
+            </div>
+          ))}
+        </div>
       </div>
+    </figure>
+  )
+}
 
-      <ul class="node-list">
-        {redesignRows.map((row) => (
-          <li class="node-row">
-            <span class="t-mono node-name">{row.name}</span>
-            <span class="node-detail">{row.detail}</span>
-          </li>
-        ))}
-      </ul>
+{
+  variant === "first-system" && (
+    <figure
+      class="reloc-diagram"
+      data-diagram="first-system"
+      aria-labelledby={captionId}
+    >
+      <figcaption id={captionId} class="t-label diagram-caption">
+        first system · work split across four surfaces
+      </figcaption>
 
-      <div class="panel-close">
-        <span class="t-label close-label close-label-active">
-          close · after every solo or shared session
-        </span>
-        <span class="close-body">
-          Composes the shared agenda from state/ records, proposes board
-          changes for approval, and reports any surface not updated.
-        </span>
+      <div class="diagram-panel">
+        <div class="panel-head">
+          <span class="t-label panel-step">initial setup · split by job</span>
+          <span class="panel-title">
+            Four separate places the AI agent worked across
+          </span>
+        </div>
+
+        <div class="diagram-grid">
+          {firstSystemRows.map((row) => (
+            <div class="node-row">
+              <span class="t-mono node-name">{row.name}</span>
+              <span class="node-detail">{row.detail}</span>
+            </div>
+          ))}
+        </div>
+
+        <div class="panel-close">
+          <span class="t-label close-label">
+            where it broke under a fixed departure date
+          </span>
+          <span class="close-body">
+            Solo mid-week sessions had no wrap-up step, dates in the memory
+            index drifted away from the Notion task board, and a file named
+            'verified facts' held an unconfirmed guess.
+          </span>
+        </div>
       </div>
-    </div>
-  </div>
-</figure>
+    </figure>
+  )
+}
+
+{
+  variant === "weekly-agenda" && (
+    <figure
+      class="reloc-diagram"
+      data-diagram="weekly-agenda"
+      aria-labelledby={captionId}
+    >
+      <figcaption id={captionId} class="t-label diagram-caption">
+        weekly review · how the session agenda was built
+      </figcaption>
+
+      <div class="diagram-stack">
+        <div class="diagram-grid diagram-grid-3">
+          {agendaInputs.map((input) => (
+            <div class="node-row">
+              <span class="t-label panel-step">{input.step}</span>
+              <span class="t-mono node-name">{input.name}</span>
+              <span class="node-detail">{input.detail}</span>
+            </div>
+          ))}
+        </div>
+
+        <div class="diagram-panel diagram-panel-active">
+          <div class="panel-head">
+            <span class="t-label panel-step panel-step-active">
+              output · weekly couple session agenda
+            </span>
+            <span class="panel-title">
+              Plain-English check-in with my partner
+            </span>
+          </div>
+          <span class="close-body">
+            Structured our discussions, kept us on top of small details, asked
+            good questions, and let us add or remove anything we decided was not
+            necessary or could wait.
+          </span>
+        </div>
+      </div>
+    </figure>
+  )
+}
+
+{
+  variant === "redesigned-system" && (
+    <figure
+      class="reloc-diagram"
+      data-diagram="redesigned-system"
+      aria-labelledby={captionId}
+    >
+      <figcaption id={captionId} class="t-label diagram-caption">
+        redesigned system · structured memory in state/ feeding one session-end wrap-up
+      </figcaption>
+
+      <div class="diagram-grid">
+        <div class="diagram-panel diagram-panel-active">
+          <div class="panel-head">
+            <span class="t-label panel-step panel-step-active">
+              01 · structured memory in state/
+            </span>
+            <span class="panel-title">
+              Strict markdown templates + one AGENTS.md approval contract
+            </span>
+          </div>
+
+          <ul class="node-list">
+            {redesignRows.map((row) => (
+              <li class="node-row">
+                <span class="t-mono node-name">{row.name}</span>
+                <span class="node-detail">{row.detail}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div class="diagram-panel">
+          <div class="panel-head">
+            <span class="t-label panel-step">02 · unified session loop</span>
+            <span class="panel-title">
+              Solo and partner sessions share one session-end wrap-up
+            </span>
+          </div>
+
+          <ul class="node-list">
+            {redesignSessionRows.map((row) => (
+              <li class="node-row">
+                <span class="t-mono node-name">{row.name}</span>
+                <span class="node-detail">{row.detail}</span>
+              </li>
+            ))}
+          </ul>
+
+          <div class="panel-close">
+            <span class="t-label close-label close-label-active">
+              close · runs after every session, solo or shared
+            </span>
+            <span class="close-body">
+              Builds the next shared agenda straight from state/ records instead
+              of from conversation memory, and flags anything outside the folder
+              that it did not update.
+            </span>
+          </div>
+        </div>
+      </div>
+    </figure>
+  )
+}
 
 <style>
   .reloc-diagram {
@@ -122,10 +389,20 @@ const redesignRows: RecordRow[] = [
     margin: 0 0 var(--s-3);
   }
 
+  .diagram-stack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-3);
+  }
+
   .diagram-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--s-4);
+  }
+
+  .diagram-grid-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .diagram-panel {
@@ -221,7 +498,8 @@ const redesignRows: RecordRow[] = [
   }
 
   @media (max-width: 680px) {
-    .diagram-grid {
+    .diagram-grid,
+    .diagram-grid-3 {
       grid-template-columns: 1fr;
     }
   }
