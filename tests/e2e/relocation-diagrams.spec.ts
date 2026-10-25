@@ -21,7 +21,7 @@ test.describe("Relocation Playbook diagrams", () => {
     page.on("requestfinished", async (request) => {
       if (!diagramImagePath.test(new URL(request.url()).pathname)) return;
       const response = await request.response();
-      if (response) {
+      if (response && response.status() >= 200 && response.status() < 300) {
         delivered.set(
           new URL(request.url()).pathname,
           (await response.body()).length,
