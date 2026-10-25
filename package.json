@@ -7,9 +7,9 @@
     "node": ">=24 <25"
   },
   "scripts": {
-    "predev": "pnpm gen:trail-register && pnpm gen:hero-variants && pnpm gen:eye-rig && pnpm gen:corpus-index",
+    "predev": "pnpm gen:trail-register && pnpm gen:hero-variants && pnpm gen:eye-rig && pnpm gen:relocation-diagrams && pnpm gen:corpus-index",
     "dev": "astro dev",
-    "prebuild": "pnpm gen:trail-register && pnpm gen:shift-log && pnpm gen:hero-variants && pnpm gen:eye-rig && pnpm gen:corpus-index",
+    "prebuild": "pnpm gen:trail-register && pnpm gen:shift-log && pnpm gen:hero-variants && pnpm gen:eye-rig && pnpm gen:relocation-diagrams && pnpm gen:corpus-index",
     "build": "astro build",
     "postbuild": "tsx scripts/patch-vercel-config.ts && tsx scripts/check-built-site.ts && tsx scripts/smoke-production-build.ts",
     "preview": "astro preview",
@@ -18,6 +18,7 @@
     "gen:shift-log": "tsx scripts/gen-shift-log.ts",
     "gen:hero-variants": "tsx scripts/gen-hero-variants.ts",
     "gen:eye-rig": "tsx scripts/gen-eye-rig.ts",
+    "gen:relocation-diagrams": "tsx scripts/gen-relocation-diagrams.ts",
     "gen:corpus-index": "tsx scripts/gen-corpus-index.ts",
     "export:pageviews": "tsx scripts/export-pageviews.ts",
     "verify": "pnpm gen:corpus-index && biome check . && astro sync && tsc --noEmit && astro check",

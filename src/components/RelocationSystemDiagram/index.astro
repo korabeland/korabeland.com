@@ -1,8 +1,6 @@
 ---
-// RelocationSystemDiagram/index.astro — static console diagrams for the
-// Relocation Playbook lab entry. Server-rendered HTML/CSS only: zero client
-// JavaScript, no inline styles, token-driven for night and day shifts, and
-// stacks cleanly below the 680px prose breakpoint with no horizontal overflow.
+// Relocation Playbook diagrams. The component keeps story placement, captions,
+// and accessible descriptions while responsive images carry the illustrations.
 
 import type { RelocationDiagramVariant } from "./segments";
 
@@ -10,373 +8,126 @@ interface Props {
   variant?: RelocationDiagramVariant;
 }
 
-interface RecordRow {
-  step?: string;
-  name: string;
-  detail: string;
-  active?: boolean;
-}
-
 const { variant = "system-overview" } = Astro.props;
 const captionId = `reloc-diagram-caption-${variant}`;
 
-const overviewStages: RecordRow[] = [
-  {
-    step: "01 · single source of truth",
-    name: "Markdown folder",
-    detail:
-      "Simple text files in one folder hold the plan, tasks, research, and weekly check-ins.",
+const diagrams: Record<
+  RelocationDiagramVariant,
+  { caption: string; alt: string }
+> = {
+  "system-overview": {
+    caption:
+      "system overview · markdown folder, Claude Code, approval gate, and shared reviews",
+    alt: "Flow from a markdown folder holding the plan, tasks, and research through Claude Code and human approval before changes outside the folder, then to a Notion task board and a weekly plain-English partner review.",
   },
-  {
-    step: "02 · household chief of staff",
-    name: "Claude Code",
-    detail:
-      "Works from the markdown folder to read and edit files, research options, and draft agendas.",
+  "ripple-effects": {
+    caption:
+      "dependency ripple · when one travel date or work assumption shifts",
+    alt: "A shift in the travel date or work assumption branches to lease notice periods, health coverage start dates, sale timing, and the weekly budget.",
   },
-  {
-    step: "03 · approval gate",
-    name: "My approval before any change",
-    detail:
-      "Only I drive the AI tooling. Human approval is required before changes are made outside the folder.",
-    active: true,
+  "first-system": {
+    caption: "first system · work split across four surfaces",
+    alt: "Four surfaces support the first system: PLAN.md for strategy and timeline tasks, a Notion task board read at each session start, research and document folders, and a short memory index. The system had no wrap-up after solo sessions, memory dates drifted from the Notion board, and an unconfirmed guess was filed as verified facts.",
   },
-  {
-    step: "04 · shared surfaces",
-    name: "Notion task board + weekly partner session",
-    detail:
-      "Tasks live on the Notion board, while weekly reviews with my partner run in plain English.",
+  "weekly-agenda": {
+    caption: "weekly review · how the session agenda was built",
+    alt: "The overall plan, urgent deadlines, and open decisions feed a weekly partner session in plain English. It structures discussions, tracks small details, asks questions, and lets topics be added or removed.",
   },
-];
+  "redesigned-system": {
+    caption:
+      "redesigned system · structured memory in state/ feeding one session-end wrap-up",
+    alt: "Strict templates and the AGENTS.md approval contract feed state/ records for facts, deadlines, decisions, research, and a board snapshot. Solo sessions and partner reviews share a session-end wrap-up that builds the next agenda from state/ and flags changes outside the folder.",
+  },
+};
 
-const rippleRows: RecordRow[] = [
-  {
-    step: "01 · housing",
-    name: "Lease notice periods",
-    detail:
-      "Ending a lease and matching notice dates when the departure timeline moves.",
-  },
-  {
-    step: "02 · insurance",
-    name: "Health coverage",
-    detail:
-      "Adjusting insurance start dates when travel dates or work assumptions change.",
-  },
-  {
-    step: "03 · belongings",
-    name: "Sale timing",
-    detail: "Re-timing when to sell what you cannot take.",
-  },
-  {
-    step: "04 · cash flow",
-    name: "Weekly budget",
-    detail: "Recalculating the cash you need in a given week.",
-  },
-];
-
-const firstSystemRows: RecordRow[] = [
-  {
-    name: "PLAN.md",
-    detail:
-      "Overall strategy, move structure, and tasks prioritised against the timeline.",
-  },
-  {
-    name: "Notion task board",
-    detail: "To-do list read page by page at the start of every session.",
-  },
-  {
-    name: "Research and document folders",
-    detail: "Shared folders for background research and drafted documents.",
-  },
-  {
-    name: "Short memory index",
-    detail: "Condensed notes and dates kept alongside the plan.",
-  },
-];
-
-const agendaInputs: RecordRow[] = [
-  {
-    step: "input 01",
-    name: "Overall plan",
-    detail: "Move structure, timeline priorities, and background research.",
-  },
-  {
-    step: "input 02",
-    name: "Urgent deadlines",
-    detail: "Whatever was most urgent to act on next.",
-  },
-  {
-    step: "input 03",
-    name: "Open decisions",
-    detail: "Choices and questions to talk through together as a couple.",
-  },
-];
-
-const redesignRows: RecordRow[] = [
-  {
-    name: "state/facts",
-    detail:
-      "Confirmed, assumption, or recommendation · source · date checked · date to check again.",
-  },
-  {
-    name: "state/deadlines",
-    detail: "Hard (legal or booked) or soft (self-imposed).",
-  },
-  {
-    name: "state/decisions",
-    detail: "Open decisions sitting next to deadlines.",
-  },
-  {
-    name: "state/research-queue",
-    detail: "Prioritised research queue.",
-  },
-  {
-    name: "state/board-snapshot",
-    detail: "Cached snapshot of the task board for fast starts.",
-  },
-];
-
-const redesignSessionRows: RecordRow[] = [
-  {
-    name: "Solo sessions mid-week",
-    detail:
-      "Updates structured records in state/ and runs the session-end wrap-up.",
-  },
-  {
-    name: "Partner review sessions",
-    detail:
-      "Reviews the plain-English agenda together and runs the same session-end wrap-up.",
-  },
-];
+const { caption, alt } = diagrams[variant];
+const shifts = ["night", "day"] as const;
+const widths = [680, 1360] as const;
+const imagePath = (
+  shift: (typeof shifts)[number],
+  width: number,
+  format: string,
+) =>
+  `/lab/relocation-playbook/diagrams/${variant}-${shift}.gen.${width}.${format}`;
+const imageSrcset = (shift: (typeof shifts)[number], format: string) =>
+  widths
+    .map((width) => `${imagePath(shift, width, format)} ${width}w`)
+    .join(", ");
 ---
 
-{
-  variant === "system-overview" && (
-    <figure
-      class="reloc-diagram"
-      data-diagram="system-overview"
-      aria-labelledby={captionId}
-    >
-      <figcaption id={captionId} class="t-label diagram-caption">
-        system overview · markdown folder, Claude Code, approval gate, and shared reviews
-      </figcaption>
+<figure
+  class="reloc-diagram"
+  data-diagram={variant}
+  aria-labelledby={captionId}
+>
+  <figcaption id={captionId} class="t-label diagram-caption">
+    {caption}
+  </figcaption>
 
-      <div class="diagram-grid">
-        {overviewStages.map((stage) => (
-          <div
-            class:list={[
-              "diagram-panel",
-              stage.active && "diagram-panel-active",
-            ]}
-          >
-            <div class="panel-head">
-              <span
-                class:list={[
-                  "t-label panel-step",
-                  stage.active && "panel-step-active",
-                ]}
-              >
-                {stage.step}
-              </span>
-              <span class="panel-title">{stage.name}</span>
-            </div>
-            <span class="close-body">{stage.detail}</span>
-          </div>
-        ))}
-      </div>
-    </figure>
-  )
-}
+  <div class="diagram-image-stack">
+    {
+      shifts.map((shift) => (
+        <picture class:list={["diagram-picture", `diagram-${shift}`]} data-shift={shift}>
+          <source
+            type="image/avif"
+            data-srcset={imageSrcset(shift, "avif")}
+            sizes="(max-width: 680px) 100vw, 680px"
+          />
+          <source
+            type="image/webp"
+            data-srcset={imageSrcset(shift, "webp")}
+            sizes="(max-width: 680px) 100vw, 680px"
+          />
+          <img
+            data-src={imagePath(shift, 680, "webp")}
+            alt={alt}
+            width="1536"
+            height="1024"
+            loading="eager"
+            decoding="async"
+            sizes="(max-width: 680px) 100vw, 680px"
+          />
+        </picture>
+      ))
+    }
+  </div>
+  <noscript>
+    <img
+      class="diagram-noscript-image"
+      src={imagePath("night", 680, "webp")}
+      alt={alt}
+      width="1536"
+      height="1024"
+    />
+  </noscript>
+</figure>
 
-{
-  variant === "ripple-effects" && (
-    <figure
-      class="reloc-diagram"
-      data-diagram="ripple-effects"
-      aria-labelledby={captionId}
-    >
-      <figcaption id={captionId} class="t-label diagram-caption">
-        dependency ripple · when one travel date or work assumption shifts
-      </figcaption>
+<script>
+  const root = document.documentElement;
+  const stacks = Array.from(
+    document.querySelectorAll<HTMLElement>(".diagram-image-stack"),
+  );
+  const activeShift = () => (root.dataset.time === "day" ? "day" : "night");
 
-      <div class="diagram-stack">
-        <div class="diagram-panel diagram-panel-active">
-          <div class="panel-head">
-            <span class="t-label panel-step panel-step-active">
-              trigger · upstream shift
-            </span>
-            <span class="panel-title">
-              Shifted travel date or work assumption
-            </span>
-          </div>
-          <span class="close-body">
-            Moving between Melbourne and Washington DC tied dozens of dependent
-            plans together. One shift ripples into four downstream areas:
-          </span>
-        </div>
+  const loadShift = (stack: HTMLElement, shift: string) => {
+    const picture = stack.querySelector<HTMLPictureElement>(
+      `.diagram-${shift}`,
+    );
+    const image = picture?.querySelector<HTMLImageElement>("img");
+    if (!picture || !image || image.hasAttribute("src")) return;
 
-        <div class="diagram-grid">
-          {rippleRows.map((row) => (
-            <div class="node-row">
-              <span class="t-label panel-step">{row.step}</span>
-              <span class="t-mono node-name">{row.name}</span>
-              <span class="node-detail">{row.detail}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </figure>
-  )
-}
+    for (const source of picture.querySelectorAll<HTMLSourceElement>("source")) {
+      source.srcset = source.dataset.srcset ?? "";
+    }
+    image.src = image.dataset.src ?? "";
+  };
 
-{
-  variant === "first-system" && (
-    <figure
-      class="reloc-diagram"
-      data-diagram="first-system"
-      aria-labelledby={captionId}
-    >
-      <figcaption id={captionId} class="t-label diagram-caption">
-        first system · work split across four surfaces
-      </figcaption>
+  for (const stack of stacks) loadShift(stack, activeShift());
 
-      <div class="diagram-panel">
-        <div class="panel-head">
-          <span class="t-label panel-step">initial setup · split by job</span>
-          <span class="panel-title">
-            Four separate places the AI agent worked across
-          </span>
-        </div>
-
-        <div class="diagram-grid">
-          {firstSystemRows.map((row) => (
-            <div class="node-row">
-              <span class="t-mono node-name">{row.name}</span>
-              <span class="node-detail">{row.detail}</span>
-            </div>
-          ))}
-        </div>
-
-        <div class="panel-close">
-          <span class="t-label close-label">
-            where it broke under a fixed departure date
-          </span>
-          <span class="close-body">
-            Solo mid-week sessions had no wrap-up step, dates in the memory
-            index drifted away from the Notion task board, and a file named
-            'verified facts' held an unconfirmed guess.
-          </span>
-        </div>
-      </div>
-    </figure>
-  )
-}
-
-{
-  variant === "weekly-agenda" && (
-    <figure
-      class="reloc-diagram"
-      data-diagram="weekly-agenda"
-      aria-labelledby={captionId}
-    >
-      <figcaption id={captionId} class="t-label diagram-caption">
-        weekly review · how the session agenda was built
-      </figcaption>
-
-      <div class="diagram-stack">
-        <div class="diagram-grid diagram-grid-3">
-          {agendaInputs.map((input) => (
-            <div class="node-row">
-              <span class="t-label panel-step">{input.step}</span>
-              <span class="t-mono node-name">{input.name}</span>
-              <span class="node-detail">{input.detail}</span>
-            </div>
-          ))}
-        </div>
-
-        <div class="diagram-panel diagram-panel-active">
-          <div class="panel-head">
-            <span class="t-label panel-step panel-step-active">
-              output · weekly couple session agenda
-            </span>
-            <span class="panel-title">
-              Plain-English check-in with my partner
-            </span>
-          </div>
-          <span class="close-body">
-            Structured our discussions, kept us on top of small details, asked
-            good questions, and let us add or remove anything we decided was not
-            necessary or could wait.
-          </span>
-        </div>
-      </div>
-    </figure>
-  )
-}
-
-{
-  variant === "redesigned-system" && (
-    <figure
-      class="reloc-diagram"
-      data-diagram="redesigned-system"
-      aria-labelledby={captionId}
-    >
-      <figcaption id={captionId} class="t-label diagram-caption">
-        redesigned system · structured memory in state/ feeding one session-end wrap-up
-      </figcaption>
-
-      <div class="diagram-grid">
-        <div class="diagram-panel diagram-panel-active">
-          <div class="panel-head">
-            <span class="t-label panel-step panel-step-active">
-              01 · structured memory in state/
-            </span>
-            <span class="panel-title">
-              Strict markdown templates + one AGENTS.md approval contract
-            </span>
-          </div>
-
-          <ul class="node-list">
-            {redesignRows.map((row) => (
-              <li class="node-row">
-                <span class="t-mono node-name">{row.name}</span>
-                <span class="node-detail">{row.detail}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div class="diagram-panel">
-          <div class="panel-head">
-            <span class="t-label panel-step">02 · unified session loop</span>
-            <span class="panel-title">
-              Solo and partner sessions share one session-end wrap-up
-            </span>
-          </div>
-
-          <ul class="node-list">
-            {redesignSessionRows.map((row) => (
-              <li class="node-row">
-                <span class="t-mono node-name">{row.name}</span>
-                <span class="node-detail">{row.detail}</span>
-              </li>
-            ))}
-          </ul>
-
-          <div class="panel-close">
-            <span class="t-label close-label close-label-active">
-              close · runs after every session, solo or shared
-            </span>
-            <span class="close-body">
-              Builds the next shared agenda straight from state/ records instead
-              of from conversation memory, and flags anything outside the folder
-              that it did not update.
-            </span>
-          </div>
-        </div>
-      </div>
-    </figure>
-  )
-}
+  new MutationObserver(() => {
+    for (const stack of stacks) loadShift(stack, activeShift());
+  }).observe(root, { attributes: true, attributeFilter: ["data-time"] });
+</script>
 
 <style>
   .reloc-diagram {
@@ -389,118 +140,33 @@ const redesignSessionRows: RecordRow[] = [
     margin: 0 0 var(--s-3);
   }
 
-  .diagram-stack {
-    display: flex;
-    flex-direction: column;
-    gap: var(--s-3);
-  }
-
-  .diagram-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--s-4);
-  }
-
-  .diagram-grid-3 {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .diagram-panel {
+  .diagram-image-stack {
+    width: 100%;
+    overflow: hidden;
     background: var(--paper-2);
-    border: 1px solid var(--rule);
-    padding: var(--s-4);
-    display: flex;
-    flex-direction: column;
-    gap: var(--s-4);
-    min-width: 0;
   }
 
-  .diagram-panel-active {
-    border-top: 2px solid var(--signal);
+  .diagram-picture {
+    display: none;
   }
 
-  .panel-head {
-    display: flex;
-    flex-direction: column;
-    gap: var(--s-1);
-    padding-bottom: var(--s-3);
-    border-bottom: 1px solid var(--rule);
+  :global(html[data-time="day"]) .diagram-night {
+    display: none;
   }
 
-  .panel-step-active {
-    color: var(--signal);
+  :global(html[data-time="day"]) .diagram-day,
+  :global(html:not([data-time="day"])) .diagram-night {
+    display: block;
   }
 
-  .panel-title {
-    font-family: var(--font-display);
-    font-weight: 500;
-    font-size: 15px;
-    line-height: 1.35;
-    color: var(--ink);
+  .diagram-picture img,
+  .diagram-noscript-image {
+    display: block;
+    width: 100%;
+    height: auto;
   }
 
-  .reloc-diagram .node-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: var(--s-2);
-    flex: 1;
-  }
-
-  .reloc-diagram .node-row {
-    background: var(--paper);
-    border: 1px solid var(--rule);
-    padding: var(--s-2) var(--s-3);
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-width: 0;
-  }
-
-  .node-name {
-    text-transform: none;
-    letter-spacing: 0.01em;
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--ink);
-    overflow-wrap: break-word;
-  }
-
-  .node-detail {
-    font-family: var(--font-body);
-    font-size: 13px;
-    line-height: 1.45;
-    color: var(--ink-soft);
-    overflow-wrap: break-word;
-  }
-
-  .panel-close {
-    background: var(--paper);
-    border: 1px solid var(--rule);
-    padding: var(--s-3);
-    display: flex;
-    flex-direction: column;
-    gap: var(--s-1);
-  }
-
-  .close-label-active {
-    color: var(--signal);
-  }
-
-  .close-body {
-    font-family: var(--font-body);
-    font-size: 13px;
-    line-height: 1.5;
-    color: var(--ink-soft);
-    overflow-wrap: break-word;
-  }
-
-  @media (max-width: 680px) {
-    .diagram-grid,
-    .diagram-grid-3 {
-      grid-template-columns: 1fr;
-    }
+  .diagram-picture img:not([src]) {
+    visibility: hidden;
   }
 </style>
