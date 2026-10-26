@@ -4,7 +4,7 @@ Korab Eland's personal site — a small, fast "console" that says who he is and 
 
 Requests to `www.korabeland.com` permanently redirect to `https://korabeland.com`, preserving the path and query string. The hosting rule lives in [`vercel.json`](vercel.json).
 
-The site's own thesis is its headline: *turn ambiguous problems into systems that ship.* This repo is one of those systems — a static-by-default Astro site, built and maintained by an AI team orchestrated through [Claude Code](https://claude.com/claude-code), with every change reviewed on a Vercel preview before it lands.
+The site's own thesis is its headline: *turn ambiguous problems into systems that ship.* This repo is one of those systems, a static-by-default Astro site built and maintained by an AI team supervised through firstmate, which routes work across Claude, Codex, and Gemini agents. Korab reviews each change on a Vercel preview before it lands.
 
 ---
 
@@ -48,7 +48,7 @@ One detail worth calling out: Korab's location, work authorization, citizenship 
 
 The distinctive thing about this repo is *how* it's maintained. Korab works it solo, in natural language, through firstmate, a supervising agent that routes work across Claude, Codex, and Gemini agents:
 
-- **Instructions** go to `claude` in a terminal — no code editing required.
+- **Instructions** go to the first mate in natural language — no code editing required.
 - **Review** happens on Vercel preview URLs (often from a phone) and in Chromatic's visual-diff queue.
 - **Every change** ships as a pull request with a review page: preview link, screenshots at four viewports, before/after diffs, and a plain-English summary.
 
