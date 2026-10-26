@@ -165,49 +165,74 @@ const tools: { label: string; note: string }[] = [
     {stats && prMeter && modelMeter && (
       <section aria-labelledby="built-with-ai" class="ai-split">
         <h2 id="built-with-ai">Built with AI, decided by me</h2>
-        <p class="ai-split-lede">
-          Agents write every change to this site. I make every request, design
-          pick, and merge call.
-        </p>
         <p>
-          A supervising agent, my first mate (running on the open-source{" "}
-          <a href="https://github.com/kunchenguid/firstmate">firstmate</a>{" "}
-          supervisor), is my single point of contact. It never edits the site
-          itself. When I state what I want in plain English, it writes a task
-          brief, picks a worker model, and starts that worker in an isolated
-          copy of the repository so parallel jobs cannot collide. Each worker
-          runs its change through <code>no-mistakes</code>: a model from a
-          different family reviews the diff before type checks, unit tests,
-          Playwright browser tests, Lighthouse performance budgets, and a
-          production smoke check run. Clear review findings get fixed in the
-          pipeline; ambiguous product or design decisions come back to me as a
-          question. No agent can merge to <code>main</code> on its own.
+          I do not hand-write the code for this site. A crew of AI coding
+          agents builds it as a working product, while I set the direction,
+          make the product and design calls, and approve every change before it
+          goes live. No agent can merge to <code>main</code> on its own.
         </p>
 
-        <div
-          class="split-grid"
-          role="group"
-          aria-label="Division of work between agents and Korab"
-        >
-          <div class="split-card">
-            <p class="t-label split-card-label">agents build</p>
-            <ul class="split-list">
-              <li>Write code, styles, and tests in an isolated repo copy</li>
-              <li>Review every diff with a model from a different family</li>
-              <li>Fix lint, test, accessibility, and Lighthouse findings</li>
-              <li>Open the pull request and attach preview screenshots</li>
-            </ul>
-          </div>
-          <div class="split-card split-card--decider">
-            <p class="t-label split-card-label">I decide</p>
-            <ul class="split-list">
-              <li>State what to build and why in plain English</li>
-              <li>Set the design rules, voice, and scope boundaries</li>
-              <li>Answer product and design questions surfaced by review</li>
-              <li>Inspect the preview and approve or reject every merge</li>
-            </ul>
-          </div>
-        </div>
+        <figure class="ai-crew-diagram" aria-labelledby="ai-crew-caption">
+          <figcaption id="ai-crew-caption" class="t-label">
+            How a request moves through my agent crew, with a separate queue for lab work
+          </figcaption>
+          <picture class="ai-crew-diagram-day">
+            <source media="(max-width: 680px)" type="image/avif" srcset="/diagrams/ai-crew-flow-day-mobile.gen.375.avif 375w, /diagrams/ai-crew-flow-day-mobile.gen.750.avif 750w" sizes="100vw" />
+            <source media="(max-width: 680px)" type="image/webp" srcset="/diagrams/ai-crew-flow-day-mobile.gen.375.webp 375w, /diagrams/ai-crew-flow-day-mobile.gen.750.webp 750w" sizes="100vw" />
+            <source type="image/avif" srcset="/diagrams/ai-crew-flow-day.gen.680.avif 680w, /diagrams/ai-crew-flow-day.gen.1360.avif 1360w" sizes="(max-width: 680px) 100vw, 680px" />
+            <source type="image/webp" srcset="/diagrams/ai-crew-flow-day.gen.680.webp 680w, /diagrams/ai-crew-flow-day.gen.1360.webp 1360w" sizes="(max-width: 680px) 100vw, 680px" />
+            <img src="/diagrams/ai-crew-flow-day.gen.680.webp" alt="Korab sends a plain-English request to his first mate, who routes web work to a site second mate and lab work to a separate muted queue. The site second mate sends a task brief to an isolated worker agent. Automated checks and a different model family review its pull request. Clear findings return to the worker for a fix. Product or design questions and a preview return to Korab, who approves the merge and deploy." width="2172" height="724" loading="eager" decoding="async" sizes="(max-width: 680px) 100vw, 680px" />
+          </picture>
+          <picture class="ai-crew-diagram-dark">
+            <source media="(max-width: 680px)" type="image/avif" srcset="/diagrams/ai-crew-flow-dark-mobile.gen.375.avif 375w, /diagrams/ai-crew-flow-dark-mobile.gen.750.avif 750w" sizes="100vw" />
+            <source media="(max-width: 680px)" type="image/webp" srcset="/diagrams/ai-crew-flow-dark-mobile.gen.375.webp 375w, /diagrams/ai-crew-flow-dark-mobile.gen.750.webp 750w" sizes="100vw" />
+            <source type="image/avif" srcset="/diagrams/ai-crew-flow-dark.gen.680.avif 680w, /diagrams/ai-crew-flow-dark.gen.1360.avif 1360w" sizes="(max-width: 680px) 100vw, 680px" />
+            <source type="image/webp" srcset="/diagrams/ai-crew-flow-dark.gen.680.webp 680w, /diagrams/ai-crew-flow-dark.gen.1360.webp 1360w" sizes="(max-width: 680px) 100vw, 680px" />
+            <img src="/diagrams/ai-crew-flow-dark.gen.680.webp" alt="Korab sends a plain-English request to his first mate, who routes web work to a site second mate and lab work to a separate muted queue. The site second mate sends a task brief to an isolated worker agent. Automated checks and a different model family review its pull request. Clear findings return to the worker for a fix. Product or design questions and a preview return to Korab, who approves the merge and deploy." width="2172" height="724" loading="eager" decoding="async" sizes="(max-width: 680px) 100vw, 680px" />
+          </picture>
+        </figure>
+
+        <p class="ai-diagram-intro">
+          The crew runs on <a href="https://github.com/kunchenguid/firstmate">firstmate</a>,
+          an open-source supervisor for coding agents created by Kun Chen. I use
+          it and contribute fixes upstream. My single point of contact is a
+          supervising agent I call my first mate, which sends all my web work to
+          a dedicated site second mate that looks after this site and its
+          companion repositories on their own queue. When I describe what I
+          want in plain English, the supervisor turns it into a task brief and
+          hands it to an isolated worker running Anthropic Claude, OpenAI
+          ChatGPT (via Codex), or Google Gemini.
+        </p>
+
+        <p class="ai-diagram-intro">
+          The site's architecture and security are built with intention, and
+          the system catches mistakes automatically before I review a preview.
+          Every change is built in an isolated copy of the repository, checked
+          by an automated verification and security suite, and reviewed by a
+          model from a different family, so an agent never grades its own work.
+          Clear defects get fixed inside the pipeline. Ambiguous product or
+          design questions come back to me. From March through September 2026 I
+          shipped <strong>52</strong> pull requests in hands-on sessions, mostly
+          in a single burst of <strong>47</strong> in July. In the first 25 days
+          on Firstmate, in October, <strong>32</strong> were merged at a steady
+          pace that takes very little of my own time.
+        </p>
+
+        <p class="ai-diagram-intro">
+          I am not an engineer by education. After 13 years in marketing,
+          customer experience, and operations, I built this site as a live
+          example of my research into AI systems, and of how far you can go by
+          pairing an advanced harness like Firstmate with three basic $20
+          subscriptions across Claude, ChatGPT, and Gemini. The first mate sends
+          each job to the model that suits the work and has spare allowance,
+          which keeps costs down.
+        </p>
+
+        <p class="ai-diagram-intro">
+          The agents write the code and run the checks. I stay on judgement,
+          voice, and taste, and I remain accountable for every decision on the
+          page.
+        </p>
 
         <div class="ai-stats" role="group" aria-label="Repository numbers">
           <div class="ai-stat-card" data-stat="shipped">
@@ -242,15 +267,8 @@ const tools: { label: string; note: string }[] = [
               {stats.pullRequests.mergedCount} merged ({prMeter.primaryPercent}%) · {stats.pullRequests.closedUnmergedCount} closed unmerged · {stats.commits.totalCommits} commits on main
             </p>
             <p class="ai-stat-meta">
-              <strong>Date range:</strong>{" "}
-              {formatHumanDateRange(stats.pullRequests.mergedRange)} for pull
-              requests ({formatHumanDateRange(stats.commits.commitRange)} for
-              commits on <code>main</code>).{" "}
-              <strong>Source:</strong> public GitHub pull requests on{" "}
-              <code>korabeland/korabeland.com</code> and <code>git log</code>.
-              {" "}<strong>Pull-request data:</strong>{" "}
-              {statsSource(stats.pullRequests)}. <strong>Commit data:</strong>{" "}
-              {statsSource(stats.commits)}.
+              <strong>Source:</strong> Counted from public GitHub pull requests
+              and commit history on <code>korabeland/korabeland.com</code> ({statsSource(stats.commits)}).
             </p>
           </div>
 
@@ -265,17 +283,9 @@ const tools: { label: string; note: string }[] = [
               {stats.commits.noMistakesRounds} automated pipeline fix rounds across {stats.commits.noMistakesCommits} merged pull requests ({formatHumanDateRange(stats.commits.recentRange)})
             </p>
             <p class="ai-stat-meta">
-              <strong>Date range:</strong>{" "}
-              {formatHumanDateRange(stats.pullRequests.mergedRange)} (closed
-              between{" "}
-              {formatHumanDateRange(stats.pullRequests.closedUnmergedRange)}).{" "}
-              <strong>Source:</strong> public GitHub pull requests closed with{" "}
-              <code>merged_at: null</code>, plus{" "}
-              <code>no-mistakes</code> fix commits in <code>git log</code>.
-              Rework and direction calls I make inside a branch before merge
-              are not recorded as separate events in the public repo.
-              <strong>Data status:</strong> pull requests {statsSource(stats.pullRequests)};
-              commits {statsSource(stats.commits)}.
+              <strong>Source:</strong> Counted from unmerged closed pull
+              requests and automated fix commits in the public{" "}
+              <code>korabeland/korabeland.com</code> repository ({statsSource(stats.commits)}).
             </p>
           </div>
 
@@ -311,21 +321,11 @@ const tools: { label: string; note: string }[] = [
               {stats.commits.modelTrailerCommits} commits with a Claude trailer ({modelMeter.primaryPercent}%) · {stats.commits.unattributedRecentCommits} commits since {formatHumanDate(stats.commits.recentRange.startDate)} with no model tag in git
             </p>
             <p class="ai-stat-meta">
-              <strong>Date range:</strong>{" "}
-              {formatHumanDateRange(stats.commits.modelTrailerRange)} for git
-              model trailers; {formatHumanDateRange(stats.commits.recentRange)}{" "}
-              for the current multi-model crew.{" "}
-              <strong>Source:</strong> <code>Co-authored-by</code> trailers in{" "}
-              <code>git log</code> and review logs in{" "}
-              <code>docs/reviews/</code>. Direct Claude Code commits through
-              August 2026 stamped a Claude Opus or Sonnet trailer into git.
-              Earlier work also committed OpenAI Codex review logs. Since
-              October 2026, the first mate routes work across Anthropic Claude
-              (Opus, Sonnet, Haiku), OpenAI Codex, and Google Gemini (Argon),
-              with cross-family review, and does not write a model tag into
-              commits or pull requests. The public repo does not record a
-              per-model count for those recent changes.
-              <strong>Data status:</strong> {statsSource(stats.commits)}.
+              <strong>Source:</strong> Counted from <code>Co-authored-by</code>
+              commit trailers and review logs in{" "}
+              <code>korabeland/korabeland.com</code> ({statsSource(stats.commits)}),
+              noting that multi-model commits since October 2026 do not stamp a
+              model tag into git.
             </p>
           </div>
         </div>
@@ -417,60 +417,36 @@ const tools: { label: string; note: string }[] = [
 
   /* ─── Built with AI, decided by me ───────────────────────────────────── */
 
-  .ai-split-lede {
-    margin: 0 0 var(--s-3);
-    color: var(--ink);
-    font-weight: 500;
+  .ai-diagram-intro {
+    margin: 0 0 var(--s-4);
   }
 
-  .split-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--s-4);
-    margin: var(--s-5) 0;
+  .ai-crew-diagram {
+    margin: var(--s-4) 0 var(--s-5);
   }
 
-  .split-card {
-    border: 1px solid var(--rule);
-    background: var(--paper-2);
-    padding: var(--s-4);
-  }
-
-  .split-card--decider {
-    border-left: 2px solid var(--signal);
-  }
-
-  .ai-split .split-card-label {
-    margin: 0 0 var(--s-3);
-    color: var(--ink);
-  }
-
-  .split-card--decider .split-card-label {
-    color: var(--signal);
-  }
-
-  .ai-split .split-list {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .ai-split .split-list li {
-    padding: var(--s-2) 0;
-    border-top: 1px solid var(--rule);
-    border-bottom: none;
-    font-size: 14px;
-    line-height: 1.5;
+  .ai-crew-diagram figcaption {
+    margin: 0 0 var(--s-2);
     color: var(--ink-soft);
   }
 
-  .ai-split .split-list li:first-child {
-    padding-top: 0;
-    border-top: none;
+  .ai-crew-diagram picture,
+  .ai-crew-diagram img {
+    display: block;
+    width: 100%;
+    height: auto;
   }
 
-  .ai-split .split-list li:last-child {
-    padding-bottom: 0;
+  .ai-crew-diagram-dark {
+    display: none !important;
+  }
+
+  :global(html[data-time="night"]) .ai-crew-diagram-day {
+    display: none;
+  }
+
+  :global(html[data-time="night"]) .ai-crew-diagram-dark {
+    display: block !important;
   }
 
   .ai-stats {
@@ -662,9 +638,6 @@ const tools: { label: string; note: string }[] = [
   }
 
   @media (max-width: 680px) {
-    .split-grid {
-      grid-template-columns: 1fr;
-    }
     .build-log .commit {
       grid-template-columns: 68px 1fr;
     }
