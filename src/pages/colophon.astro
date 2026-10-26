@@ -267,8 +267,9 @@ const tools: { label: string; note: string }[] = [
               {stats.pullRequests.mergedCount} merged ({prMeter.primaryPercent}%) · {stats.pullRequests.closedUnmergedCount} closed unmerged · {stats.commits.totalCommits} commits on main
             </p>
             <p class="ai-stat-meta">
-              <strong>Source:</strong> Counted from public GitHub pull requests
-              and commit history on <code>korabeland/korabeland.com</code> ({statsSource(stats.commits)}).
+              <strong>Source:</strong> Pull request counts from public GitHub
+              pull requests ({statsSource(stats.pullRequests)}); commit counts
+              from commit history on <code>korabeland/korabeland.com</code> ({statsSource(stats.commits)}).
             </p>
           </div>
 
@@ -283,8 +284,9 @@ const tools: { label: string; note: string }[] = [
               {stats.commits.noMistakesRounds} automated pipeline fix rounds across {stats.commits.noMistakesCommits} merged pull requests ({formatHumanDateRange(stats.commits.recentRange)})
             </p>
             <p class="ai-stat-meta">
-              <strong>Source:</strong> Counted from unmerged closed pull
-              requests and automated fix commits in the public{" "}
+              <strong>Source:</strong> Closed pull request counts from public
+              GitHub pull requests ({statsSource(stats.pullRequests)}); pipeline
+              fix counts from commits in the public{" "}
               <code>korabeland/korabeland.com</code> repository ({statsSource(stats.commits)}).
             </p>
           </div>
@@ -435,6 +437,16 @@ const tools: { label: string; note: string }[] = [
     display: block;
     width: 100%;
     height: auto;
+  }
+
+  .ai-crew-diagram img {
+    aspect-ratio: 3 / 1;
+  }
+
+  @media (max-width: 680px) {
+    .ai-crew-diagram img {
+      aspect-ratio: 2 / 3;
+    }
   }
 
   .ai-crew-diagram-dark {

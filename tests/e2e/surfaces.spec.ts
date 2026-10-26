@@ -105,7 +105,10 @@ test("colophon renders the 'Built with AI, decided by me' section with live stat
     /\d+ merged pull requests/,
   );
   await expect(shipped.locator(".ai-stat-meta")).toContainText(
-    "Source: Counted from public GitHub pull requests and commit history",
+    "Pull request counts from public GitHub pull requests",
+  );
+  await expect(shipped.locator(".ai-stat-meta")).toContainText(
+    "commit counts from commit history",
   );
   await expect(shipped.locator(".ai-stat-meta")).toContainText(
     /Live as of|Snapshot as of/,
@@ -118,7 +121,10 @@ test("colophon renders the 'Built with AI, decided by me' section with live stat
     /\d+ closed without merging/,
   );
   await expect(returned.locator(".ai-stat-meta")).toContainText(
-    "Source: Counted from unmerged closed pull requests and automated fix commits",
+    "Closed pull request counts from public GitHub pull requests",
+  );
+  await expect(returned.locator(".ai-stat-meta")).toContainText(
+    "pipeline fix counts from commits",
   );
   await expect(returned.locator(".ai-stat-meta")).toContainText(
     /Live as of|Snapshot as of/,
