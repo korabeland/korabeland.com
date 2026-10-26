@@ -25,8 +25,8 @@ async function encode(
     const pipeline = sharp(source).resize({ width, withoutEnlargement: true });
     const bytes =
       format === "avif"
-        ? await pipeline.avif({ quality, effort: 6 }).toBuffer()
-        : await pipeline.webp({ quality, effort: 6 }).toBuffer();
+        ? await pipeline.avif({ quality, effort: 2 }).toBuffer()
+        : await pipeline.webp({ quality, effort: 2 }).toBuffer();
     if (bytes.byteLength <= maxBytes) return bytes;
   }
   throw new Error(
