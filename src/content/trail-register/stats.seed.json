@@ -1,0 +1,37 @@
+{
+  "pullRequests": {
+    "asOf": "2026-10-19",
+    "source": "seed",
+    "mergedCount": 79,
+    "closedUnmergedCount": 5,
+    "mergedRange": {
+      "startDate": "2026-04-11",
+      "endDate": "2026-10-17"
+    },
+    "closedUnmergedRange": {
+      "startDate": "2026-07-11",
+      "endDate": "2026-10-16"
+    }
+  },
+  "commits": {
+    "asOf": "2026-10-19",
+    "source": "seed",
+    "totalCommits": 114,
+    "commitRange": {
+      "startDate": "2026-03-01",
+      "endDate": "2026-10-17"
+    },
+    "modelTrailerCommits": 71,
+    "modelTrailerRange": {
+      "startDate": "2026-03-12",
+      "endDate": "2026-08-06"
+    },
+    "unattributedRecentCommits": 27,
+    "recentRange": {
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-17"
+    },
+    "noMistakesCommits": 18,
+    "noMistakesRounds": 59
+  }
+}

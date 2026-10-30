@@ -4,7 +4,7 @@ Korab Eland's personal site — a small, fast "console" that says who he is and 
 
 Requests to `www.korabeland.com` permanently redirect to `https://korabeland.com`, preserving the path and query string. The hosting rule lives in [`vercel.json`](vercel.json).
 
-The site's own thesis is its headline: *turn ambiguous problems into systems that ship.* This repo is one of those systems — a static-by-default Astro site, built and maintained by an AI team orchestrated through [Claude Code](https://claude.com/claude-code), with every change reviewed on a Vercel preview before it lands.
+The site's own thesis is its headline: *turn ambiguous problems into systems that ship.* This repo is one of those systems, a static-by-default Astro site built and maintained by an AI team supervised through firstmate, which routes work across Claude, Codex, and Gemini agents. Korab reviews each change on a Vercel preview before it lands.
 
 ---
 
@@ -18,7 +18,7 @@ The home page is the console: a hero readout, then a set of ledgers that fill in
 - **Notes (`/notes`)** — field notes and longer-form writing.
 - **About (`/about`)** — the career narrative across thirteen years in marketing, CX and operations, hiring details, career experience with achievement highlights and linked recommendations, skills, education and linked certifications.
 - **Ask about my work** — an optional search section on About that finds excerpts from the site's published pages and links to their sources. Search runs in the browser; it does not generate answers.
-- **Colophon (`/colophon`)** — how the site was built, and its own git build log: every commit, in the open.
+- **Colophon (`/colophon`)** — how the site was built, its git build log, and live repository counts for shipped changes, changes sent back, and model attribution.
 
 A few routes are deliberately quiet: `/for/<slug>` renders unlisted, tailored landing pages (noindex, excluded from the sitemap); `/off-trail` is the SSR companion to the 404. Both `/off-trail` and the 404 page carry `noindex`, and `/off-trail` is excluded from the sitemap. `/og.png` generates the social-share card at build time; page sharing and image overrides follow the [BaseLayout contract](docs/design/components.md#shell--baselayout).
 
@@ -34,7 +34,7 @@ A few routes are deliberately quiet: `/for/<slug>` renders unlisted, tailored la
 
 The site is small on purpose; the build pipeline does most of the work behind the scenes. Some content isn't authored by hand but generated at build time from real activity:
 
-- the colophon's **build log** comes from this repo's `git log`,
+- the colophon's **build log and commit counts** come from this repo's `git log`, while pull-request counts come from the public GitHub API; committed snapshots keep the page available when live data cannot be fetched,
 - the home page's **shift log** comes from the GitHub contributions API,
 - the hero portrait's responsive image variants and its cursor-tracking **gaze rig** are both generated pre-build.
 
@@ -46,9 +46,9 @@ One detail worth calling out: Korab's location, work authorization, citizenship 
 
 ## Built by an AI team
 
-The distinctive thing about this repo is *how* it's maintained. Korab works it solo, in natural language, through Claude Code and a small crew of subagents:
+The distinctive thing about this repo is *how* it's maintained. Korab works it solo, in natural language, through firstmate, a supervising agent that routes work across Claude, Codex, and Gemini agents:
 
-- **Instructions** go to `claude` in a terminal — no code editing required.
+- **Instructions** go to the first mate in natural language — no code editing required.
 - **Review** happens on Vercel preview URLs (often from a phone) and in Chromatic's visual-diff queue.
 - **Every change** ships as a pull request with a review page: preview link, screenshots at four viewports, before/after diffs, and a plain-English summary.
 

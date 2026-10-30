@@ -28,8 +28,6 @@ Statuses used after triage: `backlog` -> `next` | `parked` | `dropped`.
 
 | Item | Source | Next step | Status |
 |---|---|---|---|
-| "Window into Claude Code usage" live-portfolio section (commit visualisations, agent-run stats). Flagged top priority in two separate docs | `Personal_Brand/ideas/wispr-flow-notes.md` (2026-03-28); business shortlist | Brainstorm -> requirements; strongest feature candidate | backlog |
-| R8: "Built with AI, decided by me" colophon extension (real repo stats + honest AI-vs-Korab split) | `docs/brainstorms/2026-07-06-ux-enhancement-ideas-requirements.md` | Plan it; colophon already has the build log to hang it on | backlog |
 | R6: single-source `/resume` route + print stylesheet (one-page brief) | same brainstorm | Plan; decide print-CSS vs PDF export | backlog |
 | R3: 90-second brief toggle on case studies | same brainstorm | Plan if case-study depth becomes a friction signal | backlog |
 | R4: requirement-to-evidence map on `/for/` pages | same brainstorm | Only worth building once real `/for/` pages exist | backlog |

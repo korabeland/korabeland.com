@@ -2,6 +2,13 @@
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import BaseLayout from "../layouts/BaseLayout.astro";
+import type { ColophonStatsData } from "../lib/colophon-stats";
+import {
+  formatHumanDate,
+  formatHumanDateRange,
+  isValidColophonStats,
+  meterSegments,
+} from "../lib/colophon-stats";
 import { serializeJsonLd } from "../lib/json-ld";
 
 const trailRegisterRoot = resolve(process.cwd(), "src/content/trail-register");
@@ -41,6 +48,25 @@ function loadCommits(): CommitEntry[] {
   return [];
 }
 
+function loadColophonStats(): ColophonStatsData | null {
+  const candidates = import.meta.env.PROD
+    ? ["stats.json", "stats.seed.json"]
+    : ["stats.seed.json"];
+  for (const name of candidates) {
+    const file = resolve(trailRegisterRoot, name);
+    if (!existsSync(file)) continue;
+    try {
+      const raw: unknown = JSON.parse(readFileSync(file, "utf8"));
+      if (isValidColophonStats(raw)) {
+        return raw;
+      }
+    } catch {
+      // fall through to the next candidate
+    }
+  }
+  return null;
+}
+
 function formatCommitDate(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
@@ -48,6 +74,13 @@ function formatCommitDate(iso: string): string {
   const mm = String(d.getMonth() + 1).padStart(2, "0");
   const dd = String(d.getDate()).padStart(2, "0");
   return `${yyyy}.${mm}.${dd}`;
+}
+
+function statsSource(metric: {
+  source: "live" | "seed";
+  asOf: string;
+}): string {
+  return `${metric.source === "live" ? "Live" : "Snapshot"} as of ${formatHumanDate(metric.asOf)}`;
 }
 
 // Human-relative age for the featured commit — "shipped today / yesterday /
@@ -69,6 +102,20 @@ function relativeTime(iso: string): string {
 
 const commits = loadCommits().slice(0, 14);
 const [featured, ...rest] = commits;
+const stats = loadColophonStats();
+
+const prMeter = stats
+  ? meterSegments(
+      stats.pullRequests.mergedCount,
+      stats.pullRequests.closedUnmergedCount,
+    )
+  : null;
+const modelMeter = stats
+  ? meterSegments(
+      stats.commits.modelTrailerCommits,
+      stats.commits.totalCommits - stats.commits.modelTrailerCommits,
+    )
+  : null;
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -93,8 +140,8 @@ const tools: { label: string; note: string }[] = [
   { label: "Keystatic", note: "local-git-backed CMS for long-form posts" },
   { label: "Vercel", note: "hosting, preview deploys, edge functions" },
   {
-    label: "Claude Code + a small team of subagents",
-    note: "the build crew running this site",
+    label: "firstmate + Claude, Codex, and Gemini agents",
+    note: "the supervised agent crew building this site",
   },
 ];
 ---
@@ -114,6 +161,178 @@ const tools: { label: string; note: string }[] = [
         {" "}<a href="/about">about</a>.
       </p>
     </header>
+
+    {stats && prMeter && modelMeter && (
+      <section aria-labelledby="built-with-ai" class="ai-split">
+        <h2 id="built-with-ai">Built with AI, decided by me</h2>
+        <p>
+          I do not hand-write the code for this site. A crew of AI coding
+          agents builds it as a working product, while I set the direction,
+          make the product and design calls, and approve every change before it
+          goes live. No agent can merge to <code>main</code> on its own.
+        </p>
+
+        <figure class="ai-crew-diagram" aria-labelledby="ai-crew-caption">
+          <figcaption id="ai-crew-caption" class="t-label">
+            How a request moves through my agent crew, with a separate queue for lab work
+          </figcaption>
+          <picture class="ai-crew-diagram-day">
+            <source media="(max-width: 680px)" type="image/avif" srcset="/diagrams/ai-crew-flow-day-mobile.gen.375.avif 375w, /diagrams/ai-crew-flow-day-mobile.gen.750.avif 750w" sizes="100vw" />
+            <source media="(max-width: 680px)" type="image/webp" srcset="/diagrams/ai-crew-flow-day-mobile.gen.375.webp 375w, /diagrams/ai-crew-flow-day-mobile.gen.750.webp 750w" sizes="100vw" />
+            <source type="image/avif" srcset="/diagrams/ai-crew-flow-day.gen.680.avif 680w, /diagrams/ai-crew-flow-day.gen.1360.avif 1360w" sizes="(max-width: 680px) 100vw, 680px" />
+            <source type="image/webp" srcset="/diagrams/ai-crew-flow-day.gen.680.webp 680w, /diagrams/ai-crew-flow-day.gen.1360.webp 1360w" sizes="(max-width: 680px) 100vw, 680px" />
+            <img src="/diagrams/ai-crew-flow-day.gen.680.webp" alt="Korab sends a plain-English request to his first mate, who routes web work to a site second mate and lab work to a separate muted queue. The site second mate sends a task brief to an isolated worker agent. Automated checks and a different model family review its pull request. Clear findings return to the worker for a fix. Product or design questions and a preview return to Korab, who approves the merge and deploy." width="2172" height="724" loading="eager" decoding="async" sizes="(max-width: 680px) 100vw, 680px" />
+          </picture>
+          <picture class="ai-crew-diagram-dark">
+            <source media="(max-width: 680px)" type="image/avif" srcset="/diagrams/ai-crew-flow-dark-mobile.gen.375.avif 375w, /diagrams/ai-crew-flow-dark-mobile.gen.750.avif 750w" sizes="100vw" />
+            <source media="(max-width: 680px)" type="image/webp" srcset="/diagrams/ai-crew-flow-dark-mobile.gen.375.webp 375w, /diagrams/ai-crew-flow-dark-mobile.gen.750.webp 750w" sizes="100vw" />
+            <source type="image/avif" srcset="/diagrams/ai-crew-flow-dark.gen.680.avif 680w, /diagrams/ai-crew-flow-dark.gen.1360.avif 1360w" sizes="(max-width: 680px) 100vw, 680px" />
+            <source type="image/webp" srcset="/diagrams/ai-crew-flow-dark.gen.680.webp 680w, /diagrams/ai-crew-flow-dark.gen.1360.webp 1360w" sizes="(max-width: 680px) 100vw, 680px" />
+            <img src="/diagrams/ai-crew-flow-dark.gen.680.webp" alt="Korab sends a plain-English request to his first mate, who routes web work to a site second mate and lab work to a separate muted queue. The site second mate sends a task brief to an isolated worker agent. Automated checks and a different model family review its pull request. Clear findings return to the worker for a fix. Product or design questions and a preview return to Korab, who approves the merge and deploy." width="2172" height="724" loading="eager" decoding="async" sizes="(max-width: 680px) 100vw, 680px" />
+          </picture>
+        </figure>
+
+        <p class="ai-diagram-intro">
+          The crew runs on <a href="https://github.com/kunchenguid/firstmate">firstmate</a>,
+          an open-source supervisor for coding agents created by Kun Chen. I use
+          it and contribute fixes upstream. My single point of contact is a
+          supervising agent I call my first mate, which sends all my web work to
+          a dedicated site second mate that looks after this site and its
+          companion repositories on their own queue. When I describe what I
+          want in plain English, the supervisor turns it into a task brief and
+          hands it to an isolated worker running Anthropic Claude, OpenAI
+          ChatGPT (via Codex), or Google Gemini.
+        </p>
+
+        <p class="ai-diagram-intro">
+          The site's architecture and security are built with intention, and
+          the system catches mistakes automatically before I review a preview.
+          Every change is built in an isolated copy of the repository, checked
+          by an automated verification and security suite, and reviewed by a
+          model from a different family, so an agent never grades its own work.
+          Clear defects get fixed inside the pipeline. Ambiguous product or
+          design questions come back to me. From March through September 2026 I
+          shipped <strong>52</strong> pull requests in hands-on sessions, mostly
+          in a single burst of <strong>47</strong> in July. In the first 25 days
+          on Firstmate, in October, <strong>32</strong> were merged at a steady
+          pace that takes very little of my own time.
+        </p>
+
+        <p class="ai-diagram-intro">
+          I am not an engineer by education. After 13 years in marketing,
+          customer experience, and operations, I built this site as a live
+          example of my research into AI systems, and of how far you can go by
+          pairing an advanced harness like Firstmate with three basic $20
+          subscriptions across Claude, ChatGPT, and Gemini. The first mate sends
+          each job to the model that suits the work and has spare allowance,
+          which keeps costs down.
+        </p>
+
+        <p class="ai-diagram-intro">
+          The agents write the code and run the checks. I stay on judgement,
+          voice, and taste, and I remain accountable for every decision on the
+          page.
+        </p>
+
+        <div class="ai-stats" role="group" aria-label="Repository numbers">
+          <div class="ai-stat-card" data-stat="shipped">
+            <div class="ai-stat-head">
+              <span class="t-label ai-stat-title">changes shipped</span>
+              <span class="t-mono ai-stat-value ai-stat-value--shipped">
+                {stats.pullRequests.mergedCount} merged pull requests
+              </span>
+            </div>
+            <svg
+              class="ai-meter-svg"
+              viewBox="0 0 1000 8"
+              preserveAspectRatio="none"
+              aria-hidden="true"
+            >
+              <rect
+                class="ai-meter-shipped"
+                x="0"
+                y="0"
+                width={prMeter.primaryWidth}
+                height="8"
+              />
+              <rect
+                class="ai-meter-returned"
+                x={prMeter.secondaryX}
+                y="0"
+                width={prMeter.secondaryWidth}
+                height="8"
+              />
+            </svg>
+            <p class="t-mono small ai-meter-caption">
+              {stats.pullRequests.mergedCount} merged ({prMeter.primaryPercent}%) · {stats.pullRequests.closedUnmergedCount} closed unmerged · {stats.commits.totalCommits} commits on main
+            </p>
+            <p class="ai-stat-meta">
+              <strong>Source:</strong> Pull request counts from public GitHub
+              pull requests ({statsSource(stats.pullRequests)}); commit counts
+              from commit history on <code>korabeland/korabeland.com</code> ({statsSource(stats.commits)}).
+            </p>
+          </div>
+
+          <div class="ai-stat-card" data-stat="returned">
+            <div class="ai-stat-head">
+              <span class="t-label ai-stat-title">changes sent back</span>
+              <span class="t-mono ai-stat-value ai-stat-value--returned">
+                {stats.pullRequests.closedUnmergedCount} closed without merging
+              </span>
+            </div>
+            <p class="t-mono small ai-meter-caption">
+              {stats.commits.noMistakesRounds} automated pipeline fix rounds across {stats.commits.noMistakesCommits} merged pull requests ({formatHumanDateRange(stats.commits.recentRange)})
+            </p>
+            <p class="ai-stat-meta">
+              <strong>Source:</strong> Closed pull request counts from public
+              GitHub pull requests ({statsSource(stats.pullRequests)}); pipeline
+              fix counts from commits in the public{" "}
+              <code>korabeland/korabeland.com</code> repository ({statsSource(stats.commits)}).
+            </p>
+          </div>
+
+          <div class="ai-stat-card" data-stat="models">
+            <div class="ai-stat-head">
+              <span class="t-label ai-stat-title">models used</span>
+              <span class="t-mono ai-stat-value">
+                {stats.commits.modelTrailerCommits} of {stats.commits.totalCommits} commits name a model in git
+              </span>
+            </div>
+            <svg
+              class="ai-meter-svg"
+              viewBox="0 0 1000 8"
+              preserveAspectRatio="none"
+              aria-hidden="true"
+            >
+              <rect
+                class="ai-meter-signal"
+                x="0"
+                y="0"
+                width={modelMeter.primaryWidth}
+                height="8"
+              />
+              <rect
+                class="ai-meter-untagged"
+                x={modelMeter.secondaryX}
+                y="0"
+                width={modelMeter.secondaryWidth}
+                height="8"
+              />
+            </svg>
+            <p class="t-mono small ai-meter-caption">
+              {stats.commits.modelTrailerCommits} commits with a Claude trailer ({modelMeter.primaryPercent}%) · {stats.commits.unattributedRecentCommits} commits since {formatHumanDate(stats.commits.recentRange.startDate)} with no model tag in git
+            </p>
+            <p class="ai-stat-meta">
+              <strong>Source:</strong> Counted from <code>Co-authored-by</code>
+              commit trailers and review logs in{" "}
+              <code>korabeland/korabeland.com</code> ({statsSource(stats.commits)}),
+              noting that multi-model commits since October 2026 do not stamp a
+              model tag into git.
+            </p>
+          </div>
+        </div>
+      </section>
+    )}
 
     {commits.length > 0 && (
       <section aria-labelledby="build-log" class="build-log">
@@ -196,6 +415,138 @@ const tools: { label: string; note: string }[] = [
 
   .colophon .lede {
     margin: 0 0 var(--s-5);
+  }
+
+  /* ─── Built with AI, decided by me ───────────────────────────────────── */
+
+  .ai-diagram-intro {
+    margin: 0 0 var(--s-4);
+  }
+
+  .ai-crew-diagram {
+    margin: var(--s-4) 0 var(--s-5);
+  }
+
+  .ai-crew-diagram figcaption {
+    margin: 0 0 var(--s-2);
+    color: var(--ink-soft);
+  }
+
+  .ai-crew-diagram picture,
+  .ai-crew-diagram img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .ai-crew-diagram img {
+    aspect-ratio: 3 / 1;
+  }
+
+  @media (max-width: 680px) {
+    .ai-crew-diagram img {
+      aspect-ratio: 2 / 3;
+    }
+  }
+
+  .ai-crew-diagram-dark {
+    display: none !important;
+  }
+
+  :global(html[data-time="night"]) .ai-crew-diagram-day {
+    display: none;
+  }
+
+  :global(html[data-time="night"]) .ai-crew-diagram-dark {
+    display: block !important;
+  }
+
+  .ai-stats {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-4);
+    margin: var(--s-5) 0 0;
+  }
+
+  .ai-stat-card {
+    border: 1px solid var(--rule);
+    padding: var(--s-4);
+    background: var(--paper);
+  }
+
+  .ai-stat-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: var(--s-2) var(--s-4);
+    margin: 0 0 var(--s-3);
+  }
+
+  .ai-split .ai-stat-title {
+    margin: 0;
+    color: var(--ink);
+  }
+
+  .ai-split .ai-stat-value {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 500;
+    text-transform: none;
+    letter-spacing: 0.02em;
+    color: var(--ink);
+  }
+
+  .ai-split .ai-stat-value--shipped {
+    color: var(--moss);
+  }
+
+  .ai-split .ai-stat-value--returned {
+    color: var(--signal);
+  }
+
+  .ai-meter-svg {
+    display: block;
+    width: 100%;
+    height: 8px;
+    margin: 0 0 var(--s-2);
+    border: 1px solid var(--rule);
+    background: var(--paper-2);
+  }
+
+  .ai-meter-shipped {
+    fill: var(--moss);
+  }
+
+  .ai-meter-returned,
+  .ai-meter-signal {
+    fill: var(--signal);
+  }
+
+  .ai-meter-untagged {
+    fill: var(--rule);
+  }
+
+  .ai-split .ai-meter-caption {
+    margin: 0 0 var(--s-3);
+    color: var(--ink-soft);
+    text-transform: none;
+    letter-spacing: 0.01em;
+    line-height: 1.5;
+  }
+
+  .ai-split .ai-stat-meta {
+    margin: 0;
+    padding-top: var(--s-3);
+    border-top: 1px solid var(--rule);
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+  }
+
+  .ai-split .ai-stat-meta strong {
+    color: var(--ink);
+    font-weight: 500;
   }
 
   /* ─── Build log — the lead section: this site's own commits ─────────── */
