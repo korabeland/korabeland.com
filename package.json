@@ -71,7 +71,7 @@
     "@fontsource/jetbrains-mono": "^5.3.0",
     "@fontsource/schibsted-grotesk": "^5.3.0",
     "@keystatic/astro": "^6.0.0",
-    "@keystatic/core": "^0.5.50",
+    "@keystatic/core": "^0.6.9",
     "@markdoc/markdoc": "^0.5.10",
     "@resvg/resvg-js": "^2.6.2",
     "@tailwindcss/vite": "^4.3.3",
