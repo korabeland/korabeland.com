@@ -1,0 +1,495 @@
+---
+// Explorable/PairingMatrix.astro: two questions, every answer pairing, and
+// the bucket each pairing sorts into. The reader answers both questions and
+// the matrix shows where that pairing lands.
+//
+// Server render: the full matrix as a real table (row and column headers,
+// each cell naming its bucket) plus the bucket legend. That static table is
+// the no-script fallback and already carries the point. The two question
+// groups are native radio inputs, revealed by the script, so keyboard and
+// screen-reader operation come from the platform.
+//
+// Motion: 150ms colour transitions only (DESIGN.md §9).
+
+import {
+  assertMatrix,
+  bucketFor,
+  type MatrixBucket,
+  type MatrixQuestion,
+} from "../../lib/explorable";
+
+interface Props {
+  /** Unique id prefix for inputs and labels. */
+  id: string;
+  /** Question on the rows. */
+  rows: MatrixQuestion;
+  /** Question on the columns. */
+  cols: MatrixQuestion;
+  /** Buckets, strongest first. Shading steps down in this order. */
+  buckets: MatrixBucket[];
+  /** Bucket index per pairing, indexed [row][column]. */
+  cells: number[][];
+  /** Starting answers as [row, column]. */
+  initial?: [number, number];
+  /** Accessible table caption. */
+  caption: string;
+  /** Heading over the bucket legend. */
+  legendLabel?: string;
+}
+
+const {
+  id,
+  rows,
+  cols,
+  buckets,
+  cells,
+  initial = [0, 0],
+  caption,
+  legendLabel = "result",
+} = Astro.props;
+
+assertMatrix(cells, rows.options.length, cols.options.length, buckets.length);
+const [initialRow, initialCol] = initial;
+const initialBucket = bucketFor(cells, initialRow, initialCol);
+
+// Shading level per bucket: 1 for the strongest, 0 for the weakest.
+const level = (index: number) =>
+  buckets.length > 1 ? 1 - index / (buckets.length - 1) : 1;
+---
+
+<div
+  class="pm"
+  data-pairing-matrix
+  data-cells={JSON.stringify(cells)}
+  data-initial-bucket={initialBucket}
+>
+  <div class="pm-questions" data-pm-controls hidden>
+    {
+      [
+        { q: rows, name: `${id}-row`, checked: initialRow, role: "row" },
+        { q: cols, name: `${id}-col`, checked: initialCol, role: "col" },
+      ].map(({ q, name, checked, role }) => (
+        <fieldset class="pm-q" data-pm-axis={role} data-axis-name={q.axis}>
+          <legend class="pm-q-legend">{q.question}</legend>
+          <div class="pm-opts">
+            {q.options.map((option, i) => (
+              <label class="pm-opt">
+                <input
+                  type="radio"
+                  name={name}
+                  value={i}
+                  checked={i === checked}
+                />
+                <span>{option}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      ))
+    }
+  </div>
+
+  <div class="pm-grid">
+    <table class="pm-table">
+      <caption class="sr-only">{caption}</caption>
+      <thead>
+        <tr>
+          <td class="pm-corner"></td>
+          {
+            cols.options.map((option, c) => (
+              <th scope="col" data-pm-col={c}>
+                {option}
+              </th>
+            ))
+          }
+        </tr>
+      </thead>
+      <tbody>
+        {
+          rows.options.map((option, r) => (
+            <tr>
+              <th scope="row" data-pm-row={r}>
+                {option}
+              </th>
+              {cols.options.map((_, c) => {
+                const b = bucketFor(cells, r, c);
+                return (
+                  <td
+                    class="pm-cell"
+                    data-r={r}
+                    data-c={c}
+                    data-bucket={b}
+                    style={`--lvl: ${level(b)}`}
+                  >
+                    <span class="pm-code" aria-hidden="true">
+                      {buckets[b].short}
+                    </span>
+                    <span class="sr-only">
+                      {buckets[b].label}: {buckets[b].action}
+                    </span>
+                  </td>
+                );
+              })}
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+
+    <div class="pm-result">
+      <span class="t-label">{legendLabel}</span>
+      <ol class="pm-legend">
+        {
+          buckets.map((bucket, i) => (
+            <li class="pm-bucket" data-pm-bucket={i} style={`--lvl: ${level(i)}`}>
+              <span class="pm-swatch" aria-hidden="true">
+                {bucket.short}
+              </span>
+              <span class="pm-bucket-label">{bucket.label}</span>
+              <span class="pm-bucket-action">{bucket.action}</span>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </div>
+
+  <div class="pm-say" data-pm-say aria-live="polite" hidden>
+    <span data-pm-say-pair></span>
+    <strong data-pm-say-bucket></strong>
+  </div>
+</div>
+
+<script>
+  // Enhancement only. The table and legend are complete without it; the
+  // script reveals the two question groups and marks the chosen pairing.
+  for (const root of document.querySelectorAll<HTMLElement>(
+    "[data-pairing-matrix]",
+  )) {
+    const cells: number[][] = JSON.parse(root.dataset.cells ?? "[]");
+    const controls = root.querySelector<HTMLElement>("[data-pm-controls]");
+    const say = root.querySelector<HTMLElement>("[data-pm-say]");
+    const sayPair = root.querySelector<HTMLElement>("[data-pm-say-pair]");
+    const sayBucket = root.querySelector<HTMLElement>("[data-pm-say-bucket]");
+    if (!controls || !say || !sayPair || !sayBucket) continue;
+
+    const axis = (role: "row" | "col") => {
+      const set = controls.querySelector<HTMLElement>(
+        `[data-pm-axis="${role}"]`,
+      );
+      const inputs = [
+        ...(set?.querySelectorAll<HTMLInputElement>("input") ?? []),
+      ];
+      return { name: set?.dataset.axisName ?? role, inputs };
+    };
+    const rowAxis = axis("row");
+    const colAxis = axis("col");
+
+    const mark = (selector: string, on: (el: HTMLElement) => boolean) => {
+      for (const el of root.querySelectorAll<HTMLElement>(selector)) {
+        el.toggleAttribute("data-on", on(el));
+      }
+    };
+
+    const update = () => {
+      const rowInput = rowAxis.inputs.find((i) => i.checked);
+      const colInput = colAxis.inputs.find((i) => i.checked);
+      if (!rowInput || !colInput) return;
+      const r = Number(rowInput.value);
+      const c = Number(colInput.value);
+      const bucket = cells[r]?.[c];
+      if (bucket === undefined) return;
+
+      mark(".pm-cell", (el) => el.dataset.r === `${r}` && el.dataset.c === `${c}`);
+      mark("[data-pm-row]", (el) => el.dataset.pmRow === `${r}`);
+      mark("[data-pm-col]", (el) => el.dataset.pmCol === `${c}`);
+      mark("[data-pm-bucket]", (el) => el.dataset.pmBucket === `${bucket}`);
+
+      const legend = root.querySelector<HTMLElement>(
+        `[data-pm-bucket="${bucket}"]`,
+      );
+      const label = legend?.querySelector(".pm-bucket-label")?.textContent ?? "";
+      const action =
+        legend?.querySelector(".pm-bucket-action")?.textContent ?? "";
+      const rowText = rowInput.nextElementSibling?.textContent ?? "";
+      const colText = colInput.nextElementSibling?.textContent ?? "";
+      sayPair.textContent = `${rowText} + ${colText}: `;
+      sayBucket.textContent = `${label}. ${action}.`;
+    };
+
+    controls.addEventListener("change", update);
+
+    // Pointer shortcut: clicking a cell answers both questions at once. The
+    // radio groups remain the keyboard path, so the cells take no tab stop.
+    root.querySelector(".pm-table")?.addEventListener("click", (event) => {
+      const cell = (event.target as HTMLElement).closest<HTMLElement>(
+        ".pm-cell",
+      );
+      if (!cell) return;
+      const rowInput = rowAxis.inputs[Number(cell.dataset.r)];
+      const colInput = colAxis.inputs[Number(cell.dataset.c)];
+      if (!rowInput || !colInput) return;
+      rowInput.checked = true;
+      colInput.checked = true;
+      update();
+    });
+
+    controls.hidden = false;
+    say.hidden = false;
+    root.setAttribute("data-enhanced", "");
+    update();
+  }
+</script>
+
+<style>
+  .pm {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-5);
+  }
+
+  /* ─── The two questions ─────────────────────────────────────────────── */
+  .pm-questions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--s-5);
+  }
+  .pm-questions[hidden] {
+    display: none;
+  }
+
+  .pm-q {
+    border: 0;
+    margin: 0;
+    padding: 0;
+    min-width: 0;
+  }
+
+  .pm-q-legend {
+    padding: 0;
+    margin-bottom: var(--s-3);
+    font-size: 15px;
+    line-height: 1.4;
+    color: var(--ink);
+  }
+
+  .pm-opts {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--rule);
+  }
+
+  .pm-opt {
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding: var(--s-2) var(--s-3);
+    font-size: 14px;
+    line-height: 1.35;
+    color: var(--ink-soft);
+    cursor: pointer;
+    border-bottom: 1px solid var(--rule);
+    transition:
+      background 150ms ease,
+      color 150ms ease;
+  }
+  .pm-opt:last-child {
+    border-bottom: 0;
+  }
+
+  /* The native radio stays in the accessibility tree and takes focus; the
+     label draws the state. */
+  .pm-opt input {
+    position: absolute;
+    opacity: 0;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    cursor: pointer;
+  }
+
+  .pm-opt span {
+    padding-left: var(--s-5);
+    position: relative;
+  }
+  .pm-opt span::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 9px;
+    height: 9px;
+    margin-top: -5px;
+    border: 1px solid var(--ink-mute);
+    border-radius: var(--r-pill);
+  }
+
+  .pm-opt:has(input:checked) {
+    background: var(--paper-2);
+    color: var(--ink);
+  }
+  .pm-opt:has(input:checked) span::before {
+    background: var(--signal);
+    border-color: var(--signal);
+  }
+  .pm-opt:has(input:focus-visible) {
+    box-shadow: var(--focus-ring);
+    z-index: 1;
+  }
+  @media (hover: hover) {
+    .pm-opt:hover {
+      color: var(--ink);
+    }
+  }
+
+  /* ─── The matrix ────────────────────────────────────────────────────── */
+  .pm-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+    gap: var(--s-5);
+    align-items: start;
+  }
+
+  .pm-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+
+  .pm-table th {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    font-weight: 400;
+    line-height: 1.35;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    text-align: left;
+    padding: var(--s-2);
+    vertical-align: bottom;
+    transition: color 150ms ease;
+  }
+  .pm-table th[scope="row"] {
+    vertical-align: middle;
+    padding-left: 0;
+  }
+  .pm-table th[data-on] {
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .pm-corner {
+    width: 34%;
+  }
+
+  .pm-cell {
+    height: 44px;
+    text-align: center;
+    border: 1px solid var(--paper);
+    background: color-mix(
+      in oklab,
+      var(--signal) calc(var(--lvl) * 34%),
+      var(--paper-2)
+    );
+    transition: box-shadow 150ms ease;
+  }
+  .pm[data-enhanced] .pm-cell {
+    cursor: pointer;
+  }
+  .pm-cell[data-on] {
+    box-shadow: inset 0 0 0 2px var(--ink);
+  }
+
+  .pm-code {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+  }
+
+  /* ─── The result ────────────────────────────────────────────────────── */
+  .pm-result {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-3);
+    padding-top: var(--s-2);
+  }
+
+  .pm-legend {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--rule);
+  }
+
+  .pm-bucket {
+    display: grid;
+    grid-template-columns: 32px minmax(0, auto) minmax(0, 1fr);
+    align-items: center;
+    gap: var(--s-3);
+    padding: var(--s-2) 0;
+    border-bottom: 1px solid var(--rule);
+    font-size: 14px;
+    line-height: 1.35;
+    color: var(--ink-soft);
+    transition: color 150ms ease;
+  }
+
+  .pm-swatch {
+    display: grid;
+    place-items: center;
+    height: 24px;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--ink);
+    background: color-mix(
+      in oklab,
+      var(--signal) calc(var(--lvl) * 34%),
+      var(--paper-2)
+    );
+    transition: box-shadow 150ms ease;
+  }
+
+  .pm-bucket-action {
+    text-align: right;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .pm-bucket[data-on] {
+    color: var(--ink);
+  }
+  .pm-bucket[data-on] .pm-swatch {
+    box-shadow: inset 0 0 0 2px var(--ink);
+  }
+  .pm-bucket[data-on] .pm-bucket-label {
+    font-weight: 500;
+  }
+
+  .pm-say {
+    margin: 0;
+    padding-top: var(--s-4);
+    border-top: 1px solid var(--rule);
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--ink-soft);
+  }
+  .pm-say strong {
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  @media (max-width: 680px) {
+    .pm-questions,
+    .pm-grid {
+      grid-template-columns: 1fr;
+    }
+    .pm-corner {
+      width: 38%;
+    }
+  }
+</style>

@@ -4,12 +4,17 @@
 // datum / status chip. Work-category slice only; /lab renders the side
 // projects through the same component. See docs/plans/2026-07-03-console-mvp.md.
 
+import FeaturedStudy from "../../components/FeaturedStudy/index.astro";
+import { CHAPTERS, STORY_SLUG } from "../../components/LeadScoringStory/data";
 import ProjectLedger from "../../components/ProjectLedger/index.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { serializeJsonLd } from "../../lib/json-ld";
 import { listProjects, projectHref, projectStatus } from "../../lib/projects";
 
 const projects = (await listProjects()).filter((p) => p.category === "work");
+// The flagship explorable is featured above the ledger. It stays in the
+// ledger too: "all case studies" means all of them.
+const featured = projects.find((p) => p.slug === STORY_SLUG);
 const ledgerItems = projects.map((p) => ({
   slug: p.slug,
   title: p.title,
@@ -45,6 +50,20 @@ const jsonLd = {
         and the numbers that came out of it.
       </p>
     </section>
+
+    {
+      featured && (
+        <FeaturedStudy
+          href={projectHref(featured)}
+          eyebrow="featured · explorable"
+          title={featured.title}
+          description={featured.description}
+          status={projectStatus(featured)}
+          chapters={CHAPTERS}
+          cta="read the case study"
+        />
+      )
+    }
 
     <ProjectLedger
       items={ledgerItems}

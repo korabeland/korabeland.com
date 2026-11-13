@@ -1,0 +1,410 @@
+---
+// Explorable/CutoffDial.astro: a ranked population, cut two ways. A coarse
+// scale (a few buckets) allows one cut: the whole bottom bucket. A fine scale
+// (equal steps, such as deciles) lets the cutoff sit at any step. The reader
+// drags the cutoff and sees the band only the fine scale can release.
+//
+// Server render: the complete figure at the starting cutoff, with its
+// readout. That is the no-script fallback. The script reveals a native range
+// input, so keyboard operation (arrow keys, Home, End) and the screen-reader
+// value text come from the platform.
+//
+// Motion: none beyond the 150ms colour transitions (DESIGN.md §9). The
+// cutoff follows the input directly.
+
+import { type CutoffNote, cutoffGeometry, noteFor } from "../../lib/explorable";
+
+interface Props {
+  /** Unique id prefix. */
+  id: string;
+  /** Relative height of each fine step, best first. Any scale. */
+  heights: number[];
+  /** True when the heights are a drawn shape, not measured values. Hatches
+   *  the bars so they read as illustrative. */
+  illustrative?: boolean;
+  /** Share the coarse scale can cut, in percent, from the bottom. */
+  coarseCutPercent: number;
+  /** Labels for the coarse row: what stays, and what the coarse cut drops. */
+  coarse: { keep: string; cut: string };
+  /** Steps kept at the start (the rest are cut). */
+  initialKept: number;
+  /** Label for the range input. */
+  controlLabel: string;
+  /** Axis ends, best and worst. */
+  axis: { best: string; worst: string };
+  /** Headline readout for a number of cut steps. Runs at build time. */
+  readout: (cut: number, steps: number) => string;
+  /** Plain-language note by cut share. */
+  notes: CutoffNote[];
+  /** Legend text for the three mark types. */
+  legend: { kept: string; band: string; cut: string };
+}
+
+const {
+  id,
+  heights,
+  illustrative = false,
+  coarseCutPercent,
+  coarse,
+  initialKept,
+  controlLabel,
+  axis,
+  readout,
+  notes,
+  legend,
+} = Astro.props;
+
+const steps = heights.length;
+const tallest = Math.max(...heights);
+const start = cutoffGeometry(initialKept, steps, coarseCutPercent);
+
+// Every state's text is rendered at build time so the script only indexes it.
+const states = Array.from({ length: steps + 1 }, (_, kept) => {
+  const g = cutoffGeometry(kept, steps, coarseCutPercent);
+  return {
+    main: readout(g.cut, steps),
+    note: noteFor(notes, g.cutPercent),
+  };
+});
+const startState = states[steps - start.cut];
+---
+
+<div
+  class="cd"
+  data-cutoff-dial
+  data-steps={steps}
+  data-coarse-cut={coarseCutPercent}
+  data-states={JSON.stringify(states)}
+  data-illustrative={illustrative ? "" : undefined}
+  style={`--kept: ${start.keptPercent}%; --coarse-edge: ${100 - coarseCutPercent}%`}
+>
+  <div class="cd-stage">
+    <div class="cd-bars" aria-hidden="true">
+      {
+        heights.map((h, i) => (
+          <span
+            class="cd-bar"
+            data-cut={i >= steps - start.cut ? "" : undefined}
+            style={`--h: ${((h / tallest) * 100).toFixed(2)}%`}
+          />
+        ))
+      }
+    </div>
+
+    <div class="cd-control" data-cd-control hidden>
+      <label class="sr-only" for={`${id}-range`}>{controlLabel}</label>
+      <input
+        id={`${id}-range`}
+        type="range"
+        min="0"
+        max={steps}
+        step="1"
+        value={steps - start.cut}
+        aria-valuetext={startState.main}
+      />
+    </div>
+
+    <div class="cd-axis" aria-hidden="true">
+      <span>{axis.best}</span>
+      <span>{axis.worst}</span>
+    </div>
+
+    <div class="cd-coarse" aria-hidden="true">
+      <span class="cd-coarse-keep">{coarse.keep}</span>
+      <span class="cd-coarse-cut">{coarse.cut}</span>
+    </div>
+
+    <div class="cd-band" aria-hidden="true"></div>
+    <div class="cd-line" aria-hidden="true"></div>
+  </div>
+
+  <output class="cd-read" for={`${id}-range`} aria-live="polite">
+    <span class="cd-read-main" data-cd-main>{startState.main}</span>
+    <span class="cd-read-note" data-cd-note>{startState.note}</span>
+  </output>
+
+  <ol class="cd-legend">
+    <li><span class="cd-key cd-key-kept" aria-hidden="true"></span>{legend.kept}</li>
+    <li><span class="cd-key cd-key-band" aria-hidden="true"></span>{legend.band}</li>
+    <li><span class="cd-key cd-key-cut" aria-hidden="true"></span>{legend.cut}</li>
+  </ol>
+</div>
+
+<script>
+  // Enhancement only: the server already rendered the starting state.
+  for (const root of document.querySelectorAll<HTMLElement>(
+    "[data-cutoff-dial]",
+  )) {
+    const steps = Number(root.dataset.steps);
+    const states: { main: string; note: string }[] = JSON.parse(
+      root.dataset.states ?? "[]",
+    );
+    const control = root.querySelector<HTMLElement>("[data-cd-control]");
+    const input = control?.querySelector<HTMLInputElement>("input");
+    const main = root.querySelector<HTMLElement>("[data-cd-main]");
+    const note = root.querySelector<HTMLElement>("[data-cd-note]");
+    const bars = [...root.querySelectorAll<HTMLElement>(".cd-bar")];
+    if (!control || !input || !main || !note || !steps) continue;
+
+    const update = () => {
+      const kept = Number(input.value);
+      const state = states[kept];
+      if (!state) return;
+      root.style.setProperty("--kept", `${(kept / steps) * 100}%`);
+      for (const [i, bar] of bars.entries()) {
+        bar.toggleAttribute("data-cut", i >= kept);
+      }
+      main.textContent = state.main;
+      note.textContent = state.note;
+      input.setAttribute("aria-valuetext", state.main);
+    };
+
+    input.addEventListener("input", update);
+    control.hidden = false;
+    root.setAttribute("data-enhanced", "");
+    update();
+  }
+</script>
+
+<style>
+  .cd {
+    --thumb: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-5);
+  }
+
+  .cd-stage {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ─── Fine scale: one bar per step ──────────────────────────────────── */
+  .cd-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 148px;
+    border-bottom: 1px solid var(--ink-soft);
+  }
+
+  .cd-bar {
+    flex: 1 1 0;
+    height: var(--h);
+    min-height: 3px;
+    background: var(--ink-mute);
+    border: 1px solid var(--ink-mute);
+    transition:
+      background 150ms ease,
+      border-color 150ms ease;
+  }
+  /* Hatching marks a drawn shape, not a measured one. */
+  .cd[data-illustrative] .cd-bar {
+    background: repeating-linear-gradient(
+      135deg,
+      var(--ink-mute) 0 1px,
+      transparent 1px 5px
+    );
+  }
+  .cd .cd-bar[data-cut] {
+    background: transparent;
+    border-style: dashed;
+    border-color: var(--rule);
+  }
+
+  /* ─── The control ───────────────────────────────────────────────────── */
+  .cd-control {
+    height: 44px;
+    /* Widen the input by one thumb so its centre travels edge to edge and
+       stays on the cutoff line. */
+    margin-inline: calc(var(--thumb) / -2);
+    position: relative;
+    z-index: 2;
+  }
+  .cd-control[hidden] {
+    display: none;
+  }
+
+  .cd-control input {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 100%;
+    height: 44px;
+    margin: 0;
+    background: transparent;
+    cursor: ew-resize;
+  }
+  .cd-control input::-webkit-slider-runnable-track {
+    height: 44px;
+    background: transparent;
+  }
+  .cd-control input::-moz-range-track {
+    height: 44px;
+    background: transparent;
+  }
+  .cd-control input::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: var(--thumb);
+    height: var(--thumb);
+    margin-top: 8px;
+    border: 2px solid var(--paper);
+    border-radius: var(--r-pill);
+    background: var(--signal);
+  }
+  .cd-control input::-moz-range-thumb {
+    width: calc(var(--thumb) - 4px);
+    height: calc(var(--thumb) - 4px);
+    border: 2px solid var(--paper);
+    border-radius: var(--r-pill);
+    background: var(--signal);
+  }
+  .cd-control input:focus-visible {
+    box-shadow: none;
+  }
+  .cd-control input:focus-visible::-webkit-slider-thumb {
+    box-shadow: var(--focus-ring);
+  }
+  .cd-control input:focus-visible::-moz-range-thumb {
+    box-shadow: var(--focus-ring);
+  }
+
+  .cd-axis {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--s-3);
+    padding: var(--s-2) 0 var(--s-3);
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  /* ─── Coarse scale: what the buckets can cut ────────────────────────── */
+  .cd-coarse {
+    display: flex;
+    gap: 2px;
+    height: 32px;
+  }
+  .cd-coarse span {
+    display: flex;
+    align-items: center;
+    padding-inline: var(--s-2);
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .cd-coarse-keep {
+    flex: 1 1 0;
+    background: var(--paper-2);
+    border: 1px solid var(--ink-mute);
+    color: var(--ink);
+  }
+  .cd-coarse-cut {
+    flex: 0 0 calc(100% - var(--coarse-edge));
+    justify-content: center;
+    border: 1px dashed var(--ink-mute);
+    color: var(--ink-soft);
+  }
+
+  /* ─── Cutoff line and the band only the fine scale can cut ──────────── */
+  .cd-line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: var(--kept);
+    width: 2px;
+    margin-left: -1px;
+    background: var(--signal);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .cd-band {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: var(--kept);
+    width: max(0%, calc(var(--coarse-edge) - var(--kept)));
+    background: color-mix(in oklch, var(--signal) 16%, transparent);
+    pointer-events: none;
+  }
+
+  /* ─── Readout ───────────────────────────────────────────────────────── */
+  .cd-read {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-1);
+    min-height: 76px;
+    padding-top: var(--s-4);
+    border-top: 1px solid var(--rule);
+  }
+  .cd-read-main {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1.5;
+    letter-spacing: 0.02em;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+  }
+  .cd-read-note {
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--ink-soft);
+  }
+
+  .cd-legend {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2) var(--s-5);
+    font-size: 13px;
+    line-height: 1.4;
+    color: var(--ink-soft);
+  }
+  .cd-legend li {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+  }
+  .cd-key {
+    flex: none;
+    width: 14px;
+    height: 14px;
+    border: 1px solid var(--ink-mute);
+  }
+  .cd-key-kept {
+    background: var(--ink-mute);
+  }
+  .cd[data-illustrative] .cd-key-kept {
+    background: repeating-linear-gradient(
+      135deg,
+      var(--ink-mute) 0 1px,
+      transparent 1px 5px
+    );
+  }
+  .cd-key-band {
+    border-color: transparent;
+    border-left: 2px solid var(--signal);
+    background: color-mix(in oklch, var(--signal) 16%, transparent);
+  }
+  .cd-key-cut {
+    border-style: dashed;
+    border-color: var(--ink-mute);
+  }
+
+  @media (max-width: 680px) {
+    .cd-bars {
+      height: 120px;
+    }
+    .cd-read {
+      min-height: 100px;
+    }
+  }
+</style>

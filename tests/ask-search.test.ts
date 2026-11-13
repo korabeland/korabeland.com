@@ -110,8 +110,11 @@ describe("search over the live corpus", () => {
     }
   });
 
+  // The lead scoring question is answered by the flagship case study, which
+  // retells /work/lead-scoring with the measured tier results alongside it
+  // and outranks that page for this question.
   it.each([
-    [EXAMPLE_QUESTIONS[0], "/work/lead-scoring"],
+    [EXAMPLE_QUESTIONS[0], "/work/call-tiers-lead-scoring"],
     [EXAMPLE_QUESTIONS[1], "/about#experience-heading"],
     [EXAMPLE_QUESTIONS[2], "/work/ai-sms-pilot"],
     [EXAMPLE_QUESTIONS[3], "/about#skills-heading"],
@@ -126,7 +129,11 @@ describe("search over the live corpus", () => {
 
   it.each([
     ["Where are you based?", "/about#close"],
-    ["What results did the lead scoring project get?", "/work/lead-scoring"],
+    [
+      "What results did the lead scoring project get?",
+      "/work/call-tiers-lead-scoring",
+    ],
+    ["What is the decile model?", "/work/lead-scoring"],
     ["What is Perian?", "/lab/perian"],
     ["What citizenship do you hold?", "/about#close"],
     ["Which certifications do you hold?", "/about#skills-heading"],

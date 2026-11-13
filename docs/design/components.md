@@ -34,7 +34,9 @@ The system has two layers:
 Every component is server-rendered and ships **zero client JS by default**.
 Three components are deliberate, gated exceptions (`OutcomeMetrics`,
 `ShiftToggle`, `ShiftLog`); each server-renders its final state and enhances only
-when JS + capability + motion permit. See [Cross-cutting conventions](#cross-cutting-conventions).
+when JS + capability + motion permit. Two [Explorable](#explorable) figures
+(`PairingMatrix`, `CutoffDial`) follow the same rule: the server render is the
+complete no-script figure, and a small script reveals native form controls. See [Cross-cutting conventions](#cross-cutting-conventions).
 
 ---
 
@@ -516,12 +518,121 @@ subline, and a `.btn` back to `/`. `<section aria-labelledby="off-trail-title">`
 
 `components/PostContent.tsx` — the one React island. Renders Keystatic's
 `fields.markdoc()` AST through Markdoc's React renderer. Consumers:
-`work/[slug].astro`, `lab/[slug].astro`, `notes/[slug].astro`.
+`work/[slug].astro`, `lab/[slug].astro`, `notes/[slug].astro`, and
+`LeadScoringStory` (one call per body segment).
 
 **Props** — `document: { node } | Node` (Keystatic reader output). Not a visual
 component; it emits plain `<p>/<h2>/<ul>` that the parent layout (`CaseStudy` /
 `ReadingRoom`) styles via `:global`. Styling belongs to the host layout, not
 here.
+
+---
+
+### Explorable
+
+`components/Explorable/*` — the figure set for explorable case studies: figures a
+reader works rather than reads. Built for the flagship
+`/work/call-tiers-lead-scoring` and meant for reuse by later showcase pieces.
+Pure logic lives in `src/lib/explorable.ts` (Vitest: `tests/explorable.test.ts`).
+
+**The visual rule the set establishes:** solid marks are measured, hatched or
+dashed marks are illustrative. Any figure that draws a shape with no published
+number behind it passes `illustrative` to `Figure`, which adds the visible
+"Illustrative" chip and a foot row saying exactly what is drawn.
+
+**Shared contract** — every figure server-renders a complete, point-carrying
+state (the no-script fallback); controls are native inputs (radio, range), so
+keyboard operation and screen-reader semantics come from the platform; touch
+targets are 44px or taller; `--signal` marks only the thing the figure is about;
+motion is 150–200ms colour or width transitions, removed by the global
+reduced-motion guard. No charting library: the figures are HTML and CSS.
+
+| Component | What the reader does | Client JS |
+|---|---|---|
+| `Figure` | Nothing: the frame (eyebrow, question, body slot, measured / illustrative foot) | none |
+| `PairingMatrix` | Answers two questions; the matrix marks the pairing and names its bucket | reveals the radios, marks the cell |
+| `ShareShift` | Switches a whole between two or three named states; the bar redistributes | none (radios + CSS `:has()`) |
+| `RatioPair` | Nothing: two bars in a published ratio, when the rates themselves are not published | none |
+| `CutoffDial` | Drags a cutoff along a ranked population; sees the band only the fine scale can cut | reveals the range input, moves the cutoff |
+| `ChapterRail` | Jumps to a chapter (with `href`), or reads a static summary (without) | none |
+
+**Figure** — props `id`, `label` (mono eyebrow; keep it short enough to share a
+phone-width line with the chip), `title` (the question the figure answers),
+`measured?`, `illustrative?` (presence adds the chip). A `<figure>` with a
+`<figcaption>`; the foot is a `<dl>`.
+
+**PairingMatrix** — props `id`, `rows` / `cols` (`{ question, axis, options[] }`),
+`buckets` (`{ label, short, action }[]`, strongest first; shading steps down in
+that order), `cells` (bucket index per `[row][column]`), `initial?`, `caption`,
+`legendLabel?`. No-script: the full matrix as a real `<table>` with row and
+column headers plus the bucket legend. Enhanced: two radio groups appear and a
+polite live region names the result. Clicking a cell is a pointer shortcut; the
+radios stay the keyboard path, so cells take no tab stop. A ragged or
+out-of-range matrix throws at build time.
+
+**ShareShift** — props `id`, `measure`, `switchLabel`, `segments`
+(`{ key, label, focus? }[]`), `states` (two or three of
+`{ label, detail, shares, values, verdict }`). One segment per state may be
+`"rest"`, which takes the remainder, so a derived figure is never printed or
+invented. Works with scripts off. Browsers without `:has()` get every state's
+verdict listed in place of the switch.
+
+**RatioPair** — props `measure`, `high` / `low` (`{ label, value }`), `multiple`.
+The low bar is one unit, the high bar `multiple` units.
+
+**CutoffDial** — props `id`, `heights` (relative bar height per step, best
+first), `illustrative?` (hatches the bars), `coarseCutPercent`, `coarse`
+(`{ keep, cut }` labels; keep them short for phone width), `initialKept`,
+`controlLabel`, `axis`, `readout(cut, steps)`, `notes` (`{ upTo, text }[]`),
+`legend`. Every state's text is rendered at build time; the script only indexes
+it. No-script: the figure at `initialKept` with its readout, and no dead
+control.
+
+**ChapterRail** — props `chapters` (`{ datum, caption, href? }[]`), `label`.
+Three columns on desktop, stacked rows at 680px and below.
+
+**Do / Don't**
+
+| ✅ Do | ❌ Don't |
+|---|---|
+| Print only published numbers; draw the rest and pass `illustrative` | Put a number on an illustrative mark |
+| Choose an `initial` state that carries the point with scripts off | Start a figure in an empty or trivial state |
+| Keep figure data in a `data.ts` beside the story, with a tracing test | Inline figures' numbers in the template |
+
+---
+
+### FeaturedStudy
+
+`components/FeaturedStudy/index.astro` — the featured block above a case-study
+ledger. Consumer: `work/index.astro`.
+
+**Props** — `href`, `eyebrow`, `title`, `description`, `status`
+(`"shipped" | "in-flight"`), `chapters` (rendered as a static `ChapterRail`),
+`cta`, `headingId?`.
+
+**Accessibility** — `<section aria-labelledby>`; the title is the block's one
+link, stretched over the whole block, so it is a single tab stop with the focus
+ring drawn around the block. The call-to-action line is `aria-hidden` (it
+repeats the link).
+
+---
+
+### LeadScoringStory
+
+`components/LeadScoringStory/index.astro` — assembles the flagship case study.
+Consumer: `work/[slug].astro`, for the `call-tiers-lead-scoring` entry only.
+
+**Props** — `document` (the entry's Markdoc body).
+
+**Structure** — `segments.ts` splits the body at its `h2` headings into an
+intro, three chapters and a closing section, and this component seats one
+`Explorable` figure in each chapter between the setup and the finding. The body
+must keep that shape; a missing heading fails the build. `data.ts` holds the
+figure data under one rule: every printed number is published on a source case
+study (`intent-tiers`, `call-tier-discipline`, `lead-scoring`).
+`tests/lead-scoring-story.test.ts` enforces the rule and the no-dash writing
+rule; `tests/e2e/lead-scoring-story.spec.ts` covers keyboard use, phone and
+desktop width, both shifts, and scripts off.
 
 ---
 
@@ -600,7 +711,9 @@ the source, not the call site.
 
 ## Coverage & gaps
 
-17 component files (12 top-level + 5 sub-components) + shell documented.
+17 component files (12 top-level + 5 sub-components) + shell documented, plus
+the `Explorable` set (six files), `FeaturedStudy` and `LeadScoringStory`, added
+2026-11-13.
 
 **Resolved:** the duplicate status chip in `CaseStudy/index.astro` was folded
 into `StatusChip` (styling was already byte-identical); the dead

@@ -1,0 +1,133 @@
+---
+// FeaturedStudy: the featured block above a case-study ledger. One showcase
+// piece, set apart from the rows below it: eyebrow, title, one-line
+// description, and the story's chapter rail as a preview of what is inside.
+//
+// One link (the title) stretched over the whole block, so the block is a
+// single tab stop with a 44px-plus target. Zero client JS.
+
+import type { RailChapter } from "../../lib/explorable";
+import ChapterRail from "../Explorable/ChapterRail.astro";
+import StatusChip from "../StatusChip/StatusChip.astro";
+
+interface Props {
+  href: string;
+  /** Mono eyebrow, e.g. "featured · explorable". Keep it short. */
+  eyebrow: string;
+  title: string;
+  description: string;
+  status: "shipped" | "in-flight";
+  /** One real datum per chapter. Rendered as a static rail. */
+  chapters: readonly RailChapter[];
+  /** Mono call to action, e.g. "read the case study". */
+  cta: string;
+  /** id for the heading, the owning section's aria-labelledby target. */
+  headingId?: string;
+}
+
+const {
+  href,
+  eyebrow,
+  title,
+  description,
+  status,
+  chapters,
+  cta,
+  headingId = "featured-heading",
+} = Astro.props;
+
+// Static rail: the block is already one link, so the rows carry no hrefs.
+const rail = chapters.map(({ datum, caption }) => ({ datum, caption }));
+---
+
+<section class="fs" aria-labelledby={headingId}>
+  <div class="fs-meta">
+    <span class="t-label">{eyebrow}</span>
+    <StatusChip status={status} variant="chip" />
+  </div>
+
+  <h2 class="fs-title" id={headingId}>
+    <a class="fs-link" href={href}>{title}</a>
+  </h2>
+  <p class="fs-description">{description}</p>
+
+  <ChapterRail chapters={rail} label="Chapters in this case study" />
+
+  <span class="t-mono fs-cta" aria-hidden="true">{cta} →</span>
+</section>
+
+<style>
+  .fs {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-4);
+    padding: var(--s-5);
+    border: 1px solid var(--rule);
+    border-top-color: var(--ink);
+    background: var(--paper);
+    transition: background 150ms ease;
+  }
+
+  .fs-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-3);
+  }
+
+  .fs-title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: clamp(22px, 3vw, 28px);
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    max-width: 34ch;
+  }
+
+  .fs-link {
+    color: var(--ink);
+    text-decoration: none;
+  }
+  /* Stretch the one link over the whole block. */
+  .fs-link::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+  }
+  .fs-link:focus-visible {
+    box-shadow: none;
+  }
+  .fs-link:focus-visible::after {
+    box-shadow: var(--focus-ring);
+  }
+
+  .fs-description {
+    margin: 0 0 var(--s-2);
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    max-width: 64ch;
+  }
+
+  .fs-cta {
+    color: var(--ink-soft);
+    transition: color 150ms ease;
+  }
+
+  @media (hover: hover) {
+    .fs:hover {
+      background: var(--paper-2);
+    }
+    .fs:hover .fs-cta {
+      color: var(--signal);
+    }
+  }
+
+  @media (max-width: 680px) {
+    .fs {
+      padding: var(--s-4);
+    }
+  }
+</style>

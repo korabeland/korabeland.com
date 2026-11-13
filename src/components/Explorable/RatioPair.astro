@@ -1,0 +1,103 @@
+---
+// Explorable/RatioPair.astro: two bars whose lengths are in a measured
+// ratio, for when the ratio is published but the underlying rates are not.
+// The shorter bar is one unit; the longer is `multiple` units. Static: no
+// client JS, no motion.
+
+interface Props {
+  /** What is being compared, e.g. "30-day application rate". */
+  measure: string;
+  /** The larger side. */
+  high: { label: string; value: string };
+  /** The smaller side, drawn as one unit. */
+  low: { label: string; value: string };
+  /** How many times larger the high side is. */
+  multiple: number;
+}
+
+const { measure, high, low, multiple } = Astro.props;
+
+if (!(multiple >= 1)) {
+  throw new Error("RatioPair: multiple must be 1 or more.");
+}
+const lowWidth = `${(100 / multiple).toFixed(3)}%`;
+---
+
+<div class="rp">
+  <span class="t-label">{measure}</span>
+  <dl class="rp-rows">
+    <div class="rp-row">
+      <dt>{high.label}</dt>
+      <dd>
+        <span class="rp-bar" style="--w: 100%" aria-hidden="true"></span>
+        <span class="rp-value">{high.value}</span>
+      </dd>
+    </div>
+    <div class="rp-row" data-low>
+      <dt>{low.label}</dt>
+      <dd>
+        <span class="rp-bar" style={`--w: ${lowWidth}`} aria-hidden="true"></span>
+        <span class="rp-value">{low.value}</span>
+      </dd>
+    </div>
+  </dl>
+</div>
+
+<style>
+  .rp {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-3);
+    padding-top: var(--s-5);
+    margin-top: var(--s-5);
+    border-top: 1px solid var(--rule);
+  }
+
+  .rp-rows {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-2);
+  }
+
+  .rp-row {
+    display: grid;
+    grid-template-columns: 96px minmax(0, 1fr);
+    align-items: center;
+    gap: var(--s-3);
+  }
+
+  .rp-row dt {
+    font-size: 14px;
+    line-height: 1.35;
+    color: var(--ink-soft);
+  }
+
+  .rp-row dd {
+    margin: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 48px;
+    align-items: center;
+    gap: var(--s-3);
+  }
+
+  .rp-bar {
+    display: block;
+    height: 12px;
+    width: var(--w);
+    min-width: 2px;
+    background: var(--ink-mute);
+  }
+  .rp-row[data-low] .rp-bar {
+    background: var(--signal);
+  }
+
+  .rp-value {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+    color: var(--ink);
+    text-align: right;
+  }
+</style>

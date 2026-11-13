@@ -1,0 +1,311 @@
+---
+// Explorable/ShareShift.astro: one whole, split into segments, shown in two
+// or three named states (before and after a decision, say). The reader
+// switches state and the bar redistributes.
+//
+// Zero client JS. The states are native radio inputs and the bar reads the
+// checked one through CSS :has(), so it works with scripts off, by keyboard
+// (arrow keys move between states) and for screen readers (each radio is
+// described by its state's verdict). Browsers without :has() get every
+// state's verdict listed instead of the switch.
+//
+// Motion: one 200ms width transition, removed by the global reduced-motion
+// guard (DESIGN.md §9).
+
+import {
+  resolveShares,
+  type ShareSegment,
+  type ShareState,
+} from "../../lib/explorable";
+
+interface Props {
+  /** Unique id prefix for inputs. */
+  id: string;
+  /** What the whole bar is, e.g. "Share of weekly call effort". */
+  measure: string;
+  /** Legend for the switch (read by screen readers, shown as a label). */
+  switchLabel: string;
+  segments: ShareSegment[];
+  /** Two or three states. The first is checked by default. */
+  states: ShareState[];
+}
+
+const { id, measure, switchLabel, segments, states } = Astro.props;
+
+if (states.length < 2 || states.length > 3) {
+  throw new Error("ShareShift: pass two or three states.");
+}
+
+const layout = states.map((state) =>
+  resolveShares(segments.map((s) => state.shares[s.key] ?? 0)),
+);
+const segmentStyle = (segmentIndex: number) =>
+  layout.map((shares, i) => `--s${i}: ${shares[segmentIndex]}%`).join("; ");
+---
+
+<div class="ss">
+  <fieldset class="ss-switch">
+    <legend class="t-label">{switchLabel}</legend>
+    <div class="ss-states">
+      {
+        states.map((state, i) => (
+          <label class="ss-state">
+            <input
+              type="radio"
+              name={`${id}-state`}
+              value={i}
+              data-i={i}
+              checked={i === 0}
+              aria-describedby={`${id}-verdict-${i}`}
+            />
+            <span class="ss-state-label">{state.label}</span>
+            <span class="ss-state-detail">{state.detail}</span>
+          </label>
+        ))
+      }
+    </div>
+  </fieldset>
+
+  <div class="ss-chart">
+    <span class="t-label">{measure}</span>
+    <div class="ss-bar" aria-hidden="true">
+      {
+        segments.map((segment, i) => (
+          <span
+            class="ss-seg"
+            data-focus={segment.focus ? "" : undefined}
+            style={segmentStyle(i)}
+          />
+        ))
+      }
+    </div>
+    <ul class="ss-legend">
+      {
+        segments.map((segment) => (
+          <li class="ss-legend-row" data-focus={segment.focus ? "" : undefined}>
+            <span class="ss-swatch" aria-hidden="true" />
+            <span class="ss-legend-label">{segment.label}</span>
+            <span class="ss-legend-value">
+              {states.map((state, i) => (
+                <span data-show={i}>{state.values[segment.key]}</span>
+              ))}
+            </span>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+
+  <div class="ss-verdicts">
+    {
+      states.map((state, i) => (
+        <div class="ss-verdict" id={`${id}-verdict-${i}`} data-show={i}>
+          <span class="ss-verdict-state">{state.label}: </span>
+          {state.verdict}
+        </div>
+      ))
+    }
+  </div>
+</div>
+
+<style>
+  .ss {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-5);
+  }
+
+  /* ─── The switch ────────────────────────────────────────────────────── */
+  .ss-switch {
+    border: 0;
+    margin: 0;
+    padding: 0;
+    min-width: 0;
+  }
+  .ss-switch legend {
+    padding: 0;
+    margin-bottom: var(--s-3);
+  }
+
+  .ss-states {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    border: 1px solid var(--rule);
+  }
+
+  .ss-state {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+    min-height: 56px;
+    padding: var(--s-2) var(--s-3) var(--s-2) var(--s-4);
+    border-right: 1px solid var(--rule);
+    border-left: 2px solid transparent;
+    cursor: pointer;
+    transition:
+      background 150ms ease,
+      border-color 150ms ease;
+  }
+  .ss-state:last-child {
+    border-right: 0;
+  }
+
+  .ss-state input {
+    position: absolute;
+    opacity: 0;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    cursor: pointer;
+  }
+
+  .ss-state-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .ss-state-detail {
+    font-size: 14px;
+    line-height: 1.35;
+    color: var(--ink-soft);
+  }
+
+  .ss-state:has(input:checked) {
+    background: var(--paper-2);
+    border-left-color: var(--signal);
+  }
+  .ss-state:has(input:checked) .ss-state-label,
+  .ss-state:has(input:checked) .ss-state-detail {
+    color: var(--ink);
+  }
+  .ss-state:has(input:focus-visible) {
+    box-shadow: var(--focus-ring);
+    z-index: 1;
+  }
+
+  /* ─── The bar ───────────────────────────────────────────────────────── */
+  .ss-chart {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-3);
+  }
+
+  .ss-bar {
+    display: flex;
+    height: 48px;
+    gap: 2px;
+  }
+
+  .ss-seg {
+    flex: 0 1 var(--s0);
+    min-width: 2px;
+    background: var(--ink-mute);
+    transition: flex-basis 200ms ease;
+  }
+  .ss-seg[data-focus] {
+    background: var(--signal);
+  }
+
+  .ss:has([data-i="1"]:checked) .ss-seg {
+    flex-basis: var(--s1);
+  }
+  .ss:has([data-i="2"]:checked) .ss-seg {
+    flex-basis: var(--s2);
+  }
+
+  .ss-legend {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--rule);
+  }
+  /* Beats the case-study prose list rule, which would restyle these rows. */
+  .ss .ss-legend .ss-legend-row {
+    display: grid;
+    grid-template-columns: 12px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--s-3);
+    padding: var(--s-2) 0;
+    border-bottom: 1px solid var(--rule);
+    font-size: 14px;
+    line-height: 1.35;
+    color: var(--ink-soft);
+  }
+
+  .ss-swatch {
+    width: 12px;
+    height: 12px;
+    background: var(--ink-mute);
+  }
+  .ss-legend-row[data-focus] .ss-swatch {
+    background: var(--signal);
+  }
+  .ss-legend-row[data-focus] .ss-legend-label {
+    color: var(--ink);
+  }
+
+  .ss-legend-value {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+    color: var(--ink-soft);
+  }
+  .ss-legend-row[data-focus] .ss-legend-value {
+    font-size: 20px;
+    color: var(--signal);
+  }
+
+  /* ─── State-dependent text ──────────────────────────────────────────── */
+  .ss [data-show] {
+    display: none;
+  }
+  .ss:has([data-i="0"]:checked) [data-show="0"],
+  .ss:has([data-i="1"]:checked) [data-show="1"],
+  .ss:has([data-i="2"]:checked) [data-show="2"] {
+    display: revert;
+  }
+
+  .ss-verdict {
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--ink);
+  }
+  .ss-verdict-state {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  /* No :has(): drop the switch and state every verdict in order. The bar
+     stays on the first state, and the verdicts carry the change in words. */
+  @supports not selector(:has(*)) {
+    .ss-switch {
+      display: none;
+    }
+    .ss .ss-verdict[data-show] {
+      display: block;
+    }
+    .ss .ss-legend-value [data-show="0"] {
+      display: inline;
+    }
+  }
+
+  @media (max-width: 680px) {
+    .ss-state {
+      padding-left: var(--s-3);
+    }
+    .ss-state-detail {
+      font-size: 13px;
+    }
+  }
+</style>

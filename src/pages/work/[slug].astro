@@ -5,6 +5,8 @@
 
 import type { GetStaticPaths } from "astro";
 import CaseStudy from "../../components/CaseStudy/index.astro";
+import { STORY_SLUG } from "../../components/LeadScoringStory/data";
+import LeadScoringStory from "../../components/LeadScoringStory/index.astro";
 import { PostContent } from "../../components/PostContent";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { serializeJsonLd } from "../../lib/json-ld";
@@ -95,6 +97,14 @@ const jsonLd = {
     reflection={project.reflection}
     nextProject={nextProject}
   >
-    <PostContent document={content} />
+    {
+      // The flagship explorable seats a figure in each chapter of its body;
+      // every other case study renders its body as plain prose.
+      slug === STORY_SLUG ? (
+        <LeadScoringStory document={content} />
+      ) : (
+        <PostContent document={content} />
+      )
+    }
   </CaseStudy>
 </BaseLayout>
