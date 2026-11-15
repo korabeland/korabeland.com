@@ -129,10 +129,7 @@ export interface CutoffGeometry {
  * right, and split into `steps` equal bands. `kept` bands stay; the rest are
  * cut.
  */
-export function cutoffGeometry(
-  kept: number,
-  steps: number,
-): CutoffGeometry {
+export function cutoffGeometry(kept: number, steps: number): CutoffGeometry {
   if (!Number.isInteger(steps) || steps < 1) {
     throw new Error("CutoffDial: steps must be a positive whole number.");
   }
