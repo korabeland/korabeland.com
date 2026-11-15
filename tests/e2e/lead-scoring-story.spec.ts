@@ -130,13 +130,40 @@ for (const shift of SHIFTS) {
         ).toBeChecked();
         await expect(result).toContainText("Tier 1. Call first.");
 
-        await figure.getByRole("radio", { name: "Advance my career" }).focus();
-        await page.keyboard.press("ArrowDown");
+        await figure
+          .getByRole("radio", { name: "Gathering information" })
+          .focus();
+        await page.keyboard.press("ArrowRight");
         await expect(result).toContainText(
-          "As soon as possible + Personal interest",
+          "As soon as possible + Just browsing",
         );
         await expect(result).toContainText("Tier 2. Call next.");
         await expect(figure.locator(".pm-cell[data-on]")).toHaveCount(1);
+
+        await expect(
+          figure.getByRole("group", {
+            name: "Reason for enquiring: how ready are you to enroll?",
+          }),
+        ).toBeVisible();
+        await expect(figure.locator(".pm-table caption")).toContainText(
+          "as the reason for enquiring, how ready they were to enroll",
+        );
+
+        await figure.getByRole("radio", { name: "Just browsing" }).focus();
+        await page.keyboard.press("ArrowLeft");
+        await page.keyboard.press("ArrowLeft");
+        await expect(result).toContainText(
+          "As soon as possible + Ready to enroll",
+        );
+        await expect(result).toContainText("Tier 1. Call first.");
+        await figure
+          .getByRole("radio", { name: "As soon as possible" })
+          .focus();
+        await page.keyboard.press("ArrowDown");
+        await page.keyboard.press("ArrowDown");
+        await page.keyboard.press("ArrowDown");
+        await expect(result).toContainText("Not sure yet + Ready to enroll");
+        await expect(result).toContainText("Tier 3. Call last.");
       });
 
       test("switching to after shows the bottom tier's effort fall to 0.7%", async ({

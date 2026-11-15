@@ -59,8 +59,8 @@ const rail = CHAPTERS.map((chapter, i) => ({
     id="figure-tier-matrix"
     label="figure 01 · tiers"
     title="Answer the two questions. See which tier the lead lands in."
-    measured="Two lead-form questions, study timeframe and reason for enquiring, were combined into a matrix of every answer pairing to define three intent tiers."
-    illustrative="The answer options, and the tier each pairing lands in. The real matrix was scored on historical lead-to-application conversion rates, which are not published."
+    measured="Two lead-form questions, study timeframe and reason for enquiring through intent to enroll, were combined into a matrix of every answer pairing to define three intent tiers."
+    illustrative="Which tier each pairing lands in. The real matrix was scored on historical lead-to-application conversion rates, which are not published."
   >
     <PairingMatrix
       id="tier-matrix"
@@ -69,7 +69,7 @@ const rail = CHAPTERS.map((chapter, i) => ({
       buckets={MATRIX_BUCKETS}
       cells={MATRIX_CELLS}
       initial={[1, 1]}
-      caption="Every pairing of the two answers, and the intent tier it lands in. Illustrative."
+      caption="The form asked when someone wanted to study and, as the reason for enquiring, how ready they were to enroll. Each pairing's tier is illustrative."
       legendLabel="intent tier"
     />
   </Figure>

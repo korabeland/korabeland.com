@@ -13,6 +13,19 @@ const STORY = read(`src/content/projects/${data.STORY_SLUG}/index.mdoc`);
 const STORY_BODY = STORY.replace(/^---\n[\s\S]*?\n---\n/, "");
 
 describe("flagship case study: source provenance", () => {
+  it("pairs the real readiness answers with an illustrative tier layout", () => {
+    expect(data.MATRIX_COLS.question).toMatch(
+      /reason for enquiring.*ready.*enroll/i,
+    );
+    expect(data.MATRIX_COLS.options).toEqual([
+      "Ready to enroll",
+      "Gathering information",
+      "Just browsing",
+    ]);
+    expect(data.MATRIX_CELLS[0][0]).toBe(0);
+    expect(data.MATRIX_CELLS[3][2]).toBe(2);
+  });
+
   it("keeps each metric with its source record", async () => {
     const slugs = [
       "intent-tiers",

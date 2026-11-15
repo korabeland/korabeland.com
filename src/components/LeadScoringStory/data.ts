@@ -28,9 +28,10 @@ export const CHAPTERS = [
 ] as const;
 
 // ─── Figure 01: the tier matrix ────────────────────────────────────────────
-// Measured: two form questions (study timeframe, reason for enquiring)
+// Measured: two form questions (study timeframe, reason for enquiring,
+// expressed through readiness to enroll)
 // combined into a matrix of every answer pairing, giving three intent tiers.
-// ILLUSTRATIVE: the answer options and which tier each pairing lands in.
+// ILLUSTRATIVE: which tier each pairing lands in.
 
 export const MATRIX_ROWS: MatrixQuestion = {
   question: "When do you want to start studying?",
@@ -39,9 +40,9 @@ export const MATRIX_ROWS: MatrixQuestion = {
 };
 
 export const MATRIX_COLS: MatrixQuestion = {
-  question: "Why are you enquiring?",
-  axis: "reason",
-  options: ["Change career", "Advance my career", "Personal interest"],
+  question: "Reason for enquiring: how ready are you to enroll?",
+  axis: "readiness",
+  options: ["Ready to enroll", "Gathering information", "Just browsing"],
 };
 
 export const MATRIX_BUCKETS: MatrixBucket[] = [
@@ -53,8 +54,8 @@ export const MATRIX_BUCKETS: MatrixBucket[] = [
 export const MATRIX_CELLS = [
   [0, 0, 1],
   [0, 1, 1],
-  [1, 1, 2],
   [1, 2, 2],
+  [2, 2, 2],
 ];
 
 // ─── Figure 02: where call effort went ─────────────────────────────────────
