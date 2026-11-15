@@ -56,11 +56,11 @@ const {
 
 const steps = heights.length;
 const tallest = Math.max(...heights);
-const start = cutoffGeometry(initialKept, steps, coarseCutPercent);
+const start = cutoffGeometry(initialKept, steps);
 
 // Every state's text is rendered at build time so the script only indexes it.
 const states = Array.from({ length: steps + 1 }, (_, kept) => {
-  const g = cutoffGeometry(kept, steps, coarseCutPercent);
+  const g = cutoffGeometry(kept, steps);
   return {
     main: readout(g.cut, steps),
     note: noteFor(notes, g.cutPercent),

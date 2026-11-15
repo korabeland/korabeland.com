@@ -551,7 +551,7 @@ reduced-motion guard. No charting library: the figures are HTML and CSS.
 |---|---|---|
 | `Figure` | Nothing: the frame (eyebrow, question, body slot, measured / illustrative foot) | none |
 | `PairingMatrix` | Answers two questions; the matrix marks the pairing and names its bucket | reveals the radios, marks the cell |
-| `ShareShift` | Switches a whole between two or three named states; the bar redistributes | none (radios + CSS `:has()`) |
+| `ShareShift` | Switches a whole between before and after; the bar redistributes | none (radios + CSS `:has()`) |
 | `RatioPair` | Nothing: two bars in a published ratio, when the rates themselves are not published | none |
 | `CutoffDial` | Drags a cutoff along a ranked population; sees the band only the fine scale can cut | reveals the range input, moves the cutoff |
 | `ChapterRail` | Jumps to a chapter (with `href`), or reads a static summary (without) | none |
@@ -571,8 +571,9 @@ radios stay the keyboard path, so cells take no tab stop. A ragged or
 out-of-range matrix throws at build time.
 
 **ShareShift** — props `id`, `measure`, `switchLabel`, `segments`
-(`{ key, label, focus? }[]`), `states` (two or three of
-`{ label, detail, shares, values, verdict }`). One segment per state may be
+(`{ key, label, focus? }[]`), `states` (the before and after
+entries, each shaped like `{ label, detail, shares, values, verdict }`). One
+segment per state may be
 `"rest"`, which takes the remainder, so a derived figure is never printed or
 invented. Works with scripts off. Browsers without `:has()` get every state's
 verdict listed in place of the switch.

@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { expect, type Page, test } from "@playwright/test";
 import { ORIGIN } from "../helpers/port";
 
@@ -7,6 +9,22 @@ import { ORIGIN } from "../helpers/port";
 // enumeration in tests/visual/accessibility.test.ts (both shifts).
 
 const STORY = "/work/call-tiers-lead-scoring";
+const SOURCES = ["intent-tiers", "call-tier-discipline", "lead-scoring"].map(
+  (slug) =>
+    readFileSync(
+      resolve(process.cwd(), `src/content/projects/${slug}/index.mdoc`),
+      "utf8",
+    ),
+);
+
+function figures(text: string): string[] {
+  return [...text.matchAll(/\d+(?:[.,]\d+)?\s?(?:%|×|k\b)?/g)].map((m) =>
+    m[0].replace(/\s/g, ""),
+  );
+}
+
+const isCount = (token: string) => /^0?\d$|^10$/.test(token);
+const DERIVED = new Set(["1×"]);
 
 const VIEWPORTS = [
   { name: "phone", width: 375, height: 812 },
@@ -25,6 +43,37 @@ async function openStory(page: Page) {
   await page.goto(STORY);
   await page.locator("main#main").waitFor({ state: "visible" });
 }
+
+test("rendered copy and every interactive state use published figures", async ({
+  page,
+}) => {
+  await openStory(page);
+  const renderedStates = [await page.locator("main").innerText()];
+
+  const effort = page.locator("#figure-call-effort");
+  await effort.getByRole("radio", { name: /After/ }).check();
+  renderedStates.push(await page.locator("main").innerText());
+
+  const slider = page.locator("#figure-cutoff input[type=range]");
+  await slider.focus();
+  await page.keyboard.press("Home");
+  for (let kept = 0; kept <= 10; kept += 1) {
+    if (kept > 0) await page.keyboard.press("ArrowRight");
+    renderedStates.push(await page.locator("main").innerText());
+  }
+
+  const sourceFigures = new Set(SOURCES.flatMap(figures));
+  const untraced = renderedStates
+    .flatMap(figures)
+    .filter(
+      (token) =>
+        !isCount(token) && !DERIVED.has(token) && !sourceFigures.has(token),
+    );
+  expect(untraced).toEqual([]);
+  for (const text of renderedStates) {
+    expect(text).not.toMatch(/[—–]|\S - \S/);
+  }
+});
 
 for (const shift of SHIFTS) {
   for (const viewport of VIEWPORTS) {

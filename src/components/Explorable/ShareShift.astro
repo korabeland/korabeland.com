@@ -1,6 +1,6 @@
 ---
 // Explorable/ShareShift.astro: one whole, split into segments, shown in two
-// or three named states (before and after a decision, say). The reader
+// named states (before and after a decision, say). The reader
 // switches state and the bar redistributes.
 //
 // Zero client JS. The states are native radio inputs and the bar reads the
@@ -26,14 +26,14 @@ interface Props {
   /** Legend for the switch (read by screen readers, shown as a label). */
   switchLabel: string;
   segments: ShareSegment[];
-  /** Two or three states. The first is checked by default. */
+  /** The before and after states. The first is checked by default. */
   states: ShareState[];
 }
 
 const { id, measure, switchLabel, segments, states } = Astro.props;
 
-if (states.length < 2 || states.length > 3) {
-  throw new Error("ShareShift: pass two or three states.");
+if (states.length !== 2) {
+  throw new Error("ShareShift: pass before and after states.");
 }
 
 const layout = states.map((state) =>
@@ -216,10 +216,6 @@ const segmentStyle = (segmentIndex: number) =>
   .ss:has([data-i="1"]:checked) .ss-seg {
     flex-basis: var(--s1);
   }
-  .ss:has([data-i="2"]:checked) .ss-seg {
-    flex-basis: var(--s2);
-  }
-
   .ss-legend {
     list-style: none;
     margin: 0;
@@ -268,8 +264,7 @@ const segmentStyle = (segmentIndex: number) =>
     display: none;
   }
   .ss:has([data-i="0"]:checked) [data-show="0"],
-  .ss:has([data-i="1"]:checked) [data-show="1"],
-  .ss:has([data-i="2"]:checked) [data-show="2"] {
+  .ss:has([data-i="1"]:checked) [data-show="1"] {
     display: revert;
   }
 

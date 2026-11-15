@@ -122,23 +122,16 @@ export interface CutoffGeometry {
   keptPercent: number;
   /** Share of the ranked population below the cutoff, in percent. */
   cutPercent: number;
-  /** True when the fine cutoff reaches past the coarse (bucket) cut. */
-  beyondCoarse: boolean;
-  /** Left edge and width, in percent, of the band only the fine scale can
-   *  cut. Width is 0 when the cutoff has not passed the coarse cut. */
-  band: { left: number; width: number };
 }
 
 /**
  * Geometry for a CutoffDial. The population is ranked best to worst, left to
  * right, and split into `steps` equal bands. `kept` bands stay; the rest are
- * cut. `coarseCutPercent` is the one cut the coarse buckets allow (the whole
- * bottom bucket), measured from the right edge.
+ * cut.
  */
 export function cutoffGeometry(
   kept: number,
   steps: number,
-  coarseCutPercent: number,
 ): CutoffGeometry {
   if (!Number.isInteger(steps) || steps < 1) {
     throw new Error("CutoffDial: steps must be a positive whole number.");
@@ -146,14 +139,10 @@ export function cutoffGeometry(
   const clamped = Math.min(steps, Math.max(0, Math.round(kept)));
   const keptPercent = (clamped / steps) * 100;
   const cutPercent = 100 - keptPercent;
-  const coarseEdge = 100 - coarseCutPercent;
-  const width = Math.max(0, coarseEdge - keptPercent);
   return {
     cut: steps - clamped,
     keptPercent,
     cutPercent,
-    beyondCoarse: width > 0,
-    band: { left: keptPercent, width },
   };
 }
 

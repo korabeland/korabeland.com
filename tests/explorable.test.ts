@@ -55,34 +55,29 @@ describe("bucketFor and assertMatrix: a pairing lands in one tier", () => {
   });
 });
 
-describe("cutoffGeometry: where the cutoff and its band sit", () => {
+describe("cutoffGeometry: the kept and cut shares", () => {
   it("cuts nothing when every step is kept", () => {
-    const g = cutoffGeometry(10, 10, 27);
+    const g = cutoffGeometry(10, 10);
     expect(g).toMatchObject({ cut: 0, keptPercent: 100, cutPercent: 0 });
-    expect(g.beyondCoarse).toBe(false);
-    expect(g.band.width).toBe(0);
   });
 
-  it("shows no band while the fine cut is smaller than the coarse cut", () => {
-    const g = cutoffGeometry(8, 10, 27);
+  it("reports the share cut by a fine cutoff", () => {
+    const g = cutoffGeometry(8, 10);
     expect(g.cutPercent).toBe(20);
-    expect(g.beyondCoarse).toBe(false);
   });
 
-  it("draws the band between the cutoff and the coarse cut once past it", () => {
-    const g = cutoffGeometry(5, 10, 27);
+  it("reports the shares for a midpoint cutoff", () => {
+    const g = cutoffGeometry(5, 10);
     expect(g).toMatchObject({ cut: 5, keptPercent: 50, cutPercent: 50 });
-    expect(g.beyondCoarse).toBe(true);
-    expect(g.band).toEqual({ left: 50, width: 23 });
   });
 
   it("clamps a cutoff outside the scale", () => {
-    expect(cutoffGeometry(14, 10, 27).cut).toBe(0);
-    expect(cutoffGeometry(-3, 10, 27).cut).toBe(10);
+    expect(cutoffGeometry(14, 10).cut).toBe(0);
+    expect(cutoffGeometry(-3, 10).cut).toBe(10);
   });
 
   it("refuses a scale with no steps", () => {
-    expect(() => cutoffGeometry(1, 0, 27)).toThrow(/positive whole number/);
+    expect(() => cutoffGeometry(1, 0)).toThrow(/positive whole number/);
   });
 });
 
