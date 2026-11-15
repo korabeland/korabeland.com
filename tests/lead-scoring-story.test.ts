@@ -4,28 +4,45 @@ import Markdoc from "@markdoc/markdoc";
 import { describe, expect, it } from "vitest";
 import * as data from "@/components/LeadScoringStory/data";
 import { buildStoryParts } from "@/components/LeadScoringStory/segments";
+import { mapMetrics, readProject } from "@/lib/projects";
 
 const ROOT = process.cwd();
 const read = (path: string) => readFileSync(resolve(ROOT, path), "utf8");
 
-const SOURCES = ["intent-tiers", "call-tier-discipline", "lead-scoring"].map(
-  (slug) => read(`src/content/projects/${slug}/index.mdoc`),
-);
 const STORY = read(`src/content/projects/${data.STORY_SLUG}/index.mdoc`);
 const STORY_BODY = STORY.replace(/^---\n[\s\S]*?\n---\n/, "");
 
 describe("flagship case study: source provenance", () => {
-  it("reuses the source pages' metric provenance word for word", () => {
-    const provenance = [...STORY.matchAll(/provenance: >-\n((?: {6}.*\n)+)/g)]
-      .map((m) => m[1].replace(/\s+/g, " ").trim())
-      .filter(Boolean);
-    expect(provenance).toHaveLength(4);
-    const flatSources = SOURCES.map((s) => s.replace(/\s+/g, " "));
-    for (const text of provenance) {
-      expect(
-        flatSources.some((source) => source.includes(text)),
-        text,
-      ).toBe(true);
+  it("keeps each metric with its source record", async () => {
+    const slugs = [
+      "intent-tiers",
+      "call-tier-discipline",
+      "lead-scoring",
+      data.STORY_SLUG,
+    ];
+    const projects = await Promise.all(slugs.map((slug) => readProject(slug)));
+    const records = new Map<string, ReturnType<typeof mapMetrics>>();
+    for (const [i, project] of projects.entries()) {
+      expect(project, slugs[i]).not.toBeNull();
+      if (!project) throw new Error(`Project ${slugs[i]} is missing.`);
+      records.set(slugs[i], mapMetrics(slugs[i], project.outcomeMetrics));
+    }
+    const storyMetrics = records.get(data.STORY_SLUG)!;
+    const sourcedMetrics = [
+      ["2 → 3", "intent-tiers"],
+      ["8×", "call-tier-discipline"],
+      ["27.8% → 0.7%", "call-tier-discipline"],
+      ["~600k leads", "lead-scoring"],
+    ] as const;
+
+    for (const [value, sourceSlug] of sourcedMetrics) {
+      const storyMetric = storyMetrics.find((metric) => metric.value === value);
+      const sourceMetric = records
+        .get(sourceSlug)!
+        .find((metric) => metric.value === value);
+      expect(storyMetric, value).toBeDefined();
+      expect(sourceMetric, `${sourceSlug}: ${value}`).toBeDefined();
+      expect(storyMetric).toEqual(sourceMetric);
     }
   });
 });

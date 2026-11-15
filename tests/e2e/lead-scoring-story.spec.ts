@@ -25,6 +25,8 @@ function figures(text: string): string[] {
 
 const isCount = (token: string) => /^0?\d$|^10$/.test(token);
 const DERIVED = new Set(["1×"]);
+const STORY_COPY =
+  ".story-rail, .story-chapter, .story-closing, .metric-label, .metric-value, .metric-provenance";
 
 const VIEWPORTS = [
   { name: "phone", width: 375, height: 812 },
@@ -44,34 +46,43 @@ async function openStory(page: Page) {
   await page.locator("main#main").waitFor({ state: "visible" });
 }
 
+async function readStoryCopy(page: Page) {
+  return page.locator(STORY_COPY).allInnerTexts();
+}
+
 test("rendered copy and every interactive state use published figures", async ({
   page,
 }) => {
   await openStory(page);
-  const renderedStates = [await page.locator("main").innerText()];
+  for (const summary of await page.locator(".metric-details summary").all()) {
+    await summary.click();
+  }
+  const renderedStates = [await readStoryCopy(page)];
 
   const effort = page.locator("#figure-call-effort");
   await effort.getByRole("radio", { name: /After/ }).check();
-  renderedStates.push(await page.locator("main").innerText());
+  renderedStates.push(await readStoryCopy(page));
 
   const slider = page.locator("#figure-cutoff input[type=range]");
   await slider.focus();
   await page.keyboard.press("Home");
   for (let kept = 0; kept <= 10; kept += 1) {
     if (kept > 0) await page.keyboard.press("ArrowRight");
-    renderedStates.push(await page.locator("main").innerText());
+    renderedStates.push(await readStoryCopy(page));
   }
 
   const sourceFigures = new Set(SOURCES.flatMap(figures));
   const untraced = renderedStates
-    .flatMap(figures)
+    .flatMap((state) => state.flatMap(figures))
     .filter(
       (token) =>
         !isCount(token) && !DERIVED.has(token) && !sourceFigures.has(token),
     );
   expect(untraced).toEqual([]);
-  for (const text of renderedStates) {
-    expect(text).not.toMatch(/[—–]|\S - \S/);
+  for (const state of renderedStates) {
+    for (const text of state) {
+      expect(text).not.toMatch(/[—–]|\S - \S/);
+    }
   }
 });
 
