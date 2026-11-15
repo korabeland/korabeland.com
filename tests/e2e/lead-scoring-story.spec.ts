@@ -26,7 +26,7 @@ function figures(text: string): string[] {
 const isCount = (token: string) => /^0?\d$|^10$/.test(token);
 const DERIVED = new Set(["1×"]);
 const STORY_COPY =
-  ".story-rail, .story-chapter, .story-closing, .metric-label, .metric-value, .metric-provenance";
+  ".head-title, .head-subtitle, .prose > p, .story-rail, .story-chapter, .story-closing, .metric-label, .metric-value, .metric-provenance";
 
 const VIEWPORTS = [
   { name: "phone", width: 375, height: 812 },
@@ -47,7 +47,9 @@ async function openStory(page: Page) {
 }
 
 async function readStoryCopy(page: Page) {
-  return page.locator(STORY_COPY).allInnerTexts();
+  const copy = await page.locator(STORY_COPY).allInnerTexts();
+  const facts = await page.locator(".fact-label, .fact-value").allInnerTexts();
+  return [...copy, ...facts.filter((text) => text !== "—")];
 }
 
 test("rendered copy and every interactive state use published figures", async ({
