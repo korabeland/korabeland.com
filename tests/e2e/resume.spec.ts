@@ -27,7 +27,15 @@ test("/resume renders the authored experience and skills", async ({ page }) => {
   await expect(page.locator(".resume-role-title").first()).toHaveText(
     "Customer Experience Manager",
   );
-  await expect(page.locator(".resume-period").first()).toHaveText("2021–2026");
+  await expect(page.locator(".resume-period").first()).toHaveText(
+    "Mar 2021 to Aug 2026",
+  );
+  await expect(page.locator(".resume-targeting")).toHaveText(
+    "Open to customer experience, marketing, product, AI and operations roles.",
+  );
+  await expect(page.locator(".resume-contact")).toContainText(
+    "Based in Washington, DC",
+  );
   await expect(page.locator(".resume-metric").first()).toContainText("30%");
   await expect(page.locator(".resume-skill-row")).toHaveCount(5);
   await expect(page.getByRole("list", { name: "Education" })).toBeVisible();
@@ -109,7 +117,7 @@ test("/dev/resume-preview gates sections on data", async ({ page }) => {
   expect(response?.status()).toBe(200);
   await expect(page.locator(".resume-role")).toHaveCount(2);
   await expect(page.locator(".resume-period").first()).toHaveText(
-    "2021–present",
+    "Feb 2021 to present",
   );
   // A role with no location shows the company alone; a bullet with no metric
   // shows none.

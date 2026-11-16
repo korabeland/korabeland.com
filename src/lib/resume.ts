@@ -7,7 +7,6 @@
 import {
   type ExperienceAchievement,
   type ExperienceSummary,
-  formatExperiencePeriod,
 } from "./experience";
 import type { Education, SkillCategory, SkillsData } from "./skills";
 import { STATUS } from "./status";
@@ -25,6 +24,9 @@ export const RESUME_IDENTITY = {
     "13 years across marketing, CX and operations. Now building AI systems for the same problems.",
   location: STATUS.base,
 } as const;
+
+export const RESUME_TARGETING =
+  "Open to customer experience, marketing, product, AI and operations roles.";
 
 export interface ResumeContactLink {
   label: string;
@@ -89,6 +91,35 @@ export function formatResumeMetric(
   return metric.label ? `${metric.value} · ${metric.label}` : metric.value;
 }
 
+const MONTHS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+] as const;
+
+function formatResumeDate(date: string | null): string {
+  if (!date) return "";
+  const year = date.slice(0, 4);
+  const month = Number(date.slice(5, 7));
+  return month >= 1 && month <= 12 ? `${MONTHS[month - 1]} ${year}` : year;
+}
+
+function formatResumePeriod(role: ExperienceSummary): string {
+  const start = formatResumeDate(role.startDate);
+  const end = role.current ? "present" : formatResumeDate(role.endDate);
+  if (start && end) return `${start} to ${end}`;
+  return start || end;
+}
+
 /**
  * Resume view of one role. Testimonials and tags are dropped on purpose: the
  * page has to fit one printed sheet.
@@ -98,7 +129,7 @@ export function toResumeRole(role: ExperienceSummary): ResumeRole {
     slug: role.slug,
     role: role.role,
     organisation: [role.company, role.location].filter(Boolean).join(" · "),
-    period: formatExperiencePeriod(role),
+    period: formatResumePeriod(role),
     achievements: role.achievements.map((a) => ({
       text: a.text,
       metric: formatResumeMetric(a.metric),

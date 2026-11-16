@@ -59,7 +59,7 @@ describe("toResumeRole", () => {
       slug: "acme-operator",
       role: "Operator",
       organisation: "Acme · Melbourne",
-      period: "2020–2022",
+      period: "Jan 2020 to Jun 2022",
       achievements: [
         { text: "Did a thing", metric: "30% · faster" },
         { text: "Did another", metric: null },
@@ -71,7 +71,7 @@ describe("toResumeRole", () => {
       role({ location: "", endDate: null, current: true }),
     );
     expect(r.organisation).toBe("Acme");
-    expect(r.period).toBe("2020–present");
+    expect(r.period).toBe("Jan 2020 to present");
   });
   it("never carries the testimonial", () => {
     expect(JSON.stringify(toResumeRole(role()))).not.toContain("Great");

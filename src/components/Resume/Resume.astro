@@ -11,6 +11,7 @@
 import {
   RESUME_CONTACT,
   RESUME_IDENTITY,
+  RESUME_TARGETING,
   type ResumeModel,
 } from "../../lib/resume";
 import SectionHead from "../SectionHead.astro";
@@ -34,8 +35,9 @@ const { experience, skills } = model;
     <h1 class="t-display resume-name">{RESUME_IDENTITY.name}</h1>
     <p class="resume-headline">{RESUME_IDENTITY.headline}</p>
     <p class="resume-summary">{RESUME_IDENTITY.summary}</p>
+    <p class="resume-targeting">{RESUME_TARGETING}</p>
     <p class="t-mono resume-contact">
-      <span>{RESUME_IDENTITY.location}</span>
+      <span>Based in {RESUME_IDENTITY.location}</span>
       {RESUME_CONTACT.map((link) => (
         <a href={link.href} rel={link.href.startsWith("http") ? "me" : undefined}>
           {link.display}
@@ -163,6 +165,13 @@ const { experience, skills } = model;
   .resume-summary {
     font-size: 15px;
     line-height: 1.55;
+    color: var(--ink-soft);
+    margin: 0 0 var(--s-3);
+  }
+
+  .resume-targeting {
+    font-size: 14px;
+    line-height: 1.45;
     color: var(--ink-soft);
     margin: 0 0 var(--s-3);
   }
@@ -331,7 +340,7 @@ const { experience, skills } = model;
     }
 
     .resume-header {
-      margin-bottom: 2.5mm;
+      margin-bottom: 1.5mm;
     }
 
     .resume-name {
@@ -345,12 +354,20 @@ const { experience, skills } = model;
     }
 
     .resume-summary {
-      font-size: 9pt;
-      margin-bottom: 1.5mm;
+      font-size: 8.4pt;
+      line-height: 1.15;
+      margin-bottom: 1mm;
+    }
+
+    .resume-targeting {
+      font-size: 8.4pt;
+      line-height: 1.15;
+      margin-bottom: 1mm;
     }
 
     .resume-contact {
-      font-size: 8pt;
+      font-size: 7.5pt;
+      line-height: 1.1;
       gap: 0 3.5mm;
     }
 
@@ -360,17 +377,17 @@ const { experience, skills } = model;
     }
 
     .resume-section {
-      margin-top: 3mm;
+      margin-top: 2mm;
     }
 
     .resume-section :global(.section-head) {
       border-bottom-color: #000;
-      padding-bottom: 0.8mm;
-      margin-bottom: 2mm;
+      padding-bottom: 0.6mm;
+      margin-bottom: 1.4mm;
     }
 
     .resume-roles {
-      gap: 2.2mm;
+      gap: 1.5mm;
     }
 
     /* Role, organisation and period share one line to save height. */
@@ -394,13 +411,13 @@ const { experience, skills } = model;
     }
 
     .resume-bullets {
-      margin-top: 0.8mm;
-      gap: 0.5mm;
+      margin-top: 0.6mm;
+      gap: 0.3mm;
     }
 
     .resume-bullet {
-      font-size: 8.4pt;
-      line-height: 1.25;
+      font-size: 8.2pt;
+      line-height: 1.15;
       padding-left: 3mm;
     }
 
@@ -424,14 +441,14 @@ const { experience, skills } = model;
 
     /* Category name runs in with its skills. */
     .resume-skills {
-      gap: 0.8mm;
+      gap: 0.5mm;
     }
 
     .resume-skill-row dt,
     .resume-skill-row dd {
       display: inline;
       font-size: 8.4pt;
-      line-height: 1.25;
+      line-height: 1.15;
     }
 
     .resume-skill-row dt::after {
@@ -441,16 +458,16 @@ const { experience, skills } = model;
     .resume-education {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 0.8mm 6mm;
-      margin-top: 1.5mm;
-      padding-top: 1.5mm;
+      gap: 0.5mm 6mm;
+      margin-top: 1mm;
+      padding-top: 1mm;
       border-top-color: #000;
     }
 
     .resume-edu-row {
       display: block;
       font-size: 8.2pt;
-      line-height: 1.25;
+      line-height: 1.15;
     }
 
     .resume-edu-meta {
