@@ -256,9 +256,11 @@ outcome datum and a status.
 | `emptyMessage` | `string` | — (required) | Empty-state copy; differs per surface, kept verbatim |
 | `stagger` | `boolean` | `false` | Home-only per-row stagger-in reveal |
 
-`LedgerItem` = `{ slug, title, outcome, status: "shipped" | "in-flight", href }`.
-The caller derives `href` via `projectHref` (category-aware `/work/<slug>` or
-`/lab/<slug>`) so this component stays route-agnostic.
+`LedgerItem` = `{ slug, title, outcome, status: "shipped" | "in-flight",
+statusLabel?: string, href }`. `status` sets the chip tone; `statusLabel` can
+provide a surface-specific display label. The caller derives `href` via
+`projectHref` (category-aware `/work/<slug>` or `/lab/<slug>`) so this component
+stays route-agnostic.
 
 **States** — populated list vs `emptyMessage`; rows have a `:hover` `--paper-2`
 wash (gated `@media (hover: hover)`). With `stagger`, rows animate in via the

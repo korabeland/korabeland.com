@@ -10,7 +10,11 @@ import SectionHead from "../../components/SectionHead.astro";
 import SkillsSection from "../../components/SkillsSection/SkillsSection.astro";
 import StatusChip from "../../components/StatusChip/StatusChip.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import { projectHref, projectStatus, projectStatusLabel } from "../../lib/projects";
+import {
+  projectHref,
+  projectStatus,
+  projectStatusLabel,
+} from "../../lib/projects";
 import { listTailoredSlugs, readTailored } from "../../lib/tailored";
 
 export const getStaticPaths: GetStaticPaths = async () => {
