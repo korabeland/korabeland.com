@@ -4,10 +4,7 @@
 // uses) or from the constants below. This module has no reader import, so
 // Vitest covers it with plain fixtures.
 
-import {
-  type ExperienceAchievement,
-  type ExperienceSummary,
-} from "./experience";
+import type { ExperienceAchievement, ExperienceSummary } from "./experience";
 import type { Education, SkillCategory, SkillsData } from "./skills";
 import { STATUS } from "./status";
 
