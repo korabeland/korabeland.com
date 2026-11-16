@@ -83,23 +83,6 @@ function statsSource(metric: {
   return `${metric.source === "live" ? "Live" : "Snapshot"} as of ${formatHumanDate(metric.asOf)}`;
 }
 
-// Human-relative age for the featured commit — "shipped today / yesterday /
-// N days ago". Computed at build time (the page rebuilds on every push), so
-// it is accurate as of each deploy without any client JS.
-function relativeTime(iso: string): string {
-  const then = new Date(iso).getTime();
-  if (Number.isNaN(then)) return "";
-  const days = Math.floor((Date.now() - then) / 86_400_000);
-  if (days <= 0) return "today";
-  if (days === 1) return "yesterday";
-  if (days < 7) return `${days} days ago`;
-  const weeks = Math.floor(days / 7);
-  if (weeks === 1) return "last week";
-  if (days < 30) return `${weeks} weeks ago`;
-  const months = Math.floor(days / 30);
-  return months === 1 ? "last month" : `${months} months ago`;
-}
-
 const commits = loadCommits().slice(0, 14);
 const [featured, ...rest] = commits;
 const stats = loadColophonStats();
@@ -344,7 +327,7 @@ const tools: { label: string; note: string }[] = [
           <div class="commit-featured-top">
             <span class="commit-sha t-mono">{featured.shortSha}</span>
             <time class="commit-when t-mono" datetime={featured.date}>
-              shipped {relativeTime(featured.date)}
+              shipped {formatCommitDate(featured.date)}
             </time>
           </div>
           <p class="commit-featured-subject t-mono">{featured.subject}</p>
@@ -567,7 +550,7 @@ const tools: { label: string; note: string }[] = [
   }
 
   /* Featured latest commit — the most recent ship, enlarged and accent-marked
-     so recency reads at a glance. Its "shipped N days ago" is build-time. */
+     so its calendar date reads at a glance. */
   .commit-featured {
     border: 1px solid var(--rule);
     border-left: 2px solid var(--signal);
