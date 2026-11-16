@@ -411,6 +411,9 @@ test("/for/demo renders the tailored page with its case-study exits", async ({
   await expect(page.locator(".tailored-eyebrow")).toContainText("Demo Company");
   await expect(page.locator('a[href="/work/lead-scoring"]')).toBeVisible();
   await expect(page.locator('a[href="/work/ai-sms-pilot"]')).toBeVisible();
+  await expect(
+    page.getByText("handed over, August 2026", { exact: true }),
+  ).toBeVisible();
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
     "content",
     /noindex/,
