@@ -19,7 +19,8 @@ const curatedRoutes: SeoRouteCase[] = [
   {
     path: "/",
     title: "korab eland",
-    descriptionFragment: "ambiguous problems into systems",
+    descriptionFragment:
+      "Looking for roles in CX, marketing, product, AI and operations",
     ogType: "website",
     noindex: false,
   },
@@ -43,7 +44,8 @@ const curatedRoutes: SeoRouteCase[] = [
   {
     path: "/about",
     title: "about · korab eland",
-    descriptionFragment: "13 years across marketing, CX and operations",
+    descriptionFragment:
+      "Looking for roles in CX, marketing, product, AI and operations",
     ogType: "website",
     noindex: false,
   },
