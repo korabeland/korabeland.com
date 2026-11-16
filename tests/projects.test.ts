@@ -4,9 +4,33 @@ import {
   listProjects,
   mapMetrics,
   projectHref,
+  projectStatus,
+  projectStatusLabel,
   type RawOutcomeMetric,
   readProject,
 } from "@/lib/projects";
+
+describe("D4 professional project statuses", () => {
+  it("marks the three finished case studies as shipped", () => {
+    for (const slug of [
+      "intent-tiers",
+      "call-tier-discipline",
+      "ai-sms-pilot",
+    ]) {
+      const project = { slug, shippedAt: null };
+      expect(projectStatus(project)).toBe("shipped");
+      expect(projectStatusLabel(project)).toBe("shipped");
+    }
+  });
+
+  it("labels the two handed-over case studies with their handover date", () => {
+    for (const slug of ["lead-scoring", "chat-capture-gap"]) {
+      const project = { slug, shippedAt: null };
+      expect(projectStatus(project)).toBe("in-flight");
+      expect(projectStatusLabel(project)).toBe("handed over, August 2026");
+    }
+  });
+});
 
 function metric(overrides: Partial<RawOutcomeMetric> = {}): RawOutcomeMetric {
   return {

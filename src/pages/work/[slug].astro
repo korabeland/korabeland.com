@@ -13,6 +13,7 @@ import {
   listProjects,
   mapMetrics,
   projectHref,
+  projectStatusLabel,
   readProject,
 } from "../../lib/projects";
 
@@ -31,9 +32,7 @@ if (!project) throw new Error(`Project not found: ${slug}`);
 
 const content = await project.content();
 
-// Status derives from shippedAt — same rule as the ledger chips on / and
-// /work: amber "in flight" while null, moss "shipped" once set.
-const status = project.shippedAt ? "shipped" : "in flight";
+const status = projectStatusLabel({ slug, shippedAt: project.shippedAt });
 
 const span = formatSpan(project.startedAt, project.shippedAt);
 

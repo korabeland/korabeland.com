@@ -32,7 +32,7 @@ const jsonLd = {
   url: "https://korabeland.com/about",
   name: "About · korab eland",
   description:
-    "13 years across marketing, CX and operations. Now building AI systems for the same problems.",
+    "Based in Washington, DC. My CX Manager role ended in August 2026. Looking for roles in CX, marketing, product, AI and operations.",
   mainEntity: { "@id": "https://korabeland.com/#person" },
 };
 
@@ -41,7 +41,7 @@ const PORTRAIT_SIZES = "(max-width: 680px) 280px, 440px";
 
 <BaseLayout
   title="about · korab eland"
-  description="13 years across marketing, CX and operations. Now building AI systems for the same problems. The career arc, how I operate, and how to reach me."
+  description="Based in Washington, DC. My CX Manager role ended in August 2026. Looking for roles in CX, marketing, product, AI and operations. The career arc, how I operate, and how to reach me."
   active="about"
 >
   <script is:inline type="application/ld+json" slot="jsonld" set:html={serializeJsonLd(jsonLd)} />

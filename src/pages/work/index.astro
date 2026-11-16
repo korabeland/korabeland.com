@@ -7,7 +7,12 @@
 import ProjectLedger from "../../components/ProjectLedger/index.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { serializeJsonLd } from "../../lib/json-ld";
-import { listProjects, projectHref, projectStatus } from "../../lib/projects";
+import {
+  listProjects,
+  projectHref,
+  projectStatus,
+  projectStatusLabel,
+} from "../../lib/projects";
 
 const projects = (await listProjects()).filter((p) => p.category === "work");
 const ledgerItems = projects.map((p) => ({
@@ -15,6 +20,7 @@ const ledgerItems = projects.map((p) => ({
   title: p.title,
   outcome: p.outcome,
   status: projectStatus(p),
+  statusLabel: projectStatusLabel(p),
   href: projectHref(p),
 }));
 
