@@ -7,7 +7,11 @@
 import Resume from "../components/Resume/Resume.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { listExperience } from "../lib/experience";
-import { buildResume } from "../lib/resume";
+import {
+  buildResume,
+  RESUME_IDENTITY,
+  RESUME_TARGETING,
+} from "../lib/resume";
 import { readSkills } from "../lib/skills";
 
 const model = buildResume(await listExperience(), await readSkills());
@@ -15,7 +19,7 @@ const model = buildResume(await listExperience(), await readSkills());
 
 <BaseLayout
   title="resume · korab eland"
-  description="One-page resume for Korab Eland, based in Washington, DC and open to customer experience, marketing, product, AI and operations roles. Print it or save it as a PDF."
+  description={`One-page resume for ${RESUME_IDENTITY.name}, based in ${RESUME_IDENTITY.location}. ${RESUME_TARGETING} Print it or save it as a PDF.`}
 >
   <Resume model={model} />
 </BaseLayout>
