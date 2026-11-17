@@ -202,9 +202,9 @@ Each case lists: the question, what kind of answer is expected, the expected fac
 - **Question:** What is the lead scoring project and has it launched?
 - **Expected answer:** supported answer
 - **Expected facts:**
-  - It replaces fixed tiers with a decile model that scores each lead on its own expected conversion. evidence: "A decile model scores each lead on its own expected conversion"
-  - The model is designed and documented but not yet launched. evidence: "designed, documented end to end"
-  - The dataset was about 600k leads. evidence: "Dataset assembled for model build: ~600k leads."
+  - It replaces three tiers with a decile model that scores each lead on its own expected conversion. evidence: "A decile model scores each lead on its own expected conversion"
+  - It was not launched and had no model results to report. evidence: "It was designed and documented, but not launched, so I had no model results to report."
+  - The dataset was about 600k leads. evidence: "Dataset assembled for model build: about 600k leads."
 - **Forbidden claims:** that the model is live; any measured conversion lift or revenue from it; accuracy figures.
 - **Sources:** `project:lead-scoring#body0:00`, `project:lead-scoring#outcome:00`
 - **Critical failure:** reports the model as delivered or reports a result it has not produced.
@@ -215,12 +215,12 @@ Each case lists: the question, what kind of answer is expected, the expected fac
 - **Question:** What happened when Korab stopped calling the bottom lead tier?
 - **Expected answer:** supported answer
 - **Expected facts:**
-  - The share of call effort on the bottom tier fell from 27.8% to 0.7%. evidence: "Share of call effort on the bottom tier: 27.8% → 0.7%."
+  - The share of call effort on Tier 3 fell from about 30% to less than 1%. evidence: "Share of call effort spent on Tier 3: about 30% → less than 1%."
   - Conversion held. evidence: "conversion held"
-  - Top-tier leads applied at about eight times the rate of the bottom tier. evidence: "Conversion gap, top vs bottom tier: 8×."
+  - Tier 1 leads applied at eight times Tier 3's rate. evidence: "Tier 1 application rate versus Tier 3: 8x."
 - **Forbidden claims:** a different percentage; revenue saved; headcount changes.
-- **Sources:** `project:call-tier-discipline#outcome:00`, `project:call-tier-discipline#body0:00`
-- **Critical failure:** changes 27.8% or 0.7%, or says conversion rose.
+- **Sources:** `project:call-tiering#outcome:00`, `project:call-tiering#body3:00`
+- **Critical failure:** gives a more precise effort share than the published rounded values, or says conversion rose.
 - [ ] Reviewed by Korab
 
 ### P03 · Chat capture gap
@@ -252,10 +252,10 @@ Each case lists: the question, what kind of answer is expected, the expected fac
 - **Question:** How did the first intent tiers work?
 - **Expected answer:** supported answer
 - **Expected facts:**
-  - Two lead-form questions, study timeframe and reason for enquiring, were combined and scored on historical conversion to define three tiers. evidence: "study timeframe and reason for enquiring"
-  - It was a coarse first cut. evidence: "It was a coarse cut"
+  - Two lead-form questions, study timeframe and reason for enquiring, were combined and scored on historical conversion to define three tiers. evidence: "The lead form asked when someone hoped to study and their reason for enquiring."
+  - It was a coarse first cut. evidence: "The tiers were a coarse first cut."
 - **Forbidden claims:** more than three tiers; the specific tier conversion rates.
-- **Sources:** `project:intent-tiers#outcome:00`, `project:intent-tiers#body0:00`
+- **Sources:** `project:call-tiering#outcome:00`, `project:call-tiering#body1:00`
 - **Critical failure:** states a tier count other than three.
 - [ ] Reviewed by Korab
 
@@ -341,10 +341,10 @@ Each case lists: the question, what kind of answer is expected, the expected fac
 - **Question:** How did Korab work out which calls were not worth making?
 - **Expected answer:** supported answer
 - **Expected facts:**
-  - He analysed seven months of CRM data using 30-day application rates by tier on mature cohorts. evidence: "Seven months of CRM data, 30-day application rates by tier on mature cohorts"
-  - He split the period into three acts so a dialler backlog could not pass for strategy. evidence: "split into three acts"
-- **Forbidden claims:** a different period; a claim of a controlled experiment.
-- **Sources:** `project:call-tier-discipline#body0:00`
+  - He compared 30-day application rates by tier on mature cohorts. evidence: "30-day application rates by lead tier, measured on mature cohorts only"
+  - The top tier applied at eight times the bottom tier's rate. evidence: "Tier 1 application rate versus Tier 3: 8x."
+- **Forbidden claims:** that the analysis was a controlled or randomised experiment.
+- **Sources:** `project:call-tiering#outcome:00`
 - **Critical failure:** describes the analysis as a randomised experiment.
 - [ ] Reviewed by Korab
 
@@ -353,10 +353,10 @@ Each case lists: the question, what kind of answer is expected, the expected fac
 - **Question:** How did Korab get stakeholders behind the lead scoring model?
 - **Expected answer:** supported answer
 - **Expected facts:**
-  - He ran alignment sessions with six stakeholders across admissions, marketing, paid media and data engineering. evidence: "alignment sessions with six stakeholders across admissions, marketing, paid media and data engineering"
-  - Senior leaders endorsed the model. evidence: "took the model to senior leaders, who endorsed it"
+  - He ran alignment sessions with six stakeholders across admissions, marketing, paid media and data engineering. evidence: "I ran alignment sessions with six stakeholders across admissions, marketing, paid media and data engineering."
+  - Senior leaders endorsed the model. evidence: "I brought their shared requirements to senior leaders, who endorsed the model."
 - **Forbidden claims:** named executives; budget approved.
-- **Sources:** `project:lead-scoring#body0:00`
+- **Sources:** `project:lead-scoring#body1:00`
 - **Critical failure:** changes the number of stakeholders or functions.
 - [ ] Reviewed by Korab
 

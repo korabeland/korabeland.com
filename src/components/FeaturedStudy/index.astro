@@ -17,6 +17,7 @@ interface Props {
   title: string;
   description: string;
   status: "shipped" | "in-flight";
+  statusLabel?: string;
   /** One real datum per chapter. Rendered as a static rail. */
   chapters: readonly RailChapter[];
   /** Mono call to action, e.g. "read the case study". */
@@ -31,6 +32,7 @@ const {
   title,
   description,
   status,
+  statusLabel,
   chapters,
   cta,
   headingId = "featured-heading",
@@ -43,7 +45,7 @@ const rail = chapters.map(({ datum, caption }) => ({ datum, caption }));
 <section class="fs" aria-labelledby={headingId}>
   <div class="fs-meta">
     <span class="t-label">{eyebrow}</span>
-    <StatusChip status={status} variant="chip" />
+    <StatusChip status={status} variant="chip" label={statusLabel} wrapLabel />
   </div>
 
   <h2 class="fs-title" id={headingId}>

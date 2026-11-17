@@ -12,7 +12,7 @@ interface SeoRouteCase {
 }
 
 // Curated: non-collection pages (no reader to derive from) plus two
-// collection-backed pages (lead-scoring, hello-world) kept here deliberately
+// collection-backed pages (call-tiering, lead-scoring, hello-world) kept here deliberately
 // so their real, hand-verified copy stays pinned. Every other published
 // project/post gets a generic case below instead.
 const curatedRoutes: SeoRouteCase[] = [
@@ -31,11 +31,18 @@ const curatedRoutes: SeoRouteCase[] = [
     noindex: false,
   },
   {
+    path: "/work/call-tiering",
+    title: "From Coverage to Intent-based Dialling · case study · korab eland",
+    descriptionFragment: "lead volume outgrew the team's capacity",
+    ogType: "article",
+    noindex: false,
+    hasJsonLd: true,
+  },
+  {
     path: "/work/lead-scoring",
     title:
-      "Lead scoring: fixed tiers to a decile model · case study · korab eland",
-    descriptionFragment:
-      "decile model that scores each lead on its own probability",
+      "Precision Dialling via Predictive Modelling · case study · korab eland",
+    descriptionFragment: "designed and documented a lead-scoring model",
     ogType: "article",
     noindex: false,
     hasJsonLd: true,
@@ -85,7 +92,7 @@ const curatedRoutes: SeoRouteCase[] = [
   },
 ];
 
-const CURATED_PROJECT_SLUGS = new Set(["lead-scoring"]);
+const CURATED_PROJECT_SLUGS = new Set(["call-tiering", "lead-scoring"]);
 const CURATED_POST_SLUGS = new Set(["hello-world"]);
 
 // Generic cases for every project/post not curated above — the title and

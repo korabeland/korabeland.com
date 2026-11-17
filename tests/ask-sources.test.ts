@@ -77,6 +77,7 @@ const project = (overrides: Partial<ProjectSummary> = {}): ProjectSummary => ({
   team: "Growth, IT",
   stack: "",
   outcome: "",
+  statusLabel: "",
   startedAt: "2026-01-01",
   shippedAt: "2026-05-01",
   heroImage: null,
@@ -98,6 +99,19 @@ describe("projectDocument", () => {
       "Role: Lead. Team: Growth, IT. Span: 2026 · 4 months. Status: shipped.",
     );
     expect(facts).not.toMatch(/Stack|undefined|—/);
+  });
+
+  it("uses a precise handoff status when a launch has not happened", () => {
+    const doc = projectDocument({
+      project: project({
+        shippedAt: null,
+        statusLabel: "Designed and handed over, August 2026",
+      }),
+      body: [],
+    });
+    expect(doc.sections[0].paragraphs.at(-1)).toContain(
+      "Status: Designed and handed over, August 2026.",
+    );
   });
 
   it("routes by category and cites only ids the case-study layout emits", () => {

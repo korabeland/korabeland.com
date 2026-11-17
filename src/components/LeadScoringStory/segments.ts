@@ -62,7 +62,7 @@ export function buildStoryParts(
   const expected = figureAfter.length + 1;
   if (starts.length !== expected) {
     throw new Error(
-      `call-tiers-lead-scoring: expected ${expected} h2 sections (${figureAfter.length} chapters and a closing section), got ${starts.length}.`,
+      `case-study story: expected ${expected} h2 sections (${figureAfter.length} figure chapters and a closing section), got ${starts.length}.`,
     );
   }
 
@@ -73,7 +73,7 @@ export function buildStoryParts(
     const blocks = sections[i];
     if (count < 2 || count >= blocks.length) {
       throw new Error(
-        `call-tiers-lead-scoring: chapter ${i + 1} has ${blocks.length} blocks, so its figure cannot sit after block ${count} with prose on both sides.`,
+        `case-study story: figure chapter ${i + 1} has ${blocks.length} blocks, so its figure cannot sit after block ${count} with prose on both sides.`,
       );
     }
     return {

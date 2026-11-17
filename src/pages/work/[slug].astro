@@ -4,8 +4,9 @@
 // docs/plans/2026-07-03-console-mvp.md.
 
 import type { GetStaticPaths } from "astro";
+import { CALL_TIERING_SLUG } from "../../components/CallTieringStory/data";
+import CallTieringStory from "../../components/CallTieringStory/index.astro";
 import CaseStudy from "../../components/CaseStudy/index.astro";
-import { STORY_SLUG } from "../../components/LeadScoringStory/data";
 import LeadScoringStory from "../../components/LeadScoringStory/index.astro";
 import { PostContent } from "../../components/PostContent";
 import BaseLayout from "../../layouts/BaseLayout.astro";
@@ -15,6 +16,7 @@ import {
   listProjects,
   mapMetrics,
   projectHref,
+  projectStatusLabel,
   readProject,
 } from "../../lib/projects";
 
@@ -33,9 +35,8 @@ if (!project) throw new Error(`Project not found: ${slug}`);
 
 const content = await project.content();
 
-// Status derives from shippedAt — same rule as the ledger chips on / and
-// /work: amber "in flight" while null, moss "shipped" once set.
-const status = project.shippedAt ? "shipped" : "in flight";
+// The status label can be more specific than its semantic chip colour.
+const status = projectStatusLabel(project);
 
 const span = formatSpan(project.startedAt, project.shippedAt);
 
@@ -44,7 +45,7 @@ const facts = [
   { label: "role", value: project.role || "—" },
   { label: "team", value: project.team || "—" },
   { label: "stack", value: project.stack || "—" },
-  { label: "span", value: span || "—" },
+  ...(span ? [{ label: "span", value: span }] : []),
   { label: "status", value: status },
 ];
 
@@ -98,9 +99,10 @@ const jsonLd = {
     nextProject={nextProject}
   >
     {
-      // The flagship explorable seats a figure in each chapter of its body;
-      // every other case study renders its body as plain prose.
-      slug === STORY_SLUG ? (
+      // These linked studies place their figures inside their own story arcs.
+      slug === CALL_TIERING_SLUG ? (
+        <CallTieringStory document={content} />
+      ) : slug === "lead-scoring" ? (
         <LeadScoringStory document={content} />
       ) : (
         <PostContent document={content} />

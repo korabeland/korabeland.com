@@ -4,6 +4,7 @@ import {
   listProjects,
   mapMetrics,
   projectHref,
+  projectStatusLabel,
   type RawOutcomeMetric,
   readProject,
 } from "@/lib/projects";
@@ -87,6 +88,26 @@ describe("projectHref — category routing", () => {
     expect(projectHref({ slug: "perian", category: "side" })).toBe(
       "/lab/perian",
     );
+  });
+});
+
+describe("projectStatusLabel — specific completion copy", () => {
+  it("uses an explicit label when a project has a more precise state", () => {
+    expect(
+      projectStatusLabel({
+        shippedAt: null,
+        statusLabel: "Designed and handed over, August 2026",
+      }),
+    ).toBe("Designed and handed over, August 2026");
+  });
+
+  it("keeps the standard status labels as the fallback", () => {
+    expect(projectStatusLabel({ shippedAt: null, statusLabel: "" })).toBe(
+      "in flight",
+    );
+    expect(
+      projectStatusLabel({ shippedAt: "2025-11-13", statusLabel: "" }),
+    ).toBe("shipped");
   });
 });
 

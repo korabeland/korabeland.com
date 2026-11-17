@@ -103,6 +103,9 @@ export default defineConfig({
     "/projects/[slug]": "/work/[slug]",
     "/work/perian": "/lab/perian",
     "/work/personal-os": "/lab/personal-os",
+    "/work/intent-tiers": "/work/call-tiering",
+    "/work/call-tier-discipline": "/work/call-tiering",
+    "/work/call-tiers-lead-scoring": "/work/call-tiering",
   },
   integrations: [
     react(),

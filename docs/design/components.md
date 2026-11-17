@@ -531,8 +531,8 @@ here.
 ### Explorable
 
 `components/Explorable/*` — the figure set for explorable case studies: figures a
-reader works rather than reads. Built for the flagship
-`/work/call-tiers-lead-scoring` and meant for reuse by later showcase pieces.
+reader works rather than reads. Built for `/work/call-tiering` and
+`/work/lead-scoring`, with self-contained figures for later showcase pieces.
 Pure logic lives in `src/lib/explorable.ts` (Vitest: `tests/explorable.test.ts`).
 
 **The visual rule the set establishes:** solid marks are measured, hatched or
@@ -608,7 +608,7 @@ Three columns on desktop, stacked rows at 680px and below.
 ledger. Consumer: `work/index.astro`.
 
 **Props** — `href`, `eyebrow`, `title`, `description`, `status`
-(`"shipped" | "in-flight"`), `chapters` (rendered as a static `ChapterRail`),
+(`"shipped" | "in-flight"`), optional `statusLabel`, `chapters` (rendered as a static `ChapterRail`),
 `cta`, `headingId?`.
 
 **Accessibility** — `<section aria-labelledby>`; the title is the block's one
@@ -621,19 +621,16 @@ repeats the link).
 ### LeadScoringStory
 
 `components/LeadScoringStory/index.astro` — assembles the flagship case study.
-Consumer: `work/[slug].astro`, for the `call-tiers-lead-scoring` entry only.
+Consumer: `work/[slug].astro`, for the `call-tiering` and `lead-scoring` entries.
 
 **Props** — `document` (the entry's Markdoc body).
 
-**Structure** — `segments.ts` splits the body at its `h2` headings into an
-intro, three chapters and a closing section, and this component seats one
-`Explorable` figure in each chapter between the setup and the finding. The body
-must keep that shape; a missing heading fails the build. `data.ts` holds the
-figure data under one rule: every printed number is published on a source case
-study (`intent-tiers`, `call-tier-discipline`, `lead-scoring`).
-`tests/lead-scoring-story.test.ts` enforces the rule and the no-dash writing
-rule; `tests/e2e/lead-scoring-story.spec.ts` covers keyboard use, phone and
-desktop width, both shifts, and scripts off.
+**Structure** — both stories use `segments.ts` to place their figures inside
+their own arcs. Call Tiering has two figures for the answer matrix and effort
+shift. Lead Scoring has one illustrative cutoff dial. Both render their full
+copy and a useful static figure before scripts enhance the controls. The test
+suite checks source-backed figures, keyboard use, phone and desktop width,
+both shifts, and scripts off.
 
 ---
 

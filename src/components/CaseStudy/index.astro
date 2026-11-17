@@ -85,7 +85,7 @@ const HERO_SIZES = "(max-width: 960px) 100vw, 960px";
     <span class="t-label">{eyebrowLabel}</span>
     {status && (
       <StatusChip
-        status={status === "shipped" || status === "complete" ? "shipped" : "in-flight"}
+        status={status.toLowerCase() === "shipped" || status.toLowerCase() === "complete" ? "shipped" : "in-flight"}
         variant="chip"
         label={status}
       />

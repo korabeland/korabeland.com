@@ -1,33 +1,58 @@
 ---
 slug: lead-scoring
-title: 'Lead scoring: fixed tiers to a decile model'
+title: 'Precision Dialling via Predictive Modelling'
 description: >-
-  The three intent tiers proved that intent predicts who converts, but two
-  questions measured it bluntly. This is the decile model that scores each lead
-  on its own probability, designed, documented, and months from launch.
+  I designed and documented a lead-scoring model that replaces three intent
+  tiers with individual probability scores and an interpretable, cost-based
+  call stopping rule. It was handed to IT unlaunched in August 2026.
 category: work
-role: Led strategy + evidence
+role: Led strategy and evidence
 team: Admissions, marketing, paid media, data engineering
 stack: SQL · CRM · ML pipeline
-outcome: decile model · designed, months from launch
+outcome: About 600k leads · decile model designed and handed over
 startedAt: 2026-01-28
+statusLabel: Designed and handed over, August 2026
 tags:
-  - ai
   - ml
   - evidence
   - operations
 outcomeMetrics:
-  - value: ~600k leads
+  - value: about 600k leads
     label: Dataset assembled for model build
     provenance: >-
       Approximate row count of the lead dataset with point-in-time features,
       assembled from the analysis query written to scope the model build.
+  - value: 6 stakeholders
+    label: Alignment sessions across four functions
+    provenance: >-
+      Six stakeholders across admissions, marketing, paid media and data
+      engineering. Senior leaders endorsed the model.
 fieldLog: []
 reflection: ''
 nextProject: ai-sms-pilot
 ---
-Stopping the calls we did not need was the proof. The model was the point. The three intent tiers had done their job, but they were built for a smaller operation than the one we had become. Two questions sorting every lead into three buckets was blunt where the scale now needed precision. A **decile model** scores each lead on its own expected conversion, so call strategy, nurture and media spend can follow the evidence rather than the bucket it fell into.
+In [Call Tiering](/work/call-tiering), I designed a way to prioritise outbound sales capacity with intent signals and historical conversion data. Call effort on low-intent leads fell from about 30% to less than 1%. Those leads kept applying on their own, Tier 1 reached its highest application rate on record, and the team did it without adding headcount.
 
-I ran alignment sessions with six stakeholders across admissions, marketing, paid media and data engineering, synthesised where they converged, and took the model to senior leaders, who endorsed it. Then the groundwork: I audited the signals we actually had, wrote the analysis query myself, **around 600k leads with point-in-time features**, and set an interpretability requirement so the team could trust the scores.
+Then the capacity problem came back. A staffing shortfall absorbed the effort we had freed. I asked what would happen when capacity tightened again and three tiers were no longer precise enough.
 
-The model is designed, documented end to end, and lands in the next couple of months. When it does, the share of call effort we can safely cut should climb from the **roughly 27%** the tiers reached toward **half**. The whole workstream is written to run without me as the dependency.
+The Lead Scoring project was designed to answer that question. A decile model scores each lead on its own expected conversion. It was designed and documented, but not launched, so I had no model results to report.
+
+## A cutoff the evidence can support
+
+I ran alignment sessions with six stakeholders across admissions, marketing, paid media and data engineering. I brought their shared requirements to senior leaders, who endorsed the model.
+
+I audited the signals that were actually available and wrote the analysis query myself. It assembled about 600k leads with point-in-time features, meaning each lead's details as they stood at enquiry.
+
+The model had to be interpretable. Each score would surface the context behind it, not just a decile number. Two stakeholders independently raised this need in April 2026.
+
+The dial below shows how a cutoff can move one decile at a time. Its bar heights and positions are illustrative. They do not predict conversion or show a safe amount of call effort to cut.
+
+For each decile, the stopping rule counts only extra applications caused by calls. It uses the application-to-start rate to work out calls per additional student, then prices those calls. The calls stop at the first decile where cost per additional student exceeds the ceiling, lifetime value divided by the target value-to-cost ratio.
+
+Tier 3 gave the team a worked intuition: 290 call attempts per application, while leads applied anyway. That meant very few extra applications came from the calls. Ten deciles let the team draw the stopping line more precisely than three tiers.
+
+## Designed, documented, and handed over
+
+I designed the model, documented it end to end, and handed it to IT unlaunched in August 2026. The work was built to run without me as the dependency.
+
+This builds on [Call Tiering](/work/call-tiering). The model was designed to make the next call decision more precise, but its safe cutoff still needs measured results after launch.

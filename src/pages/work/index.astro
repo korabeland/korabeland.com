@@ -4,22 +4,36 @@
 // datum / status chip. Work-category slice only; /lab renders the side
 // projects through the same component. See docs/plans/2026-07-03-console-mvp.md.
 
+import {
+  CALL_TIERING_SLUG,
+  CHAPTERS,
+} from "../../components/CallTieringStory/data";
 import FeaturedStudy from "../../components/FeaturedStudy/index.astro";
-import { CHAPTERS, STORY_SLUG } from "../../components/LeadScoringStory/data";
 import ProjectLedger from "../../components/ProjectLedger/index.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { serializeJsonLd } from "../../lib/json-ld";
-import { listProjects, projectHref, projectStatus } from "../../lib/projects";
+import {
+  listProjects,
+  projectHref,
+  projectStatus,
+  projectStatusLabel,
+} from "../../lib/projects";
 
-const projects = (await listProjects()).filter((p) => p.category === "work");
+const allProjects = (await listProjects()).filter((p) => p.category === "work");
+const priority = [CALL_TIERING_SLUG, "lead-scoring", "ai-sms-pilot"];
+const projects = [
+  ...priority.flatMap((slug) => allProjects.filter((p) => p.slug === slug)),
+  ...allProjects.filter((p) => !priority.includes(p.slug)),
+];
 // The flagship explorable is featured above the ledger. It stays in the
 // ledger too: "all case studies" means all of them.
-const featured = projects.find((p) => p.slug === STORY_SLUG);
+const featured = projects.find((p) => p.slug === CALL_TIERING_SLUG);
 const ledgerItems = projects.map((p) => ({
   slug: p.slug,
   title: p.title,
   outcome: p.outcome,
   status: projectStatus(p),
+  statusLabel: projectStatusLabel(p),
   href: projectHref(p),
 }));
 
@@ -59,6 +73,7 @@ const jsonLd = {
           title={featured.title}
           description={featured.description}
           status={projectStatus(featured)}
+          statusLabel={projectStatusLabel(featured)}
           chapters={CHAPTERS}
           cta="read the case study"
         />

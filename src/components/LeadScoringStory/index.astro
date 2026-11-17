@@ -1,129 +1,51 @@
 ---
-// LeadScoringStory: assembles the flagship case study at
-// /work/call-tiers-lead-scoring. The prose is the entry's Markdoc body; this
-// component splits it at its chapter headings and seats one Explorable figure
-// in each chapter, between the setup and the finding.
-//
-// Everything here is server-rendered. The figures enhance themselves; with
-// scripts off the page still reads start to finish with each figure in its
-// resolved starting state. Figure data lives in ./data.ts, under the rule
-// that every printed number is published on a source case study.
+// Lead Scoring case study. Its single shared Explorable figure presents the
+// decile cutoff as a design method, not as a measured model result.
 
-import ChapterRail from "../Explorable/ChapterRail.astro";
 import CutoffDial from "../Explorable/CutoffDial.astro";
 import Figure from "../Explorable/Figure.astro";
-import PairingMatrix from "../Explorable/PairingMatrix.astro";
-import RatioPair from "../Explorable/RatioPair.astro";
-import ShareShift from "../Explorable/ShareShift.astro";
 import { PostContent } from "../PostContent";
-import {
-  CHAPTERS,
-  DECILE_HEIGHTS,
-  DECILE_NOTES,
-  decileReadout,
-  EFFORT_SEGMENTS,
-  EFFORT_STATES,
-  FIGURE_AFTER,
-  MATRIX_BUCKETS,
-  MATRIX_CELLS,
-  MATRIX_COLS,
-  MATRIX_ROWS,
-  RATE_RATIO,
-  TIER_CUT_PERCENT,
-} from "./data";
+import { DECILE_HEIGHTS, DECILE_NOTES, decileReadout } from "./data";
 import { buildStoryParts } from "./segments";
 
 interface Props {
-  /** The entry's Markdoc body, as the Keystatic reader returns it. */
   document: unknown;
 }
 
 const { document } = Astro.props;
-const parts = buildStoryParts(document, FIGURE_AFTER);
-const chapterId = (i: number) => `chapter-${i + 1}`;
-const rail = CHAPTERS.map((chapter, i) => ({
-  ...chapter,
-  href: `#${chapterId(i)}`,
-}));
+const parts = buildStoryParts(document, [3]);
 ---
 
 <PostContent document={parts.intro} />
 
-<nav class="story-rail" aria-label="Chapters">
-  <ChapterRail chapters={rail} label="Chapters" />
-</nav>
-
-<section class="story-chapter" id={chapterId(0)}>
+<section class="story-chapter" id="cutoff-method">
   <PostContent document={parts.chapters[0].before} />
   <Figure
-    id="figure-tier-matrix"
-    label="figure 01 · tiers"
-    title="Answer the two questions. See which tier the lead lands in."
-    measured="Two lead-form questions, study timeframe and reason for enquiring through intent to enroll, were combined into a matrix of every answer pairing to define three intent tiers."
-    illustrative="Which tier each pairing lands in. The real matrix was scored on historical lead-to-application conversion rates, which are not published."
-  >
-    <PairingMatrix
-      id="tier-matrix"
-      rows={MATRIX_ROWS}
-      cols={MATRIX_COLS}
-      buckets={MATRIX_BUCKETS}
-      cells={MATRIX_CELLS}
-      initial={[1, 1]}
-      caption="The form asked when someone wanted to study and, as the reason for enquiring, how ready they were to enroll. Each pairing's tier is illustrative."
-      legendLabel="intent tier"
-    />
-  </Figure>
-  <PostContent document={parts.chapters[0].after} />
-</section>
-
-<section class="story-chapter" id={chapterId(1)}>
-  <PostContent document={parts.chapters[1].before} />
-  <Figure
-    id="figure-call-effort"
-    label="figure 02 · effort"
-    title="Switch from before to after. Watch where the effort goes."
-    measured="Share of weekly outbound call attempts landing on bottom-tier leads: 27.8% before calling stopped for that tier, 0.7% after. Top-tier leads applied at eight times the bottom tier's rate, on 30-day application rates for mature cohorts."
-  >
-    <ShareShift
-      id="call-effort"
-      measure="share of weekly call effort"
-      switchLabel="calling policy"
-      segments={EFFORT_SEGMENTS}
-      states={EFFORT_STATES}
-    />
-    <RatioPair {...RATE_RATIO} />
-  </Figure>
-  <PostContent document={parts.chapters[1].after} />
-</section>
-
-<section class="story-chapter" id={chapterId(2)}>
-  <PostContent document={parts.chapters[2].before} />
-  <Figure
     id="figure-cutoff"
-    label="figure 03 · cutoff"
-    title="Drag the cutoff. See what three tiers can cut, and what ten deciles can."
-    measured="The tiers reached roughly 27% of call effort cut. Around 600k leads were assembled to build the model. The move toward half is an expectation, not yet a result."
-    illustrative="The height of every bar, and the even spread of call effort across deciles. The real curve comes from the model once it has run."
+    label="figure 01 · stopping rule"
+    title="Move the cutoff one decile at a time."
+    measured="About 600k leads were assembled with point-in-time features. The model was designed around an interpretable, cost-based stopping rule."
+    illustrative="The bar heights and the cutoff position show the method only. They are not model scores, conversion rates, or a measured safe cut."
   >
     <CutoffDial
       id="decile-cutoff"
       heights={DECILE_HEIGHTS}
       illustrative
-      coarseCutPercent={TIER_CUT_PERCENT}
-      coarse={{ keep: "Tiers 1 and 2", cut: "Tier 3" }}
-      initialKept={5}
-      controlLabel="Cutoff: how many of the ten deciles get a call"
-      axis={{ best: "most likely to apply", worst: "least likely" }}
+      coarseCutPercent={30}
+      coarse={{ keep: "Tier 1 and Tier 2", cut: "Tier 3" }}
+      initialKept={10}
+      controlLabel="Cutoff: how many of the ten deciles remain in the call queue"
+      axis={{ best: "Higher score", worst: "Lower score" }}
       readout={decileReadout}
       notes={DECILE_NOTES}
       legend={{
-        kept: "Called",
-        band: "Only a score for each lead can cut this",
-        cut: "Not called",
+        kept: "Still called",
+        band: "Cutoff being explored",
+        cut: "Below the cutoff",
       }}
     />
   </Figure>
-  <PostContent document={parts.chapters[2].after} />
+  <PostContent document={parts.chapters[0].after} />
 </section>
 
 <section class="story-closing">
@@ -131,11 +53,5 @@ const rail = CHAPTERS.map((chapter, i) => ({
 </section>
 
 <style>
-  .story-rail {
-    margin: var(--s-6) 0 0;
-  }
-
-  .story-chapter {
-    scroll-margin-top: var(--s-8);
-  }
+  .story-chapter { scroll-margin-top: var(--s-8); }
 </style>

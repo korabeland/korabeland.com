@@ -60,12 +60,10 @@ test("keyboard: reach an example, search, inspect a source, clear history", asyn
   const entry = page.locator(".ask-entry").first();
   await expect(entry.locator(".ask-q")).toHaveText(QUESTION);
   await expect(entry.locator(".ask-hit").first()).toBeVisible();
-  const source = entry
-    .locator("a[href^='/work/call-tiers-lead-scoring']")
-    .first();
+  const source = entry.locator("a[href^='/work/lead-scoring']").first();
   await source.focus();
   await page.keyboard.press("Enter");
-  await expect(page).toHaveURL(/\/work\/call-tiers-lead-scoring/);
+  await expect(page).toHaveURL(/\/work\/lead-scoring/);
 
   await gotoAbout(page);
   await expect(page.locator(".ask-entry .ask-q")).toHaveText(QUESTION);
@@ -233,10 +231,10 @@ test("history survives navigation, can be cleared, and is gone after a new sessi
   await expect(page.locator(".ask-entry")).toHaveCount(1);
 
   await page
-    .locator(".ask-entry a[href^='/work/call-tiers-lead-scoring']")
+    .locator(".ask-entry a[href^='/work/lead-scoring']")
     .first()
     .click();
-  await expect(page).toHaveURL(/\/work\/call-tiers-lead-scoring/);
+  await expect(page).toHaveURL(/\/work\/lead-scoring/);
   // The section lives on /about; the history waits there for the same tab.
   await page.goto("/about");
   await expect(page.locator(".ask-entry .ask-q")).toHaveText(QUESTION);

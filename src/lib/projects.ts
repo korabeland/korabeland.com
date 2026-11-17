@@ -23,6 +23,7 @@ export interface ProjectSummary {
   team: string;
   stack: string;
   outcome: string;
+  statusLabel: string;
   startedAt: string | null;
   shippedAt: string | null;
   heroImage: string | null;
@@ -81,6 +82,7 @@ export async function listProjects(): Promise<ProjectSummary[]> {
       team: project.team ?? "",
       stack: project.stack ?? "",
       outcome: project.outcome ?? "",
+      statusLabel: project.statusLabel ?? "",
       startedAt: project.startedAt,
       shippedAt: project.shippedAt,
       heroImage: project.heroImage,
@@ -126,6 +128,15 @@ export function projectStatus(
   project: Pick<ProjectSummary, "shippedAt">,
 ): "shipped" | "in-flight" {
   return project.shippedAt ? "shipped" : "in-flight";
+}
+
+/** Visible status copy can be more specific while keeping its semantic tone. */
+export function projectStatusLabel(
+  project: Pick<ProjectSummary, "shippedAt" | "statusLabel">,
+): string {
+  return (
+    project.statusLabel.trim() || (project.shippedAt ? "shipped" : "in flight")
+  );
 }
 
 /**

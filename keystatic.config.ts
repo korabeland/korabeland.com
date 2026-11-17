@@ -69,6 +69,11 @@ export default config({
         team: fields.text({ label: "Team" }),
         stack: fields.text({ label: "Stack" }),
         outcome: fields.text({ label: "Outcome (short)" }),
+        statusLabel: fields.text({
+          label: "Status label override",
+          description:
+            "Optional display copy when the standard status is not precise enough.",
+        }),
         startedAt: fields.date({ label: "Started at" }),
         shippedAt: fields.date({ label: "Shipped at" }),
         heroImage: fields.image({

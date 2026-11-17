@@ -18,7 +18,8 @@ Korab Eland's personal site (https://korabeland.com) holds his case studies, car
 
 - [Homepage](https://korabeland.com/): Positioning, the outcome ledger of case studies, and recent notes.
 - [Work](https://korabeland.com/work): Case studies from past work, with the outcomes they produced.
-- [Lead scoring](https://korabeland.com/work/lead-scoring): Replacing fixed intent tiers with a decile-based probability score.
+- [Call Tiering](https://korabeland.com/work/call-tiering): From coverage to intent-based dialling, with a measured call order and decision to stop calling the bottom tier.
+- [Lead Scoring](https://korabeland.com/work/lead-scoring): Replacing three intent tiers with individual probability scores and a cost-based stopping rule.
 - [AI SMS engagement pilot](https://korabeland.com/work/ai-sms-pilot): A contained pilot and vendor evaluation measured against a randomised holdout.
 - [About](https://korabeland.com/about): Career narrative, career experience and recommendations, skills, education, certifications, and how Korab runs his own work.
 
