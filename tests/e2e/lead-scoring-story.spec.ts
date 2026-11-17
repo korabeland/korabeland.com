@@ -103,6 +103,24 @@ for (const shift of SHIFTS) {
               () => "Illustrative",
             ),
           );
+          for (const metric of await page
+            .locator(".outcome .metric-details")
+            .all()) {
+            const label = await metric.locator(".metric-label").boundingBox();
+            const value = await metric
+              .locator(".metric-value-group")
+              .boundingBox();
+            expect(label).not.toBeNull();
+            expect(value).not.toBeNull();
+            if (!label || !value) continue;
+            const overlaps =
+              label.x < value.x + value.width &&
+              label.x + label.width > value.x &&
+              label.y < value.y + value.height &&
+              label.y + label.height > value.y;
+            expect(overlaps, `${route} metric label/value`).toBe(false);
+            expect(value.x + value.width).toBeLessThanOrEqual(viewport.width);
+          }
         }
 
         await page.goto(CALL);
