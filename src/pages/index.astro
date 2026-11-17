@@ -27,20 +27,49 @@ const PORTRAIT_SIZES = "(max-width: 680px) 240px, 340px";
 const projects = await listProjects();
 // Work case studies and personal AI systems render as separate bands and
 // never interleave (the site's hard work/lab split). Home leads with the three
-// shipped professional showcases; the full set lives at /work.
+// approved professional showcases; the full set lives at /work.
 const workProjects = projects.filter((p) => p.category === "work");
 const labProjects = projects.filter((p) => p.category === "side");
-const ledgerItems = workProjects
-  .filter((p) => projectStatus(p) === "shipped")
-  .slice(0, 3)
-  .map((p) => ({
-    slug: p.slug,
-    title: p.title,
-    outcome: p.outcome,
-    status: projectStatus(p),
-    statusLabel: projectStatusLabel(p),
-    href: projectHref(p),
-  }));
+const workBySlug = new Map(
+  workProjects.map((project) => [project.slug, project]),
+);
+const homeShowcase = [
+  {
+    slug: "call-tiering",
+    fallbackSlug: "call-tier-discipline",
+    title: "Call Tiering: From Coverage to Intent-based Dialling",
+    outcome: "about 30% → less than 1% call effort on Tier 3",
+  },
+  {
+    slug: "lead-scoring",
+    title: "Lead Scoring: Precision Dialling via Predictive Modelling",
+  },
+  { slug: "ai-sms-pilot" },
+];
+const ledgerItems = homeShowcase.flatMap((showcase) => {
+  const project =
+    workBySlug.get(showcase.slug) ??
+    ("fallbackSlug" in showcase
+      ? workBySlug.get(showcase.fallbackSlug)
+      : undefined);
+  if (!project) return [];
+  return [
+    {
+      slug: showcase.slug,
+      title: showcase.title ?? project.title,
+      outcome: showcase.outcome ?? project.outcome,
+      status: projectStatus({
+        slug: showcase.slug,
+        shippedAt: project.shippedAt,
+      }),
+      statusLabel: projectStatusLabel({
+        slug: showcase.slug,
+        shippedAt: project.shippedAt,
+      }),
+      href: projectHref({ slug: showcase.slug, category: project.category }),
+    },
+  ];
+});
 const labItems = labProjects.map((p) => ({
   slug: p.slug,
   title: p.title,

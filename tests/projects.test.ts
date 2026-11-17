@@ -11,24 +11,31 @@ import {
 } from "@/lib/projects";
 
 describe("D4 professional project statuses", () => {
-  it("marks the three finished case studies as shipped", () => {
+  it("marks the shipped case studies as shipped", () => {
     for (const slug of [
       "intent-tiers",
       "call-tier-discipline",
+      "call-tiering",
       "ai-sms-pilot",
     ]) {
       const project = { slug, shippedAt: null };
       expect(projectStatus(project)).toBe("shipped");
-      expect(projectStatusLabel(project)).toBe("shipped");
+      expect(projectStatusLabel(project)).toBe("Shipped");
     }
   });
 
-  it("labels the two handed-over case studies with their handover date", () => {
-    for (const slug of ["lead-scoring", "chat-capture-gap"]) {
-      const project = { slug, shippedAt: null };
-      expect(projectStatus(project)).toBe("in-flight");
-      expect(projectStatusLabel(project)).toBe("handed over, August 2026");
-    }
+  it("labels lead scoring with its handover date", () => {
+    const project = { slug: "lead-scoring", shippedAt: null };
+    expect(projectStatus(project)).toBe("in-flight");
+    expect(projectStatusLabel(project)).toBe(
+      "Designed and handed over, August 2026",
+    );
+  });
+
+  it("labels the chat capture gap as handed over", () => {
+    const project = { slug: "chat-capture-gap", shippedAt: null };
+    expect(projectStatus(project)).toBe("in-flight");
+    expect(projectStatusLabel(project)).toBe("Handed over");
   });
 });
 

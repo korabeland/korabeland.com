@@ -126,9 +126,12 @@ export function projectStatus(
   project: Pick<ProjectSummary, "slug" | "shippedAt">,
 ): "shipped" | "in-flight" {
   if (
-    ["intent-tiers", "call-tier-discipline", "ai-sms-pilot"].includes(
-      project.slug,
-    )
+    [
+      "intent-tiers",
+      "call-tier-discipline",
+      "call-tiering",
+      "ai-sms-pilot",
+    ].includes(project.slug)
   ) {
     return "shipped";
   }
@@ -142,10 +145,13 @@ export function projectStatus(
 export function projectStatusLabel(
   project: Pick<ProjectSummary, "slug" | "shippedAt">,
 ): string {
-  if (["lead-scoring", "chat-capture-gap"].includes(project.slug)) {
-    return "handed over, August 2026";
+  if (project.slug === "lead-scoring") {
+    return "Designed and handed over, August 2026";
   }
-  return projectStatus(project) === "shipped" ? "shipped" : "in flight";
+  if (project.slug === "chat-capture-gap") {
+    return "Handed over";
+  }
+  return projectStatus(project) === "shipped" ? "Shipped" : "in flight";
 }
 
 /**
