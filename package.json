@@ -88,7 +88,7 @@
     "@axe-core/playwright": "^4.14.0",
     "@biomejs/biome": "^2.5.15",
     "@chromatic-com/playwright": "^0.13.1",
-    "@lhci/cli": "^0.15.1",
+    "@lhci/cli": "^0.16.0",
     "@playwright/test": "^1.64.1",
     "@types/pngjs": "^6.0.5",
     "@types/react": "^19.3.0",
