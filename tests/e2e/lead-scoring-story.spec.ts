@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { ORIGIN } from "../helpers/port";
 
 const CALL = "/work/call-tiering";
@@ -19,6 +19,37 @@ const shiftState = (shift: (typeof SHIFTS)[number]) => ({
     { origin: ORIGIN, localStorage: [{ name: "korab-shift", value: shift }] },
   ],
 });
+
+async function expectRenderedCopy(page: Page) {
+  const copy = await page.evaluate(() => {
+    const selectors = [
+      ".head-title",
+      ".head-subtitle",
+      ".fact-value",
+      ".prose",
+      ".outcome .metric-details",
+    ];
+    const roots = selectors.flatMap((selector) =>
+      Array.from(document.querySelectorAll(selector)),
+    );
+    return roots
+      .map((root) => {
+        const clone = root.cloneNode(true) as HTMLElement;
+        clone
+          .querySelectorAll(
+            ".next-row, .outcome .metric-details .sr-only, .xf-meta",
+          )
+          .forEach((el) => el.remove());
+        return clone.textContent ?? "";
+      })
+      .join(" ");
+  });
+  expect(copy).not.toMatch(/[—–]|\s-\s/);
+  const numbers = copy.match(/\d+(?:\.\d+)?/g) ?? [];
+  expect(numbers.filter((number) => !SOURCE_NUMBER_TOKENS.has(number))).toEqual(
+    [],
+  );
+}
 
 for (const shift of SHIFTS) {
   for (const viewport of VIEWPORTS) {
@@ -101,6 +132,16 @@ test("the matrix sorts a lead by both answers with keyboard controls", async ({
       name: "Reason for enquiring: how ready are you to enroll?",
     }),
   ).toBeVisible();
+
+  const rowChoices = figure.locator('[data-pm-axis="row"] input');
+  const columnChoices = figure.locator('[data-pm-axis="col"] input');
+  for (let row = 0; row < 4; row += 1) {
+    await rowChoices.nth(row).check();
+    for (let column = 0; column < 3; column += 1) {
+      await columnChoices.nth(column).check();
+      await expectRenderedCopy(page);
+    }
+  }
 });
 
 test("rendered flagship copy keeps supported numbers and clean punctuation", async ({
@@ -108,29 +149,7 @@ test("rendered flagship copy keeps supported numbers and clean punctuation", asy
 }) => {
   for (const route of [CALL, LEAD]) {
     await page.goto(route);
-    const copy = await page.evaluate(() => {
-      const selectors = [
-        ".head-title",
-        ".head-subtitle",
-        ".fact-value",
-        ".prose",
-        ".outcome .metric-details",
-      ];
-      const roots = selectors.flatMap((selector) =>
-        Array.from(document.querySelectorAll(selector)),
-      );
-      for (const root of roots) {
-        root
-          .querySelectorAll(".next-row, .sr-only, [aria-live], .xf-meta")
-          .forEach((el) => el.remove());
-      }
-      return roots.map((root) => root.textContent ?? "").join(" ");
-    });
-    expect(copy).not.toMatch(/[—–]|\s-\s/);
-    const numbers = copy.match(/\d+(?:\.\d+)?/g) ?? [];
-    expect(numbers.filter((number) => !SOURCE_NUMBER_TOKENS.has(number))).toEqual(
-      [],
-    );
+    await expectRenderedCopy(page);
   }
 
   await page.goto(CALL);
@@ -163,7 +182,9 @@ test("the effort switch keeps the rounded result and conversion context", async 
     ".ss-legend-row[data-focus] .ss-legend-value span:visible",
   );
   await expect(share).toHaveText("about 30%");
+  await expectRenderedCopy(page);
   await figure.getByRole("radio", { name: /After/ }).check();
+  await expectRenderedCopy(page);
   await expect(share).toHaveText("less than 1%");
   await expect(figure.locator(".ss-verdict:visible")).toContainText(
     "conversion held",
@@ -184,9 +205,11 @@ test("the decile cutoff explores a method without implying a result", async ({
   await expect(readout).toContainText(
     "All ten deciles remain in the call queue.",
   );
+  await expectRenderedCopy(page);
 
   await slider.focus();
   await page.keyboard.press("ArrowLeft");
+  await expectRenderedCopy(page);
   await expect(readout).toContainText(
     "The bottom decile sits below the cutoff.",
   );
@@ -198,6 +221,7 @@ test("the decile cutoff explores a method without implying a result", async ({
 
   for (let step = 0; step < 9; step += 1) {
     await page.keyboard.press("ArrowLeft");
+    await expectRenderedCopy(page);
   }
   await expect(readout).toContainText("No calls go to any of the 10 deciles.");
   await expect(readout).toContainText("This is not a recommendation");
