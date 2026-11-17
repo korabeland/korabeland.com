@@ -45,6 +45,31 @@ describe("the linked case studies use the approved figures", () => {
     );
     expect(values).toContain("about 30% → less than 1%");
     expect(values).toContain("8x");
+    expect(project.outcomeMetrics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          value: "8x",
+          label: "Tier 1 application rate versus Tier 3",
+          provenance: expect.stringContaining("30-day application rates"),
+        }),
+      ]),
+    );
+    expect(
+      project.outcomeMetrics.map(({ label, provenance }) => [label, provenance]),
+    ).toEqual([
+      [
+        "Share of call effort spent on Tier 3",
+        expect.stringContaining("Rounded from the published before and after"),
+      ],
+      [
+        "Tier 1 application rate versus Tier 3",
+        expect.stringContaining("30-day application rates"),
+      ],
+      [
+        "Weekly volume after the change",
+        expect.stringContaining("staffing shortfall absorbed the freed effort"),
+      ],
+    ]);
     expect(callTiering.EFFORT_STATES[0].values.bottom).toBe("about 30%");
     expect(callTiering.EFFORT_STATES[1].values.bottom).toBe("less than 1%");
   });
@@ -58,7 +83,18 @@ describe("the linked case studies use the approved figures", () => {
     );
     expect(values).toContain("about 600k leads");
     expect(leadScoring.DECILE_HEIGHTS).toHaveLength(10);
-    expect(leadBody).toContain("illustrative");
+    expect(lead?.outcomeMetrics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          value: "about 600k leads",
+          provenance: expect.stringContaining("point-in-time features"),
+        }),
+        expect.objectContaining({
+          value: "6 stakeholders",
+          provenance: expect.stringContaining("Senior leaders endorsed the model"),
+        }),
+      ]),
+    );
     expect(leadBody).toContain("290 call attempts per application");
   });
 
@@ -68,6 +104,8 @@ describe("the linked case studies use the approved figures", () => {
       "two calls over 7 days",
       "one call on day 1",
       "Tier 1 leads applied at eight times Tier 3's rate",
+      "Tier 1 converted at 6.7%, compared with 0.8% for Tier 3",
+      "with no revenue lost",
       "8.2%",
       "No headcount was added",
       "Weekly call output later fell 16% while lead volume grew 8%",
@@ -85,17 +123,6 @@ describe("the linked case studies use the approved figures", () => {
     expect(leadBody).toContain("[Call Tiering](/work/call-tiering)");
   });
 
-  it("uses no dash punctuation in published copy", () => {
-    for (const copy of [callBody, leadBody]) {
-      expect(copy).not.toMatch(/[—–]|\s-\s/);
-    }
-  });
-
-  it("removes superseded numbers and unsupported forecast language", () => {
-    for (const copy of [callBody, leadBody]) {
-      expect(copy).not.toMatch(/27\.8%|0\.7%|8\.1%|toward half/i);
-    }
-  });
 });
 
 describe("buildStoryParts: figure placements remain attached to the copy", () => {
@@ -112,9 +139,9 @@ describe("buildStoryParts: figure placements remain attached to the copy", () =>
   });
 
   it("splits Lead Scoring into one figure chapter and a close", () => {
-    const parts = buildStoryParts(Markdoc.parse(leadBody), [3]);
+    const parts = buildStoryParts(Markdoc.parse(leadBody), [5]);
     expect(parts.chapters).toHaveLength(1);
-    expect(parts.chapters[0].before.children).toHaveLength(3);
+    expect(parts.chapters[0].before.children).toHaveLength(5);
     expect(parts.chapters[0].after.children.length).toBeGreaterThan(0);
     expect(parts.closing.children[0].type).toBe("heading");
   });

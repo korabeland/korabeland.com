@@ -8,6 +8,10 @@ const VIEWPORTS = [
   { name: "desktop", width: 1280, height: 800 },
 ] as const;
 const SHIFTS = ["night", "day"] as const;
+const SOURCE_NUMBER_TOKENS = new Set([
+  "0.8", "1", "2", "3", "6", "6.7", "7", "8", "8.2", "10", "13", "14",
+  "16", "30", "290", "600", "2025", "2026",
+]);
 
 const shiftState = (shift: (typeof SHIFTS)[number]) => ({
   cookies: [],
@@ -97,6 +101,57 @@ test("the matrix sorts a lead by both answers with keyboard controls", async ({
       name: "Reason for enquiring: how ready are you to enroll?",
     }),
   ).toBeVisible();
+});
+
+test("rendered flagship copy keeps supported numbers and clean punctuation", async ({
+  page,
+}) => {
+  for (const route of [CALL, LEAD]) {
+    await page.goto(route);
+    const copy = await page.evaluate(() => {
+      const selectors = [
+        ".head-title",
+        ".head-subtitle",
+        ".fact-value",
+        ".prose",
+        ".outcome .metric-details",
+      ];
+      const roots = selectors.flatMap((selector) =>
+        Array.from(document.querySelectorAll(selector)),
+      );
+      for (const root of roots) {
+        root
+          .querySelectorAll(".next-row, .sr-only, [aria-live], .xf-meta")
+          .forEach((el) => el.remove());
+      }
+      return roots.map((root) => root.textContent ?? "").join(" ");
+    });
+    expect(copy).not.toMatch(/[—–]|\s-\s/);
+    const numbers = copy.match(/\d+(?:\.\d+)?/g) ?? [];
+    expect(numbers.filter((number) => !SOURCE_NUMBER_TOKENS.has(number))).toEqual(
+      [],
+    );
+  }
+
+  await page.goto(CALL);
+  await expect(page.locator(".head-title")).toHaveText(
+    "From Coverage to Intent-based Dialling",
+  );
+  await expect(page.locator(".prose")).toContainText("with no revenue lost");
+  for (const metric of await page.locator(".outcome .metric-details").all()) {
+    await metric.locator("summary").click();
+    await expect(metric.locator(".metric-provenance")).toBeVisible();
+    await expect(metric.locator(".metric-provenance")).not.toContainText("—");
+  }
+  await page.goto(LEAD);
+  await expect(page.locator(".head-subtitle")).toContainText(
+    "handed to IT unlaunched in August 2026",
+  );
+  for (const metric of await page.locator(".outcome .metric-details").all()) {
+    await metric.locator("summary").click();
+    await expect(metric.locator(".metric-provenance")).toBeVisible();
+    await expect(metric.locator(".metric-provenance")).not.toContainText("—");
+  }
 });
 
 test("the effort switch keeps the rounded result and conversion context", async ({

@@ -47,7 +47,6 @@ export const EFFORT_SEGMENTS: ShareSegment[] = [
 export const EFFORT_STATES: ShareState[] = [
   {
     label: "Before",
-    detail: "One call on day 1",
     shares: { rest: "rest", bottom: 30 },
     values: { rest: "the rest", bottom: "about 30%" },
     verdict: "about 30% of call effort went to Tier 3.",

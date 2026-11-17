@@ -70,6 +70,8 @@ test("/ renders the operator's console home", async ({ page }) => {
   await expect(homeRows.nth(1).locator(".statuschip")).toHaveText(
     "Designed and handed over, August 2026",
   );
+  await expect(homeRows.nth(0).locator(".statuschip")).toHaveText("Shipped");
+  await expect(homeRows.nth(2).locator(".statuschip")).toHaveText("Shipped");
   await expect(page.locator('a.section-more[href="/work"]')).toBeVisible();
   // Lab band: a separate section, one row per side project, its own more-link
   // to /lab — never interleaved with the work ledger.
@@ -108,6 +110,9 @@ test("/work renders the case-study index", async ({ page }) => {
     page.locator('.ledger a[href="/work/call-tiering"]'),
   ).toBeVisible();
   await expect(page.locator('a[href="/work/ai-sms-pilot"]')).toBeVisible();
+  await expect(
+    page.locator('.ledger a[href="/work/chat-capture-gap"] .statuschip'),
+  ).toHaveText("Handed over");
   // /work stays the FULL work index — every published case study gets a row
   // (home curates to three; this page must not). Work category only: side
   // projects live at /lab and never appear here.
@@ -319,7 +324,6 @@ const MOVED_TO_LAB = [
 const REPLACED_CASE_STUDY_ROUTES = [
   { from: "/work/intent-tiers", to: "/work/call-tiering" },
   { from: "/work/call-tier-discipline", to: "/work/call-tiering" },
-  { from: "/work/call-tiers-lead-scoring", to: "/work/call-tiering" },
 ] as const;
 
 for (const { from, to } of REPLACED_CASE_STUDY_ROUTES) {
