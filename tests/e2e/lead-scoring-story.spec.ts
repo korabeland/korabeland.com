@@ -20,8 +20,8 @@ const shiftState = (shift: (typeof SHIFTS)[number]) => ({
   ],
 });
 
-async function expectRenderedCopy(page: Page) {
-  const copy = await page.evaluate(() => {
+async function expectRenderedCopy(page: Page, expectedKept?: number) {
+  const rendered = await page.evaluate(() => {
     const selectors = [
       ".head-title",
       ".head-subtitle",
@@ -32,23 +32,44 @@ async function expectRenderedCopy(page: Page) {
     const roots = selectors.flatMap((selector) =>
       Array.from(document.querySelectorAll(selector)),
     );
-    return roots
-      .map((root) => {
+    const copyParts = roots.map((root) => {
         const clone = root.cloneNode(true) as HTMLElement;
         clone
-          .querySelectorAll(
-            ".next-row, .outcome .metric-details .sr-only, .xf-meta",
-          )
+          .querySelectorAll(".next-row, .xf-meta, .cr-n")
           .forEach((el) => el.remove());
-        return clone.textContent ?? "";
-      })
-      .join(" ");
+        if (clone.matches(".metric-details")) {
+          clone.querySelector(".sr-only")?.remove();
+        }
+        const numberCopy = clone.cloneNode(true) as HTMLElement;
+        numberCopy.querySelector(".cd-read-main")?.remove();
+        return {
+          text: clone.textContent ?? "",
+          numbers: numberCopy.textContent ?? "",
+        };
+      });
+    return {
+      text: copyParts.map((part) => part.text).join(" "),
+      numbers: copyParts.map((part) => part.numbers).join(" "),
+      dial: document.querySelector(".cd-read-main")?.textContent ?? null,
+    };
   });
-  expect(copy).not.toMatch(/[—–]|\s-\s/);
-  const numbers = copy.match(/\d+(?:\.\d+)?/g) ?? [];
+  expect(rendered.text).not.toMatch(/[—–]|\s-\s/);
+  const numbers = rendered.numbers.match(/\d+(?:\.\d+)?/g) ?? [];
   expect(numbers.filter((number) => !SOURCE_NUMBER_TOKENS.has(number))).toEqual(
     [],
   );
+  if (expectedKept !== undefined) {
+    const cut = 10 - expectedKept;
+    const expectedReadout =
+      cut === 0
+        ? "All 10 deciles remain in the call queue."
+        : cut === 10
+          ? "No calls go to any of the 10 deciles."
+          : cut === 1
+            ? "The bottom decile sits below the cutoff."
+            : `Bottom ${cut} deciles sit below the cutoff.`;
+    expect(rendered.dial).toBe(expectedReadout);
+  }
 }
 
 for (const shift of SHIFTS) {
@@ -156,7 +177,20 @@ test("rendered flagship copy keeps supported numbers and clean punctuation", asy
   await expect(page.locator(".head-title")).toHaveText(
     "From Coverage to Intent-based Dialling",
   );
-  await expect(page.locator(".prose")).toContainText("with no revenue lost");
+  const callCopy = page.locator(".prose");
+  for (const fact of [
+    "up to four calls over 14 days",
+    "two calls over 7 days",
+    "one call on day 1",
+    "Tier 1 leads applied at eight times Tier 3's rate",
+    "Tier 1 converted at 6.7%, compared with 0.8% for Tier 3",
+    "with no revenue lost",
+    "8.2%",
+    "No headcount was added",
+    "Weekly call output later fell 16% while lead volume grew 8%",
+  ]) {
+    await expect(callCopy).toContainText(fact);
+  }
   for (const metric of await page.locator(".outcome .metric-details").all()) {
     await metric.locator("summary").click();
     await expect(metric.locator(".metric-provenance")).toBeVisible();
@@ -166,6 +200,15 @@ test("rendered flagship copy keeps supported numbers and clean punctuation", asy
   await expect(page.locator(".head-subtitle")).toContainText(
     "handed to IT unlaunched in August 2026",
   );
+  const leadCopy = page.locator(".prose");
+  await expect(leadCopy).toContainText("six stakeholders");
+  await expect(leadCopy).toContainText("senior leaders, who endorsed the model");
+  await expect(leadCopy).toContainText("about 600k leads");
+  await expect(leadCopy).toContainText("point-in-time features");
+  await expect(leadCopy).toContainText("290 call attempts per application");
+  await expect(
+    page.getByRole("link", { name: "Call Tiering" }).first(),
+  ).toHaveAttribute("href", CALL);
   for (const metric of await page.locator(".outcome .metric-details").all()) {
     await metric.locator("summary").click();
     await expect(metric.locator(".metric-provenance")).toBeVisible();
@@ -205,11 +248,11 @@ test("the decile cutoff explores a method without implying a result", async ({
   await expect(readout).toContainText(
     "All ten deciles remain in the call queue.",
   );
-  await expectRenderedCopy(page);
+  await expectRenderedCopy(page, 10);
 
   await slider.focus();
   await page.keyboard.press("ArrowLeft");
-  await expectRenderedCopy(page);
+  await expectRenderedCopy(page, 9);
   await expect(readout).toContainText(
     "The bottom decile sits below the cutoff.",
   );
@@ -221,7 +264,7 @@ test("the decile cutoff explores a method without implying a result", async ({
 
   for (let step = 0; step < 9; step += 1) {
     await page.keyboard.press("ArrowLeft");
-    await expectRenderedCopy(page);
+    await expectRenderedCopy(page, 8 - step);
   }
   await expect(readout).toContainText("No calls go to any of the 10 deciles.");
   await expect(readout).toContainText("This is not a recommendation");

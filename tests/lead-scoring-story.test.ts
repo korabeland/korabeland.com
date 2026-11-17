@@ -83,7 +83,7 @@ describe("the linked case studies use the approved figures", () => {
     );
     expect(values).toContain("about 600k leads");
     expect(leadScoring.DECILE_HEIGHTS).toHaveLength(10);
-    expect(lead?.outcomeMetrics).toEqual(
+    expect(project.outcomeMetrics).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           value: "about 600k leads",
@@ -95,23 +95,6 @@ describe("the linked case studies use the approved figures", () => {
         }),
       ]),
     );
-    expect(leadBody).toContain("290 call attempts per application");
-  });
-
-  it("includes the approved call order and honest capacity limit", () => {
-    for (const fact of [
-      "up to four calls over 14 days",
-      "two calls over 7 days",
-      "one call on day 1",
-      "Tier 1 leads applied at eight times Tier 3's rate",
-      "Tier 1 converted at 6.7%, compared with 0.8% for Tier 3",
-      "with no revenue lost",
-      "8.2%",
-      "No headcount was added",
-      "Weekly call output later fell 16% while lead volume grew 8%",
-    ]) {
-      expect(callBody).toContain(fact);
-    }
   });
 
   it("links both studies and preserves their distinct completion states", async () => {
@@ -120,7 +103,6 @@ describe("the linked case studies use the approved figures", () => {
     expect(call?.nextProject).toBe("lead-scoring");
     expect(call?.shippedAt).toBe("2025-11-13");
     expect(lead?.statusLabel).toBe("Designed and handed over, August 2026");
-    expect(leadBody).toContain("[Call Tiering](/work/call-tiering)");
   });
 
 });
