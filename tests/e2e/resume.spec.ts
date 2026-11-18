@@ -90,10 +90,9 @@ test("resume identity and public contacts align with the rendered home page", as
     );
 
   expect(resumeName).toBe(homeName);
-  for (const href of homeContacts) {
-    expect(resumeContacts).toContain(href);
-  }
-  expect(resumeContacts).toContain("https://korabeland.com/");
+  expect(resumeContacts).toEqual(
+    [...homeContacts, "https://korabeland.com/"].sort(),
+  );
 });
 
 test("About links to /resume from the experience section", async ({ page }) => {

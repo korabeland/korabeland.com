@@ -9,15 +9,13 @@ export const prerender = false;
 
 import Resume from "../../components/Resume/Resume.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import type { ExperienceSummary } from "../../lib/experience";
-import { buildResume } from "../../lib/resume";
-import type { SkillsData } from "../../lib/skills";
+import type { ResumeModel } from "../../lib/resume";
 
 if (import.meta.env.PROD) {
   return new Response("Not found", { status: 404 });
 }
 
-const roles: ExperienceSummary[] = [
+const roles: ResumeModel["experience"] = [
   {
     slug: "current-role",
     company: "Current Co",
@@ -29,11 +27,11 @@ const roles: ExperienceSummary[] = [
     achievements: [
       {
         text: "Rebuilt triage so the team acts on evidence, not hunches.",
-        metric: { value: "30–50%", label: "less manual effort" },
+        metric: "30–50% · less manual effort",
       },
       {
         text: "Aligned four functions before a line of code was written.",
-        metric: { value: "6", label: "stakeholders" },
+        metric: "6 · stakeholders",
       },
     ],
     tags: ["operations", "evidence"],
@@ -62,7 +60,7 @@ const roles: ExperienceSummary[] = [
   },
 ];
 
-const skills: SkillsData = {
+const skills: NonNullable<ResumeModel["skills"]> = {
   categories: [
     {
       name: "Data & AI",
@@ -79,7 +77,7 @@ const skills: SkillsData = {
   certifications: [
     {
       name: "Some Certification",
-      issuer: "An Institute",
+      institution: "An Institute",
       year: "2024",
       url: "https://example.co",
     },
@@ -87,19 +85,23 @@ const skills: SkillsData = {
 };
 
 const empty = Astro.url.searchParams.get("empty") === "1";
-const model = empty
-  ? buildResume([], null)
-  : buildResume(roles, skills, {
+const model: ResumeModel = empty
+  ? { summary: null, experience: [], skills: null }
+  : {
       summary:
         "Operations and customer experience leader building evidence-based systems.",
-      certifications: [
-        {
-          name: "Decision Modelling Course",
-          institution: "A University",
-          year: "2018",
-        },
-      ],
-    });
+      experience: roles,
+      skills: {
+        ...skills,
+        certifications: [
+          {
+            name: "Decision Modelling Course",
+            institution: "A University",
+            year: "2018",
+          },
+        ],
+      },
+    };
 ---
 
 <BaseLayout title="dev · resume preview" noindex={true}>

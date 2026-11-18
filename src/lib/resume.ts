@@ -1,11 +1,9 @@
 // Pure model for the one-page /resume. Identity location derives from
 // src/lib/status.ts (the single source of truth for base/citizenship), and the
 // resume content follows the owner's 2026-11-15 Drive resume with the site's
-// public contact line and two-part-tiers corrections. Pure builders remain here
-// so Vitest and /dev/resume-preview exercise section gating with fixtures.
+// public contact line and two-part-tiers corrections.
 
-import type { ExperienceAchievement, ExperienceSummary } from "./experience";
-import type { Education, SkillCategory, SkillsData } from "./skills";
+import type { Education, SkillCategory } from "./skills";
 import { STATUS } from "./status";
 
 export const RESUME_IDENTITY = {
@@ -89,101 +87,6 @@ export interface ResumeModel {
   experience: ResumeRole[];
   /** Null when no skills, education, or certifications remain to display. */
   skills: ResumeSkills | null;
-}
-
-export function formatResumeMetric(
-  metric: ExperienceAchievement["metric"],
-): string | null {
-  if (!metric) return null;
-  return metric.label ? `${metric.value} · ${metric.label}` : metric.value;
-}
-
-const MONTHS = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
-] as const;
-
-function formatResumeDate(date: string | null): string {
-  if (!date) return "";
-  const year = date.slice(0, 4);
-  const month = Number(date.slice(5, 7));
-  return month >= 1 && month <= 12 ? `${MONTHS[month - 1]} ${year}` : year;
-}
-
-function formatResumePeriod(role: ExperienceSummary): string {
-  const start = formatResumeDate(role.startDate);
-  const end = role.current ? "present" : formatResumeDate(role.endDate);
-  if (start && end) return `${start} to ${end}`;
-  return start || end;
-}
-
-/**
- * Resume view of one role. Testimonials and tags are dropped on purpose: the
- * page has to fit one printed sheet.
- */
-export function toResumeRole(role: ExperienceSummary): ResumeRole {
-  return {
-    slug: role.slug,
-    role: role.role,
-    organisation: [role.company, role.location].filter(Boolean).join(" · "),
-    period: formatResumePeriod(role),
-    summary: null,
-    achievements: role.achievements.map((a) => ({
-      text: a.text,
-      metric: formatResumeMetric(a.metric),
-    })),
-  };
-}
-
-/**
- * Skills the resume shows: categories and education, plus optional concise
- * certifications. Long-URL Keystatic certifications are left out by default so
- * fixture-backed previews match the one-sheet contract. Null when nothing
- * remains, so the section is skipped instead of rendered empty.
- */
-export function toResumeSkills(
-  data: SkillsData | null,
-  certifications: ResumeCertification[] = [],
-): ResumeSkills | null {
-  if (!data && certifications.length === 0) return null;
-  const categories = (data?.categories ?? []).filter(
-    (c) => c.skills.length > 0,
-  );
-  const education = data?.education ?? [];
-  if (
-    categories.length === 0 &&
-    education.length === 0 &&
-    certifications.length === 0
-  ) {
-    return null;
-  }
-  return { categories, education, certifications };
-}
-
-/** Experience arrives already sorted by the caller; order is preserved. */
-export function buildResume(
-  roles: ExperienceSummary[],
-  skills: SkillsData | null,
-  options: {
-    summary?: string | null;
-    certifications?: ResumeCertification[];
-  } = {},
-): ResumeModel {
-  return {
-    summary: options.summary ?? null,
-    experience: roles.map(toResumeRole),
-    skills: toResumeSkills(skills, options.certifications ?? []),
-  };
 }
 
 /** Canonical one-page resume model rebuilt from the 2026-11-15 Drive resume. */
