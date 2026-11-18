@@ -13,13 +13,16 @@ test("colophon features a latest commit with a valid datetime and earlier rows",
   const featured = page.locator(".commit-featured");
   await expect(featured).toHaveCount(1);
 
-  // The featured commit must carry a machine-readable, parseable timestamp —
-  // this is what the relative-time copy and the P0 trail-register fix feed.
+  // The featured commit must carry a machine-readable, parseable timestamp.
+  // The visible date stays accurate after a build.
   const datetime = await featured
     .locator("time.commit-when")
     .getAttribute("datetime");
   expect(datetime).toBeTruthy();
   expect(Number.isNaN(Date.parse(datetime ?? ""))).toBe(false);
+  await expect(featured.locator("time.commit-when")).toHaveText(
+    /^\s*shipped \d{4}\.\d{2}\.\d{2}\s*$/,
+  );
 
   await expect(featured.locator(".commit-featured-subject")).not.toBeEmpty();
 
