@@ -49,7 +49,7 @@ const homeShowcase = [
 const ledgerItems = homeShowcase.flatMap((showcase) => {
   const project =
     workBySlug.get(showcase.slug) ??
-    ("fallbackSlug" in showcase
+    ("fallbackSlug" in showcase && showcase.fallbackSlug
       ? workBySlug.get(showcase.fallbackSlug)
       : undefined);
   if (!project) return [];
