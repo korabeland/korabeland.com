@@ -306,9 +306,10 @@ the page when no roles exist.
 ### Resume
 
 `components/Resume/Resume.astro` — one-page resume layout shared by the
-prerendered `/resume` route and the dev-only preview. `src/lib/resume.ts` maps
-experience and skills reader data to the page model; print styles fit the page
-on Letter and A4 paper. The About experience section links to this route.
+prerendered `/resume` route and the dev-only preview. `src/lib/resume.ts` holds
+the canonical resume model (location derived from `src/lib/status.ts`) and pure
+fixture builders; print styles fit the page on Letter and A4 paper. The About
+experience section links to this route.
 
 ### SkillsSection
 

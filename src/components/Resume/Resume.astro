@@ -11,7 +11,6 @@
 import {
   RESUME_CONTACT,
   RESUME_IDENTITY,
-  RESUME_TARGETING,
   type ResumeModel,
 } from "../../lib/resume";
 import SectionHead from "../SectionHead.astro";
@@ -21,7 +20,11 @@ interface Props {
 }
 
 const { model } = Astro.props;
-const { experience, skills } = model;
+const { summary, experience, skills } = model;
+const hasCategories = (skills?.categories.length ?? 0) > 0;
+const hasEducation = (skills?.education.length ?? 0) > 0;
+const hasCertifications = (skills?.certifications.length ?? 0) > 0;
+const hasCredentials = hasEducation || hasCertifications;
 ---
 
 <article class="resume">
@@ -34,8 +37,6 @@ const { experience, skills } = model;
   <header class="resume-header">
     <h1 class="t-display resume-name">{RESUME_IDENTITY.name}</h1>
     <p class="resume-headline">{RESUME_IDENTITY.headline}</p>
-    <p class="resume-summary">{RESUME_IDENTITY.summary}</p>
-    <p class="resume-targeting">{RESUME_TARGETING}</p>
     <p class="t-mono resume-contact">
       <span>Based in {RESUME_IDENTITY.location}</span>
       {RESUME_CONTACT.map((link) => (
@@ -45,6 +46,31 @@ const { experience, skills } = model;
       ))}
     </p>
   </header>
+
+  {
+    summary && (
+      <section class="resume-section" aria-labelledby="resume-summary">
+        <SectionHead id="resume-summary" text="summary" />
+        <p class="resume-summary">{summary}</p>
+      </section>
+    )
+  }
+
+  {
+    hasCategories && skills && (
+      <section class="resume-section" aria-labelledby="resume-skills">
+        <SectionHead id="resume-skills" text="areas of expertise" />
+        <dl class="resume-skills">
+          {skills.categories.map((cat) => (
+            <div class="resume-skill-row">
+              <dt>{cat.name}</dt>
+              <dd>{cat.skills.join(" · ")}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
+    )
+  }
 
   {
     experience.length > 0 && (
@@ -62,6 +88,9 @@ const { experience, skills } = model;
                 </div>
                 <span class="t-mono resume-period">{role.period}</span>
               </div>
+              {role.summary && (
+                <p class="resume-role-summary">{role.summary}</p>
+              )}
               {role.achievements.length > 0 && (
                 <ul class="resume-bullets">
                   {role.achievements.map((a) => (
@@ -82,31 +111,38 @@ const { experience, skills } = model;
   }
 
   {
-    skills && (
-      <section class="resume-section" aria-labelledby="resume-skills">
-        <SectionHead id="resume-skills" text="skills · education" />
-        {skills.categories.length > 0 && (
-          <dl class="resume-skills">
-            {skills.categories.map((cat) => (
-              <div class="resume-skill-row">
-                <dt>{cat.name}</dt>
-                <dd>{cat.skills.join(" · ")}</dd>
-              </div>
-            ))}
-          </dl>
-        )}
-        {skills.education.length > 0 && (
-          <ul class="resume-education" aria-label="Education">
-            {skills.education.map((entry) => (
-              <li class="resume-edu-row">
-                <span>{entry.name}</span>
-                <span class="t-mono resume-edu-meta">
-                  {[entry.institution, entry.year].filter(Boolean).join(" · ")}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
+    hasCredentials && skills && (
+      <section class="resume-section" aria-labelledby="resume-credentials">
+        <SectionHead id="resume-credentials" text="education · certifications" />
+        <div class="resume-credentials">
+          {hasEducation && (
+            <ul class="resume-edu-list resume-education" aria-label="Education">
+              {skills.education.map((entry) => (
+                <li class="resume-edu-row">
+                  <span>{entry.name}</span>
+                  <span class="t-mono resume-edu-meta">
+                    {[entry.institution, entry.year].filter(Boolean).join(" · ")}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+          {hasCertifications && (
+            <ul
+              class="resume-edu-list resume-certifications"
+              aria-label="Certifications"
+            >
+              {skills.certifications.map((entry) => (
+                <li class="resume-edu-row">
+                  <span>{entry.name}</span>
+                  <span class="t-mono resume-edu-meta">
+                    {[entry.institution, entry.year].filter(Boolean).join(" · ")}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </section>
     )
   }
@@ -156,24 +192,17 @@ const { experience, skills } = model;
 
   .resume-headline {
     font-family: var(--font-display);
-    font-size: 18px;
-    line-height: 1.4;
+    font-size: 16px;
+    line-height: 1.45;
     color: var(--ink);
-    margin: 0 0 var(--s-1);
+    margin: 0 0 var(--s-3);
   }
 
   .resume-summary {
     font-size: 15px;
-    line-height: 1.55;
+    line-height: 1.65;
     color: var(--ink-soft);
-    margin: 0 0 var(--s-3);
-  }
-
-  .resume-targeting {
-    font-size: 14px;
-    line-height: 1.45;
-    color: var(--ink-soft);
-    margin: 0 0 var(--s-3);
+    margin: 0;
   }
 
   .resume-contact {
@@ -244,9 +273,16 @@ const { experience, skills } = model;
     margin: 2px 0 0;
   }
 
+  .resume-role-summary {
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--ink);
+    margin: var(--s-2) 0 0;
+  }
+
   .resume-bullets {
     list-style: none;
-    margin: var(--s-3) 0 0;
+    margin: var(--s-2) 0 0;
     padding: 0;
     display: flex;
     flex-direction: column;
@@ -297,14 +333,24 @@ const { experience, skills } = model;
     color: var(--ink-soft);
   }
 
-  .resume-education {
+  .resume-credentials {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-4);
+  }
+
+  .resume-edu-list {
     list-style: none;
-    margin: var(--s-4) 0 0;
-    padding: var(--s-4) 0 0;
-    border-top: 1px solid var(--rule);
+    margin: 0;
+    padding: 0;
     display: flex;
     flex-direction: column;
     gap: var(--s-2);
+  }
+
+  .resume-certifications {
+    padding-top: var(--s-4);
+    border-top: 1px solid var(--rule);
   }
 
   .resume-edu-row {
@@ -340,35 +386,25 @@ const { experience, skills } = model;
     }
 
     .resume-header {
-      margin-bottom: 1.5mm;
+      margin-bottom: 1.2mm;
     }
 
     .resume-name {
-      font-size: 20pt;
-      margin-bottom: 0.5mm;
+      font-size: 17pt;
+      line-height: 1.05;
+      margin-bottom: 0.3mm;
     }
 
     .resume-headline {
-      font-size: 10.5pt;
-      margin-bottom: 0;
-    }
-
-    .resume-summary {
-      font-size: 8.4pt;
-      line-height: 1.15;
-      margin-bottom: 1mm;
-    }
-
-    .resume-targeting {
-      font-size: 8.4pt;
-      line-height: 1.15;
-      margin-bottom: 1mm;
+      font-size: 9pt;
+      line-height: 1.2;
+      margin-bottom: 0.5mm;
     }
 
     .resume-contact {
-      font-size: 7.5pt;
-      line-height: 1.1;
-      gap: 0 3.5mm;
+      font-size: 6.5pt;
+      line-height: 1.15;
+      gap: 0 1.8mm;
     }
 
     .resume-contact a {
@@ -382,43 +418,76 @@ const { experience, skills } = model;
 
     .resume-section :global(.section-head) {
       border-bottom-color: #000;
-      padding-bottom: 0.6mm;
-      margin-bottom: 1.4mm;
+      padding-bottom: 0.5mm;
+      margin-bottom: 1.1mm;
+    }
+
+    .resume-summary {
+      font-size: 7.7pt;
+      line-height: 1.18;
+    }
+
+    .resume-skills {
+      gap: 0.6mm;
+    }
+
+    .resume-skill-row {
+      font-size: 7.7pt;
+      line-height: 1.16;
+    }
+
+    .resume-skill-row dt,
+    .resume-skill-row dd {
+      display: inline;
+      font-size: 7.7pt;
+      line-height: 1.16;
+    }
+
+    .resume-skill-row dt::after {
+      content: ": ";
     }
 
     .resume-roles {
-      gap: 1.5mm;
+      gap: 1.2mm;
     }
 
     /* Role, organisation and period share one line to save height. */
     .resume-role-id {
       flex-direction: row;
       align-items: baseline;
-      gap: 2.5mm;
+      gap: 2mm;
     }
 
     .resume-role-title {
-      font-size: 10pt;
+      font-size: 9pt;
+      line-height: 1.15;
     }
 
     .resume-org {
-      font-size: 8.5pt;
+      font-size: 7.8pt;
       margin: 0;
     }
 
     .resume-period {
-      font-size: 8pt;
+      font-size: 7.4pt;
+    }
+
+    .resume-role-summary {
+      font-size: 7.6pt;
+      line-height: 1.15;
+      margin-top: 0.3mm;
+      font-weight: 500;
     }
 
     .resume-bullets {
-      margin-top: 0.6mm;
-      gap: 0.3mm;
+      margin-top: 0.35mm;
+      gap: 0.2mm;
     }
 
     .resume-bullet {
-      font-size: 8.2pt;
-      line-height: 1.15;
-      padding-left: 3mm;
+      font-size: 7.5pt;
+      line-height: 1.14;
+      padding-left: 2.6mm;
     }
 
     .resume-bullet::before {
@@ -427,52 +496,42 @@ const { experience, skills } = model;
 
     .resume-metric {
       display: inline;
-      font-size: 7.2pt;
+      font-size: 7pt;
       letter-spacing: 0;
     }
 
     .resume-metric::before {
-      content: "(";
+      content: " (";
     }
 
     .resume-metric::after {
       content: ")";
     }
 
-    /* Category name runs in with its skills. */
-    .resume-skills {
-      gap: 0.5mm;
-    }
-
-    .resume-skill-row dt,
-    .resume-skill-row dd {
-      display: inline;
-      font-size: 8.4pt;
-      line-height: 1.15;
-    }
-
-    .resume-skill-row dt::after {
-      content: ": ";
-    }
-
-    .resume-education {
+    .resume-credentials {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 0.5mm 6mm;
-      margin-top: 1mm;
-      padding-top: 1mm;
-      border-top-color: #000;
+    }
+
+    .resume-edu-list {
+      gap: 0.4mm;
+    }
+
+    .resume-certifications {
+      padding-top: 0;
+      border-top: 0;
     }
 
     .resume-edu-row {
       display: block;
-      font-size: 8.2pt;
-      line-height: 1.15;
+      font-size: 7.5pt;
+      line-height: 1.14;
     }
 
     .resume-edu-meta {
       display: block;
-      font-size: 7.2pt;
+      font-size: 6.9pt;
       letter-spacing: 0;
       text-align: left;
     }
@@ -492,7 +551,7 @@ const { experience, skills } = model;
 
 <style is:global>
   @page {
-    margin: 8mm 11mm;
+    margin: 7mm 10mm;
   }
 
   @media print {
@@ -513,7 +572,7 @@ const { experience, skills } = model;
       background: #fff;
       color: #000;
       min-height: 0;
-      font-size: 9.5pt;
+      font-size: 8.5pt;
     }
 
     .skip-link,

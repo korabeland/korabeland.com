@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 
-// /resume reads the same experience and skills data as About. The content-gated
+// /resume renders the rebuilt 2026-11-15 Drive-based resume. The content-gated
 // states are covered through the dev-only fixture route, per AGENTS.md §2.
 
 async function seriousViolations(page: Page) {
@@ -19,10 +19,18 @@ function pdfPages(pdf: Buffer): number {
     .length;
 }
 
-test("/resume renders the authored experience and skills", async ({ page }) => {
+test("/resume renders the rebuilt resume with summary, roles, skills, education and certifications", async ({
+  page,
+}) => {
   const response = await page.goto("/resume");
   expect(response?.status()).toBe(200);
   await expect(page.locator("h1")).toHaveText("Korab Eland");
+  await expect(page.locator(".resume-headline")).toHaveText(
+    "Customer Experience · Marketing · Product · AI · Operations",
+  );
+  await expect(page.locator(".resume-summary")).toContainText(
+    "intent-based lead tiering system",
+  );
   await expect(page.locator(".resume-role")).toHaveCount(5);
   await expect(page.locator(".resume-role-title").first()).toHaveText(
     "Customer Experience Manager",
@@ -30,42 +38,41 @@ test("/resume renders the authored experience and skills", async ({ page }) => {
   await expect(page.locator(".resume-period").first()).toHaveText(
     "Mar 2021 to Aug 2026",
   );
-  await expect(page.locator(".resume-targeting")).toHaveText(
-    "Open to customer experience, marketing, product, AI and operations roles.",
-  );
   await expect(page.locator(".resume-contact")).toContainText(
     "Based in Washington, DC",
   );
-  await expect(page.locator(".resume-metric").first()).toContainText("30%");
-  await expect(page.locator(".resume-skill-row")).toHaveCount(5);
+  await expect(page.locator(".resume-skill-row")).toHaveCount(2);
   await expect(page.getByRole("list", { name: "Education" })).toBeVisible();
-  // Testimonials and certifications stay off the one-page brief.
+  await expect(
+    page.getByRole("list", { name: "Certifications" }),
+  ).toBeVisible();
+  // Testimonials stay off the one-page brief; no dashes or banned tiering numbers.
   await expect(page.locator("blockquote")).toHaveCount(0);
-  await expect(page.locator("main")).not.toContainText("—");
+  const mainText = (await page.locator("main").innerText()) ?? "";
+  expect(mainText).not.toContain("\u2014");
+  expect(mainText).not.toContain("\u2013");
+  expect(mainText).not.toMatch(/ - /);
+  expect(mainText).not.toContain("25%");
+  expect(mainText).not.toContain("27.8%");
+  expect(mainText).not.toContain("0.7%");
   await expect(
     page.locator('.resume-contact a[href="mailto:hello@korabeland.com"]'),
+  ).toBeVisible();
+  await expect(
+    page.locator('.resume-contact a[href="https://korabeland.com"]'),
   ).toBeVisible();
   await expect(
     page.getByRole("button", { name: /print or save/i }),
   ).toBeVisible();
 });
 
-test("resume identity and contacts match the rendered home page", async ({
+test("resume identity and public contacts align with the rendered home page", async ({
   page,
 }) => {
   await page.goto("/");
   const homeName = (await page.locator(".chrome-brand-text").innerText())
     .trim()
     .toLocaleLowerCase();
-  const homeHeadline = await page
-    .locator("#hero-heading")
-    .evaluate((heading) => {
-      const visible = heading.cloneNode(true) as HTMLElement;
-      visible.querySelectorAll(".sr-only").forEach((node) => {
-        node.remove();
-      });
-      return visible.innerText.replace(/\s+/g, " ").trim();
-    });
   const homeContacts = await page
     .locator(".hero-social-link")
     .evaluateAll((links) =>
@@ -76,7 +83,6 @@ test("resume identity and contacts match the rendered home page", async ({
   const resumeName = (await page.locator(".resume-name").innerText())
     .trim()
     .toLocaleLowerCase();
-  const resumeHeadline = await page.locator(".resume-headline").innerText();
   const resumeContacts = await page
     .locator(".resume-contact a")
     .evaluateAll((links) =>
@@ -84,8 +90,10 @@ test("resume identity and contacts match the rendered home page", async ({
     );
 
   expect(resumeName).toBe(homeName);
-  expect(resumeHeadline).toBe(homeHeadline);
-  expect(resumeContacts).toEqual(homeContacts);
+  for (const href of homeContacts) {
+    expect(resumeContacts).toContain(href);
+  }
+  expect(resumeContacts).toContain("https://korabeland.com/");
 });
 
 test("About links to /resume from the experience section", async ({ page }) => {
@@ -115,6 +123,7 @@ test("the print button calls window.print", async ({ page }) => {
 test("/dev/resume-preview gates sections on data", async ({ page }) => {
   const response = await page.goto("/dev/resume-preview");
   expect(response?.status()).toBe(200);
+  await expect(page.locator(".resume-summary")).toBeVisible();
   await expect(page.locator(".resume-role")).toHaveCount(2);
   await expect(page.locator(".resume-period").first()).toHaveText(
     "Feb 2021 to present",
@@ -126,6 +135,7 @@ test("/dev/resume-preview gates sections on data", async ({ page }) => {
   await expect(page.getByText("6 · stakeholders")).toBeVisible();
   await expect(page.locator("blockquote")).toHaveCount(0);
   await expect(page.getByText("Some Certification")).toHaveCount(0);
+  await expect(page.getByText("Decision Modelling Course")).toBeVisible();
   await expect(page.locator(".resume-skill-row")).toHaveCount(2);
 });
 
@@ -180,6 +190,7 @@ test.describe("print layout", () => {
     // Contact addresses are visible text, so paper keeps them.
     const contact = await page.locator(".resume-contact").innerText();
     expect(contact).toContain("hello@korabeland.com");
+    expect(contact).toContain("korabeland.com");
     expect(contact).toContain("linkedin.com/in/korabeland");
   });
 

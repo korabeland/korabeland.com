@@ -87,7 +87,19 @@ const skills: SkillsData = {
 };
 
 const empty = Astro.url.searchParams.get("empty") === "1";
-const model = empty ? buildResume([], null) : buildResume(roles, skills);
+const model = empty
+  ? buildResume([], null)
+  : buildResume(roles, skills, {
+      summary:
+        "Operations and customer experience leader building evidence-based systems.",
+      certifications: [
+        {
+          name: "Decision Modelling Course",
+          institution: "A University",
+          year: "2018",
+        },
+      ],
+    });
 ---
 
 <BaseLayout title="dev · resume preview" noindex={true}>
