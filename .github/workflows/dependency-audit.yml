@@ -1,6 +1,6 @@
 # Accepted development-only residuals in the full-graph summary: tmp
-# (GHSA-ph9p-34f9-6g65) via @lhci/cli 0.15.1 (latest release) and its
-# inquirer/external-editor chain; extract-zip advisories have no patched release.
+# (GHSA-ph9p-34f9-6g65) via @lhci/cli 0.16.0 and its inquirer/external-editor
+# chain. The dependency lockfile no longer includes extract-zip.
 # None of these dependencies ships to visitors.
 name: Dependency audit
 # Surfaces newly published advisories on a schedule, so they show up here
