@@ -110,6 +110,7 @@ describe("search over the live corpus", () => {
     }
   });
 
+  // Call Tiering holds the measured results; Lead Scoring explains the model.
   it.each([
     [EXAMPLE_QUESTIONS[0], "/work/lead-scoring"],
     [EXAMPLE_QUESTIONS[1], "/about#experience-heading"],
@@ -127,6 +128,7 @@ describe("search over the live corpus", () => {
   it.each([
     ["Where are you based?", "/about#close"],
     ["What results did the lead scoring project get?", "/work/lead-scoring"],
+    ["What is the decile model?", "/work/lead-scoring"],
     ["What is Perian?", "/lab/perian"],
     ["What citizenship do you hold?", "/about#close"],
     ["Which certifications do you hold?", "/about#skills-heading"],

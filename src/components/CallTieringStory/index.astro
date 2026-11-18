@@ -1,0 +1,96 @@
+---
+// Call Tiering case study, with the two shared Explorable figures placed
+// between the setup and finding in each chapter.
+
+import ChapterRail from "../Explorable/ChapterRail.astro";
+import Figure from "../Explorable/Figure.astro";
+import PairingMatrix from "../Explorable/PairingMatrix.astro";
+import RatioPair from "../Explorable/RatioPair.astro";
+import ShareShift from "../Explorable/ShareShift.astro";
+import { buildStoryParts } from "../LeadScoringStory/segments";
+import { PostContent } from "../PostContent";
+import {
+  CHAPTERS,
+  EFFORT_SEGMENTS,
+  EFFORT_STATES,
+  MATRIX_BUCKETS,
+  MATRIX_CELLS,
+  MATRIX_COLS,
+  MATRIX_ROWS,
+} from "./data";
+
+interface Props {
+  document: unknown;
+}
+
+const { document } = Astro.props;
+const parts = buildStoryParts(document, [3, 2]);
+const rail = CHAPTERS.map((chapter, index) => ({
+  ...chapter,
+  href: `#chapter-${index + 1}`,
+}));
+---
+
+<PostContent document={parts.intro} />
+
+<nav class="story-rail" aria-label="Chapters">
+  <ChapterRail chapters={rail} label="Chapters" />
+</nav>
+
+<section class="story-chapter" id="chapter-1">
+  <PostContent document={parts.chapters[0].before} />
+  <Figure
+    id="figure-tier-matrix"
+    label="figure 01 · intent tiers"
+    title="Pair the answers. See the call priority."
+    measured="Two lead-form questions, study timeframe and reason for enquiring through intent to enroll, were combined. Historical lead-to-application rates for each pairing set three intent tiers."
+    illustrative="The rates are illustrative. They use the published Tier 1 and Tier 3 rates, with Tier 2 shown as the range between them. The original pairing rates are not published."
+  >
+    <PairingMatrix
+      id="tier-matrix"
+      rows={MATRIX_ROWS}
+      cols={MATRIX_COLS}
+      buckets={MATRIX_BUCKETS}
+      cells={MATRIX_CELLS}
+      initial={[0, 0]}
+      caption="Illustrative tier assignments for study timeframe and readiness to enroll, asked as the reason for enquiring."
+      legendLabel="illustrative intent tier"
+    />
+  </Figure>
+  <PostContent document={parts.chapters[0].after} />
+</section>
+
+<section class="story-chapter" id="chapter-2">
+  <PostContent document={parts.chapters[1].before} />
+  <Figure
+    id="figure-call-effort"
+    label="figure 02 · call effort"
+    title="Switch from the original call policy to the new one."
+    measured="Tier 3's share of call effort fell from about 30% to less than 1%. Conversion held, and Tier 1 applied at eight times Tier 3's rate."
+    illustrative="The bar lengths use rounded proportions. The labels show the measured shares."
+  >
+    <ShareShift
+      id="call-effort"
+      measure="share of call effort"
+      switchLabel="call policy"
+      segments={EFFORT_SEGMENTS}
+      states={EFFORT_STATES}
+    />
+    <RatioPair
+      measure="30-day application rate by tier"
+      high={{ label: "Tier 1", value: "8x" }}
+      low={{ label: "Tier 3", value: "1x" }}
+      multiple={8}
+    />
+  </Figure>
+  <PostContent document={parts.chapters[1].after} />
+</section>
+
+<section class="story-closing">
+  <PostContent document={parts.closing} />
+</section>
+
+<style>
+  .story-rail { margin: var(--s-6) 0 0; }
+  .story-chapter { scroll-margin-top: var(--s-8); }
+</style>

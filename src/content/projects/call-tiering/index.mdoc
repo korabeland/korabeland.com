@@ -1,0 +1,64 @@
+---
+slug: call-tiering
+title: 'From Coverage to Intent-based Dialling'
+description: >-
+  When lead volume outgrew the team's capacity, I paired enquiry timeframe
+  and readiness to enroll with historical application data. The resulting
+  call order showed where effort could stop without losing conversions.
+category: work
+role: Designed intent tiers, led the call analysis
+team: Marketing, admissions, operations
+stack: SQL · CRM
+outcome: Tier 3 call effort · about 30% to less than 1%
+shippedAt: 2025-11-13
+statusLabel: Shipped
+tags:
+  - evidence
+  - operations
+  - analysis
+outcomeMetrics:
+  - value: about 30% → less than 1%
+    label: Share of call effort spent on Tier 3
+    provenance: >-
+      Rounded from the published before and after call effort measurements.
+      Calling stopped on 13 November 2025, with conversion held.
+  - value: 8x
+    label: Tier 1 application rate versus Tier 3
+    provenance: >-
+      30-day application rates by lead tier, measured on mature cohorts only,
+      across tens of thousands of leads and call attempts from CRM call and
+      outcome data, August 2025 to February 2026.
+  - value: 8% more leads, 16% fewer calls
+    label: Weekly volume after the change
+    provenance: >-
+      Weekly lead volume grew 8% while weekly call output fell 16% after the
+      change. A separate staffing shortfall absorbed the freed effort.
+fieldLog: []
+reflection: ''
+nextProject: lead-scoring
+---
+The calling operation was built for coverage. As lead volume grew, the team could no longer call everyone. The useful question became who to call first.
+
+## Two questions, three intent tiers
+
+The lead form asked when someone hoped to study and their reason for enquiring. That second question measured how ready they were to enroll, with answers like ready to enroll, gathering information, and just browsing.
+
+I paired the two answers and scored each pairing on its historical lead-to-application conversion rate. Those rates set three tiers, giving the team a clear call order. The matrix below shows the idea, not the original rate table.
+
+The tiers were a coarse first cut. They helped the team prioritise intent over recency, but did not yet show which calls were unnecessary.
+
+## One call order for every lead
+
+Every lead went into one sort order: tier first, then age, then whether the team had already tried to reach them. Tier 1 came first, newest leads first, with up to four calls over 14 days. Tier 2 got two calls over 7 days. Tier 3, about 30% of all leads, got one call on day 1.
+
+This made sure the best opportunities came first. It still spent time on the bottom tier, even though those leads were less likely to apply.
+
+## Stop calling the bottom tier
+
+My analysis found that Tier 1 leads applied at eight times Tier 3's rate. I recommended stopping Tier 3 calls completely. The change went live on 13 November 2025.
+
+Tier 1 converted at 6.7%, compared with 0.8% for Tier 3. After calls stopped, the share of call effort spent on Tier 3 fell from about 30% to less than 1%, with no revenue lost. Those leads kept applying on their own. Tier 1 reached an application rate of 8.2%, its highest on record for January to February 2026. No headcount was added.
+
+Weekly call output later fell 16% while lead volume grew 8%, because a staffing shortfall unrelated to the tiers absorbed the freed effort.
+
+That is where [lead scoring begins](/work/lead-scoring), with a score for each lead instead of three buckets.

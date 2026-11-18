@@ -7,7 +7,7 @@ import { ABOUT_ANCHORS, ABOUT_HIRING, aboutOperateText } from "../about";
 import type { ExperienceSummary } from "../experience";
 import { formatExperiencePeriod } from "../experience";
 import type { ProjectSummary } from "../projects";
-import { formatSpan, projectHref, projectStatus } from "../projects";
+import { formatSpan, projectHref, projectStatusLabel } from "../projects";
 import type { SkillsData } from "../skills";
 import { normalizeInline } from "./corpus";
 import type { TextBlock } from "./markdoc";
@@ -123,7 +123,7 @@ export function projectDocument({
   body,
 }: ProjectInput): CorpusDocument {
   const span = formatSpan(project.startedAt, project.shippedAt);
-  const status = projectStatus(project) === "shipped" ? "shipped" : "in flight";
+  const status = projectStatusLabel(project);
   const facts = [
     present(project.role) ? `Role: ${clean(project.role)}.` : "",
     present(project.team) ? `Team: ${clean(project.team)}.` : "",

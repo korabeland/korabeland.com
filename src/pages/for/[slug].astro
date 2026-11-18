@@ -10,7 +10,11 @@ import SectionHead from "../../components/SectionHead.astro";
 import SkillsSection from "../../components/SkillsSection/SkillsSection.astro";
 import StatusChip from "../../components/StatusChip/StatusChip.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import { projectHref, projectStatus } from "../../lib/projects";
+import {
+  projectHref,
+  projectStatus,
+  projectStatusLabel,
+} from "../../lib/projects";
 import { listTailoredSlugs, readTailored } from "../../lib/tailored";
 
 export const getStaticPaths: GetStaticPaths = async () => {
@@ -57,7 +61,12 @@ const intro = page.intro
                 <a class="tailored-link" href={projectHref(p)}>
                   <span class="tailored-name">{p.title}</span>
                   <span class="t-mono tailored-datum">{p.outcome}</span>
-                  <StatusChip status={projectStatus(p)} variant="chip" />
+                  <StatusChip
+                    status={projectStatus(p)}
+                    variant="chip"
+                    label={projectStatusLabel(p)}
+                    wrapLabel
+                  />
                 </a>
               </li>
             ))}

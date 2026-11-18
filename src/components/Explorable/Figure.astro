@@ -1,0 +1,167 @@
+---
+// Explorable/Figure.astro: the shared frame for every explorable figure.
+// A mono eyebrow, the question the figure answers, the figure body (slot),
+// and a foot that separates what was measured from what is illustrative.
+//
+// The visual rule this frame sets for the site: solid marks are measured,
+// hatched or dashed marks are illustrative. A figure that draws any shape
+// not backed by a published number passes `illustrative`, which adds the
+// visible "Illustrative" chip and the foot note saying exactly what is drawn
+// rather than measured.
+//
+// Zero client JS. See docs/design/components.md (Explorable).
+
+interface Props {
+  /** Unique id; also the anchor target. */
+  id: string;
+  /** Mono eyebrow, e.g. "figure 01 · tiers". Keep it short enough to share
+   *  a phone-width line with the Illustrative chip. */
+  label: string;
+  /** The question or instruction the figure answers, in sentence case. */
+  title: string;
+  /** What in this figure is measured, with the numbers named. */
+  measured?: string;
+  /** What in this figure is illustrative. Presence adds the visible chip. */
+  illustrative?: string;
+}
+
+const { id, label, title, measured, illustrative } = Astro.props;
+---
+
+<figure class="xf" id={id} data-explorable>
+  <figcaption class="xf-head">
+    <span class="xf-meta">
+      <span class="t-label">{label}</span>
+      {illustrative && <span class="xf-chip">Illustrative</span>}
+    </span>
+    <span class="xf-title">{title}</span>
+  </figcaption>
+
+  <div class="xf-body">
+    <slot />
+  </div>
+
+  {
+    (measured || illustrative) && (
+      <dl class="xf-foot">
+        {measured && (
+          <div class="xf-foot-row">
+            <dt class="xf-key">Measured</dt>
+            <dd>{measured}</dd>
+          </div>
+        )}
+        {illustrative && (
+          <div class="xf-foot-row">
+            <dt class="xf-key xf-key-illustrative">Illustrative</dt>
+            <dd>{illustrative}</dd>
+          </div>
+        )}
+      </dl>
+    )
+  }
+</figure>
+
+<style>
+  .xf {
+    margin: var(--s-6) 0 var(--s-7);
+    border: 1px solid var(--rule);
+    border-top-color: var(--ink);
+    background: var(--paper);
+    scroll-margin-top: var(--s-8);
+  }
+
+  .xf-head {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-3);
+    padding: var(--s-4) var(--s-5) 0;
+  }
+
+  .xf-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-3);
+    min-height: 22px;
+  }
+
+  .xf-chip {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    padding: 5px var(--s-2);
+    border: 1px dashed var(--ink-mute);
+    white-space: nowrap;
+  }
+
+  .xf-title {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 18px;
+    line-height: 1.35;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    max-width: 44ch;
+  }
+
+  .xf-body {
+    padding: var(--s-5);
+  }
+
+  .xf-foot {
+    margin: 0;
+    padding: var(--s-4) var(--s-5);
+    border-top: 1px solid var(--rule);
+    background: var(--paper-2);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-2);
+  }
+
+  .xf-foot-row {
+    display: grid;
+    grid-template-columns: 96px minmax(0, 1fr);
+    gap: var(--s-3);
+    align-items: baseline;
+  }
+
+  .xf-key {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink);
+  }
+
+  .xf-key-illustrative {
+    color: var(--ink-soft);
+  }
+
+  .xf-foot dd {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--ink-soft);
+  }
+
+  @media (max-width: 680px) {
+    .xf-head {
+      padding: var(--s-4) var(--s-4) 0;
+    }
+    .xf-body {
+      padding: var(--s-4);
+    }
+    .xf-foot {
+      padding: var(--s-4);
+    }
+    .xf-foot-row {
+      grid-template-columns: 1fr;
+      gap: var(--s-1);
+    }
+  }
+</style>

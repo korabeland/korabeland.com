@@ -18,6 +18,7 @@ const workProjectRoutes = allProjectRoutes.filter((p) =>
 const labProjectRoutes = allProjectRoutes.filter((p) => p.startsWith("/lab/"));
 const allPostRoutes = postRoutesSync().map((entry) => entry.path);
 const SPOT_CHECKED_PROJECT_ROUTES = new Set([
+  "/work/call-tiering",
   "/work/lead-scoring",
   "/work/ai-sms-pilot",
 ]);
@@ -51,6 +52,26 @@ test("/ renders the operator's console home", async ({ page }) => {
   await expect(
     page.locator('section[aria-labelledby="ledger-heading"] .ledger-row'),
   ).toHaveCount(3);
+  const homeRows = page.locator(
+    'section[aria-labelledby="ledger-heading"] .ledger-row',
+  );
+  await expect(homeRows.nth(0).locator("a")).toHaveAttribute(
+    "href",
+    "/work/call-tiering",
+  );
+  await expect(homeRows.nth(1).locator("a")).toHaveAttribute(
+    "href",
+    "/work/lead-scoring",
+  );
+  await expect(homeRows.nth(2).locator("a")).toHaveAttribute(
+    "href",
+    "/work/ai-sms-pilot",
+  );
+  await expect(homeRows.nth(1).locator(".statuschip")).toHaveText(
+    "Designed and handed over, August 2026",
+  );
+  await expect(homeRows.nth(0).locator(".statuschip")).toHaveText("Shipped");
+  await expect(homeRows.nth(2).locator(".statuschip")).toHaveText("Shipped");
   await expect(page.locator('a.section-more[href="/work"]')).toBeVisible();
   // Lab band: a separate section, one row per side project, its own more-link
   // to /lab — never interleaved with the work ledger.
@@ -85,7 +106,13 @@ test("/work renders the case-study index", async ({ page }) => {
     "work · case studies",
   );
   await expect(page.locator('a[href="/work/lead-scoring"]')).toBeVisible();
+  await expect(
+    page.locator('.ledger a[href="/work/call-tiering"]'),
+  ).toBeVisible();
   await expect(page.locator('a[href="/work/ai-sms-pilot"]')).toBeVisible();
+  await expect(
+    page.locator('.ledger a[href="/work/chat-capture-gap"] .statuschip'),
+  ).toHaveText("Handed over");
   // /work stays the FULL work index — every published case study gets a row
   // (home curates to three; this page must not). Work category only: side
   // projects live at /lab and never appear here.
@@ -158,12 +185,33 @@ test("/lab/relocation-playbook renders the five inline diagrams without overflow
   ).toBeVisible();
 });
 
-// /work/lead-scoring — case-study detail renders title, fact strip, and body.
+// Both linked case studies render their exact title and status.
+test("/work/call-tiering renders the Call Tiering case study", async ({
+  page,
+}) => {
+  const response = await page.goto("/work/call-tiering");
+  expect(response?.status()).toBe(200);
+  await expect(page.locator("h1.head-title")).toHaveText(
+    "From Coverage to Intent-based Dialling",
+  );
+  await expect(page.locator(".series-line")).toHaveText(
+    "Call Tiering and Lead Scoring",
+  );
+  await expect(page.locator(".head-meta .statuschip")).toHaveText("Shipped");
+});
+
 test("/work/lead-scoring renders the case study detail", async ({ page }) => {
   const response = await page.goto("/work/lead-scoring");
   expect(response?.status()).toBe(200);
-  await expect(page.locator("h1.head-title")).toContainText("Lead scoring");
-  await expect(page.locator(".statuschip")).toBeVisible();
+  await expect(page.locator("h1.head-title")).toHaveText(
+    "Precision Dialling via Predictive Modelling",
+  );
+  await expect(page.locator(".series-line")).toHaveText(
+    "Call Tiering and Lead Scoring",
+  );
+  await expect(page.locator(".head-meta .statuschip")).toHaveText(
+    "Designed and handed over, August 2026",
+  );
 });
 
 // /work/ai-sms-pilot — second case study, same layout.
@@ -278,6 +326,19 @@ const MOVED_TO_LAB = [
   { from: "/work/perian", to: "/lab/perian" },
   { from: "/work/personal-os", to: "/lab/personal-os" },
 ] as const;
+
+const REPLACED_CASE_STUDY_ROUTES = [
+  { from: "/work/intent-tiers", to: "/work/call-tiering" },
+  { from: "/work/call-tier-discipline", to: "/work/call-tiering" },
+] as const;
+
+for (const { from, to } of REPLACED_CASE_STUDY_ROUTES) {
+  test(`${from} permanently redirects to ${to}`, async ({ request }) => {
+    const response = await request.get(from, { maxRedirects: 0 });
+    expect(response.status()).toBe(301);
+    expect(response.headers().location).toBe(to);
+  });
+}
 
 for (const { from, to } of MOVED_TO_LAB) {
   test(`${from} redirects to ${to}`, async ({ page }) => {
@@ -406,11 +467,21 @@ test("/dev/skills-preview renders categories and certifications", async ({
 test("/for/demo renders the tailored page with its case-study exits", async ({
   page,
 }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
   const response = await page.goto("/for/demo");
   expect(response?.status()).toBe(200);
   await expect(page.locator(".tailored-eyebrow")).toContainText("Demo Company");
   await expect(page.locator('a[href="/work/lead-scoring"]')).toBeVisible();
   await expect(page.locator('a[href="/work/ai-sms-pilot"]')).toBeVisible();
+  await expect(
+    page.locator('a[href="/work/lead-scoring"] .statuschip'),
+  ).toHaveText("Designed and handed over, August 2026");
+  await expect(
+    page.locator('a[href="/work/ai-sms-pilot"] .statuschip'),
+  ).toHaveText("Shipped");
+  await expect(
+    page.locator('a[href="/work/lead-scoring"] .statuschip'),
+  ).toHaveClass(/statuschip--wrapped/);
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
     "content",
     /noindex/,

@@ -11,7 +11,6 @@ Statuses used after triage: `backlog` -> `next` | `parked` | `dropped`.
 | Item | Source | Next step | Status |
 |---|---|---|---|
 | Watchtower site-maintenance agent team (4 Haiku watchers + 1 fixer on GitHub Actions). Plan is `status: active` and nothing is implemented | `Personal_Brand/docs/plans/korabeland.com/2026-07-09-001-feat-watchtower-agent-team-plan.md` + `2026-07-09-site-agent-team-requirements.md` (preserved in the parent repo) | Decide whether to build phase 1 (marketing watcher) | backlog |
-| Explorable case study (interactive decision-tree walkthrough) | `Personal_Brand/docs/plans/korabeland-future-features.md` | Korab: pick the featured project (Open Question 1) | backlog |
 | Generative visual (ambient hero from live GitHub activity) | same doc | Korab: settle scope/ambition (Open Question 2) | backlog |
 | Top-3 business plans doc (drives the case-study cadence below) | `Personal_Brand/docs/plans/2026-07-07-top3-business-plans.md` | Korab: sign off positioning and voice | backlog |
 

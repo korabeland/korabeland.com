@@ -1,0 +1,57 @@
+---
+// Lead Scoring case study. Its single shared Explorable figure presents the
+// decile cutoff as a design method, not as a measured model result.
+
+import CutoffDial from "../Explorable/CutoffDial.astro";
+import Figure from "../Explorable/Figure.astro";
+import { PostContent } from "../PostContent";
+import { DECILE_HEIGHTS, DECILE_NOTES, decileReadout } from "./data";
+import { buildStoryParts } from "./segments";
+
+interface Props {
+  document: unknown;
+}
+
+const { document } = Astro.props;
+const parts = buildStoryParts(document, [5]);
+---
+
+<PostContent document={parts.intro} />
+
+<section class="story-chapter" id="cutoff-method">
+  <PostContent document={parts.chapters[0].before} />
+  <Figure
+    id="figure-cutoff"
+    label="figure 01 · stopping rule"
+    title="Move the cutoff one decile at a time."
+    measured="About 600k leads were assembled with point-in-time features. The model was designed around an interpretable, cost-based stopping rule."
+    illustrative="The bar heights and the cutoff position show the method only. They are not model scores, conversion rates, or a measured safe cut."
+  >
+    <CutoffDial
+      id="decile-cutoff"
+      heights={DECILE_HEIGHTS}
+      illustrative
+      coarseCutPercent={30}
+      coarse={{ keep: "Tier 1 and Tier 2", cut: "Tier 3" }}
+      initialKept={10}
+      controlLabel="Cutoff: how many of the ten deciles remain in the call queue"
+      axis={{ best: "Higher score", worst: "Lower score" }}
+      readout={decileReadout}
+      notes={DECILE_NOTES}
+      legend={{
+        kept: "Still called",
+        band: "Cutoff being explored",
+        cut: "Below the cutoff",
+      }}
+    />
+  </Figure>
+  <PostContent document={parts.chapters[0].after} />
+</section>
+
+<section class="story-closing">
+  <PostContent document={parts.closing} />
+</section>
+
+<style>
+  .story-chapter { scroll-margin-top: var(--s-8); }
+</style>

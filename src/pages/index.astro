@@ -13,7 +13,12 @@ import ShiftLog from "../components/ShiftLog/ShiftLog.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { serializeJsonLd } from "../lib/json-ld";
 import { formatNoteMonth, listPosts } from "../lib/posts";
-import { listProjects, projectHref, projectStatus } from "../lib/projects";
+import {
+  listProjects,
+  projectHref,
+  projectStatus,
+  projectStatusLabel,
+} from "../lib/projects";
 import type { ContributionData } from "../lib/shift-log";
 import { STATUS } from "../lib/status";
 
@@ -22,15 +27,21 @@ const PORTRAIT_SIZES = "(max-width: 680px) 240px, 340px";
 const projects = await listProjects();
 // Work case studies and personal AI systems render as separate bands and
 // never interleave (the site's hard work/lab split). Home features the top
-// three case studies (ship-date order from the reader); the full set lives
+// three lead case studies in the specified order; the full set lives
 // at /work via the ledger's more-link, the lab set at /lab.
-const workProjects = projects.filter((p) => p.category === "work");
+const allWorkProjects = projects.filter((p) => p.category === "work");
+const homePriority = ["call-tiering", "lead-scoring", "ai-sms-pilot"];
+const workProjects = homePriority.flatMap((slug) => {
+  const project = allWorkProjects.find((p) => p.slug === slug);
+  return project ? [project] : [];
+});
 const labProjects = projects.filter((p) => p.category === "side");
-const ledgerItems = workProjects.slice(0, 3).map((p) => ({
+const ledgerItems = workProjects.map((p) => ({
   slug: p.slug,
   title: p.title,
   outcome: p.outcome,
   status: projectStatus(p),
+  statusLabel: projectStatusLabel(p),
   href: projectHref(p),
 }));
 const labItems = labProjects.map((p) => ({

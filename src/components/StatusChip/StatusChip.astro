@@ -18,10 +18,18 @@ interface Props {
   /** Override the default label. Required in practice for the availability
    *  lines, whose copy differs from the canonical status word. */
   label?: string;
+  /** Allow long editorial labels to wrap within narrow ledger layouts. */
+  wrapLabel?: boolean;
   class?: string;
 }
 
-const { status, variant = "chip", label, class: className } = Astro.props;
+const {
+  status,
+  variant = "chip",
+  label,
+  wrapLabel = false,
+  class: className,
+} = Astro.props;
 
 const TONE: Record<Status, "signal" | "moss"> = {
   "in-flight": "signal",
@@ -45,7 +53,7 @@ const text = label ?? DEFAULT_LABEL[status];
       {text}
     </span>
   ) : (
-    <span class:list={["statuschip statuschip--chip", `statuschip--${tone}`, className]}>
+    <span class:list={["statuschip statuschip--chip", `statuschip--${tone}`, wrapLabel && "statuschip--wrapped", className]}>
       {text}
     </span>
   )
@@ -95,5 +103,13 @@ const text = label ?? DEFAULT_LABEL[status];
     border: 1px solid var(--chip-tone);
     color: var(--chip-tone);
     white-space: nowrap;
+  }
+
+  .statuschip--wrapped {
+    max-width: 168px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-align: center;
+    line-height: 1.3;
   }
 </style>
