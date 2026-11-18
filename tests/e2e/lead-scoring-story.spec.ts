@@ -259,7 +259,9 @@ test("rendered flagship copy keeps supported numbers and clean punctuation", asy
   }
 });
 
-test("the chapter rail links to each Call Tiering chapter", async ({ page }) => {
+test("the chapter rail links to each Call Tiering chapter", async ({
+  page,
+}) => {
   await page.goto(CALL);
   const rail = page.getByRole("navigation", { name: "Chapters" });
   const links = rail.getByRole("link");

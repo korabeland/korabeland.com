@@ -694,7 +694,7 @@ the source, not the call site.
 ## Coverage & gaps
 
 17 component files (12 top-level + 5 sub-components) + shell documented, plus
-the `Explorable` set (six files) and `LeadScoringStory`, added 2026-11-13.
+the `Explorable` set (six files) and `LeadScoringStory`, added 2026-11-18.
 
 **Resolved:** the duplicate status chip in `CaseStudy/index.astro` was folded
 into `StatusChip` (styling was already byte-identical); the dead
