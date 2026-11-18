@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="250" viewBox="0 0 1200 250" role="img" aria-labelledby="title desc">
+  <title id="title">Evaluation run flow</title>
+  <desc id="desc">A task set enters a fresh isolated workspace, then an agent setup and model send traffic through a recorder. A checker reviews the result and saves it.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L10,5 L0,10 z" fill="#929bab" />
+    </marker>
+    <style>
+      .box { fill: #20242b; stroke: #454c58; stroke-width: 2; }
+      .label { fill: #ecebe1; font: 600 17px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; text-anchor: middle; }
+      .arrow { stroke: #929bab; stroke-width: 2.5; marker-end: url(#arrow); }
+    </style>
+  </defs>
+  <rect class="box" x="20" y="86" width="145" height="78" rx="14" />
+  <text class="label" x="92" y="131">Task set</text>
+
+  <rect class="box" x="210" y="86" width="170" height="78" rx="14" />
+  <text class="label" x="295" y="119"><tspan x="295">Fresh isolated</tspan><tspan x="295" dy="22">workspace</tspan></text>
+
+  <rect class="box" x="425" y="86" width="175" height="78" rx="14" />
+  <text class="label" x="512" y="119"><tspan x="512">Agent setup</tspan><tspan x="512" dy="22">+ model</tspan></text>
+
+  <rect class="box" x="645" y="86" width="155" height="78" rx="14" />
+  <text class="label" x="722" y="119"><tspan x="722">Traffic</tspan><tspan x="722" dy="22">recorder</tspan></text>
+
+  <rect class="box" x="845" y="86" width="140" height="78" rx="14" />
+  <text class="label" x="915" y="131">Checker</text>
+
+  <rect class="box" x="1030" y="86" width="150" height="78" rx="14" />
+  <text class="label" x="1105" y="119"><tspan x="1105">Saved</tspan><tspan x="1105" dy="22">result</tspan></text>
+
+  <path class="arrow" d="M165 125 H202" />
+  <path class="arrow" d="M380 125 H417" />
+  <path class="arrow" d="M600 125 H637" />
+  <path class="arrow" d="M800 125 H837" />
+  <path class="arrow" d="M985 125 H1022" />
+</svg>

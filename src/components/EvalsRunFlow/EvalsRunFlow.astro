@@ -1,0 +1,74 @@
+<figure class="run-flow" aria-labelledby="run-flow-caption">
+  <div class="diagram-frame" role="group" aria-label="Evaluation run flow diagram">
+    <img
+      class="diagram-day"
+      src="/lab/evals/run-flow.svg"
+      alt="A task set enters a fresh isolated workspace, then an agent setup and model send traffic through a recorder. A checker reviews the result and saves it."
+      width="1200"
+      height="250"
+      loading="eager"
+      decoding="async"
+    />
+    <img
+      class="diagram-night"
+      src="/lab/evals/run-flow-dark.svg"
+      alt="A task set enters a fresh isolated workspace, then an agent setup and model send traffic through a recorder. A checker reviews the result and saves it."
+      width="1200"
+      height="250"
+      loading="eager"
+      decoding="async"
+    />
+  </div>
+  <figcaption id="run-flow-caption">
+    One run moves from a task to a saved result. Diagram source: the supplied
+    <code>run-flow.svg</code>, recoloured for the site’s day and night shifts.
+    Scroll horizontally to follow each step.
+  </figcaption>
+</figure>
+
+<style>
+  .run-flow {
+    width: min(var(--w-shell), calc(100vw - 2 * var(--s-4)));
+    margin: var(--s-5) 0 var(--s-6) calc((100% - min(var(--w-shell), calc(100vw - 2 * var(--s-4)))) / 2);
+  }
+
+  .diagram-frame {
+    overflow-x: auto;
+    border-block: 1px solid var(--rule);
+    background: var(--paper);
+    scrollbar-color: var(--rule) var(--paper);
+  }
+
+  .diagram-frame :global(img) {
+    display: block;
+    width: 100%;
+    min-width: 760px;
+    height: auto;
+  }
+
+  .diagram-frame :global(.diagram-day) {
+    display: none;
+  }
+
+  :global(html[data-time="day"]) .diagram-frame :global(.diagram-night) {
+    display: none;
+  }
+
+  :global(html[data-time="day"]) .diagram-frame :global(.diagram-day) {
+    display: block;
+  }
+
+  figcaption {
+    margin-top: var(--s-2);
+    color: var(--ink-soft);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  @media (max-width: 680px) {
+    .run-flow {
+      width: calc(100vw - 2 * var(--s-4));
+      margin-left: calc((100% - (100vw - 2 * var(--s-4))) / 2);
+    }
+  }
+</style>

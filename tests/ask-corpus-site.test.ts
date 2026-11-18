@@ -19,8 +19,16 @@ describe("live site corpus", () => {
       const facts = passages.find(
         (p) => p.id === `project:${project.slug}#facts:00`,
       );
-      expect(facts?.text).toContain(`Role: ${project.role}.`);
-      expect(facts?.text).toContain(`Team: ${project.team}.`);
+      if (project.role) {
+        expect(facts?.text).toContain(`Role: ${project.role}.`);
+      } else {
+        expect(facts?.text).not.toContain("Role: .");
+      }
+      if (project.team) {
+        expect(facts?.text).toContain(`Team: ${project.team}.`);
+      } else {
+        expect(facts?.text).not.toContain("Team: .");
+      }
       const ledgerRoute = project.category === "side" ? "/lab" : "/work";
       expect(
         passages.some(
@@ -43,6 +51,28 @@ describe("live site corpus", () => {
     expect(text).toContain("Bachelor of Science in Journalism");
     expect(text).toContain(`Based in ${STATUS.base}. ${STATUS.citizenship}.`);
     expect(text).toContain("Decision-Making with ChatGPT");
+  });
+
+  it("indexes the evals scorecard and each published defect", async () => {
+    const { passages } = await buildSiteCorpus();
+    const evalsPassages = passages.filter(
+      (passage) => passage.route === "/lab/evals",
+    );
+    const evalsText = evalsPassages.map((passage) => passage.text).join("\n");
+    const evalsHeadings = evalsPassages.map((passage) => passage.sectionTitle);
+
+    expect(evalsText).toContain("qwen3.8:27b-dflash2-nvfp4-64k");
+    expect(evalsText).toContain("259 attempts, 76% pass rate");
+    expect(evalsText).toContain("qwen3.8:27b-mlx-64k");
+    expect(evalsText).toContain("180 attempts, 78% pass rate");
+    expect(evalsText).toContain("qwen3.6-35b-a3b");
+    expect(evalsText).toContain("255 attempts, 53% pass rate");
+    expect(evalsHeadings).toContain("A model reply limit was dropped");
+    expect(evalsText).toContain("ignored the configured reply limit");
+    expect(evalsHeadings).toContain("An agent wrote outside its workspace");
+    expect(evalsText).toContain("macOS write confinement");
+    expect(evalsHeadings).toContain("A timed-out request could be retried");
+    expect(evalsText).toContain("refuses replacement requests for that run");
   });
 
   it("never indexes llms.txt or any other machine-facing llms file", async () => {

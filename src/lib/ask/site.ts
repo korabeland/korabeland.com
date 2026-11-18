@@ -4,6 +4,7 @@
 // logic it feeds is in sources.ts and corpus.ts.
 
 import { ABOUT_NARRATIVE } from "../about";
+import { evalsEvidenceBlocks } from "../evals-evidence";
 import { listExperience } from "../experience";
 import { formatNoteDate, listPosts, readPost } from "../posts";
 import { listProjects, projectHref, readProject } from "../projects";
@@ -80,7 +81,10 @@ export async function buildSiteCorpus(): Promise<CorpusArtifact> {
       throw new Error(`ask corpus: project "${project.slug}" has no entry`);
     const doc = projectDocument({
       project,
-      body: blocksFromMarkdoc(await entry.content()),
+      body: [
+        ...blocksFromMarkdoc(await entry.content()),
+        ...(project.slug === "evals" ? evalsEvidenceBlocks() : []),
+      ],
     });
     routes.add(doc.route);
     anchors.set(
