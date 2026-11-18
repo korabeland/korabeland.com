@@ -467,6 +467,7 @@ test("/dev/skills-preview renders categories and certifications", async ({
 test("/for/demo renders the tailored page with its case-study exits", async ({
   page,
 }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
   const response = await page.goto("/for/demo");
   expect(response?.status()).toBe(200);
   await expect(page.locator(".tailored-eyebrow")).toContainText("Demo Company");
@@ -478,6 +479,9 @@ test("/for/demo renders the tailored page with its case-study exits", async ({
   await expect(
     page.locator('a[href="/work/ai-sms-pilot"] .statuschip'),
   ).toHaveText("Shipped");
+  await expect(
+    page.locator('a[href="/work/lead-scoring"] .statuschip'),
+  ).toHaveClass(/statuschip--wrapped/);
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
     "content",
     /noindex/,
