@@ -16,8 +16,8 @@ export interface ShareSegment {
 export interface ShareState {
   /** Short name on the switch, e.g. "Before". */
   label: string;
-  /** One line under the name, e.g. "Every tier called". */
-  detail: string;
+  /** Optional context line under the name, e.g. "Every tier called". */
+  detail?: string;
   /** Share per segment key, in percent. One segment may be "rest". */
   shares: Record<string, ShareValue>;
   /** Value text per segment key, as it should be printed. */

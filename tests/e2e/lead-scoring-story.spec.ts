@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 import { ORIGIN } from "../helpers/port";
 
 const CALL = "/work/call-tiering";
@@ -9,8 +9,24 @@ const VIEWPORTS = [
 ] as const;
 const SHIFTS = ["night", "day"] as const;
 const SOURCE_NUMBER_TOKENS = new Set([
-  "0.8", "1", "2", "3", "6", "6.7", "7", "8", "8.2", "10", "13", "14",
-  "16", "30", "290", "600", "2025", "2026",
+  "0.8",
+  "1",
+  "2",
+  "3",
+  "6",
+  "6.7",
+  "7",
+  "8",
+  "8.2",
+  "10",
+  "13",
+  "14",
+  "16",
+  "30",
+  "290",
+  "600",
+  "2025",
+  "2026",
 ]);
 
 const shiftState = (shift: (typeof SHIFTS)[number]) => ({
@@ -33,20 +49,20 @@ async function expectRenderedCopy(page: Page, expectedKept?: number) {
       Array.from(document.querySelectorAll(selector)),
     );
     const copyParts = roots.map((root) => {
-        const clone = root.cloneNode(true) as HTMLElement;
-        clone
-          .querySelectorAll(".next-row, .xf-meta, .cr-n")
-          .forEach((el) => el.remove());
-        if (clone.matches(".metric-details")) {
-          clone.querySelector(".sr-only")?.remove();
-        }
-        const numberCopy = clone.cloneNode(true) as HTMLElement;
-        numberCopy.querySelector(".cd-read-main")?.remove();
-        return {
-          text: clone.textContent ?? "",
-          numbers: numberCopy.textContent ?? "",
-        };
+      const clone = root.cloneNode(true) as HTMLElement;
+      clone.querySelectorAll(".next-row, .xf-meta, .cr-n").forEach((el) => {
+        el.remove();
       });
+      if (clone.matches(".metric-details")) {
+        clone.querySelector(".sr-only")?.remove();
+      }
+      const numberCopy = clone.cloneNode(true) as HTMLElement;
+      numberCopy.querySelector(".cd-read-main")?.remove();
+      return {
+        text: clone.textContent ?? "",
+        numbers: numberCopy.textContent ?? "",
+      };
+    });
     return {
       text: copyParts.map((part) => part.text).join(" "),
       numbers: copyParts.map((part) => part.numbers).join(" "),
@@ -175,9 +191,13 @@ test("the matrix sorts a lead by both answers with keyboard controls", async ({
   const rowChoices = figure.locator('[data-pm-axis="row"] input');
   const columnChoices = figure.locator('[data-pm-axis="col"] input');
   for (let row = 0; row < 4; row += 1) {
-    await rowChoices.nth(row).check();
+    await figure.locator('[data-pm-axis="row"] input:checked').focus();
+    await page.keyboard.press("ArrowDown");
+    await expect(rowChoices.nth(row)).toBeChecked();
     for (let column = 0; column < 3; column += 1) {
-      await columnChoices.nth(column).check();
+      await figure.locator('[data-pm-axis="col"] input:checked').focus();
+      await page.keyboard.press("ArrowDown");
+      await expect(columnChoices.nth(column)).toBeChecked();
       await expectRenderedCopy(page);
     }
   }
@@ -220,7 +240,9 @@ test("rendered flagship copy keeps supported numbers and clean punctuation", asy
   );
   const leadCopy = page.locator(".prose");
   await expect(leadCopy).toContainText("six stakeholders");
-  await expect(leadCopy).toContainText("senior leaders, who endorsed the model");
+  await expect(leadCopy).toContainText(
+    "senior leaders, who endorsed the model",
+  );
   await expect(leadCopy).toContainText("about 600k leads");
   await expect(leadCopy).toContainText("point-in-time features");
   await expect(leadCopy).toContainText("290 call attempts per application");

@@ -59,7 +59,7 @@ const segmentStyle = (segmentIndex: number) =>
               aria-describedby={`${id}-verdict-${i}`}
             />
             <span class="ss-state-label">{state.label}</span>
-            <span class="ss-state-detail">{state.detail}</span>
+            {state.detail && <span class="ss-state-detail">{state.detail}</span>}
           </label>
         ))
       }

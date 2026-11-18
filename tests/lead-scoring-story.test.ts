@@ -55,7 +55,10 @@ describe("the linked case studies use the approved figures", () => {
       ]),
     );
     expect(
-      project.outcomeMetrics.map(({ label, provenance }) => [label, provenance]),
+      project.outcomeMetrics.map(({ label, provenance }) => [
+        label,
+        provenance,
+      ]),
     ).toEqual([
       [
         "Share of call effort spent on Tier 3",
@@ -91,7 +94,9 @@ describe("the linked case studies use the approved figures", () => {
         }),
         expect.objectContaining({
           value: "6 stakeholders",
-          provenance: expect.stringContaining("Senior leaders endorsed the model"),
+          provenance: expect.stringContaining(
+            "Senior leaders endorsed the model",
+          ),
         }),
       ]),
     );
@@ -104,7 +109,6 @@ describe("the linked case studies use the approved figures", () => {
     expect(call?.shippedAt).toBe("2025-11-13");
     expect(lead?.statusLabel).toBe("Designed and handed over, August 2026");
   });
-
 });
 
 describe("buildStoryParts: figure placements remain attached to the copy", () => {
