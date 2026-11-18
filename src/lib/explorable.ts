@@ -70,6 +70,8 @@ export interface MatrixBucket {
   short: string;
   /** What happens to a lead in this bucket, e.g. "Call first". */
   action: string;
+  /** Optional illustrative rate shown wherever this bucket appears. */
+  illustrativeRate?: string;
 }
 
 /**

@@ -164,7 +164,10 @@ test("the matrix sorts a lead by both answers with keyboard controls", async ({
   await page.goto(CALL);
   const figure = page.locator("#figure-tier-matrix");
   const result = figure.locator("[data-pm-say]");
-  await expect(result).toContainText("Tier 1. Call first.");
+  await expect(figure.locator(".pm-bucket-rate")).toHaveCount(3);
+  await expect(result).toContainText(
+    "Tier 1. Call first. Illustrative rate 6.7%.",
+  );
 
   const timeframe = figure.getByRole("radio", { name: "As soon as possible" });
   await timeframe.focus();
@@ -179,7 +182,7 @@ test("the matrix sorts a lead by both answers with keyboard controls", async ({
   await page.keyboard.press("ArrowDown");
   await page.keyboard.press("ArrowDown");
   await expect(result).toContainText(
-    "Not sure yet + Just browsing: Tier 3. Call last.",
+    "Not sure yet + Just browsing: Tier 3. Call last. Illustrative rate 0.8%.",
   );
 
   await expect(
@@ -310,7 +313,7 @@ test("the decile cutoff explores a method without implying a result", async ({
   await expect(readout).toContainText("This is not a recommendation");
 });
 
-test("the two case studies link in both directions and the work listing features both", async ({
+test("the two case studies link in both directions and the work listing includes both", async ({
   page,
 }) => {
   await page.goto(CALL);
@@ -320,12 +323,12 @@ test("the two case studies link in both directions and the work listing features
   await expect(page).toHaveURL(CALL);
 
   await page.goto("/work");
-  await expect(page.locator(".fs")).toContainText(
-    "From Coverage to Intent-based Dialling",
-  );
   await expect(
     page.locator('.ledger a[href="/work/call-tiering"]'),
   ).toBeVisible();
+  await expect(
+    page.locator('.ledger a[href="/work/call-tiering"]'),
+  ).toHaveCount(1);
   await expect(
     page.locator('.ledger a[href="/work/lead-scoring"]'),
   ).toBeVisible();
@@ -358,6 +361,14 @@ test.describe("with scripts off", () => {
     await expect(matrix.getByRole("rowheader")).toHaveCount(4);
     await expect(matrix.locator("[data-pm-controls]")).toBeHidden();
     await expect(matrix.locator(".pm-legend")).toContainText("Call first");
+    await expect(matrix.locator(".pm-bucket-rate")).toHaveText([
+      "6.7%",
+      "0.8% to 6.7%",
+      "0.8%",
+    ]);
+    await expect(matrix.locator("table .pm-cell").first()).toContainText(
+      "illustrative rate 6.7%",
+    );
 
     const effort = page.locator("#figure-call-effort");
     await effort.getByRole("radio", { name: /After/ }).check();

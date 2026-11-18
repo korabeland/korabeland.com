@@ -25,9 +25,24 @@ export const MATRIX_COLS: MatrixQuestion = {
 };
 
 export const MATRIX_BUCKETS: MatrixBucket[] = [
-  { label: "Tier 1", short: "T1", action: "Call first" },
-  { label: "Tier 2", short: "T2", action: "Call next" },
-  { label: "Tier 3", short: "T3", action: "Call last" },
+  {
+    label: "Tier 1",
+    short: "T1",
+    action: "Call first",
+    illustrativeRate: "6.7%",
+  },
+  {
+    label: "Tier 2",
+    short: "T2",
+    action: "Call next",
+    illustrativeRate: "0.8% to 6.7%",
+  },
+  {
+    label: "Tier 3",
+    short: "T3",
+    action: "Call last",
+    illustrativeRate: "0.8%",
+  },
 ];
 
 // Pair-to-tier assignments are illustrative. The source pages publish the

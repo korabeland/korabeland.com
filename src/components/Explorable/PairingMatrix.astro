@@ -126,6 +126,8 @@ const level = (index: number) =>
                     </span>
                     <span class="sr-only">
                       {buckets[b].label}: {buckets[b].action}
+                      {buckets[b].illustrativeRate &&
+                        `, illustrative rate ${buckets[b].illustrativeRate}`}
                     </span>
                   </td>
                 );
@@ -147,6 +149,9 @@ const level = (index: number) =>
               </span>
               <span class="pm-bucket-label">{bucket.label}</span>
               <span class="pm-bucket-action">{bucket.action}</span>
+              {bucket.illustrativeRate && (
+                <span class="pm-bucket-rate">{bucket.illustrativeRate}</span>
+              )}
             </li>
           ))
         }
@@ -211,10 +216,11 @@ const level = (index: number) =>
       const label = legend?.querySelector(".pm-bucket-label")?.textContent ?? "";
       const action =
         legend?.querySelector(".pm-bucket-action")?.textContent ?? "";
+      const rate = legend?.querySelector(".pm-bucket-rate")?.textContent;
       const rowText = rowInput.nextElementSibling?.textContent ?? "";
       const colText = colInput.nextElementSibling?.textContent ?? "";
       sayPair.textContent = `${rowText} + ${colText}: `;
-      sayBucket.textContent = `${label}. ${action}.`;
+      sayBucket.textContent = `${label}. ${action}.${rate ? ` Illustrative rate ${rate}.` : ""}`;
     };
 
     controls.addEventListener("change", update);
@@ -459,6 +465,14 @@ const level = (index: number) =>
     font-size: 11px;
     letter-spacing: 0.04em;
     text-transform: uppercase;
+  }
+
+  .pm-bucket-rate {
+    grid-column: 2 / -1;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-mute);
   }
 
   .pm-bucket[data-on] {
