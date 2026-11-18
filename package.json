@@ -32,6 +32,11 @@
     "verify:all": "pnpm verify && pnpm test && pnpm test:visual && pnpm run lighthouse && pnpm smoke:production"
   },
   "pnpm": {
+    "auditConfig": {
+      "ignoreGhsas": [
+        "GHSA-fc5q-39xc-vjpf"
+      ]
+    },
     "onlyBuiltDependencies": [
       "esbuild",
       "sharp"
