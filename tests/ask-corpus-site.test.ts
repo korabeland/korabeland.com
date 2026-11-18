@@ -58,9 +58,7 @@ describe("live site corpus", () => {
     const evalsPassages = passages.filter(
       (passage) => passage.route === "/lab/evals",
     );
-    const evalsText = evalsPassages
-      .map((passage) => passage.text)
-      .join("\n");
+    const evalsText = evalsPassages.map((passage) => passage.text).join("\n");
     const evalsHeadings = evalsPassages.map((passage) => passage.sectionTitle);
 
     expect(evalsText).toContain("qwen3.8:27b-dflash2-nvfp4-64k");

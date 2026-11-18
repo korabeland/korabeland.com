@@ -4,12 +4,12 @@
 // logic it feeds is in sources.ts and corpus.ts.
 
 import { ABOUT_NARRATIVE } from "../about";
+import { evalsEvidenceBlocks } from "../evals-evidence";
 import { listExperience } from "../experience";
 import { formatNoteDate, listPosts, readPost } from "../posts";
 import { listProjects, projectHref, readProject } from "../projects";
 import { readSkills } from "../skills";
 import { STATUS } from "../status";
-import { evalsEvidenceBlocks } from "../evals-evidence";
 import {
   assertValidCorpus,
   computeCorpusRevision,
