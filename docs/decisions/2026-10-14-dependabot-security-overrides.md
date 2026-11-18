@@ -10,4 +10,10 @@ The four overrides added for this alert batch are listed below. They address dep
 
 The patched `fflate`, `proxy-addr`, `compression`, `js-yaml` 3, `ip-address`, and `ws` 7 releases are selected through their existing parent ranges. Lighthouse CI's Express and body-parser dependencies resolve to patched releases through their declared ranges, which also allows patched `qs` without an override.
 
-Still open: http-cache-semantics (covered by the audit exception in CI), sprintf-js and extract-zip (no patched release exists).
+The October alert batch also tracked `sprintf-js` and `extract-zip` as having no patched release at that time.
+
+## Audit exception (2026-11-17)
+
+`GHSA-fc5q-39xc-vjpf` affects `picomatch` through `astro > unstorage > anymatch > picomatch`. As of 2026-11-17, the newest `picomatch` release is 4.0.7, and the advisory covers versions through 4.0.7, so no patched version is available.
+
+This is a build-time dependency of the static site; visitor requests do not reach it. The production audit ignores only this GHSA through `pnpm.auditConfig.ignoreGhsas` in `package.json`. Remove the exception when `picomatch` ships a patched version. Other high-severity production advisories remain blocking.
