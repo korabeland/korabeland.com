@@ -18,12 +18,10 @@ if (import.meta.env.PROD) {
 const roles: ResumeModel["experience"] = [
   {
     slug: "current-role",
-    company: "Current Co",
     role: "Operations Lead",
-    location: "Melbourne",
-    startDate: "2021-02-01",
-    endDate: null,
-    current: true,
+    organisation: "Current Co · Melbourne",
+    period: "Feb 2021 to present",
+    summary: null,
     achievements: [
       {
         text: "Rebuilt triage so the team acts on evidence, not hunches.",
@@ -34,29 +32,19 @@ const roles: ResumeModel["experience"] = [
         metric: "6 · stakeholders",
       },
     ],
-    tags: ["operations", "evidence"],
-    testimonial: {
-      quote: "Framed the problem nobody had framed, then built the fix.",
-      attribution: "A manager",
-      sourceUrl: null,
-    },
   },
   {
     slug: "prior-role",
-    company: "Prior Co",
     role: "Marketing Manager",
-    location: "",
-    startDate: "2017-06-01",
-    endDate: "2021-01-01",
-    current: false,
+    organisation: "Prior Co",
+    period: "Jun 2017 to Jan 2021",
+    summary: null,
     achievements: [
       {
         text: "Led a channel-mix overhaul across paid search and social.",
         metric: null,
       },
     ],
-    tags: ["marketing"],
-    testimonial: null,
   },
 ];
 
