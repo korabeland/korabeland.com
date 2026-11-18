@@ -53,6 +53,27 @@ describe("live site corpus", () => {
     expect(text).toContain("Decision-Making with ChatGPT");
   });
 
+  it("indexes the evals scorecard and each published defect", async () => {
+    const { passages } = await buildSiteCorpus();
+    const evalsText = passages
+      .filter((passage) => passage.route === "/lab/evals")
+      .map((passage) => passage.text)
+      .join("\n");
+
+    expect(evalsText).toContain("qwen3.8:27b-dflash2-nvfp4-64k");
+    expect(evalsText).toContain("259 attempts, 76% pass rate");
+    expect(evalsText).toContain("qwen3.8:27b-mlx-64k");
+    expect(evalsText).toContain("180 attempts, 78% pass rate");
+    expect(evalsText).toContain("qwen3.6-35b-a3b");
+    expect(evalsText).toContain("255 attempts, 53% pass rate");
+    expect(evalsText).toContain("A model reply limit was dropped");
+    expect(evalsText).toContain("ignored the configured reply limit");
+    expect(evalsText).toContain("An agent wrote outside its workspace");
+    expect(evalsText).toContain("macOS write confinement");
+    expect(evalsText).toContain("A timed-out request could be retried");
+    expect(evalsText).toContain("refuses replacement requests for that run");
+  });
+
   it("never indexes llms.txt or any other machine-facing llms file", async () => {
     const { passages } = await buildSiteCorpus();
     expect(passages.length).toBeGreaterThan(0);

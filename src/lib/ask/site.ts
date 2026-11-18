@@ -9,6 +9,7 @@ import { formatNoteDate, listPosts, readPost } from "../posts";
 import { listProjects, projectHref, readProject } from "../projects";
 import { readSkills } from "../skills";
 import { STATUS } from "../status";
+import { evalsEvidenceBlocks } from "../evals-evidence";
 import {
   assertValidCorpus,
   computeCorpusRevision,
@@ -80,7 +81,10 @@ export async function buildSiteCorpus(): Promise<CorpusArtifact> {
       throw new Error(`ask corpus: project "${project.slug}" has no entry`);
     const doc = projectDocument({
       project,
-      body: blocksFromMarkdoc(await entry.content()),
+      body: [
+        ...blocksFromMarkdoc(await entry.content()),
+        ...(project.slug === "evals" ? evalsEvidenceBlocks() : []),
+      ],
     });
     routes.add(doc.route);
     anchors.set(

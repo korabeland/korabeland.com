@@ -1,11 +1,12 @@
+---
+import { evalsDefects, evalsScorecard } from "../../lib/evals-evidence";
+---
+
 <div class="evidence">
   <section aria-labelledby="scorecard-heading">
     <h2 id="scorecard-heading" class="t-label">sample scorecard</h2>
     <p>
-      These <code>playground-build</code> results cover 2026-11-01 through
-      2026-11-14. Attempts count rows with a pass or fail outcome. Pass rate is
-      passed attempts divided by scored attempts, rounded to the nearest whole
-      percent. Each row uses Pi.
+      {evalsScorecard.intro}
     </p>
     <div class="table-scroll" tabindex="0" aria-label="Sample scorecard table">
       <table>
@@ -20,76 +21,34 @@
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <th scope="row"><code>qwen3.8:27b-dflash2-nvfp4-64k</code></th>
-            <td>Pi</td>
-            <td>Software building</td>
-            <td class="number">259</td>
-            <td class="number">76%</td>
-          </tr>
-          <tr>
-            <th scope="row"><code>qwen3.8:27b-mlx-64k</code></th>
-            <td>Pi</td>
-            <td>Software building</td>
-            <td class="number">180</td>
-            <td class="number">78%</td>
-          </tr>
-          <tr>
-            <th scope="row"><code>qwen3.6-35b-a3b</code></th>
-            <td>Pi</td>
-            <td>Software building</td>
-            <td class="number">255</td>
-            <td class="number">53%</td>
-          </tr>
+          {evalsScorecard.rows.map((row) => (
+            <tr>
+              <th scope="row"><code>{row.model}</code></th>
+              <td>{row.setup}</td>
+              <td>{row.taskGroup}</td>
+              <td class="number">{row.attempts}</td>
+              <td class="number">{row.passRate}</td>
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>
     <p class="table-hint">Scroll sideways to view all columns.</p>
     <p class="limit">
-      These are observed results, not a controlled head-to-head experiment.
-      Runs span different dates and conditions.
+      {evalsScorecard.limit}
     </p>
   </section>
 
   <section aria-labelledby="defects-heading">
     <h2 id="defects-heading" class="t-label">defects the suite exposed</h2>
     <ol class="defects">
-      <li>
-        <h3>A model reply limit was dropped</h3>
-        <p>
-          One agent setup ignored the configured reply limit. The integration
-          was changed to pass the limit through and save it with the run
-          settings.
-        </p>
-        <p class="source">
-          Source file: <code>evals-README.md</code> records the correction but
-          does not identify the changed implementation file.
-        </p>
-      </li>
-      <li>
-        <h3>An agent wrote outside its workspace</h3>
-        <p>
-          Agents attempted writes beyond the task workspace. The suite added
-          macOS write confinement, and result notes retain denied paths.
-        </p>
-        <p class="source">
-          Source files: <code>local-model-eval-suite-requirements.md</code>
-          describes the isolation boundary;
-          <code>playground-results.csv</code> records denied-write notes.
-        </p>
-      </li>
-      <li>
-        <h3>A timed-out request could be retried</h3>
-        <p>
-          A request that timed out could be retried after cancellation. The
-          suite now scores the timeout as a failure and refuses replacement
-          requests for that run.
-        </p>
-        <p class="source">
-          Source files: <code>ladder-build.md</code> describes the timeout
-          behavior; <code>evals-README.md</code> identifies the fix record.
-        </p>
-      </li>
+      {evalsDefects.map((defect) => (
+        <li>
+          <h3>{defect.title}</h3>
+          <p>{defect.summary}</p>
+          <p class="source">Source: <code>{defect.source}</code></p>
+        </li>
+      ))}
     </ol>
   </section>
 
