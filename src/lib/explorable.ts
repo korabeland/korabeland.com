@@ -164,6 +164,6 @@ export interface RailChapter {
   datum: string;
   /** What the datum measures, lower case, no full stop. */
   caption: string;
-  /** In-page anchor. Omit for a static rail. */
-  href?: string;
+  /** In-page anchor. */
+  href: string;
 }

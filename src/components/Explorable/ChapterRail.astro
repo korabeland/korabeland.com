@@ -1,8 +1,6 @@
 ---
-// Explorable/ChapterRail.astro: a story's chapters as a numbered readout, one
-// real datum per chapter. With `href` on an item the row is a jump link to
-// that chapter; without it the rail is a static summary (the work listing's
-// featured block uses it that way, inside one larger link).
+// Explorable/ChapterRail.astro: a story's chapters as a numbered navigation
+// rail, one real datum per chapter.
 //
 // Zero client JS, no motion beyond the 150ms hover colour (DESIGN.md §9).
 
@@ -21,22 +19,15 @@ const number = (i: number) => String(i + 1).padStart(2, "0");
 <ol class="cr" aria-label={label}>
   {
     chapters.map((chapter, i) => {
-      const inner = (
-        <>
-          <span class="cr-n">{number(i)}</span>
-          <span class="cr-datum">{chapter.datum}</span>
-          <span class="cr-caption">{chapter.caption}</span>
-        </>
-      );
       return (
         <li class="cr-item">
-          {chapter.href ? (
-            <a class="cr-row" href={chapter.href}>
-              {inner}
-            </a>
-          ) : (
-            <span class="cr-row">{inner}</span>
-          )}
+          <a class="cr-row" href={chapter.href}>
+            <>
+              <span class="cr-n">{number(i)}</span>
+              <span class="cr-datum">{chapter.datum}</span>
+              <span class="cr-caption">{chapter.caption}</span>
+            </>
+          </a>
         </li>
       );
     })

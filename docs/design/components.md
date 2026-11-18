@@ -554,7 +554,7 @@ reduced-motion guard. No charting library: the figures are HTML and CSS.
 | `ShareShift` | Switches a whole between before and after; the bar redistributes | none (radios + CSS `:has()`) |
 | `RatioPair` | Nothing: two bars in a published ratio, when the rates themselves are not published | none |
 | `CutoffDial` | Drags a cutoff along a ranked population; sees the band only the fine scale can cut | reveals the range input, moves the cutoff |
-| `ChapterRail` | Jumps to a chapter (with `href`), or reads a static summary (without) | none |
+| `ChapterRail` | Jumps to a chapter | none |
 
 **Figure** — props `id`, `label` (mono eyebrow; keep it short enough to share a
 phone-width line with the chip), `title` (the question the figure answers),
@@ -589,7 +589,7 @@ first), `illustrative?` (hatches the bars), `coarseCutPercent`, `coarse`
 it. No-script: the figure at `initialKept` with its readout, and no dead
 control.
 
-**ChapterRail** — props `chapters` (`{ datum, caption, href? }[]`), `label`.
+**ChapterRail** — props `chapters` (`{ datum, caption, href }[]`), `label`.
 Three columns on desktop, stacked rows at 680px and below.
 
 **Do / Don't**
@@ -599,22 +599,6 @@ Three columns on desktop, stacked rows at 680px and below.
 | Print only published numbers; draw the rest and pass `illustrative` | Put a number on an illustrative mark |
 | Choose an `initial` state that carries the point with scripts off | Start a figure in an empty or trivial state |
 | Keep figure data in a `data.ts` beside the story, with a tracing test | Inline figures' numbers in the template |
-
----
-
-### FeaturedStudy
-
-`components/FeaturedStudy/index.astro` — the featured block above a case-study
-ledger. Consumer: `work/index.astro`.
-
-**Props** — `href`, `eyebrow`, `title`, `description`, `status`
-(`"shipped" | "in-flight"`), optional `statusLabel`, `chapters` (rendered as a static `ChapterRail`),
-`cta`, `headingId?`.
-
-**Accessibility** — `<section aria-labelledby>`; the title is the block's one
-link, stretched over the whole block, so it is a single tab stop with the focus
-ring drawn around the block. The call-to-action line is `aria-hidden` (it
-repeats the link).
 
 ---
 
@@ -710,8 +694,7 @@ the source, not the call site.
 ## Coverage & gaps
 
 17 component files (12 top-level + 5 sub-components) + shell documented, plus
-the `Explorable` set (six files), `FeaturedStudy` and `LeadScoringStory`, added
-2026-11-13.
+the `Explorable` set (six files) and `LeadScoringStory`, added 2026-11-13.
 
 **Resolved:** the duplicate status chip in `CaseStudy/index.astro` was folded
 into `StatusChip` (styling was already byte-identical); the dead

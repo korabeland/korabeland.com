@@ -259,6 +259,19 @@ test("rendered flagship copy keeps supported numbers and clean punctuation", asy
   }
 });
 
+test("the chapter rail links to each Call Tiering chapter", async ({ page }) => {
+  await page.goto(CALL);
+  const rail = page.getByRole("navigation", { name: "Chapters" });
+  const links = rail.getByRole("link");
+  await expect(links).toHaveCount(2);
+  await expect(links.nth(0)).toHaveAttribute("href", "#chapter-1");
+  await expect(links.nth(1)).toHaveAttribute("href", "#chapter-2");
+
+  await links.nth(1).click();
+  await expect(page).toHaveURL(/#chapter-2$/);
+  await expect(page.locator("#chapter-2")).toBeInViewport();
+});
+
 test("the effort switch keeps the rounded result and conversion context", async ({
   page,
 }) => {
