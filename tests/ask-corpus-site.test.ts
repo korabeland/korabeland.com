@@ -19,8 +19,16 @@ describe("live site corpus", () => {
       const facts = passages.find(
         (p) => p.id === `project:${project.slug}#facts:00`,
       );
-      expect(facts?.text).toContain(`Role: ${project.role}.`);
-      expect(facts?.text).toContain(`Team: ${project.team}.`);
+      if (project.role) {
+        expect(facts?.text).toContain(`Role: ${project.role}.`);
+      } else {
+        expect(facts?.text).not.toContain("Role: .");
+      }
+      if (project.team) {
+        expect(facts?.text).toContain(`Team: ${project.team}.`);
+      } else {
+        expect(facts?.text).not.toContain("Team: .");
+      }
       const ledgerRoute = project.category === "side" ? "/lab" : "/work";
       expect(
         passages.some(

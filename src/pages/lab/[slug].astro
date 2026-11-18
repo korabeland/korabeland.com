@@ -5,6 +5,8 @@
 
 import type { GetStaticPaths } from "astro";
 import CaseStudy from "../../components/CaseStudy/index.astro";
+import EvalsEvidence from "../../components/EvalsEvidence/EvalsEvidence.astro";
+import EvalsRunFlow from "../../components/EvalsRunFlow/EvalsRunFlow.astro";
 import { PostContent } from "../../components/PostContent";
 import RelocationSystemDiagram from "../../components/RelocationSystemDiagram/index.astro";
 import { buildRelocationStoryParts } from "../../components/RelocationSystemDiagram/segments";
@@ -42,7 +44,7 @@ const span = formatSpan(project.startedAt, project.shippedAt);
 // Fact strip on /lab detail pages: Stack / Span / Status (Role and Team are omitted).
 const facts = [
   { label: "stack", value: project.stack || "—" },
-  { label: "span", value: span || "—" },
+  ...(slug === "evals" ? [] : [{ label: "span", value: span || "—" }]),
   { label: "status", value: status },
 ];
 
@@ -101,6 +103,7 @@ const jsonLd = {
     backLabel="← all tinkering"
     eyebrowLabel="project"
   >
+    {slug === "evals" && <EvalsRunFlow />}
     {relocationStoryParts ? (
       relocationStoryParts.map((part) => (
         <>
@@ -111,5 +114,6 @@ const jsonLd = {
     ) : (
       <PostContent document={content} />
     )}
+    {slug === "evals" && <EvalsEvidence />}
   </CaseStudy>
 </BaseLayout>
