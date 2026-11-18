@@ -37,6 +37,10 @@ const content = await project.content();
 
 // The status label can be more specific than its semantic chip colour.
 const status = projectStatusLabel(project);
+const seriesLabel =
+  slug === CALL_TIERING_SLUG || slug === "lead-scoring"
+    ? "Call Tiering and Lead Scoring"
+    : undefined;
 
 const span = formatSpan(project.startedAt, project.shippedAt);
 
@@ -90,6 +94,7 @@ const jsonLd = {
     title={project.title}
     subtitle={project.description}
     status={status}
+    seriesLabel={seriesLabel}
     facts={facts}
     heroImage={project.heroImage ?? undefined}
     heroImageAlt={`${project.title} hero`}

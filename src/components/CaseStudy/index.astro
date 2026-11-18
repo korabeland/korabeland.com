@@ -42,6 +42,7 @@ interface Props {
   backHref?: string;
   backLabel?: string;
   eyebrowLabel?: string;
+  seriesLabel?: string;
 }
 
 const {
@@ -58,6 +59,7 @@ const {
   backHref = "/work",
   backLabel = "← all case studies",
   eyebrowLabel = "case study",
+  seriesLabel,
 } = Astro.props;
 
 // heroImage is the bare Keystatic filename; variants live in public/work/
@@ -92,6 +94,7 @@ const HERO_SIZES = "(max-width: 960px) 100vw, 960px";
     )}
   </div>
 
+  {seriesLabel && <p class="series-line t-mono">{seriesLabel}</p>}
   <h1 class="t-display head-title">{title}</h1>
   {subtitle && <p class="head-subtitle">{subtitle}</p>}
 
@@ -221,6 +224,12 @@ const HERO_SIZES = "(max-width: 960px) 100vw, 960px";
     align-items: center;
     gap: var(--s-3);
     margin-bottom: var(--s-4);
+  }
+
+  .series-line {
+    color: var(--ink-soft);
+    font-size: 12px;
+    margin: 0 0 var(--s-3);
   }
 
   .head-title {

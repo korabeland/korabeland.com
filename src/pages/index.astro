@@ -31,14 +31,12 @@ const projects = await listProjects();
 // at /work via the ledger's more-link, the lab set at /lab.
 const allWorkProjects = projects.filter((p) => p.category === "work");
 const homePriority = ["call-tiering", "lead-scoring", "ai-sms-pilot"];
-const workProjects = [
-  ...homePriority.flatMap((slug) =>
-    allWorkProjects.filter((p) => p.slug === slug),
-  ),
-  ...allWorkProjects.filter((p) => !homePriority.includes(p.slug)),
-];
+const workProjects = homePriority.flatMap((slug) => {
+  const project = allWorkProjects.find((p) => p.slug === slug);
+  return project ? [project] : [];
+});
 const labProjects = projects.filter((p) => p.category === "side");
-const ledgerItems = workProjects.slice(0, 3).map((p) => ({
+const ledgerItems = workProjects.map((p) => ({
   slug: p.slug,
   title: p.title,
   outcome: p.outcome,

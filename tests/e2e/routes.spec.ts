@@ -194,6 +194,9 @@ test("/work/call-tiering renders the Call Tiering case study", async ({
   await expect(page.locator("h1.head-title")).toHaveText(
     "From Coverage to Intent-based Dialling",
   );
+  await expect(page.locator(".series-line")).toHaveText(
+    "Call Tiering and Lead Scoring",
+  );
   await expect(page.locator(".head-meta .statuschip")).toHaveText("Shipped");
 });
 
@@ -202,6 +205,9 @@ test("/work/lead-scoring renders the case study detail", async ({ page }) => {
   expect(response?.status()).toBe(200);
   await expect(page.locator("h1.head-title")).toHaveText(
     "Precision Dialling via Predictive Modelling",
+  );
+  await expect(page.locator(".series-line")).toHaveText(
+    "Call Tiering and Lead Scoring",
   );
   await expect(page.locator(".head-meta .statuschip")).toHaveText(
     "Designed and handed over, August 2026",
