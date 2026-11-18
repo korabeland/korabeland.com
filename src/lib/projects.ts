@@ -118,14 +118,40 @@ export function projectHref(
 }
 
 /**
- * Console status vocabulary for a case study: amber "in-flight" until it has a
- * ship date, moss "shipped" after. The single derivation the ledgers and the
- * StatusChip display share — no second source of truth.
+ * Console status vocabulary for a case study. D4 fixes the five current
+ * professional case-study labels; other projects still derive status from
+ * their ship date.
  */
 export function projectStatus(
-  project: Pick<ProjectSummary, "shippedAt">,
+  project: Pick<ProjectSummary, "slug" | "shippedAt">,
 ): "shipped" | "in-flight" {
+  if (
+    [
+      "intent-tiers",
+      "call-tier-discipline",
+      "call-tiering",
+      "ai-sms-pilot",
+    ].includes(project.slug)
+  ) {
+    return "shipped";
+  }
+  if (["lead-scoring", "chat-capture-gap"].includes(project.slug)) {
+    return "in-flight";
+  }
   return project.shippedAt ? "shipped" : "in-flight";
+}
+
+/** D4's handover label is shared by the work ledger and case-study fact strip. */
+export function projectStatusLabel(
+  project: Pick<ProjectSummary, "slug" | "shippedAt">,
+): string {
+  if (project.slug === "lead-scoring") {
+    return "Designed and handed over, August 2026";
+  }
+  if (project.slug === "chat-capture-gap") {
+    return "Handed over";
+  }
+  return projectStatus(project) === "shipped" ? "Shipped" : "in flight";
 }
 
 /**

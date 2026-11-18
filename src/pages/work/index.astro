@@ -7,16 +7,41 @@
 import ProjectLedger from "../../components/ProjectLedger/index.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { serializeJsonLd } from "../../lib/json-ld";
-import { listProjects, projectHref, projectStatus } from "../../lib/projects";
+import {
+  listProjects,
+  projectHref,
+  projectStatus,
+  projectStatusLabel,
+} from "../../lib/projects";
 
-const projects = (await listProjects()).filter((p) => p.category === "work");
-const ledgerItems = projects.map((p) => ({
-  slug: p.slug,
-  title: p.title,
-  outcome: p.outcome,
-  status: projectStatus(p),
-  href: projectHref(p),
-}));
+const workProjects = (await listProjects()).filter(
+  (p) => p.category === "work",
+);
+const hasCanonicalCallTiering = workProjects.some(
+  (p) => p.slug === "call-tiering",
+);
+const projects = workProjects.filter(
+  (p) =>
+    p.slug !== "intent-tiers" &&
+    !(hasCanonicalCallTiering && p.slug === "call-tier-discipline"),
+);
+const ledgerItems = projects.map((p) => {
+  const isCallTiering =
+    p.slug === "call-tiering" || p.slug === "call-tier-discipline";
+  const slug = isCallTiering ? "call-tiering" : p.slug;
+  return {
+    slug,
+    title: isCallTiering
+      ? "Call Tiering: From Coverage to Intent-based Dialling"
+      : p.title,
+    outcome: isCallTiering
+      ? "about 30% → less than 1% call effort on Tier 3"
+      : p.outcome,
+    status: projectStatus({ slug, shippedAt: p.shippedAt }),
+    statusLabel: projectStatusLabel({ slug, shippedAt: p.shippedAt }),
+    href: projectHref({ slug, category: p.category }),
+  };
+});
 
 const jsonLd = {
   "@context": "https://schema.org",

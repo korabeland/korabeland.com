@@ -15,6 +15,7 @@ export interface LedgerItem {
   title: string;
   outcome: string;
   status: "shipped" | "in-flight";
+  statusLabel?: string;
   /** Destination — category-aware (`/work/<slug>` or `/lab/<slug>`); the
    *  caller derives it via projectHref so this component stays route-agnostic
    *  and the same ledger serves the work index, the /lab index, and both
@@ -63,7 +64,11 @@ const {
             <a class="ledger-link" href={item.href}>
               <span class="ledger-name">{item.title}</span>
               <span class="t-mono ledger-datum">{item.outcome}</span>
-              <StatusChip status={item.status} variant="chip" />
+              <StatusChip
+                status={item.status}
+                variant="chip"
+                label={item.statusLabel}
+              />
             </a>
           </li>
         ))}

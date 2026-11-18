@@ -95,7 +95,7 @@ describe("projectDocument", () => {
     const doc = projectDocument({ project: project(), body: [] });
     const facts = doc.sections[0].paragraphs.at(-1) ?? "";
     expect(facts).toBe(
-      "Role: Lead. Team: Growth, IT. Span: 2026 · 4 months. Status: shipped.",
+      "Role: Lead. Team: Growth, IT. Span: 2026 · 4 months. Status: Shipped.",
     );
     expect(facts).not.toMatch(/Stack|undefined|—/);
   });

@@ -28,4 +28,10 @@ describe("llms.txt stays in sync with src/lib/status.ts", () => {
   it("states work authorization verbatim", () => {
     expect(llms).toContain(STATUS.authorization);
   });
+
+  it("states the current role targets and employment end date", () => {
+    expect(llms).toContain("Washington, DC");
+    expect(llms).toContain("CX, marketing, product, AI and operations");
+    expect(llms).toContain("ended in August 2026");
+  });
 });

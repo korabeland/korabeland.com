@@ -46,8 +46,7 @@ export const ABOUT_HIRING: readonly { label: string; value: string }[] = [
   },
   {
     label: "Roles I am looking for",
-    value:
-      "Customer Experience Manager, Marketing Manager, Product Manager (non-technical), and Product Marketing Manager.",
+    value: "CX, marketing, product, AI and operations roles.",
   },
   {
     label: "Type of work",

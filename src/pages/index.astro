@@ -13,7 +13,12 @@ import ShiftLog from "../components/ShiftLog/ShiftLog.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { serializeJsonLd } from "../lib/json-ld";
 import { formatNoteMonth, listPosts } from "../lib/posts";
-import { listProjects, projectHref, projectStatus } from "../lib/projects";
+import {
+  listProjects,
+  projectHref,
+  projectStatus,
+  projectStatusLabel,
+} from "../lib/projects";
 import type { ContributionData } from "../lib/shift-log";
 import { STATUS } from "../lib/status";
 
@@ -21,18 +26,50 @@ const PORTRAIT_SIZES = "(max-width: 680px) 240px, 340px";
 
 const projects = await listProjects();
 // Work case studies and personal AI systems render as separate bands and
-// never interleave (the site's hard work/lab split). Home features the top
-// three case studies (ship-date order from the reader); the full set lives
-// at /work via the ledger's more-link, the lab set at /lab.
+// never interleave (the site's hard work/lab split). Home leads with the three
+// approved professional showcases; the full set lives at /work.
 const workProjects = projects.filter((p) => p.category === "work");
 const labProjects = projects.filter((p) => p.category === "side");
-const ledgerItems = workProjects.slice(0, 3).map((p) => ({
-  slug: p.slug,
-  title: p.title,
-  outcome: p.outcome,
-  status: projectStatus(p),
-  href: projectHref(p),
-}));
+const workBySlug = new Map(
+  workProjects.map((project) => [project.slug, project]),
+);
+const homeShowcase = [
+  {
+    slug: "call-tiering",
+    fallbackSlug: "call-tier-discipline",
+    title: "Call Tiering: From Coverage to Intent-based Dialling",
+    outcome: "about 30% → less than 1% call effort on Tier 3",
+  },
+  {
+    slug: "lead-scoring",
+    title: "Lead Scoring: Precision Dialling via Predictive Modelling",
+  },
+  { slug: "ai-sms-pilot" },
+];
+const ledgerItems = homeShowcase.flatMap((showcase) => {
+  const project =
+    workBySlug.get(showcase.slug) ??
+    ("fallbackSlug" in showcase && showcase.fallbackSlug
+      ? workBySlug.get(showcase.fallbackSlug)
+      : undefined);
+  if (!project) return [];
+  return [
+    {
+      slug: showcase.slug,
+      title: showcase.title ?? project.title,
+      outcome: showcase.outcome ?? project.outcome,
+      status: projectStatus({
+        slug: showcase.slug,
+        shippedAt: project.shippedAt,
+      }),
+      statusLabel: projectStatusLabel({
+        slug: showcase.slug,
+        shippedAt: project.shippedAt,
+      }),
+      href: projectHref({ slug: showcase.slug, category: project.category }),
+    },
+  ];
+});
 const labItems = labProjects.map((p) => ({
   slug: p.slug,
   title: p.title,
@@ -128,7 +165,7 @@ const MAIL_ICON =
 
 <BaseLayout
   title="korab eland"
-  description="I turn ambiguous problems into systems that ship. 13 years across marketing, CX and operations. Now building AI systems for the same problems."
+  description={`Based in ${STATUS.base}. Looking for roles in CX, marketing, product, AI and operations after my CX Manager role ended in August 2026.`}
   active="home"
   ogImage="/og.png"
 >
@@ -145,8 +182,9 @@ const MAIL_ICON =
           I turn ambiguous problems into systems that <span class="hero-ship"><span class="sr-only">ship</span><span class="hero-ship-word" aria-hidden="true">ship</span></span>.
         </h1>
         <p class="hero-sub">
-          13 years across marketing, CX and operations. Now building AI systems for the
-          same problems: evidence in, decisions out.
+          13 years across marketing, CX and operations. Based in {STATUS.base}.
+          My CX Manager role ended in August 2026. I’m looking for CX, marketing,
+          product, AI and operations roles.
         </p>
         <p class="t-mono hero-reloc">{STATUS.heroReadout}</p>
       </div>
@@ -266,8 +304,8 @@ const MAIL_ICON =
     <section class="close-section" aria-labelledby="close-heading">
       <SectionHead id="close-heading" text="the short version" />
       <p class="close-body">
-        Media buyer, then marketer, then CX manager, now building AI systems inside a real
-        business. I lead with evidence and design pilots that survive the handoff. Everything
+        Media buyer, then marketer, then CX manager. I built AI systems against real business
+        problems. I lead with evidence and design pilots that survive the handoff. Everything
         gets written down. The longer version is on the <a href="/about">about page</a>; the receipts are in
         the <a href="/work">case studies</a>.
       </p>

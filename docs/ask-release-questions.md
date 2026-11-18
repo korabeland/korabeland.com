@@ -91,11 +91,11 @@ Each case lists: the question, what kind of answer is expected, the expected fac
 - **Question:** What kind of work is Korab moving toward?
 - **Expected answer:** supported answer
 - **Expected facts:**
-  - He is looking for Customer Experience Manager, Marketing Manager, Product Manager (non-technical) and Product Marketing Manager roles. evidence: "Customer Experience Manager, Marketing Manager, Product Manager (non-technical), and Product Marketing Manager."
+  - He is looking for roles in CX, marketing, product, AI and operations. evidence: "CX, marketing, product, AI and operations roles."
   - He describes his AI work as the same operating system aimed at harder problems, not a pivot. evidence: "None of that is a pivot away from what came before."
-- **Forbidden claims:** any other job title, company or industry as a target; a start date; a salary.
+- **Forbidden claims:** target roles outside CX, marketing, product, AI and operations; a start date; a salary.
 - **Sources:** `about#hiring:00`, `about#narrative:01`
-- **Critical failure:** names a target role other than the four listed, or states an availability detail the site does not give.
+- **Critical failure:** names a target area outside the five listed, or states an availability detail the site does not give.
 - [ ] Reviewed by Korab
 
 ### C05 · Freelance or consulting
