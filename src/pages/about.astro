@@ -77,7 +77,14 @@ const PORTRAIT_SIZES = "(max-width: 680px) 280px, 440px";
       </p>
     </section>
 
-    {experience.length > 0 && <ExperienceLedger roles={experience} />}
+    {
+      experience.length > 0 && (
+        <ExperienceLedger
+          roles={experience}
+          more={{ href: "/resume", label: "one-page resume" }}
+        />
+      )
+    }
 
     {skills && <SkillsSection data={skills} />}
 

@@ -28,7 +28,7 @@ Each idea is one candidate enhancement. Effort tags: small / medium / large.
 - R3. **The 90-second brief** (medium). Toggle on each case study that collapses it to fact strip + metrics + one key decision + outcome, labelled honestly ("the 90-second version"). Full prose remains one click away.
 - R4. **Requirement-to-evidence map on `/for/` pages** (medium). Each line of a job's requirements maps to a specific case-study section or metric with a deep link, turning tailored pages into a decision aid that does the hiring manager's screening for them.
 - R5. **Relocation readout** (small). One mono status line correcting a real gap: hero and JSON-LD currently say Melbourne, but the search targets Easton MD / DC / Baltimore / US-remote. Shape: `⌖ melbourne → easton, md · us citizen · no sponsorship needed`. Highest value-to-effort on the list.
-- R6. **Single-source resume** (medium). A `/resume` route generated from the same content collections that power the site, plus a print stylesheet exporting a clean one-page brief. Site and resume cannot drift because they are one source of truth.
+- R6. **Single-source resume** (medium). A `/resume` route and print stylesheet provide a clean one-page brief. See [the component catalogue](../design/components.md#resume) for the shipped implementation.
 
 **Creative — memorable, in console grammar**
 

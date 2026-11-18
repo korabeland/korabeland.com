@@ -1,0 +1,96 @@
+---
+export const prerender = false;
+
+// Dev-only preview: renders the Resume component against fixtures so the
+// content-gated sections and the print layout are covered by e2e + axe without
+// committing placeholder content that would ship to prod. Returns 404 in
+// production; robots.txt disallows /dev/ and the sitemap filter excludes it.
+// ?empty=1 renders the no-data state.
+
+import Resume from "../../components/Resume/Resume.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import type { ResumeModel } from "../../lib/resume";
+
+if (import.meta.env.PROD) {
+  return new Response("Not found", { status: 404 });
+}
+
+const roles: ResumeModel["experience"] = [
+  {
+    slug: "current-role",
+    role: "Operations Lead",
+    organisation: "Current Co · Melbourne",
+    period: "Feb 2021 to present",
+    summary: null,
+    achievements: [
+      {
+        text: "Rebuilt triage so the team acts on evidence, not hunches.",
+        metric: "30–50% · less manual effort",
+      },
+      {
+        text: "Aligned four functions before a line of code was written.",
+        metric: "6 · stakeholders",
+      },
+    ],
+  },
+  {
+    slug: "prior-role",
+    role: "Marketing Manager",
+    organisation: "Prior Co",
+    period: "Jun 2017 to Jan 2021",
+    summary: null,
+    achievements: [
+      {
+        text: "Led a channel-mix overhaul across paid search and social.",
+        metric: null,
+      },
+    ],
+  },
+];
+
+const skills: NonNullable<ResumeModel["skills"]> = {
+  categories: [
+    {
+      name: "Data & AI",
+      skills: ["SQL", "Python", "ML pipelines", "experiment design"],
+    },
+    {
+      name: "Operations",
+      skills: ["process design", "stakeholder alignment", "CX systems"],
+    },
+  ],
+  education: [
+    { name: "Some Degree", institution: "A University", year: "2013" },
+  ],
+  certifications: [
+    {
+      name: "Some Certification",
+      institution: "An Institute",
+      year: "2024",
+    },
+  ],
+};
+
+const empty = Astro.url.searchParams.get("empty") === "1";
+const model: ResumeModel = empty
+  ? { summary: null, experience: [], skills: null }
+  : {
+      summary:
+        "Operations and customer experience leader building evidence-based systems.",
+      experience: roles,
+      skills: {
+        ...skills,
+        certifications: [
+          {
+            name: "Decision Modelling Course",
+            institution: "A University",
+            year: "2018",
+          },
+        ],
+      },
+    };
+---
+
+<BaseLayout title="dev · resume preview" noindex={true}>
+  <Resume model={model} />
+</BaseLayout>

@@ -1,0 +1,595 @@
+---
+// Resume.astro — the one-page resume body. The screen view uses the site's
+// tokens and section grammar; the @media print block at the bottom turns it
+// into a black-on-white sheet (A4 or US Letter) and hides the site chrome.
+// That block is global on purpose: it has to reach the layout's chrome, footer
+// and skip link, and the stylesheet only ships on routes that mount this
+// component. It re-pins the tokens to black on white for both shifts.
+// Sections render only when the model carries data. The page (src/pages/resume.astro)
+// and the dev preview (src/pages/dev/resume-preview.astro) both mount this.
+
+import {
+  RESUME_CONTACT,
+  RESUME_IDENTITY,
+  type ResumeModel,
+} from "../../lib/resume";
+import SectionHead from "../SectionHead.astro";
+
+interface Props {
+  model: ResumeModel;
+}
+
+const { model } = Astro.props;
+const { summary, experience, skills } = model;
+const hasCategories = (skills?.categories.length ?? 0) > 0;
+const hasEducation = (skills?.education.length ?? 0) > 0;
+const hasCertifications = (skills?.certifications.length ?? 0) > 0;
+const hasCredentials = hasEducation || hasCertifications;
+---
+
+<article class="resume">
+  <div class="resume-actions">
+    <button type="button" class="btn ghost resume-print" hidden>
+      Print or save as PDF
+    </button>
+  </div>
+
+  <header class="resume-header">
+    <h1 class="t-display resume-name">{RESUME_IDENTITY.name}</h1>
+    <p class="resume-headline">{RESUME_IDENTITY.headline}</p>
+    <p class="t-mono resume-contact">
+      <span>Based in {RESUME_IDENTITY.location}</span>
+      {RESUME_CONTACT.map((link) => (
+        <a href={link.href} rel={link.href.startsWith("http") ? "me" : undefined}>
+          {link.display}
+        </a>
+      ))}
+    </p>
+  </header>
+
+  {
+    summary && (
+      <section class="resume-section" aria-labelledby="resume-summary">
+        <SectionHead id="resume-summary" text="summary" />
+        <p class="resume-summary">{summary}</p>
+      </section>
+    )
+  }
+
+  {
+    hasCategories && skills && (
+      <section class="resume-section" aria-labelledby="resume-skills">
+        <SectionHead id="resume-skills" text="areas of expertise" />
+        <dl class="resume-skills">
+          {skills.categories.map((cat) => (
+            <div class="resume-skill-row">
+              <dt>{cat.name}</dt>
+              <dd>{cat.skills.join(" · ")}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
+    )
+  }
+
+  {
+    experience.length > 0 && (
+      <section class="resume-section" aria-labelledby="resume-experience">
+        <SectionHead id="resume-experience" text="experience" />
+        <ol class="resume-roles">
+          {experience.map((role) => (
+            <li class="resume-role">
+              <div class="resume-role-head">
+                <div class="resume-role-id">
+                  <h3 class="resume-role-title">{role.role}</h3>
+                  {role.organisation && (
+                    <p class="resume-org">{role.organisation}</p>
+                  )}
+                </div>
+                <span class="t-mono resume-period">{role.period}</span>
+              </div>
+              {role.summary && (
+                <p class="resume-role-summary">{role.summary}</p>
+              )}
+              {role.achievements.length > 0 && (
+                <ul class="resume-bullets">
+                  {role.achievements.map((a) => (
+                    <li class="resume-bullet">
+                      <span>{a.text}</span>
+                      {a.metric && (
+                        <span class="t-mono resume-metric">{a.metric}</span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </li>
+          ))}
+        </ol>
+      </section>
+    )
+  }
+
+  {
+    hasCredentials && skills && (
+      <section class="resume-section" aria-labelledby="resume-credentials">
+        <SectionHead id="resume-credentials" text="education · certifications" />
+        <div class="resume-credentials">
+          {hasEducation && (
+            <ul class="resume-edu-list resume-education" aria-label="Education">
+              {skills.education.map((entry) => (
+                <li class="resume-edu-row">
+                  <span>{entry.name}</span>
+                  <span class="t-mono resume-edu-meta">
+                    {[entry.institution, entry.year].filter(Boolean).join(" · ")}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+          {hasCertifications && (
+            <ul
+              class="resume-edu-list resume-certifications"
+              aria-label="Certifications"
+            >
+              {skills.certifications.map((entry) => (
+                <li class="resume-edu-row">
+                  <span>{entry.name}</span>
+                  <span class="t-mono resume-edu-meta">
+                    {[entry.institution, entry.year].filter(Boolean).join(" · ")}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </section>
+    )
+  }
+</article>
+
+<script>
+  // The control needs JS (window.print), so it ships hidden and is revealed here.
+  const button = document.querySelector<HTMLButtonElement>(".resume-print");
+  if (button) {
+    button.hidden = false;
+    button.addEventListener("click", () => window.print());
+  }
+</script>
+
+<style>
+  .resume {
+    --section-head-margin: 0 0 var(--s-4);
+    max-width: var(--w-prose);
+    margin-inline: auto;
+    padding: var(--s-6) var(--s-4) var(--s-8);
+  }
+
+  .resume-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin: 0 0 var(--s-5);
+  }
+
+  .resume-print {
+    min-height: 44px;
+  }
+
+  /* .btn sets display, which would otherwise beat the hidden attribute. */
+  .resume-print[hidden] {
+    display: none;
+  }
+
+  .resume-header {
+    margin: 0 0 var(--s-6);
+  }
+
+  .resume-name {
+    font-size: clamp(28px, 5vw, 40px);
+    color: var(--ink);
+    margin: 0 0 var(--s-2);
+  }
+
+  .resume-headline {
+    font-family: var(--font-display);
+    font-size: 16px;
+    line-height: 1.45;
+    color: var(--ink);
+    margin: 0 0 var(--s-3);
+  }
+
+  .resume-summary {
+    font-size: 15px;
+    line-height: 1.65;
+    color: var(--ink-soft);
+    margin: 0;
+  }
+
+  .resume-contact {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-1) var(--s-4);
+    text-transform: none;
+    letter-spacing: 0.02em;
+    margin: 0;
+  }
+
+  .resume-contact a {
+    color: var(--ink-soft);
+    text-decoration: none;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .resume-contact a:hover,
+  .resume-contact a:focus-visible {
+    color: var(--signal);
+    border-bottom-color: var(--signal);
+  }
+
+  .resume-section {
+    margin-top: var(--s-6);
+  }
+
+  .resume-roles {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-5);
+  }
+
+  .resume-role-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--s-4);
+    flex-wrap: wrap;
+  }
+
+  .resume-role-id {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .resume-role-title {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 17px;
+    line-height: 1.3;
+    color: var(--ink);
+    margin: 0;
+  }
+
+  .resume-period {
+    text-transform: none;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+
+  .resume-org {
+    font-size: 14px;
+    color: var(--ink-soft);
+    margin: 2px 0 0;
+  }
+
+  .resume-role-summary {
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--ink);
+    margin: var(--s-2) 0 0;
+  }
+
+  .resume-bullets {
+    list-style: none;
+    margin: var(--s-2) 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-2);
+  }
+
+  .resume-bullet {
+    position: relative;
+    padding-left: var(--s-4);
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+  }
+
+  .resume-bullet::before {
+    content: "›";
+    position: absolute;
+    left: 0;
+    color: var(--signal);
+  }
+
+  .resume-metric {
+    display: block;
+    text-transform: none;
+    letter-spacing: 0.02em;
+    color: var(--signal);
+    font-size: 13px;
+  }
+
+  .resume-skills {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-3);
+  }
+
+  .resume-skill-row dt {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 15px;
+    color: var(--ink);
+  }
+
+  .resume-skill-row dd {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+  }
+
+  .resume-credentials {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-4);
+  }
+
+  .resume-edu-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-2);
+  }
+
+  .resume-certifications {
+    padding-top: var(--s-4);
+    border-top: 1px solid var(--rule);
+  }
+
+  .resume-edu-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--s-4);
+    font-size: 14px;
+    color: var(--ink-soft);
+  }
+
+  .resume-edu-meta {
+    text-transform: none;
+    letter-spacing: 0.02em;
+    text-align: right;
+  }
+
+  @media (max-width: 680px) {
+    .resume-edu-row {
+      flex-direction: column;
+      gap: 0;
+    }
+    .resume-edu-meta {
+      text-align: left;
+    }
+  }
+
+  @media print {
+    .resume {
+      --section-head-margin: 0;
+      max-width: none;
+      padding: 0;
+    }
+
+    .resume-header {
+      margin-bottom: 1.2mm;
+    }
+
+    .resume-name {
+      font-size: 17pt;
+      line-height: 1.05;
+      margin-bottom: 0.3mm;
+    }
+
+    .resume-headline {
+      font-size: 9pt;
+      line-height: 1.2;
+      margin-bottom: 0.5mm;
+    }
+
+    .resume-contact {
+      font-size: 6.5pt;
+      line-height: 1.15;
+      gap: 0 1.8mm;
+    }
+
+    .resume-contact a {
+      border-bottom: 0;
+      color: #000;
+    }
+
+    .resume-section {
+      margin-top: 2mm;
+    }
+
+    .resume-section :global(.section-head) {
+      border-bottom-color: #000;
+      padding-bottom: 0.5mm;
+      margin-bottom: 1.1mm;
+    }
+
+    .resume-summary {
+      font-size: 7.7pt;
+      line-height: 1.18;
+    }
+
+    .resume-skills {
+      gap: 0.6mm;
+    }
+
+    .resume-skill-row {
+      font-size: 7.7pt;
+      line-height: 1.16;
+    }
+
+    .resume-skill-row dt,
+    .resume-skill-row dd {
+      display: inline;
+      font-size: 7.7pt;
+      line-height: 1.16;
+    }
+
+    .resume-skill-row dt::after {
+      content: ": ";
+    }
+
+    .resume-roles {
+      gap: 1.2mm;
+    }
+
+    /* Role, organisation and period share one line to save height. */
+    .resume-role-id {
+      flex-direction: row;
+      align-items: baseline;
+      gap: 2mm;
+    }
+
+    .resume-role-title {
+      font-size: 9pt;
+      line-height: 1.15;
+    }
+
+    .resume-org {
+      font-size: 7.8pt;
+      margin: 0;
+    }
+
+    .resume-period {
+      font-size: 7.4pt;
+    }
+
+    .resume-role-summary {
+      font-size: 7.6pt;
+      line-height: 1.15;
+      margin-top: 0.3mm;
+      font-weight: 500;
+    }
+
+    .resume-bullets {
+      margin-top: 0.35mm;
+      gap: 0.2mm;
+    }
+
+    .resume-bullet {
+      font-size: 7.5pt;
+      line-height: 1.14;
+      padding-left: 2.6mm;
+    }
+
+    .resume-bullet::before {
+      color: #000;
+    }
+
+    .resume-metric {
+      display: inline;
+      font-size: 7pt;
+      letter-spacing: 0;
+    }
+
+    .resume-metric::before {
+      content: " (";
+    }
+
+    .resume-metric::after {
+      content: ")";
+    }
+
+    .resume-credentials {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5mm 6mm;
+    }
+
+    .resume-edu-list {
+      gap: 0.4mm;
+    }
+
+    .resume-certifications {
+      padding-top: 0;
+      border-top: 0;
+    }
+
+    .resume-edu-row {
+      display: block;
+      font-size: 7.5pt;
+      line-height: 1.14;
+    }
+
+    .resume-edu-meta {
+      display: block;
+      font-size: 6.9pt;
+      letter-spacing: 0;
+      text-align: left;
+    }
+
+    .resume-role,
+    .resume-skill-row,
+    .resume-edu-row {
+      break-inside: avoid;
+    }
+
+    .resume-role-head,
+    .resume-section :global(.section-head) {
+      break-after: avoid;
+    }
+  }
+</style>
+
+<style is:global>
+  @page {
+    margin: 7mm 10mm;
+  }
+
+  @media print {
+    html:root,
+    html[data-time] {
+      color-scheme: light;
+      --paper: #fff;
+      --paper-2: #fff;
+      --ink: #000;
+      --ink-soft: #000;
+      --ink-mute: #000;
+      --rule: #000;
+      --signal: #000;
+    }
+
+    html,
+    body {
+      background: #fff;
+      color: #000;
+      min-height: 0;
+      font-size: 8.5pt;
+    }
+
+    .skip-link,
+    .chrome,
+    .site-footer,
+    .resume-actions {
+      display: none !important;
+    }
+
+    .page-main {
+      max-width: none;
+      padding: 0;
+    }
+
+    a {
+      color: #000;
+      text-decoration: none;
+    }
+  }
+</style>
